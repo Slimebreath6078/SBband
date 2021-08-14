@@ -14,7 +14,7 @@
 #include "game-option/birth-options.h"
 #include "game-option/runtime-arguments.h"
 #include "io/files-util.h"
-#include "io/report.h"
+
 #include "io/uid-checker.h"
 #include "load/angband-version-comparer.h"
 #include "load/dummy-loader.h"
@@ -240,15 +240,6 @@ static errr exe_reading_savefile(player_type *creature_ptr)
         set_zangband_pet(creature_ptr);
     else
         rd_s16b(&creature_ptr->pet_extra_flags);
-
-    if (!h_older_than(1, 0, 9)) {
-        char *buf;
-        C_MAKE(buf, SCREEN_BUF_MAX_SIZE, char);
-        rd_string(buf, SCREEN_BUF_MAX_SIZE);
-        if (buf[0])
-            screen_dump = string_make(buf);
-        C_KILL(buf, SCREEN_BUF_MAX_SIZE, char);
-    }
 
     errr restore_dungeon_result = restore_dungeon(creature_ptr);
     if (restore_dungeon_result != 0)

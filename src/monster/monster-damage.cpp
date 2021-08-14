@@ -13,7 +13,7 @@
 #include "core/stuff-handler.h"
 #include "game-option/birth-options.h"
 #include "game-option/play-record-options.h"
-#include "io/report.h"
+#include "io/files-util.h"
 #include "io/write-diary.h"
 #include "main/sound-definitions-table.h"
 #include "main/sound-of-music.h"
@@ -335,11 +335,7 @@ void MonsterDamageProcessor::dying_scream(GAME_TEXT *m_name)
         msg_format("%^s %s", m_name, line_got);
     }
 
-#ifdef WORLD_SCORE
-    if (m_ptr->r_idx == MON_SERPENT) {
-        screen_dump = make_screen_dump(this->target_ptr);
-    }
-#endif
+
 }
 
 void MonsterDamageProcessor::show_kill_message(concptr note, GAME_TEXT *m_name)
