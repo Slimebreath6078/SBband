@@ -126,7 +126,6 @@ static void kingly(player_type *winner_ptr)
  */
 void close_game(player_type *player_ptr)
 {
-    bool do_send = true;
     handle_stuff(player_ptr);
     msg_print(NULL);
     flush();
@@ -151,8 +150,7 @@ void close_game(player_type *player_ptr)
 
         if (!save_player(player_ptr, SAVE_TYPE_CLOSE_GAME))
             msg_print(_("セーブ失敗！", "death save failed!"));
-    } else
-        do_send = false;
+    }
 
     print_tomb(player_ptr);
     flush();
