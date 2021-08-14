@@ -1,7 +1,7 @@
 ﻿#pragma once
 /*!
  * @file init-error-messages-table.h
- * @brief 変愚蛮怒のゲームデータ解析エラー名ヘッダ
+ * @brief SBbandのゲームデータ解析エラー名ヘッダ
  */
 
 #include "system/angband.h"

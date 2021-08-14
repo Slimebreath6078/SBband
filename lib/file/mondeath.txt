@@ -51,7 +51,7 @@ N:1018:Raou
 points at himself and shouts, 'I finished my life with no regrets!'
 
 N:1063:lousy, the King of louses
-says, 'Ah, Hengband is too difficult!'
+says, 'Ah, SBband is too difficult!'
 
 N:1240:Yamato, the sword master
 's editor says, 'Believe that Yamato's bravery will save the world...!  Thank you for reading!'

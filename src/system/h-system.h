@@ -1,6 +1,6 @@
 ﻿/*!
  * @file h-system.h
- * @brief 変愚蛮怒用システムヘッダーファイル /
+ * @brief SBband用システムヘッダーファイル /
  * The most basic "include" file. This file simply includes other low level header files.
  * @date 2014/08/16
  * @author

@@ -1,7 +1,7 @@
 === The Dungeon ===
 
 
-Although Hengband contains an extensive town level featuring multiple
+Although SBband contains an extensive town level featuring multiple
 towns and a large wilderness area, the bulk of your adventuring will
 take place in the dungeon. Symbols appearing on your screen will
 represent the dungeon's walls, floor, objects, features, and creatures
@@ -123,7 +123,7 @@ town. It acts in two manners, depending upon your current location.
 If read within the dungeon, it will teleport you back to town. If read
 in town, it will teleport you back down to the deepest level (usually)
 of the dungeon which your character has previously been on. This makes
-the scroll very useful for getting back to the deeper levels of Hengband.
+the scroll very useful for getting back to the deeper levels of SBband.
 The return floor is usually the deepest floor you've been to, but you
 can change the return floor by going back to a shallower floor and
 reading a scroll of "Word of Recall".
@@ -134,7 +134,7 @@ from a crisis. If your character reads another such scroll before the
 first has taken effect, the second cancels the first and your character
 will not be teleported.
 
-A more complete description of Hengband objects is found elsewhere in
+A more complete description of SBband objects is found elsewhere in
 the documentation (see object.txt [c]).
 
 
@@ -190,7 +190,7 @@ commands to use them. A "<" represents an up staircase and a ">"
 represents a down staircase. You must move your character over the
 staircase before you can use it.
 
-In Hengband, stairs will go up or down one level.  Shafts will go up
+In SBband, stairs will go up or down one level.  Shafts will go up
 or down two levels at a time.
 
 Each level has at least one up staircase and at least two down
@@ -280,7 +280,7 @@ feeling may change, with more perceptive adventurers picking up the
 change earlier. Defeating powerful monsters of picking up powerful
 items can calm the feeling for a level.
 
-In Hengband, the nastier the feeling prompt, the better the level. From
+In SBband, the nastier the feeling prompt, the better the level. From
 worst to best, the prompts are as follows:
 
      'What a boring place...'
@@ -306,7 +306,7 @@ aura', the prompts will be changed as follows:
      'You have an excellent feeling...'
      'You have a superb feeling about this level.'
 
-Hengband also uses two other feeling prompts to denote special things.
+SBband also uses two other feeling prompts to denote special things.
 If you have not yet been on a level long enough to qualify for a prompt
 and press 'Ctrl-F', you will be given the prompt:
 

@@ -34,10 +34,10 @@ struct world_type {
 
     bool is_loading_now{}; /*!< ロード処理中フラグ...ロード直後にcalc_bonus()時の徳変化、及びsanity_blast()による異常を抑止する */
 
-    byte h_ver_major{}; //!< 変愚蛮怒バージョン(メジャー番号) / Hengband version (major ver.)
-    byte h_ver_minor{}; //!< 変愚蛮怒バージョン(マイナー番号) / Hengband version (minor ver.)
-    byte h_ver_patch{}; //!< 変愚蛮怒バージョン(パッチ番号) / Hengband version (patch ver.)
-    byte h_ver_extra{}; //!< 変愚蛮怒バージョン(エクストラ番号) / Hengband version (extra ver.)
+    byte h_ver_major{}; //!< SBbandバージョン(メジャー番号) / SBband version (major ver.)
+    byte h_ver_minor{}; //!< SBbandバージョン(マイナー番号) / SBband version (minor ver.)
+    byte h_ver_patch{}; //!< SBbandバージョン(パッチ番号) / SBband version (patch ver.)
+    byte h_ver_extra{}; //!< SBbandバージョン(エクストラ番号) / SBband version (extra ver.)
 
     byte sf_extra{}; //!< セーブファイルエンコードキー(XOR)
 

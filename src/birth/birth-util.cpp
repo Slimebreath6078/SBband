@@ -6,7 +6,7 @@
 #include "term/screen-processor.h"
 
 /*!
- * @brief プレイヤー作成を中断して変愚蛮怒を終了する
+ * @brief プレイヤー作成を中断してSBbandを終了する
  */
 void birth_quit(void)
 {
