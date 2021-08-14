@@ -2,14 +2,14 @@
 
 #include "system/h-type.h"
 
-#define VERSION_NAME "Hengband" /*!< バリアント名称 / Name of the version/variant */
+#define VERSION_NAME "SBband" /*!< バリアント名称 / Name of the version/variant */
 
 /*!
- * @brief セーブファイル上のバージョン定義(メジャー番号) / "Savefile Version Number" for Hengband 1.1.1 and later
+ * @brief セーブファイル上のバージョン定義(メジャー番号) / "Savefile Version Number" for SBband 1.1.1 and later
  * @details
  * 当面FAKE_VER_*を参照しておく。
  * <pre>
- * Program Version of Hengband version is
+ * Program Version of SBband version is
  *   "(H_VER_MAJOR).(H_VER_MINOR).(H_VER_PATCH).(H_VER_EXTRA)".
  * Upper compatibility is always guaranteed when it is more than 1.0.0 .
  * </pre>

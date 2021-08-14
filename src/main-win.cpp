@@ -138,7 +138,7 @@
 /*
  * Window names
  */
-LPCWSTR win_term_name[] = { L"Hengband", L"Term-1", L"Term-2", L"Term-3", L"Term-4", L"Term-5", L"Term-6", L"Term-7" };
+LPCWSTR win_term_name[] = { L"SBband", L"Term-1", L"Term-2", L"Term-3", L"Term-4", L"Term-5", L"Term-6", L"Term-7" };
 
 #define MAX_TERM_DATA 8 //!< Maximum number of windows
 
@@ -191,7 +191,7 @@ bg_mode current_bg_mode = bg_mode::BG_NONE;
 char wallpaper_file[MAIN_WIN_MAX_PATH] = ""; //!< 壁紙ファイル名。
 
 /*
- * Show sub-windows even when Hengband is not in focus
+ * Show sub-windows even when SBband is not in focus
  */
 static bool keep_subwindows = true;
 
@@ -1395,7 +1395,7 @@ static void init_windows(void)
     td = &data[0];
     my_td = td;
     td->w = CreateWindowExW(
-        td->dwExStyle, AppName, _(L"変愚蛮怒", td->name), td->dwStyle, td->pos_x, td->pos_y, td->size_wid, td->size_hgt, HWND_DESKTOP, NULL, hInstance, NULL);
+        td->dwExStyle, AppName, _(L"SBband", td->name), td->dwStyle, td->pos_x, td->pos_y, td->size_wid, td->size_hgt, HWND_DESKTOP, NULL, hInstance, NULL);
     my_td = NULL;
 
     if (!td->w)
@@ -2647,7 +2647,7 @@ int WINAPI WinMain(
     hInstance = hInst;
     if (is_already_running()) {
         MessageBoxW(
-            NULL, _(L"変愚蛮怒はすでに起動しています。", L"Hengband is already running."), _(L"エラー！", L"Error"), MB_ICONEXCLAMATION | MB_OK | MB_ICONSTOP);
+            NULL, _(L"SBbandはすでに起動しています。", L"SBband is already running."), _(L"エラー！", L"Error"), MB_ICONEXCLAMATION | MB_OK | MB_ICONSTOP);
         return 0;
     }
 

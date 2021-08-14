@@ -1,6 +1,6 @@
 ﻿/*!
  * @file init-error-messages-table.cpp
- * @brief 変愚蛮怒のゲームデータ解析エラー名定義
+ * @brief SBbandのゲームデータ解析エラー名定義
  */
 
 #include "main/init-error-messages-table.h"
