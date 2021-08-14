@@ -19,7 +19,6 @@
 #include "game-option/birth-options.h"
 #include "game-option/game-play-options.h"
 #include "io/input-key-acceptor.h"
-#include "io/report.h"
 #include "io/signal-handlers.h"
 #include "io/uid-checker.h"
 #include "player/player-class.h"
@@ -127,50 +126,6 @@ static int highscore_add(high_score *score)
 
     /* Return location used */
     return slot;
-}
-
-/*!
- * @brief スコアサーバへの転送処理
- * @param current_player_ptr プレーヤーへの参照ポインタ
- * @param do_send 実際に転送ア処置を行うか否か
- * @return 転送が成功したらTRUEを返す
- */
-bool send_world_score(player_type *current_player_ptr, bool do_send, display_player_pf display_player)
-{
-#ifdef WORLD_SCORE
-    if (!send_score || !do_send) {
-        return true;
-    }
-
-    if (easy_band) {
-        msg_print(_("初心者モードではワールドスコアに登録できません。", "Since you are in the Easy Mode, you cannot send score to world score server."));
-        return true;
-    }
-
-    auto is_registration = get_check_strict(
-        current_player_ptr, _("スコアをスコア・サーバに登録しますか? ", "Do you send score to the world score server? "), (CHECK_NO_ESCAPE | CHECK_NO_HISTORY));
-    if (!is_registration) {
-        return true;
-    }
-
-    prt("", 0, 0);
-    prt(_("送信中．．", "Sending..."), 0, 0);
-    term_fresh();
-    screen_save();
-    auto err = report_score(current_player_ptr, display_player);
-    screen_load();
-    if (err) {
-        return false;
-    }
-
-    prt(_("完了。何かキーを押してください。", "Completed.  Hit any key."), 0, 0);
-    (void)inkey();
-#else
-    (void)current_player_ptr;
-    (void)do_send;
-    (void)display_player;
-#endif
-    return true;
 }
 
 /*!
