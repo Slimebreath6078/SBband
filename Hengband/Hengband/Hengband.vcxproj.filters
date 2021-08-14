@@ -473,9 +473,6 @@
     <ClCompile Include="..\..\src\floor\wild.cpp">
       <Filter>floor</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\io\report.cpp">
-      <Filter>io</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\floor\geometry.cpp">
       <Filter>floor</Filter>
     </ClCompile>
@@ -487,9 +484,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\object\warning.cpp">
       <Filter>object</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\io\inet.cpp">
-      <Filter>io</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\dungeon\quest.cpp">
       <Filter>dungeon</Filter>
@@ -2840,9 +2834,6 @@
     <ClInclude Include="..\..\src\floor\wild.h">
       <Filter>floor</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\io\report.h">
-      <Filter>io</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\floor\geometry.h">
       <Filter>floor</Filter>
     </ClInclude>
@@ -2857,9 +2848,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src\object\warning.h">
       <Filter>object</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\io\inet.h">
-      <Filter>io</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\dungeon\quest.h">
       <Filter>dungeon</Filter>
