@@ -42,7 +42,6 @@
 #include "grid/feature.h"
 #include "grid/grid.h"
 #include "info-reader/fixed-map-parser.h"
-#include "io/inet.h"
 #include "io/input-key-acceptor.h"
 #include "io/input-key-processor.h"
 #include "io/read-pref-file.h"
@@ -105,43 +104,6 @@ static void restore_windows(player_type *player_ptr)
             angband_term[i]->resize_hook = redraw_window;
 
     (void)term_set_cursor(0);
-}
-
-static void send_waiting_record(player_type *player_ptr)
-{
-    if (!player_ptr->wait_report_score)
-        return;
-
-    char buf[1024];
-    if (!get_check_strict(player_ptr, _("待機していたスコア登録を今行ないますか？", "Do you register score now? "), CHECK_NO_HISTORY))
-        quit(0);
-
-    player_ptr->update |= (PU_BONUS | PU_HP | PU_MANA | PU_SPELLS);
-    update_creature(player_ptr);
-    player_ptr->is_dead = true;
-    current_world_ptr->start_time = (u32b)time(NULL);
-    signals_ignore_tstp();
-    current_world_ptr->character_icky_depth = 1;
-    path_build(buf, sizeof(buf), ANGBAND_DIR_APEX, "scores.raw");
-    highscore_fd = fd_open(buf, O_RDWR);
-
-    /* 町名消失バグ対策(#38205)のためここで世界マップ情報を読み出す */
-    parse_fixed_map(player_ptr, "w_info.txt", 0, 0, current_world_ptr->max_wild_y, current_world_ptr->max_wild_x);
-    bool success = send_world_score(player_ptr, true, display_player);
-    if (!success && !get_check_strict(player_ptr, _("スコア登録を諦めますか？", "Do you give up score registration? "), CHECK_NO_HISTORY)) {
-        prt(_("引き続き待機します。", "standing by for future registration..."), 0, 0);
-        (void)inkey();
-    } else {
-        player_ptr->wait_report_score = false;
-        top_twenty(player_ptr);
-        if (!save_player(player_ptr, SAVE_TYPE_CLOSE_GAME))
-            msg_print(_("セーブ失敗！", "death save failed!"));
-    }
-
-    (void)fd_close(highscore_fd);
-    highscore_fd = -1;
-    signals_handle_tstp();
-    quit(0);
 }
 
 static void init_random_seed(player_type *player_ptr, bool new_game)
@@ -414,7 +376,6 @@ void play_game(player_type *player_ptr, bool new_game, bool browsing_movie)
         quit(_("セーブファイルが壊れています", "broken savefile"));
 
     extract_option_vars();
-    send_waiting_record(player_ptr);
     current_world_ptr->creating_savefile = new_game;
     init_random_seed(player_ptr, new_game);
     if (new_game)

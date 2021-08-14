@@ -19,7 +19,7 @@
 #include "game-option/text-display-options.h"
 #include "inventory/inventory-slot-types.h"
 #include "io/files-util.h"
-#include "io/report.h"
+
 #include "io/uid-checker.h"
 #include "monster-race/monster-race.h"
 #include "monster/monster-compaction.h"
@@ -204,10 +204,6 @@ static bool wr_savefile_new(player_type *player_ptr, save_type type)
 
     wr_s16b(player_ptr->pet_follow_distance);
     wr_s16b(player_ptr->pet_extra_flags);
-    if (screen_dump && (player_ptr->wait_report_score || !player_ptr->is_dead))
-        wr_string(screen_dump);
-    else
-        wr_string("");
 
     if (!player_ptr->is_dead) {
         if (!wr_dungeon(player_ptr))
