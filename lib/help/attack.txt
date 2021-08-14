@@ -1,6 +1,6 @@
 === Attacking and Weapons===
  
-Attacking is simple in Hengband. If you move into a creature, you
+Attacking is simple in SBband. If you move into a creature, you
 attack it. If you are wielding a weapon (including digging implements
 which are considered to be weapons) when you do so, the damage for the
 weapon is used when you hit a creature. Otherwise, you will attack with
@@ -70,14 +70,14 @@ when needed.
 
 Weapons have two main magical characteristics, their enchanted ability
 to hit and their enchanted ability to do damage, expressed as
-`(+#,+#)'. A normal weapon would be `(+0,+0)'. Many weapons in Hengband
+`(+#,+#)'. A normal weapon would be `(+0,+0)'. Many weapons in SBband
 have bonuses to hit and/or do damage. Some weapons are cursed, and have
 penalties that hurt the player. Cursed weapons cannot be unwielded
 until the curse is lifted. Identifying a weapon will inform you of the
 magical bonuses and penalties and whether or not it is cursed.
 
-Hengband assumes that your youth in the rough environment near the
-dungeons has taught you the relative merits of different weapons. Hengband
+SBband assumes that your youth in the rough environment near the
+dungeons has taught you the relative merits of different weapons. SBband
 displays as part of their description the damage dice which define
 their capabilities. Any damage enchantment is added to the dice roll
 for that weapon. The dice used for a given weapon is displayed as
@@ -229,7 +229,7 @@ Implement of Digging
 
 --- The Elemental and Other Brands ---
 
-For players of Angband, Zangband and older versions of Hengband, keep
+For players of Angband, Zangband and older versions of SBband, keep
 in mind that activations have been added to the weapons with the acid,
 electric, cold, fire or poison brands. Enjoy this new power to your
 heart's content!
@@ -291,7 +291,7 @@ Weapon of Force
 
 --- Weapons of Slay {Monster-Type} ---
 
-For players of Angband, Zangband and older version of Hengband, keep
+For players of Angband, Zangband and older version of SBband, keep
 in mind that the old weapons of Slay {Monster-Type} have been discontinued
 since they weren't particularly useful.  The old *Slay* {Monster-Type}
 weapons are now Slay {Monster-Type}, and some of those that still seemed
@@ -376,7 +376,7 @@ Morgul Weapon
     aggravates nearby monsters and is randomly and powerfully
     cursed.
 
-    For players of Angband, Zangband or older versions of Hengband,
+    For players of Angband, Zangband or older versions of SBband,
     keep in mind that Morgul weapons have become more powerful. It
     seems that some maintainers have been corrupted by Morgoth,
     and the dark powers that lie to the free people of Middle-earth
@@ -465,7 +465,7 @@ usually have more abilities and are very powerful. Artifacts never
 break.  However, they may deteriorate and, if caught in the effect
 range of *destruction*, may disappear forever.
 
-In Hengband, there are two types of artifacts: fixed and random.
+In SBband, there are two types of artifacts: fixed and random.
 A fixed artifact has a predetermined name and attributes, so,
 if you play the game many times, you may encounter the same fixed
 artifact. The name and attributes of a random artifact are determined
@@ -501,7 +501,7 @@ berserker), and allow you to cast spells.
 === Monk Attacks ===
 
 A Monk or a ForceTrainer prefer to fight barehanded rather than
-use a weapon like other characters in Hengband.  As a Monk's
+use a weapon like other characters in SBband.  As a Monk's
 level increases, the number of attacks he or she gets per round
 increases and new, increasingly powerful attacks become available.
 Higher level attacks have a chance to stun the Monk's opponent.
@@ -552,7 +552,7 @@ away diagonally to another face of the pillar, out of its line of
 sight. You then repeat that procedure when the opponent moves into
 your field of view.
 
-In Hengband, that tactic is not recommended. Movement has a
+In SBband, that tactic is not recommended. Movement has a
 randomized component so you won't be able to avoid all of the
 opponent's attacks with pillardancing.
 

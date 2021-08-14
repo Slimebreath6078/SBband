@@ -1,12 +1,12 @@
 === General Information ===
 
-This document gives a brief introduction to Hengband. You will probably
+This document gives a brief introduction to SBband. You will probably
 want to browse through all the "help files", especially the sections on
 available commands (see command.txt [b] and commdesc.txt [c]), before
 beginning any serious adventuring...
 
 
-The game of Hengband is a single player dungeon simulation. A player
+The game of SBband is a single player dungeon simulation. A player
 may choose from a number of races, classes and magic realms when
 creating a character (see birth.hlp [d]), and then "run" that
 character over a period of days, weeks, even months. Deep down inside,

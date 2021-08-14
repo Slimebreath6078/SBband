@@ -42,8 +42,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{C00503B6-18FF-42F1-BAC0-6C94EDE62CB2}</ProjectGuid>
-    <RootNamespace>Hengband</RootNamespace>
+    <ProjectGuid>{A634FD6D-71B0-4D30-BA26-861C82EA42C9}</ProjectGuid>
+    <RootNamespace>SBband</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
