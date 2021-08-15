@@ -16,19 +16,21 @@
  */
 void rd_version_info(void)
 {
-    byte fake_major;
-    rd_byte(&fake_major);
 
-    strip_bytes(3);
+    load_xor_byte = 0; 
+    rd_byte(&current_world_ptr->h_ver_extra); 
+    load_xor_byte = 0;
+    rd_byte(&current_world_ptr->h_ver_patch);
+    load_xor_byte = 0;
+    rd_byte(&current_world_ptr->h_ver_minor);
+    load_xor_byte = 0;
+    rd_byte(&current_world_ptr->h_ver_major);
+
+    strip_bytes(1);
+
     load_xor_byte = current_world_ptr->sf_extra;
     v_check = 0L;
     x_check = 0L;
-
-    /* Old savefile will be version 0.0.0.3 */
-    rd_byte(&current_world_ptr->h_ver_extra);
-    rd_byte(&current_world_ptr->h_ver_patch);
-    rd_byte(&current_world_ptr->h_ver_minor);
-    rd_byte(&current_world_ptr->h_ver_major);
 
     rd_u32b(&current_world_ptr->sf_system);
     rd_u32b(&current_world_ptr->sf_when);
@@ -36,10 +38,6 @@ void rd_version_info(void)
     rd_u16b(&current_world_ptr->sf_saves);
 
     rd_u32b(&loading_savefile_version);
-
-    /* h_ver_majorがfake_ver_majorと同じだったころへの対策 */
-    if (fake_major - current_world_ptr->h_ver_major < FAKE_VER_PLUS)
-        current_world_ptr->h_ver_major -= FAKE_VER_PLUS;
 
     load_note(format(_("バージョン %d.%d.%d のセーブデータ(SAVE%lu形式)をロード中...", "Loading a Verison %d.%d.%d savefile (SAVE%lu format)..."),
         current_world_ptr->h_ver_major, current_world_ptr->h_ver_minor, current_world_ptr->h_ver_patch,

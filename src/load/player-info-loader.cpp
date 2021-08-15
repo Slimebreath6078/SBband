@@ -240,7 +240,6 @@ static void rd_bad_status(player_type *creature_ptr)
 static void rd_energy(player_type *creature_ptr)
 {
     rd_s16b(&creature_ptr->energy_need);
-    creature_ptr->energy_need = 100 - creature_ptr->energy_need;
 
     rd_s16b(&creature_ptr->enchant_energy_need);
 }

@@ -144,7 +144,7 @@ errr top_twenty(player_type *current_player_ptr)
     (void)WIPE(&the_score, high_score);
 
     /* Save the version */
-    sprintf(the_score.what, "%u.%u.%u", FAKE_VER_MAJOR, FAKE_VER_MINOR, FAKE_VER_PATCH);
+    sprintf(the_score.what, "%u.%u.%u", H_VER_MAJOR, H_VER_MINOR, H_VER_PATCH);
 
     /* Calculate and save the points */
     sprintf(the_score.pts, "%9ld", (long)calc_score(current_player_ptr));
@@ -252,7 +252,7 @@ errr predict_score(player_type *current_player_ptr)
     }
 
     /* Save the version */
-    sprintf(the_score.what, "%u.%u.%u", FAKE_VER_MAJOR, FAKE_VER_MINOR, FAKE_VER_PATCH);
+    sprintf(the_score.what, "%u.%u.%u", H_VER_MAJOR, H_VER_MINOR, H_VER_PATCH);
 
     /* Calculate and save the points */
     sprintf(the_score.pts, "%9ld", (long)calc_score(current_player_ptr));

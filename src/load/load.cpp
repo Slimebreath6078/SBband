@@ -270,7 +270,7 @@ bool load_savedata(player_type *player_ptr, bool *new_game)
 
     bool err = false;
     int fd = -1;
-    byte fake_ver[4];
+    byte h_ver[5];
     if (!err) {
         fd = fd_open(savefile, O_RDONLY);
         if (fd < 0)
@@ -281,7 +281,7 @@ bool load_savedata(player_type *player_ptr, bool *new_game)
     }
 
     if (!err) {
-        if (fd_read(fd, (char *)(fake_ver), 4))
+        if (fd_read(fd, (char *)(h_ver), 5))
             err = true;
 
         if (err)
@@ -290,20 +290,13 @@ bool load_savedata(player_type *player_ptr, bool *new_game)
         (void)fd_close(fd);
     }
 
-    if (!err) {
-        if (fake_ver[0] < FAKE_VER_PLUS) {
-            what = _("セーブデータが古すぎます", "Savefile version is too old");
-            err = true;
-        }
-    }
+    current_world_ptr->sf_extra = h_ver[4];
 
     if (err) {
         msg_format("%s: %s", what, savefile);
         msg_print(NULL);
         return false;
     }
-
-    current_world_ptr->sf_extra = fake_ver[3];
 
     if (!err) {
         term_clear();
