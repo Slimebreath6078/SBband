@@ -14,15 +14,15 @@
  * Upper compatibility is always guaranteed when it is more than 1.0.0 .
  * </pre>
  */
-#define H_VER_MAJOR  3 //!< ゲームのバージョン定義(メジャー番号)
+#define H_VER_MAJOR  0 //!< ゲームのバージョン定義(メジャー番号)
 #define H_VER_MINOR  0 //!< ゲームのバージョン定義(マイナー番号)
-#define H_VER_PATCH  0 //!< ゲームのバージョン定義(パッチ番号)
-#define H_VER_EXTRA 35 //!< ゲームのバージョン定義(エクストラ番号)
+#define H_VER_PATCH  1 //!< ゲームのバージョン定義(パッチ番号)
+#define H_VER_EXTRA  0 //!< ゲームのバージョン定義(エクストラ番号)
 
 /*!
  * @brief セーブファイルのバージョン(3.0.0から導入)
  */
-constexpr u32b SAVEFILE_VERSION = 5;
+constexpr u32b SAVEFILE_VERSION = 1;
 
 /*!
  * @brief バージョンが開発版が安定版かを返す(廃止予定)
@@ -43,7 +43,7 @@ constexpr u32b SAVEFILE_VERSION = 5;
  * FAKE_VER_MAJOR=1,2 were reserved for ZAngband version 1.x.x/2.x.x .
  * </pre>
  */
-#define FAKE_VER_PLUS 10 //!< 偽バージョン番号としていくつ足すか
+#define FAKE_VER_PLUS 0 //!< 偽バージョン番号としていくつ足すか
 #define FAKE_VER_MAJOR (H_VER_MAJOR + FAKE_VER_PLUS) //!< 偽バージョン番号定義(メジャー番号) */
 #define FAKE_VER_MINOR H_VER_MINOR //!< 偽バージョン番号定義(マイナー番号) */
 #define FAKE_VER_PATCH H_VER_PATCH //!< 偽バージョン番号定義(パッチ番号) */

@@ -1,7 +1,6 @@
 ﻿#include "load/monster-loader.h"
 #include "load/angband-version-comparer.h"
 #include "load/load-util.h"
-#include "load/load-v1-5-0.h"
 #include "load/savedata-flag-types.h"
 #include "system/monster-type-definition.h"
 #include "system/player-type-definition.h"
@@ -12,13 +11,8 @@
  * @param player_ptr プレーヤーへの参照ポインタ
  * @param m_ptr モンスター保存先ポインタ
  */
-void rd_monster(player_type *player_ptr, monster_type *m_ptr)
+void rd_monster(monster_type *m_ptr)
 {
-    if (h_older_than(1, 5, 0, 0)) {
-        rd_monster_old(player_ptr, m_ptr);
-        return;
-    }
-
     BIT_FLAGS flags;
     rd_u32b(&flags);
     rd_s16b(&m_ptr->r_idx);
@@ -36,11 +30,7 @@ void rd_monster(player_type *player_ptr, monster_type *m_ptr)
     rd_s16b(&tmp16s);
     m_ptr->max_maxhp = (HIT_POINT)tmp16s;
 
-    if (h_older_than(2, 1, 2, 1)) {
-        m_ptr->dealt_damage = 0;
-    } else {
-        rd_s32b(&m_ptr->dealt_damage);
-    }
+    rd_s32b(&m_ptr->dealt_damage);
 
     if (flags & SAVE_MON_AP_R_IDX)
         rd_s16b(&m_ptr->ap_r_idx);
@@ -114,24 +104,7 @@ void rd_monster(player_type *player_ptr, monster_type *m_ptr)
     m_ptr->mflag2.clear();
 
     if (flags & SAVE_MON_SMART) {
-        if (loading_savefile_version_is_older_than(2)) {
-            u32b tmp32u;
-            rd_u32b(&tmp32u);
-            std::bitset<32> rd_bits(tmp32u);
-            for (size_t i = 0; i < std::min(m_ptr->smart.size(), rd_bits.size()); i++) {
-                auto f = static_cast<SM>(i);
-                m_ptr->smart[f] = rd_bits[i];
-            }
-
-            // 3.0.0Alpha10以前のSM_CLONED(ビット位置22)、SM_PET(23)、SM_FRIEDLY(28)をMFLAG2に移行する
-            // ビット位置の定義はなくなるので、ビット位置の値をハードコードする。
-            m_ptr->mflag2[MFLAG2::CLONED] = rd_bits[22];
-            m_ptr->mflag2[MFLAG2::PET] = rd_bits[23];
-            m_ptr->mflag2[MFLAG2::FRIENDLY] = rd_bits[28];
-            m_ptr->smart.reset(static_cast<SM>(22)).reset(static_cast<SM>(23)).reset(static_cast<SM>(28));
-        } else {
-            rd_FlagGroup(m_ptr->smart, rd_byte);
-        }
+        rd_FlagGroup(m_ptr->smart, rd_byte);
     } else {
         m_ptr->smart.clear();
     }
@@ -144,17 +117,7 @@ void rd_monster(player_type *player_ptr, monster_type *m_ptr)
         m_ptr->exp = 0;
 
     if (flags & SAVE_MON_MFLAG2) {
-        if (loading_savefile_version_is_older_than(2)) {
-            rd_byte(&tmp8u);
-            constexpr auto base = static_cast<int>(MFLAG2::KAGE);
-            std::bitset<7> rd_bits(tmp8u);
-            for (size_t i = 0; i < std::min(m_ptr->mflag2.size(), rd_bits.size()); ++i) {
-                auto f = static_cast<MFLAG2>(base + i);
-                m_ptr->mflag2[f] = rd_bits[i];
-            }
-        } else {
-            rd_FlagGroup(m_ptr->mflag2, rd_byte);
-        }
+        rd_FlagGroup(m_ptr->mflag2, rd_byte);
     }
 
     if (flags & SAVE_MON_NICKNAME) {

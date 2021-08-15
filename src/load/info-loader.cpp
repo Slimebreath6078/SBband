@@ -63,19 +63,6 @@ void rd_randomizer(void)
  */
 void rd_messages(void)
 {
-    if (h_older_than(2, 2, 0, 75)) {
-        u16b num;
-        rd_u16b(&num);
-        int message_max;
-        message_max = (int)num;
-
-        for (int i = 0; i < message_max; i++) {
-            char buf[128];
-            rd_string(buf, sizeof(buf));
-            message_add(buf);
-        }
-    }
-
     u32b num;
     rd_u32b(&num);
     int message_max = (int)num;

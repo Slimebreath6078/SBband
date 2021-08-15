@@ -11,11 +11,6 @@
  */
 void load_quick_start(void)
 {
-    if (h_older_than(1, 0, 13)) {
-        previous_char.quick_ok = false;
-        return;
-    }
-
     rd_byte(&previous_char.psex);
     byte tmp8u;
     rd_byte(&tmp8u);

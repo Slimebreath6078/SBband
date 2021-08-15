@@ -1466,9 +1466,6 @@
     <ClCompile Include="..\..\src\load\load-util.cpp">
       <Filter>load</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\load\load-v1-5-0.cpp">
-      <Filter>load</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\load\item-loader.cpp">
       <Filter>load</Filter>
     </ClCompile>
@@ -1491,12 +1488,6 @@
       <Filter>load</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\load\extra-loader.cpp">
-      <Filter>load</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\load\load-v1-3-0.cpp">
-      <Filter>load</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\load\load-v1-7-0.cpp">
       <Filter>load</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\load\player-info-loader.cpp">
@@ -4043,9 +4034,6 @@
     <ClInclude Include="..\..\src\load\load-util.h">
       <Filter>load</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\load\load-v1-5-0.h">
-      <Filter>load</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\load\item-loader.h">
       <Filter>load</Filter>
     </ClInclude>
@@ -4071,12 +4059,6 @@
       <Filter>load</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\load\extra-loader.h">
-      <Filter>load</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\load\load-v1-3-0.h">
-      <Filter>load</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\load\load-v1-7-0.h">
       <Filter>load</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\load\player-info-loader.h">

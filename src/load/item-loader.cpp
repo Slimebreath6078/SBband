@@ -3,7 +3,6 @@
 #include "game-option/runtime-arguments.h"
 #include "load/angband-version-comparer.h"
 #include "load/load-util.h"
-#include "load/load-v1-5-0.h"
 #include "load/savedata-flag-types.h"
 #include "object-enchant/object-ego.h"
 #include "object-enchant/tr-types.h"
@@ -21,13 +20,8 @@
  * @brief アイテムオブジェクトを読み込む(現版) / Read an object (New method)
  * @param o_ptr アイテムオブジェクト保存先ポインタ
  */
-void rd_item(player_type *player_ptr, object_type *o_ptr)
+void rd_item(object_type *o_ptr)
 {
-    if (h_older_than(1, 5, 0, 0)) {
-        rd_item_old(player_ptr, o_ptr);
-        return;
-    }
-
     BIT_FLAGS flags;
     rd_u32b(&flags);
     rd_s16b(&o_ptr->k_idx);
@@ -63,13 +57,8 @@ void rd_item(player_type *player_ptr, object_type *o_ptr)
     o_ptr->weight = tmp16s;
 
     if (flags & SAVE_ITEM_NAME1) {
-        if (h_older_than(3, 0, 0, 2)) {
-            rd_byte(&tmp8u);
-            o_ptr->name1 = tmp8u;
-        } else {
             rd_s16b(&tmp16s);
             o_ptr->name1 = tmp16s;
-        }
     } else
         o_ptr->name1 = 0;
 
@@ -154,17 +143,7 @@ void rd_item(player_type *player_ptr, object_type *o_ptr)
         o_ptr->art_flags[4] = 0;
 
     if (flags & SAVE_ITEM_CURSE_FLAGS) {
-        if (loading_savefile_version_is_older_than(5)) {
-            u32b tmp32u;
-            rd_u32b(&tmp32u);
-            std::bitset<32> rd_bits_cursed_flags(tmp32u);
-            for (size_t i = 0; i < std::min(o_ptr->curse_flags.size(), rd_bits_cursed_flags.size()); i++) {
-                auto f = static_cast<TRC>(i);
-                o_ptr->curse_flags[f] = rd_bits_cursed_flags[i];
-            }
-        } else {
-            rd_FlagGroup(o_ptr->curse_flags, rd_byte);
-        }
+        rd_FlagGroup(o_ptr->curse_flags, rd_byte);
     } else {
         o_ptr->curse_flags.clear();
     }
@@ -182,13 +161,8 @@ void rd_item(player_type *player_ptr, object_type *o_ptr)
         o_ptr->xtra1 = 0;
 
     if (flags & SAVE_ITEM_XTRA2) {
-        if (h_older_than(3, 0, 0, 2)) {
-            rd_byte(&tmp8u);
-            o_ptr->xtra2 = tmp8u;
-        } else {
             rd_s16b(&tmp16s);
             o_ptr->xtra2 = tmp16s;
-        }
     } else
         o_ptr->xtra2 = 0;
 
@@ -230,61 +204,6 @@ void rd_item(player_type *player_ptr, object_type *o_ptr)
         o_ptr->art_name = quark_add(buf);
     } else {
         o_ptr->art_name = 0;
-    }
-
-    if (!h_older_than(2, 1, 2, 4))
-        return;
-
-    BIT_FLAGS flgs[TR_FLAG_SIZE];
-    object_flags(player_ptr, o_ptr, flgs);
-
-    if ((o_ptr->name2 == EGO_DARK) || (o_ptr->name2 == EGO_ANCIENT_CURSE) || (o_ptr->name1 == ART_NIGHT)) {
-        add_flag(o_ptr->art_flags, TR_LITE_M1);
-        remove_flag(o_ptr->art_flags, TR_LITE_1);
-        remove_flag(o_ptr->art_flags, TR_LITE_2);
-        remove_flag(o_ptr->art_flags, TR_LITE_3);
-        return;
-    }
-
-    if (o_ptr->name2 == EGO_LITE_DARKNESS) {
-        if (o_ptr->tval != TV_LITE) {
-            add_flag(o_ptr->art_flags, TR_LITE_M1);
-            return;
-        }
-
-        if (o_ptr->sval == SV_LITE_TORCH) {
-            add_flag(o_ptr->art_flags, TR_LITE_M1);
-        } else if (o_ptr->sval == SV_LITE_LANTERN) {
-            add_flag(o_ptr->art_flags, TR_LITE_M2);
-        } else if (o_ptr->sval == SV_LITE_FEANOR) {
-            add_flag(o_ptr->art_flags, TR_LITE_M3);
-        }
-
-        return;
-    }
-
-    if (o_ptr->tval == TV_LITE) {
-        if (object_is_fixed_artifact(o_ptr)) {
-            add_flag(o_ptr->art_flags, TR_LITE_3);
-            return;
-        }
-
-        if (o_ptr->sval == SV_LITE_TORCH) {
-            add_flag(o_ptr->art_flags, TR_LITE_1);
-            add_flag(o_ptr->art_flags, TR_LITE_FUEL);
-            return;
-        }
-
-        if (o_ptr->sval == SV_LITE_LANTERN) {
-            add_flag(o_ptr->art_flags, TR_LITE_2);
-            add_flag(o_ptr->art_flags, TR_LITE_FUEL);
-            return;
-        }
-
-        if (o_ptr->sval == SV_LITE_FEANOR) {
-            add_flag(o_ptr->art_flags, TR_LITE_2);
-            return;
-        }
     }
 }
 
@@ -337,14 +256,7 @@ errr load_artifact(void)
 
         rd_byte(&tmp8u);
         a_ptr->cur_num = tmp8u;
-        if (h_older_than(1, 5, 0, 0)) {
-            a_ptr->floor_id = 0;
-            rd_byte(&tmp8u);
-            rd_byte(&tmp8u);
-            rd_byte(&tmp8u);
-        } else {
-            rd_s16b(&a_ptr->floor_id);
-        }
+        rd_s16b(&a_ptr->floor_id);
     }
 
     if (arg_fiddle)

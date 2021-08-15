@@ -24,8 +24,6 @@
 #include "load/inventory-loader.h"
 #include "load/item-loader.h"
 #include "load/load-util.h"
-#include "load/load-v1-5-0.h"
-#include "load/load-v1-7-0.h"
 #include "load/load-zangband.h"
 #include "load/lore-loader.h"
 #include "load/option-loader.h"
@@ -52,9 +50,6 @@
  */
 static errr load_town_quest(player_type *creature_ptr)
 {
-    if (h_older_than(2, 1, 3))
-        return 0;
-
     errr load_town_result = load_town();
     if (load_town_result != 0)
         return load_town_result;
@@ -67,12 +62,6 @@ static errr load_town_quest(player_type *creature_ptr)
 
     analyze_quests(creature_ptr, max_quests_load, max_rquests_load);
 
-    /* Quest 18 was removed */
-    if (h_older_than(1, 7, 0, 6)) {
-        (void)WIPE(&quest[OLD_QUEST_WATER_CAVE], quest_type);
-        quest[OLD_QUEST_WATER_CAVE].status = QUEST_STATUS_UNTAKEN;
-    }
-
     load_wilderness_info(creature_ptr);
     return analyze_wilderness();
 }
@@ -82,9 +71,6 @@ static errr load_town_quest(player_type *creature_ptr)
  */
 static void rd_total_play_time()
 {
-    if (loading_savefile_version_is_older_than(4))
-        return;
-
     rd_u32b(&current_world_ptr->sf_play_time);
 }
 
@@ -93,9 +79,6 @@ static void rd_total_play_time()
  */
 static void rd_winner_class()
 {
-    if (loading_savefile_version_is_older_than(4))
-        return;
-
     rd_FlagGroup(current_world_ptr->sf_winner, rd_byte);
     rd_FlagGroup(current_world_ptr->sf_retired, rd_byte);
 }
@@ -145,16 +128,8 @@ static void load_spells(player_type *creature_ptr)
     rd_u32b(&creature_ptr->spell_worked2);
     rd_u32b(&creature_ptr->spell_forgotten1);
     rd_u32b(&creature_ptr->spell_forgotten2);
-
-    if (h_older_than(0, 0, 5))
-        set_zangband_learnt_spells(creature_ptr);
-    else
-        rd_s16b(&creature_ptr->learned_spells);
-
-    if (h_older_than(0, 0, 6))
-        creature_ptr->add_spells = 0;
-    else
-        rd_s16b(&creature_ptr->add_spells);
+    rd_s16b(&creature_ptr->learned_spells);
+    rd_s16b(&creature_ptr->add_spells);
 }
 
 static errr verify_checksum()
@@ -220,7 +195,6 @@ static errr exe_reading_savefile(player_type *creature_ptr)
     cp_ptr = &class_info[creature_ptr->pclass];
     ap_ptr = &personality_info[creature_ptr->pseikaku];
 
-    set_zangband_class(creature_ptr);
     mp_ptr = &m_info[creature_ptr->pclass];
 
     load_spells(creature_ptr);
@@ -236,17 +210,11 @@ static errr exe_reading_savefile(player_type *creature_ptr)
         return load_store_result;
 
     rd_s16b(&creature_ptr->pet_follow_distance);
-    if (h_older_than(0, 4, 10))
-        set_zangband_pet(creature_ptr);
-    else
-        rd_s16b(&creature_ptr->pet_extra_flags);
+    rd_s16b(&creature_ptr->pet_extra_flags);
 
     errr restore_dungeon_result = restore_dungeon(creature_ptr);
     if (restore_dungeon_result != 0)
         return restore_dungeon_result;
-
-    if (h_older_than(1, 7, 0, 6))
-        remove_water_cave(creature_ptr);
 
     errr checksum_result = verify_checksum();
     if (checksum_result != 0)

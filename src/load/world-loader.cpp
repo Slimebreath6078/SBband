@@ -26,10 +26,7 @@ static void rd_hengband_dungeons(void)
 
 void rd_dungeons(player_type *creature_ptr)
 {
-    if (h_older_than(0, 3, 8))
-        rd_zangband_dungeon();
-    else
-        rd_hengband_dungeons();
+    rd_hengband_dungeons();
 
     if (creature_ptr->max_plv < creature_ptr->lev)
         creature_ptr->max_plv = creature_ptr->lev;
@@ -42,17 +39,10 @@ void rd_dungeons(player_type *creature_ptr)
 void rd_alter_reality(player_type *creature_ptr)
 {
     s16b tmp16s;
-    if (h_older_than(0, 3, 8))
-        creature_ptr->recall_dungeon = DUNGEON_ANGBAND;
-    else {
-        rd_s16b(&tmp16s);
-        creature_ptr->recall_dungeon = (byte)tmp16s;
-    }
+    rd_s16b(&tmp16s);
+    creature_ptr->recall_dungeon = (byte)tmp16s;
 
-    if (h_older_than(1, 5, 0, 0))
-        creature_ptr->alter_reality = 0;
-    else
-        rd_s16b(&creature_ptr->alter_reality);
+    rd_s16b(&creature_ptr->alter_reality);
 }
 
 void set_gambling_monsters(void)
@@ -60,10 +50,7 @@ void set_gambling_monsters(void)
     const int max_gambling_monsters = 4;
     for (int i = 0; i < max_gambling_monsters; i++) {
         rd_s16b(&battle_mon[i]);
-        if (h_older_than(0, 3, 4))
-            set_zangband_gambling_monsters(i);
-        else
-            rd_u32b(&mon_odds[i]);
+        rd_u32b(&mon_odds[i]);
     }
 }
 
@@ -97,45 +84,19 @@ static void rd_world_info(player_type *creature_ptr)
     set_undead_turn_limit(creature_ptr);
     current_world_ptr->dungeon_turn_limit = TURNS_PER_TICK * TOWN_DAWN * (MAX_DAYS - 1) + TURNS_PER_TICK * TOWN_DAWN * 3 / 4;
     rd_s32b(&creature_ptr->current_floor_ptr->generated_turn);
-    if (h_older_than(1, 7, 0, 4))
-        creature_ptr->feeling_turn = creature_ptr->current_floor_ptr->generated_turn;
-    else
-        rd_s32b(&creature_ptr->feeling_turn);
+    rd_s32b(&creature_ptr->feeling_turn);
 
     rd_s32b(&current_world_ptr->game_turn);
-    if (h_older_than(0, 3, 12))
-        current_world_ptr->dungeon_turn = current_world_ptr->game_turn;
-    else
-        rd_s32b(&current_world_ptr->dungeon_turn);
+    rd_s32b(&current_world_ptr->dungeon_turn);
 
-    if (h_older_than(1, 0, 13))
-        set_zangband_game_turns(creature_ptr);
+    rd_s32b(&current_world_ptr->arena_start_turn);
 
-    if (h_older_than(0, 3, 13))
-        current_world_ptr->arena_start_turn = current_world_ptr->game_turn;
-    else
-        rd_s32b(&current_world_ptr->arena_start_turn);
-
-    if (h_older_than(0, 0, 3))
-        determine_daily_bounty(creature_ptr, true);
-    else {
-        rd_s16b(&current_world_ptr->today_mon);
-        rd_s16b(&creature_ptr->today_mon);
-    }
+    rd_s16b(&current_world_ptr->today_mon);
+    rd_s16b(&creature_ptr->today_mon);
 }
 
 void rd_visited_towns(player_type *creature_ptr)
 {
-    if (h_older_than(0, 3, 9)) {
-        creature_ptr->visit = 1L;
-        return;
-    }
-
-    if (h_older_than(0, 3, 10)) {
-        set_zangband_visited_towns(creature_ptr);
-        return;
-    }
-
     s32b tmp32s;
     rd_s32b(&tmp32s);
     creature_ptr->visit = (BIT_FLAGS)tmp32s;
@@ -162,20 +123,10 @@ void load_wilderness_info(player_type *creature_ptr)
 {
     rd_s32b(&creature_ptr->wilderness_x);
     rd_s32b(&creature_ptr->wilderness_y);
-    if (h_older_than(0, 3, 13)) {
-        creature_ptr->wilderness_x = 5;
-        creature_ptr->wilderness_y = 48;
-    }
+    
+    rd_byte((byte *)&creature_ptr->wild_mode);
 
-    if (h_older_than(0, 3, 7))
-        creature_ptr->wild_mode = false;
-    else
-        rd_byte((byte *)&creature_ptr->wild_mode);
-
-    if (h_older_than(0, 3, 7))
-        creature_ptr->ambush_flag = false;
-    else
-        rd_byte((byte *)&creature_ptr->ambush_flag);
+    rd_byte((byte *)&creature_ptr->ambush_flag);
 }
 
 errr analyze_wilderness(void)

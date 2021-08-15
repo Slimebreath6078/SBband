@@ -5,8 +5,6 @@
 #include "load/birth-loader.h"
 #include "load/dummy-loader.h"
 #include "load/load-util.h"
-#include "load/load-v1-3-0.h"
-#include "load/load-v1-7-0.h"
 #include "load/load-zangband.h"
 #include "load/player-attack-loader.h"
 #include "load/world-loader.h"
@@ -48,12 +46,10 @@ void rd_base_info(player_type *creature_ptr)
 {
     rd_string(creature_ptr->name, sizeof(creature_ptr->name));
     rd_string(creature_ptr->died_from, sizeof(creature_ptr->died_from));
-    if (!h_older_than(1, 7, 0, 1)) {
-        char buf[1024];
-        rd_string(buf, sizeof buf);
-        if (buf[0])
-            creature_ptr->last_message = string_make(buf);
-    }
+    char buf[1024];
+    rd_string(buf, sizeof buf);
+    if (buf[0])
+        creature_ptr->last_message = string_make(buf);
 
     load_quick_start();
     const int max_history_lines = 4;
@@ -75,8 +71,6 @@ void rd_base_info(player_type *creature_ptr)
     rd_realms(creature_ptr);
 
     rd_byte(&tmp8u);
-    if (h_older_than(0, 4, 4))
-        set_zangband_realm(creature_ptr);
 
     rd_byte(&tmp8u);
     creature_ptr->hitdie = (DICE_SID)tmp8u;
@@ -90,26 +84,16 @@ void rd_base_info(player_type *creature_ptr)
 void rd_experience(player_type *creature_ptr)
 {
     rd_s32b(&creature_ptr->max_exp);
-    if (h_older_than(1, 5, 4, 1))
-        creature_ptr->max_max_exp = creature_ptr->max_exp;
-    else
-        rd_s32b(&creature_ptr->max_max_exp);
+    rd_s32b(&creature_ptr->max_max_exp);
 
     rd_s32b(&creature_ptr->exp);
-    if (h_older_than(1, 7, 0, 3))
-        set_exp_frac_old(creature_ptr);
-    else
-        rd_u32b(&creature_ptr->exp_frac);
+    rd_u32b(&creature_ptr->exp_frac);
 
     rd_s16b(&creature_ptr->lev);
     for (int i = 0; i < 64; i++)
         rd_s16b(&creature_ptr->spell_exp[i]);
 
-    if ((creature_ptr->pclass == CLASS_SORCERER) && h_older_than(0, 4, 2))
-        for (int i = 0; i < 64; i++)
-            creature_ptr->spell_exp[i] = SPELL_EXP_MASTER;
-
-    const int max_weapon_exp_size = h_older_than(0, 3, 6) ? 60 : 64;
+    const int max_weapon_exp_size = 64;
     for (int i = 0; i < 5; i++)
         for (int j = 0; j < max_weapon_exp_size; j++)
             rd_s16b(&creature_ptr->weapon_exp[i][j]);
@@ -125,20 +109,11 @@ static void set_spells(player_type *creature_ptr)
 
     for (int i = 0; i < MAX_SPELLS; i++)
         rd_byte(&creature_ptr->magic_num2[i]);
-
-    if (h_older_than(1, 3, 0, 1))
-        set_spells_old(creature_ptr);
 }
 
 void rd_skills(player_type *creature_ptr)
 {
-    if (h_older_than(0, 4, 1))
-        set_zangband_skill(creature_ptr);
-
-    if (h_older_than(0, 3, 14))
-        set_zangband_spells(creature_ptr);
-    else
-        set_spells(creature_ptr);
+    set_spells(creature_ptr);
 
     if (music_singing_any(creature_ptr))
         creature_ptr->action = ACTION_SING;
@@ -159,21 +134,11 @@ static void set_race(player_type *creature_ptr)
 
 void rd_race(player_type *creature_ptr)
 {
-    if (h_older_than(1, 0, 7)) {
-        set_zangband_race(creature_ptr);
-        return;
-    }
-
     set_race(creature_ptr);
 }
 
-void rd_bounty_uniques(player_type *creature_ptr)
+void rd_bounty_uniques()
 {
-    if (h_older_than(0, 0, 3)) {
-        set_zangband_bounty_uniques(creature_ptr);
-        return;
-    }
-
     for (int i = 0; i < MAX_BOUNTY; i++)
         rd_s16b(&current_world_ptr->bounty_r_idx[i]);
 }
@@ -196,34 +161,6 @@ static void rd_base_status(player_type *creature_ptr)
 
 static void set_imitation(player_type *creature_ptr)
 {
-    if (h_older_than(0, 0, 1)) {
-        for (int i = 0; i < MAX_MANE; i++) {
-            creature_ptr->mane_spell[i] = RF_ABILITY::MAX;
-            creature_ptr->mane_dam[i] = 0;
-        }
-
-        creature_ptr->mane_num = 0;
-        return;
-    }
-
-    if (h_older_than(0, 2, 3)) {
-        s16b tmp16s;
-        const int OLD_MAX_MANE = 22;
-        for (int i = 0; i < OLD_MAX_MANE; i++) {
-            rd_s16b(&tmp16s);
-            rd_s16b(&tmp16s);
-        }
-
-        for (int i = 0; i < MAX_MANE; i++) {
-            creature_ptr->mane_spell[i] = RF_ABILITY::MAX;
-            creature_ptr->mane_dam[i] = 0;
-        }
-
-        rd_s16b(&tmp16s);
-        creature_ptr->mane_num = 0;
-        return;
-    }
-
     for (int i = 0; i < MAX_MANE; i++) {
         s16b tmp16s;
         rd_s16b(&tmp16s);
@@ -241,26 +178,16 @@ static void rd_phase_out(player_type *creature_ptr)
     rd_s16b(&tmp16s);
     creature_ptr->current_floor_ptr->inside_arena = (bool)tmp16s;
     rd_s16b(&creature_ptr->current_floor_ptr->inside_quest);
-    if (h_older_than(0, 3, 5))
-        creature_ptr->phase_out = false;
-    else {
-        rd_s16b(&tmp16s);
-        creature_ptr->phase_out = (bool)tmp16s;
-    }
+    rd_s16b(&tmp16s);
+    creature_ptr->phase_out = (bool)tmp16s;
 }
 
 static void rd_arena(player_type *creature_ptr)
 {
-    if (h_older_than(0, 0, 3))
-        update_gambling_monsters(creature_ptr);
-    else
-        set_gambling_monsters();
+    set_gambling_monsters();
 
     rd_s16b(&creature_ptr->town_num);
     rd_s16b(&creature_ptr->arena_number);
-    if (h_older_than(1, 5, 0, 1))
-        if (creature_ptr->arena_number >= 99)
-            creature_ptr->arena_number = ARENA_DEFEATED_OLD_VER;
 
     rd_phase_out(creature_ptr);
     byte tmp8u;
@@ -272,10 +199,6 @@ static void rd_arena(player_type *creature_ptr)
     creature_ptr->oldpx = (POSITION)tmp16s;
     rd_s16b(&tmp16s);
     creature_ptr->oldpy = (POSITION)tmp16s;
-    if (h_older_than(0, 3, 13) && !is_in_dungeon(creature_ptr) && !creature_ptr->current_floor_ptr->inside_arena) {
-        creature_ptr->oldpy = 33;
-        creature_ptr->oldpx = 131;
-    }
 }
 
 /*!
@@ -284,11 +207,6 @@ static void rd_arena(player_type *creature_ptr)
  */
 static void rd_hp(player_type *creature_ptr)
 {
-    if (h_older_than(1, 7, 0, 3)) {
-        set_hp_old(creature_ptr);
-        return;
-    }
-
     rd_s32b(&creature_ptr->mhp);
     rd_s32b(&creature_ptr->chp);
     rd_u32b(&creature_ptr->chp_frac);
@@ -300,11 +218,6 @@ static void rd_hp(player_type *creature_ptr)
  */
 static void rd_mana(player_type *creature_ptr)
 {
-    if (h_older_than(1, 7, 0, 3)) {
-        set_mana_old(creature_ptr);
-        return;
-    }
-
     rd_s32b(&creature_ptr->msp);
     rd_s32b(&creature_ptr->csp);
     rd_u32b(&creature_ptr->csp_frac);
@@ -327,13 +240,9 @@ static void rd_bad_status(player_type *creature_ptr)
 static void rd_energy(player_type *creature_ptr)
 {
     rd_s16b(&creature_ptr->energy_need);
-    if (h_older_than(1, 0, 13))
-        creature_ptr->energy_need = 100 - creature_ptr->energy_need;
+    creature_ptr->energy_need = 100 - creature_ptr->energy_need;
 
-    if (h_older_than(2, 1, 2, 0))
-        creature_ptr->enchant_energy_need = 0;
-    else
-        rd_s16b(&creature_ptr->enchant_energy_need);
+    rd_s16b(&creature_ptr->enchant_energy_need);
 }
 
 /*!
@@ -352,18 +261,12 @@ static void rd_status(player_type *creature_ptr)
     rd_s16b(&creature_ptr->image);
     rd_s16b(&creature_ptr->protevil);
     rd_s16b(&creature_ptr->invuln);
-    if (h_older_than(0, 0, 0))
-        creature_ptr->ult_res = 0;
-    else
-        rd_s16b(&creature_ptr->ult_res);
+    rd_s16b(&creature_ptr->ult_res);
 }
 
 static void rd_tsuyoshi(player_type *creature_ptr)
 {
-    if (h_older_than(0, 0, 2))
-        creature_ptr->tsuyoshi = 0;
-    else
-        rd_s16b(&creature_ptr->tsuyoshi);
+    rd_s16b(&creature_ptr->tsuyoshi);
 }
 
 static void set_timed_effects(player_type *creature_ptr)
@@ -378,58 +281,30 @@ static void set_timed_effects(player_type *creature_ptr)
     rd_s16b(&creature_ptr->tim_sh_touki);
     rd_s16b(&creature_ptr->lightspeed);
     rd_s16b(&creature_ptr->tsubureru);
-    if (h_older_than(0, 4, 7))
-        creature_ptr->magicdef = 0;
-    else
-        rd_s16b(&creature_ptr->magicdef);
+    rd_s16b(&creature_ptr->magicdef);
 
     rd_s16b(&creature_ptr->tim_res_nether);
-    if (h_older_than(0, 4, 11))
-        set_zangband_mimic(creature_ptr);
-    else {
-        rd_s16b(&creature_ptr->tim_res_time);
+    rd_s16b(&creature_ptr->tim_res_time);
 
-        byte tmp8u;
-        rd_byte(&tmp8u);
-        creature_ptr->mimic_form = (IDX)tmp8u;
-        rd_s16b(&creature_ptr->tim_mimic);
-        rd_s16b(&creature_ptr->tim_sh_fire);
-    }
+    byte tmp8u;
+    rd_byte(&tmp8u);
+    creature_ptr->mimic_form = (IDX)tmp8u;
+    rd_s16b(&creature_ptr->tim_mimic);
+    rd_s16b(&creature_ptr->tim_sh_fire);
+    
+    rd_s16b(&creature_ptr->tim_sh_holy);
+    rd_s16b(&creature_ptr->tim_eyeeye);
+    
 
-    if (h_older_than(1, 0, 99))
-        set_zangband_holy_aura(creature_ptr);
-    else {
-        rd_s16b(&creature_ptr->tim_sh_holy);
-        rd_s16b(&creature_ptr->tim_eyeeye);
-    }
-
-    if (h_older_than(1, 0, 3))
-        set_zangband_reflection(creature_ptr);
-    else {
-        rd_s16b(&creature_ptr->tim_reflect);
-        rd_s16b(&creature_ptr->multishadow);
-        rd_s16b(&creature_ptr->dustrobe);
-    }
+    rd_s16b(&creature_ptr->tim_reflect);
+    rd_s16b(&creature_ptr->multishadow);
+    rd_s16b(&creature_ptr->dustrobe);
+    
 }
 
 static void set_mutations(player_type *creature_ptr)
 {
-    if (loading_savefile_version_is_older_than(2)) {
-        for (int i = 0; i < 3; i++) {
-            u32b tmp32u;
-            rd_u32b(&tmp32u);
-            std::bitset<32> rd_bits(tmp32u);
-            for (size_t j = 0; j < rd_bits.size(); j++) {
-                size_t pos = i * rd_bits.size() + j;
-                if (pos < creature_ptr->muta.size()) {
-                    auto f = static_cast<MUTA>(pos);
-                    creature_ptr->muta[f] = rd_bits[j];
-                }
-            }
-        }
-    } else {
-        rd_FlagGroup(creature_ptr->muta, rd_byte);
-    }
+    rd_FlagGroup(creature_ptr->muta, rd_byte);
 }
 
 static void set_virtues(player_type *creature_ptr)
@@ -462,7 +337,7 @@ static void rd_player_status(player_type *creature_ptr)
     rd_skills(creature_ptr);
     rd_race(creature_ptr);
     set_imitation(creature_ptr);
-    rd_bounty_uniques(creature_ptr);
+    rd_bounty_uniques();
     rd_arena(creature_ptr);
     rd_dummy1();
     rd_hp(creature_ptr);
