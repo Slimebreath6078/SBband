@@ -10,7 +10,6 @@
 #include "load/angband-version-comparer.h"
 #include "load/item-loader.h"
 #include "load/load-util.h"
-#include "load/load-v1-5-0.h"
 #include "load/monster-loader.h"
 #include "load/old-feature-types.h"
 #include "monster-race/monster-race.h"
@@ -118,16 +117,8 @@ errr rd_saved_floor(player_type *player_ptr, saved_floor_type *sf_ptr)
         grid_template_type *ct_ptr = &templates[i];
         rd_u16b(&tmp16u);
         ct_ptr->info = (BIT_FLAGS)tmp16u;
-        if (h_older_than(1, 7, 0, 2)) {
-            byte tmp8u;
-            rd_byte(&tmp8u);
-            ct_ptr->feat = (s16b)tmp8u;
-            rd_byte(&tmp8u);
-            ct_ptr->mimic = (s16b)tmp8u;
-        } else {
-            rd_s16b(&ct_ptr->feat);
-            rd_s16b(&ct_ptr->mimic);
-        }
+        rd_s16b(&ct_ptr->feat);
+        rd_s16b(&ct_ptr->mimic);
 
         rd_s16b(&ct_ptr->special);
     }
@@ -160,27 +151,6 @@ errr rd_saved_floor(player_type *player_ptr, saved_floor_type *sf_ptr)
         }
     }
 
-    /* Quest 18 was removed */
-    if (h_older_than(1, 7, 0, 6) && !vanilla_town) {
-        for (POSITION y = 0; y < ymax; y++) {
-            for (POSITION x = 0; x < xmax; x++) {
-                grid_type *g_ptr = &floor_ptr->grid_array[y][x];
-
-                if ((g_ptr->special == OLD_QUEST_WATER_CAVE) && !floor_ptr->dun_level) {
-                    if (g_ptr->feat == OLD_FEAT_QUEST_ENTER) {
-                        g_ptr->feat = feat_tree;
-                        g_ptr->special = 0;
-                    } else if (g_ptr->feat == OLD_FEAT_BLDG_1) {
-                        g_ptr->special = lite_town ? QUEST_OLD_CASTLE : QUEST_ROYAL_CRYPT;
-                    }
-                } else if ((g_ptr->feat == OLD_FEAT_QUEST_EXIT) && (floor_ptr->inside_quest == OLD_QUEST_WATER_CAVE)) {
-                    g_ptr->feat = feat_up_stair;
-                    g_ptr->special = 0;
-                }
-            }
-        }
-    }
-
     C_KILL(templates, limit, grid_template_type);
     rd_u16b(&limit);
     if (limit > current_world_ptr->max_o_idx)
@@ -193,7 +163,7 @@ errr rd_saved_floor(player_type *player_ptr, saved_floor_type *sf_ptr)
             return 152;
 
         o_ptr = &floor_ptr->o_list[o_idx];
-        rd_item(player_ptr, o_ptr);
+        rd_item(o_ptr);
 
         auto &list = get_o_idx_list_contains(floor_ptr, o_idx);
         list.add(floor_ptr, o_idx, o_ptr->stack_idx);
@@ -212,7 +182,7 @@ errr rd_saved_floor(player_type *player_ptr, saved_floor_type *sf_ptr)
             return 162;
 
         m_ptr = &floor_ptr->m_list[m_idx];
-        rd_monster(player_ptr, m_ptr);
+        rd_monster(m_ptr);
         g_ptr = &floor_ptr->grid_array[m_ptr->fy][m_ptr->fx];
         g_ptr->m_idx = m_idx;
         real_r_ptr(m_ptr)->cur_num++;

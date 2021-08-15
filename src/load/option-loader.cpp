@@ -32,12 +32,8 @@ void rd_options(void)
     rd_byte(&b);
     hitpoint_warn = b;
 
-    if (h_older_than(1, 7, 0, 0)) {
-        mana_warn = 2;
-    } else {
-        rd_byte(&b);
-        mana_warn = b;
-    }
+    rd_byte(&b);
+    mana_warn = b;
 
     u16b c;
     rd_u16b(&c);
@@ -83,9 +79,6 @@ void rd_options(void)
             }
         }
     }
-
-    if (h_older_than(0, 4, 5))
-        load_zangband_options();
 
     extract_option_vars();
     for (int n = 0; n < 8; n++)

@@ -6,7 +6,6 @@
 #include "load/dummy-loader.h"
 #include "load/floor-loader.h"
 #include "load/load-util.h"
-#include "load/load-v1-5-0.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
 #include "save/floor-writer.h"
@@ -27,15 +26,6 @@ static errr rd_dungeon(player_type *player_ptr)
 {
     init_saved_floors(player_ptr, false);
     errr err = 0;
-    if (h_older_than(1, 5, 0, 0)) {
-        err = rd_dungeon_old(player_ptr);
-        if (player_ptr->dungeon_idx) {
-            player_ptr->floor_id = get_new_floor_id(player_ptr);
-            get_sf_ptr(player_ptr->floor_id)->dun_level = player_ptr->current_floor_ptr->dun_level;
-        }
-
-        return err;
-    }
 
     rd_s16b(&max_floor_id);
     byte tmp8u;

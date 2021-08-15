@@ -347,9 +347,6 @@ SBband_SOURCES = \
 	load/monster-loader.cpp load/monster-loader.h \
 	load/old-feature-types.h \
 	load/load-util.cpp load/load-util.h \
-	load/load-v1-3-0.cpp load/load-v1-3-0.h \
-	load/load-v1-5-0.cpp load/load-v1-5-0.h \
-	load/load-v1-7-0.cpp load/load-v1-7-0.h \
 	load/load-zangband.cpp load/load-zangband.h \
 	load/quest-loader.cpp load/quest-loader.h \
 	load/load.cpp load/load.h \

@@ -66,26 +66,15 @@ static errr rd_store(player_type *player_ptr, int town_number, int store_number)
 {
     store_type *store_ptr;
     bool sort = false;
-    if (h_older_than(0, 3, 3) && (store_number == STORE_HOME)) {
-        store_ptr = &town_info[1].store[store_number];
-        if (store_ptr->stock_num)
-            sort = true;
-    } else {
-        store_ptr = &town_info[town_number].store[store_number];
-    }
+
+    store_ptr = &town_info[town_number].store[store_number];
 
     byte owner_idx;
-    byte tmp8u;
     s16b inven_num;
     rd_s32b(&store_ptr->store_open);
     rd_s16b(&store_ptr->insult_cur);
     rd_byte(&owner_idx);
-    if (h_older_than(1, 0, 4)) {
-        rd_byte(&tmp8u);
-        inven_num = tmp8u;
-    } else {
-        rd_s16b(&inven_num);
-    }
+    rd_s16b(&inven_num);
 
     rd_s16b(&store_ptr->good_buy);
     rd_s16b(&store_ptr->bad_buy);
@@ -99,7 +88,7 @@ static errr rd_store(player_type *player_ptr, int town_number, int store_number)
         q_ptr = &forge;
         q_ptr->wipe();
 
-        rd_item(player_ptr, q_ptr);
+        rd_item(q_ptr);
 
         auto stock_max = store_get_stock_max(static_cast<STORE_TYPE_IDX>(store_number));
         if (store_ptr->stock_num >= stock_max)

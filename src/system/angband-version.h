@@ -14,15 +14,15 @@
  * Upper compatibility is always guaranteed when it is more than 1.0.0 .
  * </pre>
  */
-#define H_VER_MAJOR  3 //!< ゲームのバージョン定義(メジャー番号)
+#define H_VER_MAJOR  0 //!< ゲームのバージョン定義(メジャー番号)
 #define H_VER_MINOR  0 //!< ゲームのバージョン定義(マイナー番号)
-#define H_VER_PATCH  0 //!< ゲームのバージョン定義(パッチ番号)
-#define H_VER_EXTRA 35 //!< ゲームのバージョン定義(エクストラ番号)
+#define H_VER_PATCH  1 //!< ゲームのバージョン定義(パッチ番号)
+#define H_VER_EXTRA  1 //!< ゲームのバージョン定義(エクストラ番号)
 
 /*!
  * @brief セーブファイルのバージョン(3.0.0から導入)
  */
-constexpr u32b SAVEFILE_VERSION = 5;
+constexpr u32b SAVEFILE_VERSION = 1;
 
 /*!
  * @brief バージョンが開発版が安定版かを返す(廃止予定)
@@ -34,19 +34,5 @@ constexpr u32b SAVEFILE_VERSION = 5;
  * @note アルファ版はエクストラ番号一定値までをアルファとし、一定まで進めて安定次第ベータ版、さらにそれも解除して無印版とする。
  */
 #define IS_ALPHA_VERSION 1
-
-/*!
- * @brief ゲームのバージョン番号定義 / "Program Version Number" of the game
- * @details
- * 本FAKE_VERSIONそのものは未使用である。Zangと整合性を合わせるための疑似的処理のためFAKE_VER_MAJORは実値-10が該当のバージョン番号となる。
- * <pre>
- * FAKE_VER_MAJOR=1,2 were reserved for ZAngband version 1.x.x/2.x.x .
- * </pre>
- */
-#define FAKE_VER_PLUS 10 //!< 偽バージョン番号としていくつ足すか
-#define FAKE_VER_MAJOR (H_VER_MAJOR + FAKE_VER_PLUS) //!< 偽バージョン番号定義(メジャー番号) */
-#define FAKE_VER_MINOR H_VER_MINOR //!< 偽バージョン番号定義(マイナー番号) */
-#define FAKE_VER_PATCH H_VER_PATCH //!< 偽バージョン番号定義(パッチ番号) */
-#define FAKE_VER_EXTRA H_VER_EXTRA //!< 偽バージョン番号定義(エクストラ番号) */
 
 void put_version(char *buf);

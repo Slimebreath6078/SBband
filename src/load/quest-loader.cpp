@@ -46,10 +46,7 @@ errr load_town(void)
 errr load_quest_info(u16b *max_quests_load, byte *max_rquests_load)
 {
     rd_u16b(max_quests_load);
-    if (h_older_than(1, 0, 7))
-        *max_rquests_load = 10;
-    else
-        rd_byte(max_rquests_load);
+    rd_byte(max_rquests_load);
 
     if (*max_quests_load <= max_q_idx)
         return 0;
@@ -75,18 +72,11 @@ static void load_quest_completion(quest_type *q_ptr)
     rd_s16b(&tmp16s);
     q_ptr->level = tmp16s;
 
-    if (h_older_than(1, 0, 6))
-        q_ptr->complev = 0;
-    else {
-        byte tmp8u;
-        rd_byte(&tmp8u);
-        q_ptr->complev = tmp8u;
-    }
+    byte tmp8u;
+    rd_byte(&tmp8u);
+    q_ptr->complev = tmp8u;
 
-    if (h_older_than(2, 1, 2, 2))
-        q_ptr->comptime = 0;
-    else
-        rd_u32b(&q_ptr->comptime);
+    rd_u32b(&q_ptr->comptime);
 }
 
 static void load_quest_details(player_type *creature_ptr, quest_type *q_ptr, int loading_quest_index)
@@ -113,7 +103,6 @@ static void load_quest_details(player_type *creature_ptr, quest_type *q_ptr, int
 
 void analyze_quests(player_type *creature_ptr, const u16b max_quests_load, const byte max_rquests_load)
 {
-    QUEST_IDX old_inside_quest = creature_ptr->current_floor_ptr->inside_quest;
     for (int i = 0; i < max_quests_load; i++) {
         if (check_quest_index(i))
             continue;
@@ -121,19 +110,16 @@ void analyze_quests(player_type *creature_ptr, const u16b max_quests_load, const
         quest_type *const q_ptr = &quest[i];
         load_quest_completion(q_ptr);
         bool is_quest_running = (q_ptr->status == QUEST_STATUS_TAKEN);
-        is_quest_running |= (!h_older_than(0, 3, 14) && (q_ptr->status == QUEST_STATUS_COMPLETED));
-        is_quest_running |= (!h_older_than(1, 0, 7) && (i >= MIN_RANDOM_QUEST) && (i <= (MIN_RANDOM_QUEST + max_rquests_load)));
+        is_quest_running |= (q_ptr->status == QUEST_STATUS_COMPLETED);
+        is_quest_running |= ((i >= MIN_RANDOM_QUEST) && (i <= (MIN_RANDOM_QUEST + max_rquests_load)));
         if (!is_quest_running)
             continue;
 
         load_quest_details(creature_ptr, q_ptr, i);
-        if (h_older_than(0, 3, 11))
-            set_zangband_quest(creature_ptr, q_ptr, i, old_inside_quest);
-        else {
-            byte tmp8u;
-            rd_byte(&tmp8u);
-            q_ptr->dungeon = tmp8u;
-        }
+        byte tmp8u;
+        rd_byte(&tmp8u);
+        q_ptr->dungeon = tmp8u;
+        
 
         if (q_ptr->status == QUEST_STATUS_TAKEN || q_ptr->status == QUEST_STATUS_UNTAKEN)
             if (r_info[q_ptr->r_idx].flags1 & RF1_UNIQUE)

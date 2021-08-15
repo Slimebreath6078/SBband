@@ -40,16 +40,13 @@ void rd_dummy2(void)
  * @param creature_ptr プレーヤーへの参照ポインタ
  * @details もはや何に使われていたのか不明
  */
-void rd_dummy_monsters(player_type *creature_ptr)
+void rd_dummy_monsters()
 {
-    if (h_older_than(1, 5, 0, 2))
-        return;
-
-    s16b tmp16s;
+s16b tmp16s;
     rd_s16b(&tmp16s);
     for (int i = 0; i < tmp16s; i++) {
         monster_type dummy_mon;
-        rd_monster(creature_ptr, &dummy_mon);
+        rd_monster(&dummy_mon);
     }
 }
 
