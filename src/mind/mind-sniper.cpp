@@ -32,6 +32,7 @@
 #include "system/player-type-definition.h"
 #include "term/screen-processor.h"
 #include "term/term-color-types.h"
+#include "util/bit-flags-calculator.h"
 #include "util/buffer-shaper.h"
 #include "util/int-char-converter.h"
 #include "view/display-messages.h"
@@ -399,7 +400,7 @@ MULTIPLY calc_snipe_damage_with_slay(player_type *sniper_ptr, MULTIPLY mult, mon
 
     switch (snipe_type) {
     case SP_LITE:
-        if (r_ptr->flags3 & (RF3_HURT_LITE)) {
+        if (any_bits(r_ptr->flags3, RF3_HURT_LITE)) {
             MULTIPLY n = 20 + sniper_ptr->concent;
             if (seen)
                 r_ptr->r_flags3 |= (RF3_HURT_LITE);
@@ -408,14 +409,14 @@ MULTIPLY calc_snipe_damage_with_slay(player_type *sniper_ptr, MULTIPLY mult, mon
         }
         break;
     case SP_FIRE:
-        if (r_ptr->flagsr & RFR_IM_FIRE) {
+        if (any_bits(r_ptr->flagsr, RFR_IM_FIRE)) {
             if (seen)
-                r_ptr->r_flagsr |= RFR_IM_FIRE;
+                set_bits(r_ptr->r_flagsr, RFR_IM_FIRE);
         } else {
             MULTIPLY n;
-            if (r_ptr->flags3 & RF3_HURT_FIRE) {
+            if (any_bits(r_ptr->flags3, RF3_HURT_FIRE)) {
                 n = 22 + (sniper_ptr->concent * 4);
-                r_ptr->r_flags3 |= RF3_HURT_FIRE;
+                set_bits(r_ptr->r_flags3, RF3_HURT_FIRE);
             }
             else
                 n = 15 + (sniper_ptr->concent * 3);
@@ -425,14 +426,14 @@ MULTIPLY calc_snipe_damage_with_slay(player_type *sniper_ptr, MULTIPLY mult, mon
         }
         break;
     case SP_COLD:
-        if (r_ptr->flagsr & RFR_IM_COLD) {
+        if (any_bits(r_ptr->flagsr, RFR_IM_COLD)) {
             if (seen)
-                r_ptr->r_flagsr |= RFR_IM_COLD;
+                set_bits(r_ptr->r_flagsr, RFR_IM_COLD);
         } else {
             MULTIPLY n;
-            if (r_ptr->flags3 & RF3_HURT_COLD) {
+            if (any_bits(r_ptr->flags3, RF3_HURT_COLD)) {
                 n = 22 + (sniper_ptr->concent * 4);
-                r_ptr->r_flags3 |= RF3_HURT_COLD;
+                set_bits(r_ptr->r_flags3, RF3_HURT_COLD);
             }
             else
                 n = 15 + (sniper_ptr->concent * 3);
@@ -442,9 +443,9 @@ MULTIPLY calc_snipe_damage_with_slay(player_type *sniper_ptr, MULTIPLY mult, mon
         }
         break;
     case SP_ELEC:
-        if (r_ptr->flagsr & RFR_IM_ELEC) {
+        if (any_bits(r_ptr->flagsr, RFR_IM_ELEC)) {
             if (seen)
-                r_ptr->r_flagsr |= RFR_IM_ELEC;
+                set_bits(r_ptr->r_flagsr, RFR_IM_ELEC);
         } else {
             MULTIPLY n = 18 + (sniper_ptr->concent * 4);
             if (mult < n)
@@ -452,34 +453,34 @@ MULTIPLY calc_snipe_damage_with_slay(player_type *sniper_ptr, MULTIPLY mult, mon
         }
         break;
     case SP_KILL_WALL:
-        if (r_ptr->flags3 & RF3_HURT_ROCK) {
+        if (any_bits(r_ptr->flags3, RF3_HURT_ROCK)) {
             MULTIPLY n = 15 + (sniper_ptr->concent * 2);
             if (seen)
-                r_ptr->r_flags3 |= RF3_HURT_ROCK;
+                set_bits(r_ptr->r_flags3, RF3_HURT_ROCK);
             if (mult < n)
                 mult = n;
-        } else if (r_ptr->flags3 & RF3_NONLIVING) {
+        } else if (any_bits(r_ptr->flags3, RF3_NONLIVING)) {
             MULTIPLY n = 15 + (sniper_ptr->concent * 2);
             if (seen)
-                r_ptr->r_flags3 |= RF3_NONLIVING;
+                set_bits(r_ptr->r_flags3, RF3_NONLIVING);
             if (mult < n)
                 mult = n;
         }
         break;
     case SP_EVILNESS:
-        if (r_ptr->flags3 & RF3_GOOD) {
+        if (any_bits(r_ptr->flags3, RF3_GOOD)) {
             MULTIPLY n = 15 + (sniper_ptr->concent * 4);
             if (seen)
-                r_ptr->r_flags3 |= RF3_GOOD;
+                set_bits(r_ptr->r_flags3, RF3_GOOD);
             if (mult < n)
                 mult = n;
         }
         break;
     case SP_HOLYNESS:
-        if (r_ptr->flags3 & RF3_EVIL) {
+        if (any_bits(r_ptr->flags3, RF3_EVIL)) {
             MULTIPLY n = 12 + (sniper_ptr->concent * 3);
             if (seen)
-                r_ptr->r_flags3 |= RF3_EVIL;
+                set_bits(r_ptr->r_flags3, RF3_EVIL);
             if (r_ptr->flags3 & (RF3_HURT_LITE)) {
                 n += (sniper_ptr->concent * 3);
                 if (seen)
