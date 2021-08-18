@@ -107,6 +107,14 @@ static void set_race_flags(lore_type *lore_ptr)
         lore_ptr->kind_flags.set(MonsterKindType::HUMAN);
     }
 
+    if (lore_ptr->r_ptr->kind_flags.has(MonsterKindType::MINERAL)) {
+        lore_ptr->kind_flags.set(MonsterKindType::MINERAL);
+    }
+
+    if (lore_ptr->r_ptr->kind_flags.has(MonsterKindType::KAN_SEN)) {
+        lore_ptr->kind_flags.set(MonsterKindType::KAN_SEN);
+    }
+
     if (lore_ptr->r_ptr->kind_flags.has(MonsterKindType::QUANTUM)) {
         lore_ptr->kind_flags.set(MonsterKindType::QUANTUM);
     }

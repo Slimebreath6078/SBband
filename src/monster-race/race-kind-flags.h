@@ -16,5 +16,7 @@ enum class MonsterKindType {
     GOOD = 12,
     ANIMAL = 13,
     UNDEAD = 14,
+    KAN_SEN = 15,
+    MINERAL = 16,
     MAX,
 };

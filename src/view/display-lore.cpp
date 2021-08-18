@@ -355,7 +355,7 @@ void display_monster_never_move(lore_type *lore_ptr)
 
 void display_monster_kind(lore_type *lore_ptr)
 {
-    if (lore_ptr->kind_flags.has_none_of({ MonsterKindType::DRAGON, MonsterKindType::DEMON, MonsterKindType::GIANT, MonsterKindType::TROLL, MonsterKindType::ORC, MonsterKindType::ANGEL, MonsterKindType::QUANTUM, MonsterKindType::HUMAN })) {
+    if (lore_ptr->kind_flags.has_none_of({ MonsterKindType::DRAGON, MonsterKindType::DEMON, MonsterKindType::GIANT, MonsterKindType::TROLL, MonsterKindType::ORC, MonsterKindType::ANGEL, MonsterKindType::QUANTUM, MonsterKindType::HUMAN, MonsterKindType::KAN_SEN, MonsterKindType::MINERAL })) {
         hooked_roff(_("モンスター", " creature"));
         return;
     }
@@ -391,6 +391,10 @@ void display_monster_kind(lore_type *lore_ptr)
     if (lore_ptr->kind_flags.has(MonsterKindType::ANGEL)) {
         hook_c_roff(TERM_YELLOW, _("天使", " angel"));
     }
+
+    if (lore_ptr->kind_flags.has(MonsterKindType::KAN_SEN)) {
+        hook_c_roff(TERM_L_WHITE, _("艦船", " KAN-SEN"));
+    }
 }
 
 void display_monster_alignment(lore_type *lore_ptr)
@@ -409,6 +413,10 @@ void display_monster_alignment(lore_type *lore_ptr)
 
     if (lore_ptr->kind_flags.has(MonsterKindType::GOOD)) {
         hook_c_roff(TERM_YELLOW, _("善良な", " good"));
+    }
+
+    if (lore_ptr->kind_flags.has(MonsterKindType::MINERAL)) {
+        hook_c_roff(TERM_L_WHITE, _("鉱物の", " mineral"));
     }
 
     if (lore_ptr->kind_flags.has(MonsterKindType::UNDEAD)) {

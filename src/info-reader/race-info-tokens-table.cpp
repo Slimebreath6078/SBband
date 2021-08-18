@@ -340,6 +340,8 @@ const std::unordered_map<std::string_view, MonsterKindType> r_info_kind_flags = 
     { "GOOD", MonsterKindType::GOOD },
     { "NONLIVING", MonsterKindType::NONLIVING },
     { "ANGEL", MonsterKindType::ANGEL },
+    { "KAN-SEN", MonsterKindType::KAN_SEN },
+    { "MINERAL", MonsterKindType::MINERAL },
 };
 
 const std::unordered_map<std::string_view, MonsterDropType> r_info_drop_flags = {
