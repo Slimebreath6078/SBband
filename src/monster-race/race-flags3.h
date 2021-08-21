@@ -18,8 +18,8 @@ enum race_flags3 {
     RF3_HURT_FIRE = 0x00004000, /*!< モンスター特性: 火炎が弱点 / Hurt badly by fire */
     RF3_HURT_COLD = 0x00008000, /*!< モンスター特性: 冷気が弱点 / Hurt badly by cold */
     RF3_ANGEL = 0x00010000, /*!< モンスター特性: 天使 / ANGEL */
-    RF3_XXX17 = 0x00020000, /*!< モンスター特性: 未使用 / XXX */
-    RF3_XXX18 = 0x00040000, /*!< モンスター特性: 未使用 / XXX */
+    RF3_KAN_SEN = 0x00020000, /*!< モンスター特性: 艦船 / Ships */
+    RF3_MINERAL = 0x00040000, /*!< モンスター特性: 鉱物 / Mineral */
     RF3_XXX19 = 0x00080000, /*!< モンスター特性: 未使用 / XXX */
     RF3_XXX20 = 0x00100000, /*!< モンスター特性: 未使用 / XXX */
     RF3_XXX21 = 0x00200000, /*!< モンスター特性: 未使用 / XXX */

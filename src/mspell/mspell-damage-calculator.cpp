@@ -4,6 +4,7 @@
 #include "monster-race/monster-race.h"
 #include "monster-race/race-ability-flags.h"
 #include "monster-race/race-flags2.h"
+#include "monster-race/race-flags3.h"
 #include "monster/monster-status.h"
 #include "player-info/equipment-info.h"
 #include "system/floor-type-definition.h"
@@ -11,6 +12,7 @@
 #include "system/monster-type-definition.h"
 #include "system/object-type-definition.h"
 #include "system/player-type-definition.h"
+#include "util/bit-flags-calculator.h"
 
 /*!
  * @brief モンスターの使う呪文の威力を決定する /
@@ -65,7 +67,7 @@ static HIT_POINT monspell_damage_roll(HIT_POINT dam, int dice_num, int dice_side
  * @return 攻撃呪文のダメージを返す。攻撃呪文以外は-1を返す。
  */
 static HIT_POINT monspell_damage_base(
-    player_type *target_ptr, RF_ABILITY ms_type, int hp, int rlev, bool powerful, int shoot_dd, int shoot_ds, int shoot_base, int TYPE)
+    player_type *target_ptr, const monster_race *r_ptr, RF_ABILITY ms_type, int hp, int rlev, bool powerful, int shoot_dd, int shoot_ds, int shoot_base, int TYPE)
 {
     HIT_POINT dam = 0, dice_num = 0, dice_side = 0, mult = 1, div = 1;
 
@@ -77,7 +79,10 @@ static HIT_POINT monspell_damage_base(
     case RF_ABILITY::DISPEL:
         return -1;
     case RF_ABILITY::ROCKET:
-        dam = (hp / 4) > 800 ? 800 : (hp / 4);
+        if (any_bits(r_ptr->flags3, RF3_KAN_SEN))
+            dam = (hp / 8) > 800 ? 800 : (hp / 8);
+        else
+            dam = (hp / 4) > 800 ? 800 : (hp / 4);
         break;
     case RF_ABILITY::SHOOT:
         dice_num = shoot_dd;
@@ -459,7 +464,7 @@ HIT_POINT monspell_damage(player_type *target_ptr, RF_ABILITY ms_type, MONSTER_I
     int shoot_dd, shoot_ds;
 
     monspell_shoot_dice(r_ptr, &shoot_dd, &shoot_ds);
-    return monspell_damage_base(target_ptr, ms_type, hp, rlev, monster_is_powerful(floor_ptr, m_idx), shoot_dd, shoot_ds, 0, TYPE);
+    return monspell_damage_base(target_ptr, r_ptr, ms_type, hp, rlev, monster_is_powerful(floor_ptr, m_idx), shoot_dd, shoot_ds, 0, TYPE);
 }
 
 /*!
@@ -479,7 +484,7 @@ HIT_POINT monspell_race_damage(player_type *target_ptr, RF_ABILITY ms_type, MONR
     int shoot_dd, shoot_ds;
 
     monspell_shoot_dice(r_ptr, &shoot_dd, &shoot_ds);
-    return monspell_damage_base(target_ptr, ms_type, MIN(30000, hp), rlev, powerful, shoot_dd, shoot_ds, 0, TYPE);
+    return monspell_damage_base(target_ptr, r_ptr, ms_type, MIN(30000, hp), rlev, powerful, shoot_dd, shoot_ds, 0, TYPE);
 }
 
 /*!
@@ -495,6 +500,7 @@ HIT_POINT monspell_bluemage_damage(player_type *target_ptr, RF_ABILITY ms_type, 
     int hp = target_ptr->chp;
     int shoot_dd = 1, shoot_ds = 1, shoot_base = 0;
     object_type *o_ptr = NULL;
+    monster_race empty_race;
 
     if (has_melee_weapon(target_ptr, INVEN_MAIN_HAND))
         o_ptr = &target_ptr->inventory_list[INVEN_MAIN_HAND];
@@ -507,5 +513,5 @@ HIT_POINT monspell_bluemage_damage(player_type *target_ptr, RF_ABILITY ms_type, 
         shoot_base = o_ptr->to_d;
     }
 
-    return monspell_damage_base(target_ptr, ms_type, hp, plev * 2, false, shoot_dd, shoot_ds, shoot_base, TYPE);
+    return monspell_damage_base(target_ptr, &empty_race, ms_type, hp, plev * 2, false, shoot_dd, shoot_ds, shoot_base, TYPE);
 }

@@ -11,14 +11,20 @@
 #include "mspell/mspell-particularity.h"
 #include "effect/effect-processor.h"
 #include "mind/drs-types.h"
+#include "monster-race/monster-race.h"
 #include "monster-race/race-ability-flags.h"
+#include "monster-race/race-flags3.h"
 #include "monster/monster-update.h"
 #include "mspell/mspell-checker.h"
 #include "mspell/mspell-damage-calculator.h"
 #include "mspell/mspell-util.h"
 #include "mspell/mspell.h"
 #include "spell/spell-types.h"
+#include "system/floor-type-definition.h"
+#include "system/monster-race-definition.h"
+#include "system/monster-type-definition.h"
 #include "system/player-type-definition.h"
+#include "util/bit-flags-calculator.h"
 
 /*!
  * @brief RF4_ROCKETの処理。ロケット。 /
@@ -33,7 +39,13 @@
  */
 MonsterSpellResult spell_RF4_ROCKET(player_type *target_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
 {
-    monspell_message(target_ptr, m_idx, t_idx, _("%^sが何かを射った。", "%^s shoots something."), _("%^sがロケットを発射した。", "%^s fires a rocket."),
+    monster_type *m_ptr = &target_ptr->current_floor_ptr->m_list[m_idx];
+    monster_race *r_ptr = &r_info[m_ptr->r_idx];
+    if (any_bits(r_ptr->flags3, RF3_KAN_SEN))
+        monspell_message(target_ptr, m_idx, t_idx, _("%^sが何かを射った。", "%^s shoots something."), _("%^sが魚雷を発射した。", "%^s fires a torpedo."),
+            _("%^sが%sに魚雷を発射した。", "%^s fires a torpedo at %s."), TARGET_TYPE);
+    else
+        monspell_message(target_ptr, m_idx, t_idx, _("%^sが何かを射った。", "%^s shoots something."), _("%^sがロケットを発射した。", "%^s fires a rocket."),
         _("%^sが%sにロケットを発射した。", "%^s fires a rocket at %s."), TARGET_TYPE);
 
     const auto dam = monspell_damage(target_ptr, RF_ABILITY::ROCKET, m_idx, DAM_ROLL);

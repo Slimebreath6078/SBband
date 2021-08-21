@@ -95,6 +95,12 @@ static void set_race_flags(lore_type *lore_ptr)
     if (lore_ptr->r_ptr->flags3 & RF3_AMBERITE)
         lore_ptr->flags3 |= (RF3_AMBERITE);
 
+    if (lore_ptr->r_ptr->flags3 & RF3_KAN_SEN)
+        lore_ptr->flags3 |= RF3_KAN_SEN;
+
+    if (lore_ptr->r_ptr->flags3 & RF3_MINERAL)
+        lore_ptr->flags3 |= RF3_MINERAL;
+
     if (lore_ptr->r_ptr->flags2 & RF2_HUMAN)
         lore_ptr->flags2 |= (RF2_HUMAN);
 

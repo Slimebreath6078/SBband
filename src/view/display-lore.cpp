@@ -347,7 +347,7 @@ void display_monster_never_move(lore_type *lore_ptr)
 
 void display_monster_kind(lore_type *lore_ptr)
 {
-    if (((lore_ptr->flags3 & (RF3_DRAGON | RF3_DEMON | RF3_GIANT | RF3_TROLL | RF3_ORC | RF3_ANGEL)) == 0)
+    if (((lore_ptr->flags3 & (RF3_DRAGON | RF3_DEMON | RF3_GIANT | RF3_TROLL | RF3_ORC | RF3_ANGEL | RF3_KAN_SEN)) == 0)
         && ((lore_ptr->flags2 & (RF2_QUANTUM | RF2_HUMAN)) == 0)) {
         hooked_roff(_("モンスター", " creature"));
         return;
@@ -376,6 +376,9 @@ void display_monster_kind(lore_type *lore_ptr)
 
     if (lore_ptr->flags3 & RF3_ANGEL)
         hook_c_roff(TERM_YELLOW, _("天使", " angel"));
+
+    if (lore_ptr->flags3 & RF3_KAN_SEN)
+        hook_c_roff(TERM_L_WHITE, _("艦船", " KAN-SEN"));
 }
 
 void display_monster_alignment(lore_type *lore_ptr)
@@ -385,6 +388,9 @@ void display_monster_alignment(lore_type *lore_ptr)
 
     if (lore_ptr->flags3 & RF3_ANIMAL)
         hook_c_roff(TERM_L_GREEN, _("自然界の", " natural"));
+
+    if (lore_ptr->flags3 & RF3_MINERAL)
+        hook_c_roff(TERM_L_WHITE, _("鉱物の", " mineral"));
 
     if (lore_ptr->flags3 & RF3_EVIL)
         hook_c_roff(TERM_L_DARK, _("邪悪なる", " evil"));
