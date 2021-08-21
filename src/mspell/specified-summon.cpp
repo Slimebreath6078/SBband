@@ -315,3 +315,35 @@ MONSTER_NUMBER summon_PLASMA(player_type *target_ptr, POSITION y, POSITION x, in
     msg_print(_("プーラーズーマーッ！！", "P--la--s--ma--!!"));
     return count;
 }
+
+/*!
+ * @brief 艦載機（現状はハヤブサのみ）召喚の処理。 /
+ * @param target_ptr プレーヤーへの参照ポインタ
+ * @param y 対象の地点のy座標
+ * @param x 対象の地点のx座標
+ * @param m_idx 呪文を唱えるモンスターID
+ * @return 召喚したモンスターの数を返す。
+ */
+
+MONSTER_NUMBER summon_OSCAR(player_type *target_ptr, POSITION y, POSITION x, int rlev, MONSTER_IDX m_idx)
+{
+    GAME_TEXT m_name[MAX_NLEN];
+    monster_name(target_ptr, m_idx, m_name);
+
+    auto count = 0;
+    auto num = 1 + MIN(2, rlev / 20);
+    for (auto k = 0; k < num; k++) {
+        count += summon_named_creature(target_ptr, m_idx, y, x, MON_OSCAR_TORPEDO, PM_NONE);
+    }
+    for (auto k = 0; k < num; k++) {
+        count += summon_named_creature(target_ptr, m_idx, y, x, MON_OSCAR, PM_NONE);
+    }
+    if (count == 0) {
+        if (target_ptr->blind)
+            msg_print(_("しかし、プロペラの音はすぐさま止んだ。", "But it is nothing immediately."));
+        else
+            msg_print(_("しかし、発艦を断念した。", "But she gave up."));
+    }
+
+    return count;
+}

@@ -8,6 +8,7 @@
 #include "monster-floor/place-monster-types.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
+#include "monster-race/race-flags3.h"
 #include "monster-race/race-indice-types.h"
 #include "monster/monster-describer.h"
 #include "monster/monster-description-types.h"
@@ -24,6 +25,7 @@
 #include "system/monster-race-definition.h"
 #include "system/monster-type-definition.h"
 #include "system/player-type-definition.h"
+#include "util/bit-flags-calculator.h"
 #include "view/display-messages.h"
 
 /* summoning number */
@@ -78,8 +80,11 @@ static void decide_summon_kin_caster(
             _("%^sがダンジョンの主を召喚した。", "%^s magically summons guardians of dungeons."),
             _("%^sがダンジョンの主を召喚した。", "%^s magically summons guardians of dungeons."), target_type);
         return;
+    } else if (any_bits(r_info[m_ptr->r_idx].flags3, RF3_KAN_SEN)) {
+        monspell_message(target_ptr, m_idx, t_idx, _("%^sからプロペラの音が聞こえる。", "Heard a propeller from %^s."),
+            _("%^sが艦載機を発艦した！", "%^s takes off aeroplanes!"), _("%^sが%^sへ艦載機を発艦した！", "%^s takes off aeroplanes to %^s!"), target_type);
+        return;
     }
-
     if (mon_to_player || (mon_to_mon && known && see_either))
         disturb(target_ptr, true, true);
 
@@ -178,6 +183,9 @@ MonsterSpellResult spell_RF6_S_KIN(player_type *target_ptr, POSITION y, POSITION
         break;
     case MON_OOTSUKI:
         count += summon_PLASMA(target_ptr, y, x, rlev, m_idx);
+        break;
+    case MON_HMS_UNICORN:
+        count += summon_OSCAR(target_ptr, y, x, rlev, m_idx);
         break;
     default:
         count += summon_Kin(target_ptr, y, x, rlev, m_idx);
