@@ -6,35 +6,132 @@
 #include "object/object-broken.h"
 #include "effect/effect-characteristics.h"
 #include "effect/effect-processor.h"
+#include "flavor/flavor-describer.h"
+#include "flavor/object-flavor-types.h"
+#include "inventory/inventory-object.h"
+#include "inventory/inventory-slot-types.h"
+#include "mind/mind-mirror-master.h"
 #include "mind/snipe-types.h"
 #include "object-enchant/tr-types.h"
+#include "object-hook/hook-enchant.h"
+#include "object-hook/hook-expendable.h"
 #include "object/object-flags.h"
+#include "object/object-info.h"
 #include "object/object-kind.h"
+#include "object/object-stack.h"
+#include "player/player-status.h"
 #include "spell/spell-types.h"
 #include "sv-definition/sv-potion-types.h"
+#include "system/floor-type-definition.h"
 #include "system/object-type-definition.h"
 #include "system/player-type-definition.h"
 #include "util/bit-flags-calculator.h"
+#include "view/display-messages.h"
 
 ObjectBreaker::ObjectBreaker(tr_type ignore_flg)
     : ignore_flg(ignore_flg)
-{}
+{
+}
 
 BreakerAcid::BreakerAcid()
     : ObjectBreaker(TR_IGNORE_ACID)
-{}
+{
+}
 
 BreakerElec::BreakerElec()
     : ObjectBreaker(TR_IGNORE_ELEC)
-{}
+{
+}
 
 BreakerFire::BreakerFire()
     : ObjectBreaker(TR_IGNORE_FIRE)
-{}
+{
+}
 
 BreakerCold::BreakerCold()
     : ObjectBreaker(TR_IGNORE_COLD)
-{}
+{
+}
+
+/*!
+ * @brief 手持ちのアイテムを指定確率で破損させる /
+ * Destroys a type of item on a given percent chance
+ * @param player_ptr プレーヤーへの参照ポインタ
+ * @param typ 破損判定関数ポインタ
+ * @param perc 基本確率
+ * @details
+ * Note that missiles are no longer necessarily all destroyed
+ * Destruction taken from "melee.c" code for "stealing".
+ * New-style wands and rods handled correctly. -LM-
+ */
+void ObjectBreaker::inventory_damage(player_type *player_ptr, int perc)
+{
+    INVENTORY_IDX i;
+    int j, amt;
+    object_type *o_ptr;
+    GAME_TEXT o_name[MAX_NLEN];
+
+    if (check_multishadow(player_ptr) || player_ptr->current_floor_ptr->inside_arena)
+        return;
+
+    /* Scan through the slots backwards */
+    for (i = 0; i < INVEN_PACK; i++) {
+        o_ptr = &player_ptr->inventory_list[i];
+        if (!o_ptr->k_idx)
+            continue;
+
+        /* Hack -- for now, skip artifacts */
+        if (object_is_artifact(o_ptr))
+            continue;
+
+        /* Give this item slot a shot at death */
+        if (!this->set_destroy(player_ptr, o_ptr))
+            continue;
+
+        /* Count the casualties */
+        for (amt = j = 0; j < o_ptr->number; ++j) {
+            if (randint0(100) < perc)
+                amt++;
+        }
+
+        /* Some casualities */
+        if (!amt)
+            continue;
+
+        describe_flavor(player_ptr, o_name, o_ptr, OD_OMIT_PREFIX);
+
+        msg_format(_("%s(%c)が%s壊れてしまった！", "%sour %s (%c) %s destroyed!"),
+#ifdef JP
+            o_name, index_to_label(i), ((o_ptr->number > 1) ? ((amt == o_ptr->number) ? "全部" : (amt > 1 ? "何個か" : "一個")) : ""));
+#else
+            ((o_ptr->number > 1) ? ((amt == o_ptr->number) ? "All of y" : (amt > 1 ? "Some of y" : "One of y")) : "Y"), o_name, index_to_label(i),
+            ((amt > 1) ? "were" : "was"));
+#endif
+
+#ifdef JP
+        if (is_echizen(player_ptr))
+            msg_print("やりやがったな！");
+        else if (is_chargeman(player_ptr)) {
+            if (randint0(2) == 0)
+                msg_print(_("ジュラル星人め！", ""));
+            else
+                msg_print(_("弱い者いじめは止めるんだ！", ""));
+        }
+#endif
+
+        /* Potions smash open */
+        if (object_is_potion(o_ptr)) {
+            (void)potion_smash_effect(player_ptr, 0, player_ptr->y, player_ptr->x, o_ptr->k_idx);
+        }
+
+        /* Reduce the charges of rods/wands */
+        reduce_charges(o_ptr, amt);
+
+        /* Destroy "amt" items */
+        inven_item_increase(player_ptr, i, -amt);
+        inven_item_optimize(player_ptr, i);
+    }
+}
 
 /*!
  * @brief アイテムが酸で破損するかどうかを判定する

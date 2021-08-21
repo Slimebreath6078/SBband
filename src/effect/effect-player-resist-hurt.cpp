@@ -6,7 +6,6 @@
 #include "core/window-redrawer.h"
 #include "effect/effect-player-util.h"
 #include "hpmp/hp-mp-processor.h"
-#include "inventory/inventory-damage.h"
 #include "inventory/inventory-slot-types.h"
 #include "main/sound-definitions-table.h"
 #include "main/sound-of-music.h"

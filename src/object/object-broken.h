@@ -14,6 +14,7 @@ public:
     ObjectBreaker(tr_type ignore_flg);
     ObjectBreaker() = delete;
     virtual ~ObjectBreaker() = default;
+    void inventory_damage(player_type *player_ptr, int perc);
     int set_destroy(player_type *owner_ptr, object_type *o_ptr);
     virtual bool hates(object_type *o_ptr) = 0;
 

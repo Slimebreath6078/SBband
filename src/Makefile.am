@@ -284,7 +284,6 @@ SBband_SOURCES = \
 	\
 	inventory/floor-item-getter.cpp inventory/floor-item-getter.h \
 	inventory/inventory-curse.cpp inventory/inventory-curse.h \
-	inventory/inventory-damage.cpp inventory/inventory-damage.h \
 	inventory/inventory-describer.cpp inventory/inventory-describer.h \
 	inventory/inventory-object.cpp inventory/inventory-object.h \
 	inventory/inventory-slot-types.h \
