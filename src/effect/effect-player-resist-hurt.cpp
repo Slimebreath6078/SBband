@@ -351,7 +351,6 @@ void effect_player_rocket(player_type *target_ptr, effect_player_type *ep_ptr)
     if (!has_resist_shard(target_ptr) && !check_multishadow(target_ptr)) {
         (void)set_cut(target_ptr, target_ptr->cut + (ep_ptr->dam / 2));
     }
-
     if (!has_resist_shard(target_ptr) || one_in_(12)) {
         BreakerCold(target_ptr).inventory_damage(3);
     }
