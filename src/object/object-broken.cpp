@@ -6,15 +6,53 @@
 #include "object/object-broken.h"
 #include "effect/effect-characteristics.h"
 #include "effect/effect-processor.h"
+#include "flavor/flavor-describer.h"
+#include "flavor/object-flavor-types.h"
+#include "inventory/inventory-object.h"
+#include "inventory/inventory-slot-types.h"
+#include "mind/mind-mirror-master.h"
 #include "mind/snipe-types.h"
 #include "object-enchant/tr-types.h"
+#include "object-hook/hook-enchant.h"
+#include "object-hook/hook-expendable.h"
 #include "object/object-flags.h"
+#include "object/object-info.h"
 #include "object/object-kind.h"
+#include "object/object-stack.h"
+#include "player/player-status.h"
 #include "spell/spell-types.h"
 #include "sv-definition/sv-potion-types.h"
+#include "system/floor-type-definition.h"
 #include "system/object-type-definition.h"
 #include "system/player-type-definition.h"
 #include "util/bit-flags-calculator.h"
+#include "view/display-messages.h"
+
+ObjectBreaker::ObjectBreaker(tr_type ignore_flg, player_type *player_ptr)
+    : ignore_flg(ignore_flg)
+    , player_ptr(player_ptr)
+{
+}
+
+BreakerAcid::BreakerAcid(player_type *player_ptr)
+    : ObjectBreaker(TR_IGNORE_ACID, player_ptr)
+{
+}
+
+BreakerElec::BreakerElec(player_type *player_ptr)
+    : ObjectBreaker(TR_IGNORE_ELEC, player_ptr)
+{
+}
+
+BreakerFire::BreakerFire(player_type *player_ptr)
+    : ObjectBreaker(TR_IGNORE_FIRE, player_ptr)
+{
+}
+
+BreakerCold::BreakerCold(player_type *player_ptr)
+    : ObjectBreaker(TR_IGNORE_COLD, player_ptr)
+{
+}
 
 /*!
  * @brief アイテムが酸で破損するかどうかを判定する
@@ -25,7 +63,7 @@
  * Does a given class of objects (usually) hate acid?
  * Note that acid can either melt or corrode something.
  */
-bool hates_acid(object_type *o_ptr)
+bool BreakerAcid::hates(object_type *o_ptr) const
 {
     /* Analyze the type */
     switch (o_ptr->tval) {
@@ -79,7 +117,7 @@ bool hates_acid(object_type *o_ptr)
  * @param o_ptr アイテムの情報参照ポインタ
  * @return 破損するならばTRUEを返す
  */
-bool hates_elec(object_type *o_ptr)
+bool BreakerElec::hates(object_type *o_ptr) const
 {
     switch (o_ptr->tval) {
     case TV_RING:
@@ -103,7 +141,7 @@ bool hates_elec(object_type *o_ptr)
  * Hafted/Polearm weapons have wooden shafts.
  * Arrows/Bows are mostly wooden.
  */
-bool hates_fire(object_type *o_ptr)
+bool BreakerFire::hates(object_type *o_ptr) const
 {
     /* Analyze the type */
     switch (o_ptr->tval) {
@@ -161,7 +199,7 @@ bool hates_fire(object_type *o_ptr)
  * @param o_ptr アイテムの情報参照ポインタ
  * @return 破損するならばTRUEを返す
  */
-bool hates_cold(object_type *o_ptr)
+bool BreakerCold::hates(object_type *o_ptr) const
 {
     switch (o_ptr->tval) {
     case TV_POTION:
@@ -178,73 +216,19 @@ bool hates_cold(object_type *o_ptr)
 }
 
 /*!
- * @brief アイテムが酸で破損するかどうかを判定する(メインルーチン) /
- * Melt something
+ * @brief アイテムが属性で破損するかどうかを判定する(メインルーチン) /
+ * Destroy things
  * @param o_ptr アイテムの情報参照ポインタ
  * @return 破損するならばTRUEを返す
  * @todo 統合を検討
  */
-int set_acid_destroy(player_type *owner_ptr, object_type *o_ptr)
+bool ObjectBreaker::can_destroy(object_type *o_ptr) const
 {
     BIT_FLAGS flgs[TR_FLAG_SIZE];
-    if (!hates_acid(o_ptr))
+    if (!this->hates(o_ptr))
         return false;
-    object_flags(owner_ptr, o_ptr, flgs);
-    if (has_flag(flgs, TR_IGNORE_ACID))
-        return false;
-    return true;
-}
-
-/*!
- * @brief アイテムが電撃で破損するかどうかを判定する(メインルーチン) /
- * Electrical damage
- * @param o_ptr アイテムの情報参照ポインタ
- * @return 破損するならばTRUEを返す
- * @todo 統合を検討
- */
-int set_elec_destroy(player_type *owner_ptr, object_type *o_ptr)
-{
-    BIT_FLAGS flgs[TR_FLAG_SIZE];
-    if (!hates_elec(o_ptr))
-        return false;
-    object_flags(owner_ptr, o_ptr, flgs);
-    if (has_flag(flgs, TR_IGNORE_ELEC))
-        return false;
-    return true;
-}
-
-/*!
- * @brief アイテムが火炎で破損するかどうかを判定する(メインルーチン) /
- * Burn something
- * @param o_ptr アイテムの情報参照ポインタ
- * @return 破損するならばTRUEを返す
- * @todo 統合を検討
- */
-int set_fire_destroy(player_type *owner_ptr, object_type *o_ptr)
-{
-    BIT_FLAGS flgs[TR_FLAG_SIZE];
-    if (!hates_fire(o_ptr))
-        return false;
-    object_flags(owner_ptr, o_ptr, flgs);
-    if (has_flag(flgs, TR_IGNORE_FIRE))
-        return false;
-    return true;
-}
-
-/*!
- * @brief アイテムが冷気で破損するかどうかを判定する(メインルーチン) /
- * Freeze things
- * @param o_ptr アイテムの情報参照ポインタ
- * @return 破損するならばTRUEを返す
- * @todo 統合を検討
- */
-int set_cold_destroy(player_type *owner_ptr, object_type *o_ptr)
-{
-    BIT_FLAGS flgs[TR_FLAG_SIZE];
-    if (!hates_cold(o_ptr))
-        return false;
-    object_flags(owner_ptr, o_ptr, flgs);
-    if (has_flag(flgs, TR_IGNORE_COLD))
+    object_flags(this->player_ptr, o_ptr, flgs);
+    if (has_flag(flgs, this->ignore_flg))
         return false;
     return true;
 }

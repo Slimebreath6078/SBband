@@ -84,7 +84,7 @@ void effect_player_nuke(player_type *target_ptr, effect_player_type *ep_ptr)
     }
 
     if (one_in_(6))
-        inventory_damage(target_ptr, set_acid_destroy, 2);
+        inventory_damage(target_ptr, BreakerAcid(target_ptr), 2);
 }
 
 void effect_player_missile(player_type *target_ptr, effect_player_type *ep_ptr)
@@ -146,7 +146,7 @@ void effect_player_plasma(player_type *target_ptr, effect_player_type *ep_ptr)
     }
 
     if (!(has_resist_fire(target_ptr) || is_oppose_fire(target_ptr) || has_immune_fire(target_ptr)))
-        inventory_damage(target_ptr, set_acid_destroy, 3);
+        inventory_damage(target_ptr, BreakerAcid(target_ptr), 3);
 }
 
 /*!
@@ -210,7 +210,7 @@ void effect_player_water(player_type *target_ptr, effect_player_type *ep_ptr)
         }
 
         if (one_in_(5) && !has_res_water) {
-            inventory_damage(target_ptr, set_cold_destroy, 3);
+            inventory_damage(target_ptr, BreakerCold(target_ptr), 3);
         }
     }
 
@@ -244,8 +244,8 @@ void effect_player_chaos(player_type *target_ptr, effect_player_type *ep_ptr)
     }
 
     if (!has_resist_chaos(target_ptr) || one_in_(9)) {
-        inventory_damage(target_ptr, set_elec_destroy, 2);
-        inventory_damage(target_ptr, set_fire_destroy, 2);
+        inventory_damage(target_ptr, BreakerElec(target_ptr), 2);
+        inventory_damage(target_ptr, BreakerFire(target_ptr), 2);
     }
 
     ep_ptr->get_damage = take_hit(target_ptr, DAMAGE_ATTACK, ep_ptr->dam, ep_ptr->killer);
@@ -263,7 +263,7 @@ void effect_player_shards(player_type *target_ptr, effect_player_type *ep_ptr)
     }
 
     if (!has_resist_shard(target_ptr) || one_in_(13))
-        inventory_damage(target_ptr, set_cold_destroy, 2);
+        inventory_damage(target_ptr, BreakerCold(target_ptr), 2);
 
     ep_ptr->get_damage = take_hit(target_ptr, DAMAGE_ATTACK, ep_ptr->dam, ep_ptr->killer);
 }
@@ -281,7 +281,7 @@ void effect_player_sound(player_type *target_ptr, effect_player_type *ep_ptr)
     }
 
     if (!has_resist_sound(target_ptr) || one_in_(13))
-        inventory_damage(target_ptr, set_cold_destroy, 2);
+        inventory_damage(target_ptr, BreakerCold(target_ptr), 2);
 
     ep_ptr->get_damage = take_hit(target_ptr, DAMAGE_ATTACK, ep_ptr->dam, ep_ptr->killer);
 }
@@ -352,9 +352,8 @@ void effect_player_rocket(player_type *target_ptr, effect_player_type *ep_ptr)
     if (!has_resist_shard(target_ptr) && !check_multishadow(target_ptr)) {
         (void)set_cut(target_ptr, target_ptr->cut + (ep_ptr->dam / 2));
     }
-
     if (!has_resist_shard(target_ptr) || one_in_(12)) {
-        inventory_damage(target_ptr, set_cold_destroy, 3);
+        inventory_damage(target_ptr, BreakerCold(target_ptr), 3);
     }
 
     ep_ptr->get_damage = take_hit(target_ptr, DAMAGE_ATTACK, ep_ptr->dam, ep_ptr->killer);
@@ -532,7 +531,7 @@ void effect_player_gravity(player_type *target_ptr, effect_player_type *ep_ptr)
     ep_ptr->dam = ep_ptr->dam * calc_gravity_damage_rate(target_ptr, CALC_RAND) / 100;
 
     if (!target_ptr->levitation || one_in_(13)) {
-        inventory_damage(target_ptr, set_cold_destroy, 2);
+        inventory_damage(target_ptr, BreakerCold(target_ptr), 2);
     }
 
     ep_ptr->get_damage = take_hit(target_ptr, DAMAGE_ATTACK, ep_ptr->dam, ep_ptr->killer);
@@ -579,8 +578,8 @@ void effect_player_meteor(player_type *target_ptr, effect_player_type *ep_ptr)
     ep_ptr->get_damage = take_hit(target_ptr, DAMAGE_ATTACK, ep_ptr->dam, ep_ptr->killer);
     if (!has_resist_shard(target_ptr) || one_in_(13)) {
         if (!has_immune_fire(target_ptr))
-            inventory_damage(target_ptr, set_fire_destroy, 2);
-        inventory_damage(target_ptr, set_cold_destroy, 2);
+            inventory_damage(target_ptr, BreakerFire(target_ptr), 2);
+        inventory_damage(target_ptr, BreakerCold(target_ptr), 2);
     }
 }
 
@@ -603,7 +602,7 @@ void effect_player_icee(player_type *target_ptr, effect_player_type *ep_ptr)
 
     if ((!(has_resist_cold(target_ptr) || is_oppose_cold(target_ptr))) || one_in_(12)) {
         if (!has_immune_cold(target_ptr))
-            inventory_damage(target_ptr, set_cold_destroy, 3);
+            inventory_damage(target_ptr, BreakerCold(target_ptr), 3);
     }
 }
 
@@ -639,7 +638,7 @@ void effect_player_void(player_type *target_ptr, effect_player_type *ep_ptr)
     ep_ptr->dam = ep_ptr->dam * calc_void_damage_rate(target_ptr, CALC_RAND) / 100;
 
     if (!target_ptr->levitation || one_in_(13)) {
-        inventory_damage(target_ptr, set_cold_destroy, 2);
+        inventory_damage(target_ptr, BreakerCold(target_ptr), 2);
     }
 }
 

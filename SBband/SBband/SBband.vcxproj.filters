@@ -659,9 +659,6 @@
     <ClCompile Include="..\..\src\combat\attack-criticality.cpp">
       <Filter>combat</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\inventory\inventory-damage.cpp">
-      <Filter>inventory</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\mind\monk-attack.cpp">
       <Filter>mind</Filter>
     </ClCompile>
@@ -2313,6 +2310,9 @@
     <ClCompile Include="..\..\src\avatar\avatar.cpp">
       <Filter>avatar</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\inventory\inventory-damage.cpp">
+      <Filter>inventory</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\combat\shoot.h">
@@ -3022,9 +3022,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src\combat\attack-criticality.h">
       <Filter>combat</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\inventory\inventory-damage.h">
-      <Filter>inventory</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\mind\monk-attack.h">
       <Filter>mind</Filter>
@@ -4967,6 +4964,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\avatar\avatar.h">
       <Filter>avatar</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\inventory\inventory-damage.h">
+      <Filter>inventory</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

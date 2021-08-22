@@ -269,6 +269,7 @@
     <ClCompile Include="..\..\src\cmd-action\cmd-tunnel.cpp" />
     <ClCompile Include="..\..\src\action\movement-execution.cpp" />
     <ClCompile Include="..\..\src\core\score-util.cpp" />
+    <ClCompile Include="..\..\src\inventory\inventory-damage.cpp" />
     <ClCompile Include="..\..\src\system\grid-type-definition.cpp" />
     <ClCompile Include="..\..\src\grid\feature-action-flags.cpp" />
     <ClCompile Include="..\..\src\main-win\commandline-win.cpp" />
@@ -618,7 +619,6 @@
     <ClCompile Include="..\..\src\player-attack\blood-sucking-processor.cpp" />
     <ClCompile Include="..\..\src\object-enchant\vorpal-weapon.cpp" />
     <ClCompile Include="..\..\src\floor\floor-object.cpp" />
-    <ClCompile Include="..\..\src\inventory\inventory-damage.cpp" />
     <ClCompile Include="..\..\src\inventory\inventory-object.cpp" />
     <ClCompile Include="..\..\src\io\pref-file-expressor.cpp" />
     <ClCompile Include="..\..\src\market\arena.cpp" />
@@ -957,6 +957,7 @@
     <ClInclude Include="..\..\src\core\score-util.h" />
     <ClInclude Include="..\..\src\dungeon\dungeon-flag-mask.h" />
     <ClInclude Include="..\..\src\grid\feature-action-flags.h" />
+    <ClInclude Include="..\..\src\inventory\inventory-damage.h" />
     <ClInclude Include="..\..\src\main-win\commandline-win.h" />
     <ClInclude Include="..\..\src\main-win\graphics-win.h" />
     <ClInclude Include="..\..\src\main-win\main-win-term.h" />
@@ -1349,7 +1350,6 @@
     <ClInclude Include="..\..\src\combat\slaying.h" />
     <ClInclude Include="..\..\src\object-enchant\vorpal-weapon.h" />
     <ClInclude Include="..\..\src\floor\floor-object.h" />
-    <ClInclude Include="..\..\src\inventory\inventory-damage.h" />
     <ClInclude Include="..\..\src\inventory\inventory-object.h" />
     <ClInclude Include="..\..\src\io\pref-file-expressor.h" />
     <ClInclude Include="..\..\src\market\arena.h" />
