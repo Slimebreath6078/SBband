@@ -55,86 +55,6 @@ BreakerCold::BreakerCold(player_type *player_ptr)
 }
 
 /*!
- * @brief 手持ちのアイテムを指定確率で破損させる /
- * Destroys a type of item on a given percent chance
- * @param player_ptr プレーヤーへの参照ポインタ
- * @param typ 破損判定関数ポインタ
- * @param perc 基本確率
- * @details
- * Note that missiles are no longer necessarily all destroyed
- * Destruction taken from "melee.c" code for "stealing".
- * New-style wands and rods handled correctly. -LM-
- */
-void ObjectBreaker::inventory_damage(int perc)
-{
-    INVENTORY_IDX i;
-    int j, amt;
-    object_type *o_ptr;
-    GAME_TEXT o_name[MAX_NLEN];
-
-    if (check_multishadow(this->player_ptr) || this->player_ptr->current_floor_ptr->inside_arena)
-        return;
-
-    /* Scan through the slots backwards */
-    for (i = 0; i < INVEN_PACK; i++) {
-        o_ptr = &this->player_ptr->inventory_list[i];
-        if (!o_ptr->k_idx)
-            continue;
-
-        /* Hack -- for now, skip artifacts */
-        if (object_is_artifact(o_ptr))
-            continue;
-
-        /* Give this item slot a shot at death */
-        if (!this->can_destroy(o_ptr))
-            continue;
-
-        /* Count the casualties */
-        for (amt = j = 0; j < o_ptr->number; ++j) {
-            if (randint0(100) < perc)
-                amt++;
-        }
-
-        /* Some casualities */
-        if (!amt)
-            continue;
-
-        describe_flavor(this->player_ptr, o_name, o_ptr, OD_OMIT_PREFIX);
-
-        msg_format(_("%s(%c)が%s壊れてしまった！", "%sour %s (%c) %s destroyed!"),
-#ifdef JP
-            o_name, index_to_label(i), ((o_ptr->number > 1) ? ((amt == o_ptr->number) ? "全部" : (amt > 1 ? "何個か" : "一個")) : ""));
-#else
-            ((o_ptr->number > 1) ? ((amt == o_ptr->number) ? "All of y" : (amt > 1 ? "Some of y" : "One of y")) : "Y"), o_name, index_to_label(i),
-            ((amt > 1) ? "were" : "was"));
-#endif
-
-#ifdef JP
-        if (is_echizen(this->player_ptr))
-            msg_print("やりやがったな！");
-        else if (is_chargeman(this->player_ptr)) {
-            if (randint0(2) == 0)
-                msg_print(_("ジュラル星人め！", ""));
-            else
-                msg_print(_("弱い者いじめは止めるんだ！", ""));
-        }
-#endif
-
-        /* Potions smash open */
-        if (object_is_potion(o_ptr)) {
-            (void)potion_smash_effect(this->player_ptr, 0, this->player_ptr->y, this->player_ptr->x, o_ptr->k_idx);
-        }
-
-        /* Reduce the charges of rods/wands */
-        reduce_charges(o_ptr, amt);
-
-        /* Destroy "amt" items */
-        inven_item_increase(this->player_ptr, i, -amt);
-        inven_item_optimize(this->player_ptr, i);
-    }
-}
-
-/*!
  * @brief アイテムが酸で破損するかどうかを判定する
  * @param o_ptr アイテムの情報参照ポインタ
  * @return 破損するならばTRUEを返す
@@ -302,7 +222,7 @@ bool BreakerCold::hates(object_type *o_ptr) const
  * @return 破損するならばTRUEを返す
  * @todo 統合を検討
  */
-int ObjectBreaker::can_destroy(object_type *o_ptr) const
+bool ObjectBreaker::can_destroy(object_type *o_ptr) const
 {
     BIT_FLAGS flgs[TR_FLAG_SIZE];
     if (!this->hates(o_ptr))

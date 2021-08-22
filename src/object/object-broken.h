@@ -16,8 +16,7 @@ protected:
     virtual ~ObjectBreaker() = default;
 
 public:
-    void inventory_damage(int perc);
-    int can_destroy(object_type *o_ptr) const;
+    bool can_destroy(object_type *o_ptr) const;
     virtual bool hates(object_type *o_ptr) const = 0;
 
 private:

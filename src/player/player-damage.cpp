@@ -20,6 +20,7 @@
 #include "game-option/input-options.h"
 #include "game-option/play-record-options.h"
 #include "game-option/special-options.h"
+#include "inventory/inventory-damage.h"
 #include "inventory/inventory-slot-types.h"
 #include "io/files-util.h"
 #include "io/input-key-acceptor.h"
@@ -158,7 +159,7 @@ HIT_POINT acid_dam(player_type *creature_ptr, HIT_POINT dam, concptr kb_str, boo
 
     HIT_POINT get_damage = take_hit(creature_ptr, aura ? DAMAGE_NOESCAPE : DAMAGE_ATTACK, dam, kb_str);
     if (!aura && !(double_resist && has_resist_acid(creature_ptr)))
-        BreakerAcid(creature_ptr).inventory_damage(inv);
+        inventory_damage(creature_ptr, BreakerAcid(creature_ptr), inv);
 
     return get_damage;
 }
@@ -190,7 +191,7 @@ HIT_POINT elec_dam(player_type *creature_ptr, HIT_POINT dam, concptr kb_str, boo
 
     HIT_POINT get_damage = take_hit(creature_ptr, aura ? DAMAGE_NOESCAPE : DAMAGE_ATTACK, dam, kb_str);
     if (!aura && !(double_resist && has_resist_elec(creature_ptr)))
-        BreakerElec(creature_ptr).inventory_damage(inv);
+        inventory_damage(creature_ptr, BreakerElec(creature_ptr), inv);
 
     return get_damage;
 }
@@ -222,7 +223,7 @@ HIT_POINT fire_dam(player_type *creature_ptr, HIT_POINT dam, concptr kb_str, boo
 
     HIT_POINT get_damage = take_hit(creature_ptr, aura ? DAMAGE_NOESCAPE : DAMAGE_ATTACK, dam, kb_str);
     if (!aura && !(double_resist && has_resist_fire(creature_ptr)))
-        BreakerFire(creature_ptr).inventory_damage(inv);
+        inventory_damage(creature_ptr, BreakerFire(creature_ptr), inv);
 
     return get_damage;
 }
@@ -252,7 +253,7 @@ HIT_POINT cold_dam(player_type *creature_ptr, HIT_POINT dam, concptr kb_str, boo
 
     HIT_POINT get_damage = take_hit(creature_ptr, aura ? DAMAGE_NOESCAPE : DAMAGE_ATTACK, dam, kb_str);
     if (!aura && !(double_resist && has_resist_cold(creature_ptr)))
-        BreakerCold(creature_ptr).inventory_damage(inv);
+        inventory_damage(creature_ptr, BreakerCold(creature_ptr), inv);
 
     return get_damage;
 }
