@@ -17,8 +17,8 @@ protected:
 
 public:
     void inventory_damage(int perc);
-    int set_destroy(object_type *o_ptr);
-    virtual bool hates(object_type *o_ptr) = 0;
+    int can_destroy(object_type *o_ptr) const;
+    virtual bool hates(object_type *o_ptr) const = 0;
 
 private:
     tr_type ignore_flg;
@@ -29,26 +29,26 @@ class BreakerAcid : public ObjectBreaker {
 public:
     BreakerAcid(player_type *player_ptr);
     virtual ~BreakerAcid() = default;
-    bool hates(object_type *o_ptr);
+    bool hates(object_type *o_ptr) const;
 };
 
 class BreakerElec : public ObjectBreaker {
 public:
     BreakerElec(player_type *player_ptr);
     virtual ~BreakerElec() = default;
-    bool hates(object_type *o_ptr);
+    bool hates(object_type *o_ptr) const;
 };
 
 class BreakerFire : public ObjectBreaker {
 public:
     BreakerFire(player_type *player_ptr);
     virtual ~BreakerFire() = default;
-    bool hates(object_type *o_ptr);
+    bool hates(object_type *o_ptr) const;
 };
 
 class BreakerCold : public ObjectBreaker {
 public:
     BreakerCold(player_type *player_ptr);
     virtual ~BreakerCold() = default;
-    bool hates(object_type *o_ptr);
+    bool hates(object_type *o_ptr) const;
 };

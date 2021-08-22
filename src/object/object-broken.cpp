@@ -86,7 +86,7 @@ void ObjectBreaker::inventory_damage(int perc)
             continue;
 
         /* Give this item slot a shot at death */
-        if (!this->set_destroy(o_ptr))
+        if (!this->can_destroy(o_ptr))
             continue;
 
         /* Count the casualties */
@@ -143,7 +143,7 @@ void ObjectBreaker::inventory_damage(int perc)
  * Does a given class of objects (usually) hate acid?
  * Note that acid can either melt or corrode something.
  */
-bool BreakerAcid::hates(object_type *o_ptr)
+bool BreakerAcid::hates(object_type *o_ptr) const
 {
     /* Analyze the type */
     switch (o_ptr->tval) {
@@ -197,7 +197,7 @@ bool BreakerAcid::hates(object_type *o_ptr)
  * @param o_ptr アイテムの情報参照ポインタ
  * @return 破損するならばTRUEを返す
  */
-bool BreakerElec::hates(object_type *o_ptr)
+bool BreakerElec::hates(object_type *o_ptr) const
 {
     switch (o_ptr->tval) {
     case TV_RING:
@@ -221,7 +221,7 @@ bool BreakerElec::hates(object_type *o_ptr)
  * Hafted/Polearm weapons have wooden shafts.
  * Arrows/Bows are mostly wooden.
  */
-bool BreakerFire::hates(object_type *o_ptr)
+bool BreakerFire::hates(object_type *o_ptr) const
 {
     /* Analyze the type */
     switch (o_ptr->tval) {
@@ -279,7 +279,7 @@ bool BreakerFire::hates(object_type *o_ptr)
  * @param o_ptr アイテムの情報参照ポインタ
  * @return 破損するならばTRUEを返す
  */
-bool BreakerCold::hates(object_type *o_ptr)
+bool BreakerCold::hates(object_type *o_ptr) const
 {
     switch (o_ptr->tval) {
     case TV_POTION:
@@ -302,7 +302,7 @@ bool BreakerCold::hates(object_type *o_ptr)
  * @return 破損するならばTRUEを返す
  * @todo 統合を検討
  */
-int ObjectBreaker::set_destroy(object_type *o_ptr)
+int ObjectBreaker::can_destroy(object_type *o_ptr) const
 {
     BIT_FLAGS flgs[TR_FLAG_SIZE];
     if (!this->hates(o_ptr))
