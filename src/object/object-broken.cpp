@@ -28,28 +28,29 @@
 #include "util/bit-flags-calculator.h"
 #include "view/display-messages.h"
 
-ObjectBreaker::ObjectBreaker(tr_type ignore_flg)
+ObjectBreaker::ObjectBreaker(tr_type ignore_flg, player_type *player_ptr)
     : ignore_flg(ignore_flg)
+    , player_ptr(player_ptr)
 {
 }
 
-BreakerAcid::BreakerAcid()
-    : ObjectBreaker(TR_IGNORE_ACID)
+BreakerAcid::BreakerAcid(player_type *player_ptr)
+    : ObjectBreaker(TR_IGNORE_ACID, player_ptr)
 {
 }
 
-BreakerElec::BreakerElec()
-    : ObjectBreaker(TR_IGNORE_ELEC)
+BreakerElec::BreakerElec(player_type *player_ptr)
+    : ObjectBreaker(TR_IGNORE_ELEC, player_ptr)
 {
 }
 
-BreakerFire::BreakerFire()
-    : ObjectBreaker(TR_IGNORE_FIRE)
+BreakerFire::BreakerFire(player_type *player_ptr)
+    : ObjectBreaker(TR_IGNORE_FIRE, player_ptr)
 {
 }
 
-BreakerCold::BreakerCold()
-    : ObjectBreaker(TR_IGNORE_COLD)
+BreakerCold::BreakerCold(player_type *player_ptr)
+    : ObjectBreaker(TR_IGNORE_COLD, player_ptr)
 {
 }
 
@@ -64,19 +65,19 @@ BreakerCold::BreakerCold()
  * Destruction taken from "melee.c" code for "stealing".
  * New-style wands and rods handled correctly. -LM-
  */
-void ObjectBreaker::inventory_damage(player_type *player_ptr, int perc)
+void ObjectBreaker::inventory_damage(int perc)
 {
     INVENTORY_IDX i;
     int j, amt;
     object_type *o_ptr;
     GAME_TEXT o_name[MAX_NLEN];
 
-    if (check_multishadow(player_ptr) || player_ptr->current_floor_ptr->inside_arena)
+    if (check_multishadow(this->player_ptr) || this->player_ptr->current_floor_ptr->inside_arena)
         return;
 
     /* Scan through the slots backwards */
     for (i = 0; i < INVEN_PACK; i++) {
-        o_ptr = &player_ptr->inventory_list[i];
+        o_ptr = &this->player_ptr->inventory_list[i];
         if (!o_ptr->k_idx)
             continue;
 
@@ -85,7 +86,7 @@ void ObjectBreaker::inventory_damage(player_type *player_ptr, int perc)
             continue;
 
         /* Give this item slot a shot at death */
-        if (!this->set_destroy(player_ptr, o_ptr))
+        if (!this->set_destroy(o_ptr))
             continue;
 
         /* Count the casualties */
@@ -98,7 +99,7 @@ void ObjectBreaker::inventory_damage(player_type *player_ptr, int perc)
         if (!amt)
             continue;
 
-        describe_flavor(player_ptr, o_name, o_ptr, OD_OMIT_PREFIX);
+        describe_flavor(this->player_ptr, o_name, o_ptr, OD_OMIT_PREFIX);
 
         msg_format(_("%s(%c)が%s壊れてしまった！", "%sour %s (%c) %s destroyed!"),
 #ifdef JP
@@ -109,9 +110,9 @@ void ObjectBreaker::inventory_damage(player_type *player_ptr, int perc)
 #endif
 
 #ifdef JP
-        if (is_echizen(player_ptr))
+        if (is_echizen(this->player_ptr))
             msg_print("やりやがったな！");
-        else if (is_chargeman(player_ptr)) {
+        else if (is_chargeman(this->player_ptr)) {
             if (randint0(2) == 0)
                 msg_print(_("ジュラル星人め！", ""));
             else
@@ -121,15 +122,15 @@ void ObjectBreaker::inventory_damage(player_type *player_ptr, int perc)
 
         /* Potions smash open */
         if (object_is_potion(o_ptr)) {
-            (void)potion_smash_effect(player_ptr, 0, player_ptr->y, player_ptr->x, o_ptr->k_idx);
+            (void)potion_smash_effect(this->player_ptr, 0, this->player_ptr->y, this->player_ptr->x, o_ptr->k_idx);
         }
 
         /* Reduce the charges of rods/wands */
         reduce_charges(o_ptr, amt);
 
         /* Destroy "amt" items */
-        inven_item_increase(player_ptr, i, -amt);
-        inven_item_optimize(player_ptr, i);
+        inven_item_increase(this->player_ptr, i, -amt);
+        inven_item_optimize(this->player_ptr, i);
     }
 }
 
@@ -301,12 +302,12 @@ bool BreakerCold::hates(object_type *o_ptr)
  * @return 破損するならばTRUEを返す
  * @todo 統合を検討
  */
-int ObjectBreaker::set_destroy(player_type *owner_ptr, object_type *o_ptr)
+int ObjectBreaker::set_destroy(object_type *o_ptr)
 {
     BIT_FLAGS flgs[TR_FLAG_SIZE];
     if (!this->hates(o_ptr))
         return false;
-    object_flags(owner_ptr, o_ptr, flgs);
+    object_flags(this->player_ptr, o_ptr, flgs);
     if (has_flag(flgs, this->ignore_flg))
         return false;
     return true;

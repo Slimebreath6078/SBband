@@ -11,41 +11,42 @@ PERCENTAGE breakage_chance(player_type *owner_ptr, object_type *o_ptr, bool has_
 
 class ObjectBreaker {
 public:
-    ObjectBreaker(tr_type ignore_flg);
+    ObjectBreaker(tr_type ignore_flg, player_type *player_ptr);
     ObjectBreaker() = delete;
     virtual ~ObjectBreaker() = default;
-    void inventory_damage(player_type *player_ptr, int perc);
-    int set_destroy(player_type *owner_ptr, object_type *o_ptr);
+    void inventory_damage(int perc);
+    int set_destroy(object_type *o_ptr);
     virtual bool hates(object_type *o_ptr) = 0;
 
 private:
     tr_type ignore_flg;
+    player_type *player_ptr;
 };
 
 class BreakerAcid : public ObjectBreaker {
 public:
-    BreakerAcid();
+    BreakerAcid(player_type *player_ptr);
     virtual ~BreakerAcid() = default;
     bool hates(object_type *o_ptr);
 };
 
 class BreakerElec : public ObjectBreaker {
 public:
-    BreakerElec();
+    BreakerElec(player_type *player_ptr);
     virtual ~BreakerElec() = default;
     bool hates(object_type *o_ptr);
 };
 
 class BreakerFire : public ObjectBreaker {
 public:
-    BreakerFire();
+    BreakerFire(player_type *player_ptr);
     virtual ~BreakerFire() = default;
     bool hates(object_type *o_ptr);
 };
 
 class BreakerCold : public ObjectBreaker {
 public:
-    BreakerCold();
+    BreakerCold(player_type *player_ptr);
     virtual ~BreakerCold() = default;
     bool hates(object_type *o_ptr);
 };
