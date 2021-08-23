@@ -3,7 +3,8 @@ name: バグ報告
 about: バグを報告する時に使用する
 title: "【バグ】 バグ報告のタイトルを編集"
 labels: bug
-assignees: ""
+assignees: ''
+
 ---
 
 ## 環境
