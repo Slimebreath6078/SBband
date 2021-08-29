@@ -26557,3 +26557,50 @@ D:$and Hell followed with him. And power was given unto them over
 D:$the fourth part of the earth, to kill with sword, and with
 D:$hunger, and with death, and with the beasts of the earth.
 D:蒼ざめた馬に乗った「死」そのものだ。あなたを死に至らしめるだろう。
+
+#出典「アズールレーン」
+N:1344:ユニコーン
+E:HMS Unicorn
+G:g:v
+I:120:1447d3:50:120:20
+W:60:3:0:20000:0:0
+B:SHOOT:HURT:4d4
+B:BUTT:HURT:6d8
+B:BUTT:HURT:6d8
+F:FORCE_MAXHP | CAN_SPEAK | FEMALE | KAN_SEN | NONLIVING | WEIRD_MIND | WILD_OCEAN |
+F:TAKE_ITEM | OPEN_DOOR | CAN_SWIM |
+F:HURT_FIRE | IM_COLD | IM_POIS | RES_SHAR | NO_SLEEP | NO_STUN | NO_CONF |
+F:DROP_1D2 | DROP_GREAT | DROP_CORPSE | DROP_SKELETON |
+S:1_IN_4 | HEAL | S_MONSTERS | S_KIN | SHOOT |
+D:$She is searching for her big brother. 
+D:彼女はお兄ちゃんを探し求めている。
+
+#出典「アズールレーン」
+N:1345:綾波
+E:IJN Ayanami
+G:g:w
+I:120:9d157:55:20:10
+W:30:2:0:2000:20000:1337
+B:SHOOT:HURT:3d6
+B:SLASH:HURT:10d4
+F:FEMALE | CAN_SPEAK | KAN_SEN | NONLIVING | WEIRD_MIND | TAKE_ITEM | OPEN_DOOR | CAN_SWIM | WILD_OCEAN |
+F:HURT_FIRE | IM_COLD | IM_POIS | NO_SLEEP | NO_STUN | NO_CONF |
+F:DROP_3D2 | DROP_CORPSE | DROP_SKELETON |
+S:1_IN_6 | ROCKET | SHOOT |
+D:「吹雪型駆逐艦の改良型、綾波……です。戦闘は怖くないです。駆逐艦だけど、どんな敵とも戦える、です……」
+D:（Manjuu「アズールレーン」）
+
+
+N:1346:綾波改
+E:Retrofitted Ayanami
+G:g:w
+I:130:526d3:60:60:5
+W:50:2:0:10000:0:0
+B:SHOOT:HURT:3d10
+B:SLASH:HURT:20d5
+F:FEMALE | CAN_SPEAK | KAN_SEN | NONLIVING | WEIRD_MIND | TAKE_ITEM | OPEN_DOOR | CAN_SWIM | WILD_OCEAN |
+F:HURT_FIRE | IM_COLD | IM_POIS | NO_SLEEP | NO_STUN | NO_CONF |
+F:DROP_4D2 | ONLY_ITEM | DROP_CORPSE | DROP_SKELETON |
+S:1_IN_4 | ROCKET | SHOOT |
+D:「戦闘は嫌いではないけど好きじゃないです。ただ普通に戦ってただけ……だけど、今は指揮官のためなら……もう少し、強くなれる気がするのです」
+D:（Manjuu「アズールレーン」）
