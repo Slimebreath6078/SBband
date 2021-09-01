@@ -27,7 +27,7 @@ W:F:T:7:25
 W:F:_:3:40
 
 # Deep Water
-W:F:~:2:60
+W:F:~:2:5
 
 # Mountain
 W:F:^:11:50

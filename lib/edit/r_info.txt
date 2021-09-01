@@ -1490,7 +1490,7 @@ I:120:5d12:14:10:20
 W:4:2:0:15:0:0
 B:STING:HURT:7d1
 B:STING:HURT:7d1
-F:ANIMAL | AQUATIC | WILD_ALL | RES_WATE
+F:ANIMAL | AQUATIC | WILD_ALL | RES_WATE | WILD_OCEAN
 D:$An animal with a swordlike "beak".
 D:それは剣のような"鉤鼻"を持った魚だ。
 
@@ -1606,7 +1606,7 @@ I:120:6d12:20:45:20
 W:5:2:0:30:0:0
 B:BITE:HURT:13d1
 B:BITE:HURT:2d7
-F:AQUATIC | ANIMAL | WILD_ALL | RES_WATE
+F:AQUATIC | ANIMAL | WILD_ALL | RES_WATE | WILD_OCEAN
 D:$A predatory fish with razor-sharp teeth.
 D:それはきわどく鋭い歯を持った肉食の魚だ。
 
@@ -3079,7 +3079,7 @@ I:120:6d9:30:30:10
 W:10:2:0:40:0:0
 B:BITE:HURT:9d1
 B:BITE:HURT:9d1
-F:NO_SLEEP | WILD_ALL | RES_WATE |
+F:NO_SLEEP | WILD_ALL | RES_WATE
 F:FRIENDS | AQUATIC | ANIMAL
 D:$A very large and bloodthirsty fish.
 D:非常に大型で血に飢えた魚だ。
@@ -3418,7 +3418,7 @@ W:11:1:0:30:0:0
 B:BITE:HURT:2d5
 B:BITE:HURT:2d5
 F:AQUATIC | WILD_ALL | DROP_CORPSE | RES_WATE |
-F:ANIMAL | RIDING
+F:ANIMAL | RIDING | WILD_OCEAN |
 D:$A truly strange hybrid of a horse and a fish.
 D:本当に奇妙な馬と魚の掛け合わせだ。
 
@@ -4388,7 +4388,7 @@ B:SPIT:BLIND:1d3
 B:CRUSH:SUPERHURT:8d3
 B:CRUSH:SUPERHURT:8d3
 B:CRUSH:SUPERHURT:8d3
-F:RAND_25 | IM_COLD | RES_WATE | AQUATIC | ANIMAL | WILD_ALL | RIDING
+F:RAND_25 | IM_COLD | RES_WATE | AQUATIC | ANIMAL | WILD_ALL | RIDING | WILD_OCEAN
 D:$It doesn't move very fast, but when it does - watch out!
 D:そんなに素早くは動かないが、もし動いたときは注意しろ！
 
