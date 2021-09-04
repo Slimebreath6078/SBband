@@ -18082,31 +18082,37 @@ D:滅ぼそうとした。「とにかくある朝起きてみるとディナー
 D:レイザークの神聖なる領地となっていたのだ」
 D:（聖悠紀、超人ロック「コズミックゲーム」）
 
-N:883:サーペント・ゾンビ
-E:Zombified Serpent of Chaos
-G:J:D
-I:160:200d150:222:200:0
-W:127:4:0:66666:0:0
-B:CRUSH:SHATTER:22d15
-B:CRUSH:SHATTER:22d15
-B:BITE:LOSE_ALL:15d12
-B:TOUCH:UN_POWER
-F:CAN_SPEAK | UNDEAD | UNIQUE2 |
-F:PREVENT_SUDDEN_MAGIC | FORCE_MAXHP | FORCE_DEPTH |
-F:REFLECTING | AURA_FIRE | AURA_ELEC | AURA_COLD |
-F:ONLY_ITEM | DROP_1D2 | DROP_2D2 | DROP_3D2 | DROP_4D2 | 
-F:DROP_GREAT | RES_CHAO | RES_NETH |
-F:SMART | KILL_WALL | KILL_BODY | POWERFUL |
-F:REGENERATE | NONLIVING | CAN_FLY |
-F:EVIL | IM_ACID | IM_FIRE | IM_COLD | IM_ELEC | IM_POIS | 
-F:NO_CONF | NO_SLEEP | NO_FEAR | NO_STUN | RES_TELE |
-S:1_IN_3 | 
-S:S_MONSTERS | BR_CHAO | BA_CHAO | ROCKET | S_CYBER | S_KIN |
-S:BR_NETH | BR_MANA | S_HI_UNDEAD | S_HI_DRAGON | S_UNIQUE |
-S:BR_NUKE | BR_DISI | HAND_DOOM | DISPEL
-D:$Has returned from the bottom of Hell to take revenge on those who
-D:$ destroyed it.
-D:自分を滅ぼした者に復讐するため、地獄の底から復活した！
+N:883:セイレーンの見据えるもの『オブザーバー』
+E:Observer, the Watcher of Siren
+G:g:y
+I:155:200d125:150:150:0
+W:100:1:0:60000:0:0
+B:CRUSH:SUPERHURT:20d10
+B:TOUCH:UN_POWER:40d1
+B:TOUCH:EXP_80:15d6
+B:CRUSH:INERTIA:15d6
+F:UNIQUE | QUESTOR | FORCE_MAXHP | FORCE_MAXHP | FEMALE |
+F:KAN-SEN | EVIL | NONLIVING | SMART | POWERFUL | CAN_FLY | CAN_SWIM |
+F:KILL_BODY | BASH_DOOR | PASS_WALL | ESCORTS | SMART | TAKE_ITEM |
+F:DROP_GREAT | DROP_1D2 | DROP_2D2 | DROP_3D2 | DROP_4D2 | DROP_CORPSE | DROP_SKELETON |
+F:IM_COLD | IM_ACID | IM_ELEC | IM_POIS | RES_CHAO | RES_DARK |
+F:RES_DISE | RES_GRAV | RES_NEXU | RES_SOUN | RES_NETH | RES_WATE |
+F:RES_TELE | NO_CONF | NO_FEAR | NO_STUN | NO_SLEEP
+S:1_IN_3
+S:ROCKET | BA_ELEC | BA_CHAO | BA_MANA | BA_NETH |
+S:S_KIN | S_HI_DRAGON | S_MONSTERS | S_UNIQUE | S_CYBER |
+S:PSY_SPEAR | DISPEL | BR_ELEC | BR_NUKE | SCARE | CONF | HOLD |
+V:150
+D:$She marked you as a troublesome one and dispatched you many enemies.
+D:$You know she also experiments with you.
+D:$You get here for aborting her putrid experiment by killing her.
+D:$You wish to kill not only her body but also her "program",
+D:$ though reincarnate so many times!
+D:彼女はあなたを厄介な因子としてマークし、数々の敵を送り込んできた。
+D:同時にあなたが実験体として試されていることもあなたは知っている。
+D:あなたはこの気味の悪い実験を終わらせるべく、彼女を葬りに来た。
+D:今度こそその体だけでなく、内なる「プログラム」を葬り去るまで
+D:何度でも蘇り、戦いを続けるのだ！
 
 N:884:有毒ガス
 E:Noxious fume
