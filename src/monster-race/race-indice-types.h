@@ -98,7 +98,7 @@ enum class MonsterRaceId : int16_t {
     DIO = 878,
     OHMU = 879,
     WONG = 880,
-    ZOMBI_SERPENT = 883,
+    OBSERVER = 883,
     SHALLOW_PUDDLE = 885,
     D_ELF_SHADE = 886,
     TROLL_KING = 894,
