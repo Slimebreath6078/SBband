@@ -5,6 +5,7 @@
 #include "monster/monster-util.h"
 #include "player-base/player-race.h"
 #include "spell/summon-types.h"
+#include "system/floor-type-definition.h"
 #include "system/monster-race-info.h"
 #include "system/player-type-definition.h"
 #include "util/bit-flags-calculator.h"
@@ -109,8 +110,11 @@ bool check_summon_specific(PlayerType *player_ptr, MonsterRaceId summoner_idx, M
         return r_idx == MonsterRaceId::MANES;
     case SUMMON_LOUSE:
         return r_idx == MonsterRaceId::LOUSE;
-    case SUMMON_GUARDIANS:
-        return monrace.misc_flags.has(MonsterMiscType::GUARDIAN);
+    case SUMMON_GUARDIANS: {
+        bool is_match = monrace.misc_flags.has(MonsterMiscType::GUARDIAN);
+        is_match &= monrace.level <= std::max(player_ptr->current_floor_ptr->dun_level, 100);
+        return is_match;
+    }
     case SUMMON_KNIGHTS: {
         auto is_match = r_idx == MonsterRaceId::NOV_PALADIN;
         is_match |= r_idx == MonsterRaceId::NOV_PALADIN_G;
