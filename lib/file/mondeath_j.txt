@@ -38,6 +38,9 @@ N:878:Dio Brando
 N:880:Wong, Master of Time
 「この私がぁ！」
 
+N:883:Observer, the Watcher of Siren
+「―――損傷甚大。これ以上の生命維持は困難と判断。……こんな想定外なこと…嘘よ…」
+
 N:921:Internet Exploder
 を削除します。
 
