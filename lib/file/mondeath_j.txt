@@ -35,6 +35,9 @@ N:878:Dio Brando
 N:880:Wong, Master of Time
 「この私がぁ！」
 
+N:883:Observer, the Watcher of Siren
+「もう体がもたない…今回もあなたを止められないの…」
+
 N:921:Internet Exploder
 を削除します。
 
