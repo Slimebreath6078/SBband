@@ -75,7 +75,7 @@ static void decide_summon_kin_caster(
     bool see_either = see_monster(target_ptr, m_idx) || see_monster(target_ptr, t_idx);
     bool mon_to_mon = target_type == MONSTER_TO_MONSTER;
     bool mon_to_player = target_type == MONSTER_TO_PLAYER;
-    if (m_ptr->r_idx == MON_SERPENT || m_ptr->r_idx == MON_ZOMBI_SERPENT) {
+    if (m_ptr->r_idx == MON_SERPENT || m_ptr->r_idx == MON_OBSERVER) {
         monspell_message(target_ptr, m_idx, t_idx, _("%^sが何かをつぶやいた。", "%^s mumbles."),
             _("%^sがダンジョンの主を召喚した。", "%^s magically summons guardians of dungeons."),
             _("%^sがダンジョンの主を召喚した。", "%^s magically summons guardians of dungeons."), target_type);
@@ -139,7 +139,7 @@ MonsterSpellResult spell_RF6_S_KIN(player_type *target_ptr, POSITION y, POSITION
         count += summon_EDGE(target_ptr, y, x, rlev, m_idx);
         break;
     case MON_SERPENT:
-    case MON_ZOMBI_SERPENT:
+    case MON_OBSERVER:
         count += summon_guardian(target_ptr, y, x, rlev, m_idx, t_idx, target_type);
         break;
     case MON_TIAMAT:

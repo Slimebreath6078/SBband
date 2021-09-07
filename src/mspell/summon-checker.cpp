@@ -11,6 +11,7 @@
 #include "monster/monster-util.h"
 #include "player/player-race.h"
 #include "spell/summon-types.h"
+#include "system/floor-type-definition.h"
 #include "system/monster-race-definition.h"
 #include "system/player-type-definition.h"
 #include "util/string-processor.h"
@@ -156,6 +157,7 @@ bool check_summon_specific(player_type *player_ptr, MONRACE_IDX summoner_idx, MO
         break;
     case SUMMON_GUARDIANS:
         is_match = (r_ptr->flags7 & RF7_GUARDIAN) != 0;
+        is_match &= r_ptr->level <= MAX(player_ptr->current_floor_ptr->dun_level, 100);
         break;
     case SUMMON_KNIGHTS:
         is_match = ((r_idx == MON_NOV_PALADIN) || (r_idx == MON_NOV_PALADIN_G) || (r_idx == MON_PALADIN) || (r_idx == MON_W_KNIGHT)

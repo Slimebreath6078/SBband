@@ -98,7 +98,7 @@ enum monster_race_type {
     MON_DIO = 878,
     MON_OHMU = 879,
     MON_WONG = 880,
-    MON_ZOMBI_SERPENT = 883,
+    MON_OBSERVER = 883,
     MON_SHALLOW_PUDDLE = 885,
     MON_D_ELF_SHADE = 886,
     MON_TROLL_KING = 894,
