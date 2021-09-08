@@ -133,8 +133,10 @@ void exe_quaff_potion(player_type *creature_ptr, INVENTORY_IDX item)
     if (music_singing_any(creature_ptr))
         stop_singing(creature_ptr);
 
-    if (hex_spelling_any(creature_ptr) && !hex_spelling(creature_ptr, HEX_INHAIL))
-        stop_hex_spell_all(creature_ptr);
+    RealmHex realm_hex(creature_ptr);
+    if (realm_hex.is_spelling_any() && !realm_hex.is_spelling_specific(HEX_INHAIL)) {
+        (void)RealmHex(creature_ptr).stop_all_spells();
+    }
 
     o_ptr = ref_item(creature_ptr, item);
     q_ptr = &forge;
@@ -216,7 +218,7 @@ void exe_quaff_potion(player_type *creature_ptr, INVENTORY_IDX item)
                     msg_print(_("恐ろしい光景が頭に浮かんできた。", "A horrible vision enters your mind."));
 
                     /* Have some nightmares */
-                    sanity_blast(creature_ptr, NULL, false);
+                    sanity_blast(creature_ptr, nullptr, false);
                 }
                 if (set_paralyzed(creature_ptr, creature_ptr->paralyzed + randint0(4) + 4)) {
                     ident = true;
@@ -470,7 +472,7 @@ void exe_quaff_potion(player_type *creature_ptr, INVENTORY_IDX item)
             msg_print(_("更なる啓蒙を感じた...", "You begin to feel more enlightened..."));
             chg_virtue(creature_ptr, V_KNOWLEDGE, 1);
             chg_virtue(creature_ptr, V_ENLIGHTEN, 2);
-            msg_print(NULL);
+            msg_print(nullptr);
             wiz_lite(creature_ptr, false);
             (void)do_inc_stat(creature_ptr, A_INT);
             (void)do_inc_stat(creature_ptr, A_WIS);
@@ -487,13 +489,13 @@ void exe_quaff_potion(player_type *creature_ptr, INVENTORY_IDX item)
 
         case SV_POTION_SELF_KNOWLEDGE:
             msg_print(_("自分自身のことが少しは分かった気がする...", "You begin to know yourself a little better..."));
-            msg_print(NULL);
+            msg_print(nullptr);
             self_knowledge(creature_ptr);
             ident = true;
             break;
 
         case SV_POTION_EXPERIENCE:
-            if (creature_ptr->prace == RACE_ANDROID)
+            if (creature_ptr->prace == player_race_type::ANDROID)
                 break;
             chg_virtue(creature_ptr, V_ENLIGHTEN, 1);
             if (creature_ptr->exp < PY_MAX_EXP) {
@@ -541,7 +543,7 @@ void exe_quaff_potion(player_type *creature_ptr, INVENTORY_IDX item)
 
         case SV_POTION_TSUYOSHI:
             msg_print(_("「オクレ兄さん！」", "Brother OKURE!"));
-            msg_print(NULL);
+            msg_print(nullptr);
             creature_ptr->tsuyoshi = 1;
             (void)set_tsuyoshi(creature_ptr, 0, true);
             if (!has_resist_chaos(creature_ptr)) {
@@ -566,13 +568,13 @@ void exe_quaff_potion(player_type *creature_ptr, INVENTORY_IDX item)
         }
     }
 
-    if (is_specific_player_race(creature_ptr, RACE_SKELETON)) {
+    if (is_specific_player_race(creature_ptr, player_race_type::SKELETON)) {
         msg_print(_("液体の一部はあなたのアゴを素通りして落ちた！", "Some of the fluid falls through your jaws!"));
         (void)potion_smash_effect(creature_ptr, 0, creature_ptr->y, creature_ptr->x, q_ptr->k_idx);
     }
     creature_ptr->update |= (PU_COMBINE | PU_REORDER);
 
-    if (!(object_is_aware(q_ptr))) {
+    if (!(q_ptr->is_aware())) {
         chg_virtue(creature_ptr, V_PATIENCE, -1);
         chg_virtue(creature_ptr, V_CHANCE, 1);
         chg_virtue(creature_ptr, V_KNOWLEDGE, -1);
@@ -582,14 +584,14 @@ void exe_quaff_potion(player_type *creature_ptr, INVENTORY_IDX item)
     object_tried(q_ptr);
 
     /* An identification was made */
-    if (ident && !object_is_aware(q_ptr)) {
+    if (ident && !q_ptr->is_aware()) {
         object_aware(creature_ptr, q_ptr);
         gain_exp(creature_ptr, (lev + (creature_ptr->lev >> 1)) / creature_ptr->lev);
     }
 
     creature_ptr->window_flags |= (PW_INVEN | PW_EQUIP | PW_PLAYER);
 
-    if (is_specific_player_race(creature_ptr, RACE_SKELETON))
+    if (is_specific_player_race(creature_ptr, player_race_type::SKELETON))
         return; //!< @note スケルトンは水分で飢えを満たせない
 
     switch (player_race_food(creature_ptr)) {

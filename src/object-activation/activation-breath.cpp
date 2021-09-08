@@ -27,14 +27,13 @@ bool activate_dragon_breath(player_type *user_ptr, object_type *o_ptr)
     if (!get_aim_dir(user_ptr, &dir))
         return false;
 
-    BIT_FLAGS resistance_flags[TR_FLAG_SIZE];
-    object_flags(user_ptr, o_ptr, resistance_flags);
+    auto resistance_flags = object_flags(o_ptr);
 
     int type[20];
     int n = 0;
     concptr name[20];
     for (int i = 0; dragonbreath_info[i].flag != 0; i++) {
-        if (has_flag(resistance_flags, dragonbreath_info[i].flag)) {
+        if (resistance_flags.has(dragonbreath_info[i].flag)) {
             type[n] = dragonbreath_info[i].type;
             name[n] = dragonbreath_info[i].name;
             n++;
@@ -47,8 +46,9 @@ bool activate_dragon_breath(player_type *user_ptr, object_type *o_ptr)
     if (music_singing_any(user_ptr))
         stop_singing(user_ptr);
 
-    if (hex_spelling_any(user_ptr))
-        stop_hex_spell_all(user_ptr);
+    if (RealmHex(user_ptr).is_spelling_any()) {
+        (void)RealmHex(user_ptr).stop_all_spells();
+    }
 
     int t = randint0(n);
     msg_format(_("あなたは%sのブレスを吐いた。", "You breathe %s."), name[t]);

@@ -34,15 +34,19 @@ MonsterSpellResult spell_RF4_SHOOT(player_type *target_ptr, POSITION y, POSITION
 {
     monster_type *m_ptr = &target_ptr->current_floor_ptr->m_list[m_idx];
     monster_race *r_ptr = &r_info[m_ptr->r_idx];
+    bool notice;
     if (any_bits(r_ptr->flags3, RF3_KAN_SEN)) {
-        monspell_message(target_ptr, m_idx, t_idx, _("%^sが奇妙な音を発した。", "%^s makes a strange noise."), _("%^sが艦砲射撃をした。", "%^s bombards."),
+        notice = monspell_message(target_ptr, m_idx, t_idx, _("%^sが奇妙な音を発した。", "%^s makes a strange noise."), _("%^sが艦砲射撃をした。", "%^s bombards."),
             _("%^sが%sに艦砲射撃をした。", "%^s bombards %s."), TARGET_TYPE);
     } else {
-        monspell_message(target_ptr, m_idx, t_idx, _("%^sが奇妙な音を発した。", "%^s makes a strange noise."), _("%^sが矢を放った。", "%^s fires an arrow."),
+        notice = monspell_message(target_ptr, m_idx, t_idx, _("%^sが奇妙な音を発した。", "%^s makes a strange noise."), _("%^sが矢を放った。", "%^s fires an arrow."),
             _("%^sが%sに矢を放った。", "%^s fires an arrow at %s."), TARGET_TYPE);
     }
 
-    sound(SOUND_SHOOT);
+    if (notice) {
+        sound(SOUND_SHOOT);
+    }
+
     const auto dam = monspell_damage(target_ptr, RF_ABILITY::SHOOT, m_idx, DAM_ROLL);
     const auto proj_res = bolt(target_ptr, m_idx, y, x, GF_ARROW, dam, TARGET_TYPE);
 

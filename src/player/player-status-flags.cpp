@@ -9,7 +9,6 @@
 #include "object-enchant/object-ego.h"
 #include "object-enchant/tr-types.h"
 #include "object-enchant/trc-types.h"
-#include "object-hook/hook-checker.h"
 #include "object-hook/hook-weapon.h"
 #include "object/object-flags.h"
 #include "player-info/equipment-info.h"
@@ -86,16 +85,15 @@ BIT_FLAGS convert_inventory_slot_type_to_flag_cause(inventory_slot_type inventor
 BIT_FLAGS check_equipment_flags(player_type *creature_ptr, tr_type tr_flag)
 {
     object_type *o_ptr;
-    BIT_FLAGS flgs[TR_FLAG_SIZE];
     BIT_FLAGS result = 0L;
     for (int i = INVEN_MAIN_HAND; i < INVEN_TOTAL; i++) {
         o_ptr = &creature_ptr->inventory_list[i];
         if (!o_ptr->k_idx)
             continue;
 
-        object_flags(creature_ptr, o_ptr, flgs);
+        auto flgs = object_flags(o_ptr);
 
-        if (has_flag(flgs, tr_flag))
+        if (flgs.has(tr_flag))
             set_bits(result, convert_inventory_slot_type_to_flag_cause(static_cast<inventory_slot_type>(i)));
     }
     return result;
@@ -461,7 +459,7 @@ bool has_pass_wall(player_type *creature_ptr)
 {
     bool pow = false;
 
-    if (creature_ptr->wraith_form || creature_ptr->tim_pass_wall || (!creature_ptr->mimic_form && creature_ptr->prace == RACE_SPECTRE)) {
+    if (creature_ptr->wraith_form || creature_ptr->tim_pass_wall || (!creature_ptr->mimic_form && creature_ptr->prace == player_race_type::SPECTRE)) {
         pow = true;
     }
 
@@ -496,7 +494,7 @@ BIT_FLAGS has_esp_evil(player_type *creature_ptr)
 {
     BIT_FLAGS result = 0L;
     if (creature_ptr->realm1 == REALM_HEX) {
-        if (hex_spelling(creature_ptr, HEX_DETECT_EVIL))
+        if (RealmHex(creature_ptr).is_spelling_specific(HEX_DETECT_EVIL))
             result |= FLAG_CAUSE_MAGIC_TIME_EFFECT;
     }
     result |= check_equipment_flags(creature_ptr, TR_ESP_EVIL);
@@ -762,16 +760,15 @@ BIT_FLAGS has_warning(player_type *creature_ptr)
 {
     BIT_FLAGS result = 0L;
     object_type *o_ptr;
-    BIT_FLAGS flgs[TR_FLAG_SIZE];
 
     for (int i = INVEN_MAIN_HAND; i < INVEN_TOTAL; i++) {
         o_ptr = &creature_ptr->inventory_list[i];
         if (!o_ptr->k_idx)
             continue;
 
-        object_flags(creature_ptr, o_ptr, flgs);
+        auto flgs = object_flags(o_ptr);
 
-        if (has_flag(flgs, TR_WARNING)) {
+        if (flgs.has(TR_WARNING)) {
             if (!o_ptr->inscription || !(angband_strchr(quark_str(o_ptr->inscription), '$')))
                 set_bits(result, convert_inventory_slot_type_to_flag_cause(static_cast<inventory_slot_type>(i)));
         }
@@ -804,7 +801,7 @@ BIT_FLAGS has_sh_fire(player_type *creature_ptr)
         result |= FLAG_CAUSE_BATTLE_FORM;
     }
 
-    if (hex_spelling(creature_ptr, HEX_DEMON_AURA) || creature_ptr->ult_res || creature_ptr->tim_sh_fire) {
+    if (RealmHex(creature_ptr).is_spelling_specific(HEX_DEMON_AURA) || creature_ptr->ult_res || creature_ptr->tim_sh_fire) {
         result |= FLAG_CAUSE_MAGIC_TIME_EFFECT;
     }
 
@@ -822,7 +819,7 @@ BIT_FLAGS has_sh_elec(player_type *creature_ptr)
     if (creature_ptr->muta.has(MUTA::ELEC_TOUC))
         result |= FLAG_CAUSE_MUTATION;
 
-    if (hex_spelling(creature_ptr, HEX_SHOCK_CLOAK) || creature_ptr->ult_res) {
+    if (RealmHex(creature_ptr).is_spelling_specific(HEX_SHOCK_CLOAK) || creature_ptr->ult_res) {
         result |= FLAG_CAUSE_MAGIC_TIME_EFFECT;
     }
 
@@ -845,7 +842,7 @@ BIT_FLAGS has_sh_cold(player_type *creature_ptr)
         result |= FLAG_CAUSE_BATTLE_FORM;
     }
 
-    if (creature_ptr->ult_res || hex_spelling(creature_ptr, HEX_ICE_ARMOR)) {
+    if (creature_ptr->ult_res || RealmHex(creature_ptr).is_spelling_specific(HEX_ICE_ARMOR)) {
         result |= FLAG_CAUSE_MAGIC_TIME_EFFECT;
     }
 
@@ -1170,7 +1167,7 @@ BIT_FLAGS has_regenerate(player_type *creature_ptr)
         result |= FLAG_CAUSE_BATTLE_FORM;
     }
 
-    if (hex_spelling(creature_ptr, HEX_DEMON_AURA) || creature_ptr->ult_res || creature_ptr->tim_regen) {
+    if (RealmHex(creature_ptr).is_spelling_specific(HEX_DEMON_AURA) || creature_ptr->ult_res || creature_ptr->tim_regen) {
         result |= FLAG_CAUSE_MAGIC_TIME_EFFECT;
     }
 
@@ -1185,7 +1182,6 @@ BIT_FLAGS has_regenerate(player_type *creature_ptr)
 void update_curses(player_type *creature_ptr)
 {
     object_type *o_ptr;
-    BIT_FLAGS flgs[TR_FLAG_SIZE];
     creature_ptr->cursed.clear();
     creature_ptr->cursed_special.clear();
 
@@ -1196,42 +1192,42 @@ void update_curses(player_type *creature_ptr)
         o_ptr = &creature_ptr->inventory_list[i];
         if (!o_ptr->k_idx)
             continue;
-        object_flags(creature_ptr, o_ptr, flgs);
-        if (has_flag(flgs, TR_AGGRAVATE))
+        auto flgs = object_flags(o_ptr);
+        if (flgs.has(TR_AGGRAVATE))
             creature_ptr->cursed.set(TRC::AGGRAVATE);
-        if (has_flag(flgs, TR_DRAIN_EXP))
+        if (flgs.has(TR_DRAIN_EXP))
             creature_ptr->cursed.set(TRC::DRAIN_EXP);
-        if (has_flag(flgs, TR_TY_CURSE))
+        if (flgs.has(TR_TY_CURSE))
             creature_ptr->cursed.set(TRC::TY_CURSE);
-        if (has_flag(flgs, TR_ADD_L_CURSE))
+        if (flgs.has(TR_ADD_L_CURSE))
             creature_ptr->cursed.set(TRC::ADD_L_CURSE);
-        if (has_flag(flgs, TR_ADD_H_CURSE))
+        if (flgs.has(TR_ADD_H_CURSE))
             creature_ptr->cursed.set(TRC::ADD_H_CURSE);
-        if (has_flag(flgs, TR_DRAIN_HP))
+        if (flgs.has(TR_DRAIN_HP))
             creature_ptr->cursed.set(TRC::DRAIN_HP);
-        if (has_flag(flgs, TR_DRAIN_MANA))
+        if (flgs.has(TR_DRAIN_MANA))
             creature_ptr->cursed.set(TRC::DRAIN_MANA);
-        if (has_flag(flgs, TR_CALL_ANIMAL))
+        if (flgs.has(TR_CALL_ANIMAL))
             creature_ptr->cursed.set(TRC::CALL_ANIMAL);
-        if (has_flag(flgs, TR_CALL_DEMON))
+        if (flgs.has(TR_CALL_DEMON))
             creature_ptr->cursed.set(TRC::CALL_DEMON);
-        if (has_flag(flgs, TR_CALL_DRAGON))
+        if (flgs.has(TR_CALL_DRAGON))
             creature_ptr->cursed.set(TRC::CALL_DRAGON);
-        if (has_flag(flgs, TR_CALL_UNDEAD))
+        if (flgs.has(TR_CALL_UNDEAD))
             creature_ptr->cursed.set(TRC::CALL_UNDEAD);
-        if (has_flag(flgs, TR_COWARDICE))
+        if (flgs.has(TR_COWARDICE))
             creature_ptr->cursed.set(TRC::COWARDICE);
-        if (has_flag(flgs, TR_LOW_MELEE))
+        if (flgs.has(TR_LOW_MELEE))
             creature_ptr->cursed.set(TRC::LOW_MELEE);
-        if (has_flag(flgs, TR_LOW_AC))
+        if (flgs.has(TR_LOW_AC))
             creature_ptr->cursed.set(TRC::LOW_AC);
-        if (has_flag(flgs, TR_HARD_SPELL))
+        if (flgs.has(TR_HARD_SPELL))
             creature_ptr->cursed.set(TRC::HARD_SPELL);
-        if (has_flag(flgs, TR_FAST_DIGEST))
+        if (flgs.has(TR_FAST_DIGEST))
             creature_ptr->cursed.set(TRC::FAST_DIGEST);
-        if (has_flag(flgs, TR_SLOW_REGEN))
+        if (flgs.has(TR_SLOW_REGEN))
             creature_ptr->cursed.set(TRC::SLOW_REGEN);
-        if (has_flag(flgs, TR_BERS_RAGE))
+        if (flgs.has(TR_BERS_RAGE))
             creature_ptr->cursed.set(TRC::BERS_RAGE);
 
         auto obj_curse_flags = o_ptr->curse_flags;
@@ -1240,8 +1236,8 @@ void update_curses(player_type *creature_ptr)
         if (o_ptr->name1 == ART_CHAINSWORD)
             creature_ptr->cursed_special.set(TRCS::CHAINSWORD);
 
-        if (has_flag(flgs, TR_TELEPORT)) {
-            if (object_is_cursed(o_ptr))
+        if (flgs.has(TR_TELEPORT)) {
+            if (o_ptr->is_cursed())
                 creature_ptr->cursed.set(TRC::TELEPORT);
             else {
                 concptr insc = quark_str(o_ptr->inscription);
@@ -1272,7 +1268,6 @@ BIT_FLAGS has_earthquake(player_type *creature_ptr)
 void update_extra_blows(player_type *creature_ptr)
 {
     object_type *o_ptr;
-    BIT_FLAGS flgs[TR_FLAG_SIZE];
     creature_ptr->extra_blows[0] = creature_ptr->extra_blows[1] = 0;
 
     const melee_type melee_type = player_melee_type(creature_ptr);
@@ -1283,8 +1278,8 @@ void update_extra_blows(player_type *creature_ptr)
         if (!o_ptr->k_idx)
             continue;
 
-        object_flags(creature_ptr, o_ptr, flgs);
-        if (has_flag(flgs, TR_BLOWS)) {
+        auto flgs = object_flags(o_ptr);
+        if (flgs.has(TR_BLOWS)) {
             if ((i == INVEN_MAIN_HAND || i == INVEN_MAIN_RING) && !two_handed)
                 creature_ptr->extra_blows[0] += o_ptr->pval;
             else if ((i == INVEN_SUB_HAND || i == INVEN_SUB_RING) && !two_handed)
@@ -1969,10 +1964,10 @@ bool has_two_handed_weapons(player_type *creature_ptr)
 {
     if (can_two_hands_wielding(creature_ptr)) {
         if (can_attack_with_main_hand(creature_ptr) && (empty_hands(creature_ptr, false) == EMPTY_HAND_SUB)
-            && object_allow_two_hands_wielding(&creature_ptr->inventory_list[INVEN_MAIN_HAND])) {
+            && creature_ptr->inventory_list[INVEN_MAIN_HAND].allow_two_hands_wielding()) {
             return true;
         } else if (can_attack_with_sub_hand(creature_ptr) && (empty_hands(creature_ptr, false) == EMPTY_HAND_MAIN)
-            && object_allow_two_hands_wielding(&creature_ptr->inventory_list[INVEN_SUB_HAND])) {
+            && creature_ptr->inventory_list[INVEN_SUB_HAND].allow_two_hands_wielding()) {
             return true;
         }
     }
@@ -2030,42 +2025,39 @@ bool has_disable_two_handed_bonus(player_type *creature_ptr, int i)
  * @brief ふさわしくない武器を持っているかどうかを返す。
  * @todo 相応しい時にFALSEで相応しくない時にTRUEという負論理は良くない、後で修正する
  */
-bool has_icky_wield_weapon(player_type *creature_ptr, int i)
+bool is_wielding_icky_weapon(player_type *creature_ptr, int i)
 {
-    BIT_FLAGS flgs[TR_FLAG_SIZE];
-    object_type *o_ptr = &creature_ptr->inventory_list[INVEN_MAIN_HAND + i];
-    object_flags(creature_ptr, o_ptr, flgs);
+    auto *o_ptr = &creature_ptr->inventory_list[INVEN_MAIN_HAND + i];
+    auto flgs = object_flags(o_ptr);
 
-    bool has_no_weapon = (o_ptr->tval == TV_NONE) || (o_ptr->tval == TV_SHIELD);
+    auto has_no_weapon = (o_ptr->tval == TV_NONE) || (o_ptr->tval == TV_SHIELD);
     if (creature_ptr->pclass == CLASS_PRIEST) {
-        bool is_suitable_weapon = has_flag(flgs, TR_BLESSED);
+        auto is_suitable_weapon = flgs.has(TR_BLESSED);
         is_suitable_weapon |= (o_ptr->tval != TV_SWORD) && (o_ptr->tval != TV_POLEARM);
         return !has_no_weapon && !is_suitable_weapon;
     }
 
     if (creature_ptr->pclass == CLASS_SORCERER) {
-        bool is_suitable_weapon = o_ptr->tval == TV_HAFTED;
+        auto is_suitable_weapon = o_ptr->tval == TV_HAFTED;
         is_suitable_weapon &= (o_ptr->sval == SV_WIZSTAFF) || (o_ptr->sval == SV_NAMAKE_HAMMER);
         return !has_no_weapon && !is_suitable_weapon;
     }
 
-    if (has_not_monk_weapon(creature_ptr, i) || has_not_ninja_weapon(creature_ptr, i))
-        return true;
-
-    return false;
+    return has_not_monk_weapon(creature_ptr, i) || has_not_ninja_weapon(creature_ptr, i);
 }
 
-bool has_riding_wield_weapon(player_type *creature_ptr, int i)
+/*!
+ * @brief 乗馬にふさわしくない武器を持って乗馬しているかどうかを返す.
+ * @param creature_ptr プレーヤーへの参照ポインタ
+ * @param i 武器を持っている手。0ならば利き手、1ならば反対の手
+ */
+bool is_wielding_icky_riding_weapon(player_type *creature_ptr, int i)
 {
-    object_type *o_ptr;
-    BIT_FLAGS flgs[TR_FLAG_SIZE];
-    o_ptr = &creature_ptr->inventory_list[INVEN_MAIN_HAND + i];
-    object_flags(creature_ptr, o_ptr, flgs);
-    if (creature_ptr->riding != 0 && !(o_ptr->tval == TV_POLEARM) && ((o_ptr->sval == SV_LANCE) || (o_ptr->sval == SV_HEAVY_LANCE))
-        && !has_flag(flgs, TR_RIDING)) {
-        return true;
-    }
-    return false;
+    auto *o_ptr = &creature_ptr->inventory_list[INVEN_MAIN_HAND + i];
+    auto flgs = object_flags(o_ptr);
+    auto has_no_weapon = (o_ptr->tval == TV_NONE) || (o_ptr->tval == TV_SHIELD);
+    auto is_suitable = o_ptr->is_lance() || flgs.has(TR_RIDING);
+    return (creature_ptr->riding > 0) && !has_no_weapon && !is_suitable;
 }
 
 bool has_not_ninja_weapon(player_type *creature_ptr, int i)
@@ -2097,7 +2089,7 @@ bool has_good_luck(player_type *creature_ptr)
 BIT_FLAGS player_aggravate_state(player_type *creature_ptr)
 {
     if (creature_ptr->cursed.has(TRC::AGGRAVATE)) {
-        if ((is_specific_player_race(creature_ptr, RACE_S_FAIRY)) && (creature_ptr->pseikaku != PERSONALITY_SEXY)) {
+        if ((is_specific_player_race(creature_ptr, player_race_type::S_FAIRY)) && (creature_ptr->pseikaku != PERSONALITY_SEXY)) {
             return AGGRAVATE_S_FAIRY;
         }
         return AGGRAVATE_NORMAL;

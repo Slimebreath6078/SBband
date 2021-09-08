@@ -41,7 +41,7 @@ typedef struct chain_str {
 /*
  * Data struct for text editor
  */
-typedef struct object_type object_type;
+struct object_type;;
 typedef struct text_body_type {
 	int wid, hgt;
 	int cx, cy;
@@ -62,7 +62,7 @@ typedef struct text_body_type {
 	concptr *lines_list;
 	byte states[MAX_LINES];
 
-	u16b dirty_flags;
+	uint16_t dirty_flags;
 	int dirty_line;
 	int filename_mode;
 	int old_com_id;
@@ -78,7 +78,7 @@ extern int max_max_autopick;
 extern autopick_type *autopick_list;
 extern object_type autopick_last_destroyed_object;
 
-typedef struct player_type player_type;
+struct player_type;
 void autopick_free_entry(autopick_type *entry);
 void free_text_lines(concptr *lines_list);
 int get_com_id(char key);

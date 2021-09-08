@@ -298,9 +298,9 @@ void choose_new_monster(player_type *player_ptr, MONSTER_IDX m_idx, bool born, M
 
         chameleon_change_m_idx = m_idx;
         if (old_unique)
-            get_mon_num_prep(player_ptr, monster_hook_chameleon_lord, NULL);
+            get_mon_num_prep(player_ptr, monster_hook_chameleon_lord, nullptr);
         else
-            get_mon_num_prep(player_ptr, monster_hook_chameleon, NULL);
+            get_mon_num_prep(player_ptr, monster_hook_chameleon, nullptr);
 
         if (old_unique)
             level = r_info[MON_CHAMELEON_K].level;
@@ -360,7 +360,7 @@ void choose_new_monster(player_type *player_ptr, MONSTER_IDX m_idx, bool born, M
     }
 
     if (ironman_nightmare) {
-        u32b hp = m_ptr->max_maxhp * 2L;
+        uint32_t hp = m_ptr->max_maxhp * 2L;
         m_ptr->max_maxhp = (HIT_POINT)MIN(30000, hp);
     }
 

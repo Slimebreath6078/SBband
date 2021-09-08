@@ -251,9 +251,9 @@ static void generate_fixed_floor(player_type *player_ptr)
     floor_ptr->object_level = floor_ptr->base_level;
     floor_ptr->monster_level = floor_ptr->base_level;
     if (record_stair)
-        exe_write_diary(player_ptr, DIARY_TO_QUEST, floor_ptr->inside_quest, NULL);
+        exe_write_diary(player_ptr, DIARY_TO_QUEST, floor_ptr->inside_quest, nullptr);
 
-    get_mon_num_prep(player_ptr, get_monster_hook(player_ptr), NULL);
+    get_mon_num_prep(player_ptr, get_monster_hook(player_ptr), nullptr);
     init_flags = INIT_CREATE_DUNGEON;
     parse_fixed_map(player_ptr, "q_info.txt", 0, 0, MAX_HGT, MAX_WID);
 }
@@ -371,8 +371,8 @@ typedef bool (*IsWallFunc)(const floor_type *, int, int);
 static bool is_permanent_blocker(const floor_type *const floor_ptr, const int y, const int x)
 {
     const FEAT_IDX feat = floor_ptr->grid_array[y][x].feat;
-    const BIT_FLAGS *const flags = f_info[feat].flags;
-    return has_flag(flags, FF_PERMANENT) && !has_flag(flags, FF_MOVE);
+    const auto &flags = f_info[feat].flags;
+    return flags.has(FF::PERMANENT) && flags.has_not(FF::MOVE);
 }
 
 static void floor_is_connected_dfs(const floor_type *const floor_ptr, const IsWallFunc is_wall, const int y_start, const int x_start, bool *const visited)
@@ -460,7 +460,7 @@ void generate_floor(player_type *player_ptr)
     set_floor_and_wall(floor_ptr->dungeon_idx);
     for (int num = 0; true; num++) {
         bool okay = true;
-        concptr why = NULL;
+        concptr why = nullptr;
         clear_cave(player_ptr);
         player_ptr->x = player_ptr->y = 0;
         if (floor_ptr->inside_arena)

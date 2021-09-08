@@ -13,7 +13,7 @@ concptr *macro__pat;
 concptr *macro__act;
 
 /* Number of active macros */
-s16b macro__num;
+int16_t macro__num;
 
 /* Expand macros in "get_com" or not */
 bool get_com_no_macros = false;
@@ -107,7 +107,7 @@ int macro_find_ready(concptr pat)
 /*
  * Add a macro definition (or redefinition).
  *
- * We should use "act == NULL" to "remove" a macro, but this might make it
+ * We should use "act == nullptr" to "remove" a macro, but this might make it
  * impossible to save the "removal" of a macro definition.
  *
  * We should consider refusing to allow macros which contain existing macros,

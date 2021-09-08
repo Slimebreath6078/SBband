@@ -10,7 +10,6 @@
 #include "object-enchant/object-ego.h"
 #include "object-enchant/special-object-flags.h"
 #include "object-enchant/trc-types.h"
-#include "object-hook/hook-checker.h"
 #include "object/object-kind.h"
 #include "sv-definition/sv-ring-types.h"
 #include "system/object-type-definition.h"
@@ -49,7 +48,7 @@ void RingEnchanter::apply_magic()
     }
 
     this->enchant();
-    if ((one_in_(400) && (this->power > 0) && !object_is_cursed(this->o_ptr) && (this->level > 79)) || (this->power > 2)) {
+    if ((one_in_(400) && (this->power > 0) && !this->o_ptr->is_cursed() && (this->level > 79)) || (this->power > 2)) {
         this->o_ptr->pval = MIN(this->o_ptr->pval, 4);
         become_random_artifact(this->owner_ptr, this->o_ptr, false);
         return;
@@ -238,7 +237,7 @@ void RingEnchanter::give_ego_index()
             break;
         case 3:
         case 4:
-            if (has_flag(k_ptr->flags, TR_REGEN)) {
+            if (k_ptr->flags.has(TR_REGEN)) {
                 break;
             }
 
@@ -246,7 +245,7 @@ void RingEnchanter::give_ego_index()
             break;
         case 5:
         case 6:
-            if (has_flag(k_ptr->flags, TR_LITE_1)) {
+            if (k_ptr->flags.has(TR_LITE_1)) {
                 break;
             }
 
@@ -254,7 +253,7 @@ void RingEnchanter::give_ego_index()
             break;
         case 7:
         case 8:
-            if (has_flag(k_ptr->flags, TR_TELEPORT)) {
+            if (k_ptr->flags.has(TR_TELEPORT)) {
                 break;
             }
 
@@ -284,21 +283,21 @@ void RingEnchanter::give_ego_index()
             this->o_ptr->name2 = EGO_RING_SLAY;
             break;
         case 14:
-            if ((has_flag(k_ptr->flags, TR_STR)) || this->o_ptr->to_h || this->o_ptr->to_d) {
+            if ((k_ptr->flags.has(TR_STR)) || this->o_ptr->to_h || this->o_ptr->to_d) {
                 break;
             }
 
             this->o_ptr->name2 = EGO_RING_WIZARD;
             break;
         case 15:
-            if (has_flag(k_ptr->flags, TR_ACTIVATE)) {
+            if (k_ptr->flags.has(TR_ACTIVATE)) {
                 break;
             }
 
             this->o_ptr->name2 = EGO_RING_HERO;
             break;
         case 16:
-            if (has_flag(k_ptr->flags, TR_ACTIVATE)) {
+            if (k_ptr->flags.has(TR_ACTIVATE)) {
                 break;
             }
 
@@ -315,12 +314,11 @@ void RingEnchanter::give_ego_index()
             this->o_ptr->name2 = EGO_RING_MAGIC_MIS;
             break;
         case 17:
-            if (has_flag(k_ptr->flags, TR_ACTIVATE)) {
+            if (k_ptr->flags.has(TR_ACTIVATE)) {
                 break;
             }
 
-            if (!(has_flag(k_ptr->flags, TR_RES_FIRE))
-                && (has_flag(k_ptr->flags, TR_RES_COLD) || has_flag(k_ptr->flags, TR_RES_ELEC) || has_flag(k_ptr->flags, TR_RES_ACID))) {
+            if (k_ptr->flags.has_not(TR_RES_FIRE) && (k_ptr->flags.has(TR_RES_COLD) || k_ptr->flags.has(TR_RES_ELEC) || k_ptr->flags.has(TR_RES_ACID))) {
                 break;
             }
 
@@ -337,12 +335,11 @@ void RingEnchanter::give_ego_index()
             this->o_ptr->name2 = EGO_RING_FIRE_BOLT;
             break;
         case 18:
-            if (has_flag(k_ptr->flags, TR_ACTIVATE)) {
+            if (k_ptr->flags.has(TR_ACTIVATE)) {
                 break;
             }
 
-            if (!(has_flag(k_ptr->flags, TR_RES_COLD))
-                && (has_flag(k_ptr->flags, TR_RES_FIRE) || has_flag(k_ptr->flags, TR_RES_ELEC) || has_flag(k_ptr->flags, TR_RES_ACID))) {
+            if (k_ptr->flags.has_not(TR_RES_COLD) && (k_ptr->flags.has(TR_RES_FIRE) || k_ptr->flags.has(TR_RES_ELEC) || k_ptr->flags.has(TR_RES_ACID))) {
                 break;
             }
 
@@ -359,12 +356,11 @@ void RingEnchanter::give_ego_index()
             this->o_ptr->name2 = EGO_RING_COLD_BOLT;
             break;
         case 19:
-            if (has_flag(k_ptr->flags, TR_ACTIVATE)) {
+            if (k_ptr->flags.has(TR_ACTIVATE)) {
                 break;
             }
 
-            if (!(has_flag(k_ptr->flags, TR_RES_ELEC))
-                && (has_flag(k_ptr->flags, TR_RES_COLD) || has_flag(k_ptr->flags, TR_RES_FIRE) || has_flag(k_ptr->flags, TR_RES_ACID))) {
+            if (k_ptr->flags.has_not(TR_RES_ELEC) && (k_ptr->flags.has(TR_RES_COLD) || k_ptr->flags.has(TR_RES_FIRE) || k_ptr->flags.has(TR_RES_ACID))) {
                 break;
             }
 
@@ -376,12 +372,11 @@ void RingEnchanter::give_ego_index()
             this->o_ptr->name2 = EGO_RING_ELEC_BOLT;
             break;
         case 20:
-            if (has_flag(k_ptr->flags, TR_ACTIVATE)) {
+            if (k_ptr->flags.has(TR_ACTIVATE)) {
                 break;
             }
 
-            if (!(has_flag(k_ptr->flags, TR_RES_ACID))
-                && (has_flag(k_ptr->flags, TR_RES_COLD) || has_flag(k_ptr->flags, TR_RES_ELEC) || has_flag(k_ptr->flags, TR_RES_FIRE))) {
+            if (k_ptr->flags.has_not(TR_RES_ACID) && (k_ptr->flags.has(TR_RES_COLD) || k_ptr->flags.has(TR_RES_ELEC) || k_ptr->flags.has(TR_RES_FIRE))) {
                 break;
             }
 
@@ -506,13 +501,11 @@ void RingEnchanter::give_cursed()
         this->o_ptr->pval = 0 - this->o_ptr->pval;
     }
 
-    this->o_ptr->art_flags[0] = 0;
-    this->o_ptr->art_flags[1] = 0;
     while (!this->o_ptr->name2) {
         auto *k_ptr = &k_info[this->o_ptr->k_idx];
         switch (randint1(5)) {
         case 1:
-            if (has_flag(k_ptr->flags, TR_DRAIN_EXP))
+            if (k_ptr->flags.has(TR_DRAIN_EXP))
                 break;
             this->o_ptr->name2 = EGO_RING_DRAIN_EXP;
             break;
@@ -520,12 +513,12 @@ void RingEnchanter::give_cursed()
             this->o_ptr->name2 = EGO_RING_NO_MELEE;
             break;
         case 3:
-            if (has_flag(k_ptr->flags, TR_AGGRAVATE))
+            if (k_ptr->flags.has(TR_AGGRAVATE))
                 break;
             this->o_ptr->name2 = EGO_RING_AGGRAVATE;
             break;
         case 4:
-            if (has_flag(k_ptr->flags, TR_TY_CURSE))
+            if (k_ptr->flags.has(TR_TY_CURSE))
                 break;
             this->o_ptr->name2 = EGO_RING_TY_CURSE;
             break;

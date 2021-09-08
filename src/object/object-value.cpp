@@ -4,8 +4,6 @@
 #include "object-enchant/object-ego.h"
 #include "object-enchant/special-object-flags.h"
 #include "object-enchant/tr-types.h"
-#include "object-hook/hook-checker.h"
-#include "object-hook/hook-enchant.h"
 #include "object/object-broken.h"
 #include "object/object-flags.h"
 #include "object/object-kind.h"
@@ -23,9 +21,9 @@
  * @param o_ptr 未鑑定価格を確認したいオブジェクトの構造体参照ポインタ
  * @return オブジェクトの未鑑定価格
  */
-static PRICE object_value_base(object_type *o_ptr)
+static PRICE object_value_base(const object_type *o_ptr)
 {
-    if (object_is_aware(o_ptr))
+    if (o_ptr->is_aware())
         return (k_info[o_ptr->k_idx].cost);
 
     switch (o_ptr->tval) {
@@ -85,21 +83,21 @@ static PRICE object_value_base(object_type *o_ptr)
  * Note that discounted items stay discounted forever, even if\n
  * the discount is "forgotten" by the player via memory loss.\n
  */
-PRICE object_value(player_type *player_ptr, object_type *o_ptr)
+PRICE object_value(const object_type *o_ptr)
 {
     PRICE value;
 
-    if (object_is_known(o_ptr)) {
-        if (object_is_broken(o_ptr))
+    if (o_ptr->is_known()) {
+        if (o_ptr->is_broken())
             return (0L);
-        if (object_is_cursed(o_ptr))
+        if (o_ptr->is_cursed())
             return (0L);
 
-        value = object_value_real(player_ptr, o_ptr);
+        value = object_value_real(o_ptr);
     } else {
-        if ((o_ptr->ident & (IDENT_SENSE)) && object_is_broken(o_ptr))
+        if ((o_ptr->ident & (IDENT_SENSE)) && o_ptr->is_broken())
             return (0L);
-        if ((o_ptr->ident & (IDENT_SENSE)) && object_is_cursed(o_ptr))
+        if ((o_ptr->ident & (IDENT_SENSE)) && o_ptr->is_cursed())
             return (0L);
 
         value = object_value_base(o_ptr);
@@ -137,39 +135,33 @@ PRICE object_value(player_type *player_ptr, object_type *o_ptr)
  *\n
  * Every wearable item with a "pval" bonus is worth extra (see below).\n
  */
-PRICE object_value_real(player_type *player_ptr, object_type *o_ptr)
+PRICE object_value_real(const object_type *o_ptr)
 {
-    BIT_FLAGS flgs[TR_FLAG_SIZE];
     object_kind *k_ptr = &k_info[o_ptr->k_idx];
 
     if (!k_info[o_ptr->k_idx].cost)
         return (0L);
 
     PRICE value = k_info[o_ptr->k_idx].cost;
-    object_flags(player_ptr, o_ptr, flgs);
-    if (object_is_fixed_artifact(o_ptr)) {
+    auto flgs = object_flags(o_ptr);
+    if (o_ptr->is_fixed_artifact()) {
         artifact_type *a_ptr = &a_info[o_ptr->name1];
         if (!a_ptr->cost)
             return (0L);
 
         value = a_ptr->cost;
-        value += flag_cost(player_ptr, o_ptr, o_ptr->pval);
+        value += flag_cost(o_ptr, o_ptr->pval);
         return (value);
-    } else if (object_is_ego(o_ptr)) {
+    } else if (o_ptr->is_ego()) {
         ego_item_type *e_ptr = &e_info[o_ptr->name2];
         if (!e_ptr->cost)
             return (0L);
 
         value += e_ptr->cost;
-        value += flag_cost(player_ptr, o_ptr, o_ptr->pval);
+        value += flag_cost(o_ptr, o_ptr->pval);
     } else {
-        bool flag = false;
-        for (int i = 0; i < TR_FLAG_SIZE; i++)
-            if (o_ptr->art_flags[i])
-                flag = true;
-
-        if (flag)
-            value += flag_cost(player_ptr, o_ptr, o_ptr->pval);
+        if (o_ptr->art_flags.any())
+            value += flag_cost(o_ptr, o_ptr->pval);
     }
 
     /* Analyze pval bonus for normal object */
@@ -199,31 +191,31 @@ PRICE object_value_real(player_type *player_ptr, object_type *o_ptr)
         if (o_ptr->pval < 0)
             return (0L);
 
-        if (has_flag(flgs, TR_STR))
+        if (flgs.has(TR_STR))
             value += (o_ptr->pval * 200L);
-        if (has_flag(flgs, TR_INT))
+        if (flgs.has(TR_INT))
             value += (o_ptr->pval * 200L);
-        if (has_flag(flgs, TR_WIS))
+        if (flgs.has(TR_WIS))
             value += (o_ptr->pval * 200L);
-        if (has_flag(flgs, TR_DEX))
+        if (flgs.has(TR_DEX))
             value += (o_ptr->pval * 200L);
-        if (has_flag(flgs, TR_CON))
+        if (flgs.has(TR_CON))
             value += (o_ptr->pval * 200L);
-        if (has_flag(flgs, TR_CHR))
+        if (flgs.has(TR_CHR))
             value += (o_ptr->pval * 200L);
-        if (has_flag(flgs, TR_MAGIC_MASTERY))
+        if (flgs.has(TR_MAGIC_MASTERY))
             value += (o_ptr->pval * 100);
-        if (has_flag(flgs, TR_STEALTH))
+        if (flgs.has(TR_STEALTH))
             value += (o_ptr->pval * 100L);
-        if (has_flag(flgs, TR_SEARCH))
+        if (flgs.has(TR_SEARCH))
             value += (o_ptr->pval * 100L);
-        if (has_flag(flgs, TR_INFRA))
+        if (flgs.has(TR_INFRA))
             value += (o_ptr->pval * 50L);
-        if (has_flag(flgs, TR_TUNNEL))
+        if (flgs.has(TR_TUNNEL))
             value += (o_ptr->pval * 50L);
-        if (has_flag(flgs, TR_BLOWS))
+        if (flgs.has(TR_BLOWS))
             value += (o_ptr->pval * 5000L);
-        if (has_flag(flgs, TR_SPEED))
+        if (flgs.has(TR_SPEED))
             value += (o_ptr->pval * 10000L);
         break;
 

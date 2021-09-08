@@ -117,7 +117,7 @@ void teleport_level(player_type *creature_ptr, MONSTER_IDX m_idx)
             }
 
             if (record_stair)
-                exe_write_diary(creature_ptr, DIARY_TELEPORT_LEVEL, 1, NULL);
+                exe_write_diary(creature_ptr, DIARY_TELEPORT_LEVEL, 1, nullptr);
 
             if (autosave_l)
                 do_cmd_save_game(creature_ptr, true);
@@ -143,7 +143,7 @@ void teleport_level(player_type *creature_ptr, MONSTER_IDX m_idx)
 
         if (m_idx <= 0) {
             if (record_stair)
-                exe_write_diary(creature_ptr, DIARY_TELEPORT_LEVEL, -1, NULL);
+                exe_write_diary(creature_ptr, DIARY_TELEPORT_LEVEL, -1, nullptr);
 
             if (autosave_l)
                 do_cmd_save_game(creature_ptr, true);
@@ -165,7 +165,7 @@ void teleport_level(player_type *creature_ptr, MONSTER_IDX m_idx)
 
         if (m_idx <= 0) {
             if (record_stair)
-                exe_write_diary(creature_ptr, DIARY_TELEPORT_LEVEL, -1, NULL);
+                exe_write_diary(creature_ptr, DIARY_TELEPORT_LEVEL, -1, nullptr);
 
             if (autosave_l)
                 do_cmd_save_game(creature_ptr, true);
@@ -184,7 +184,7 @@ void teleport_level(player_type *creature_ptr, MONSTER_IDX m_idx)
 
         if (m_idx <= 0) {
             if (record_stair)
-                exe_write_diary(creature_ptr, DIARY_TELEPORT_LEVEL, 1, NULL);
+                exe_write_diary(creature_ptr, DIARY_TELEPORT_LEVEL, 1, nullptr);
             if (autosave_l)
                 do_cmd_save_game(creature_ptr, true);
 
@@ -208,7 +208,8 @@ void teleport_level(player_type *creature_ptr, MONSTER_IDX m_idx)
     }
 
     delete_monster_idx(creature_ptr, m_idx);
-    sound(SOUND_TPLEVEL);
+    if (see_m)
+        sound(SOUND_TPLEVEL);
 }
 
 bool teleport_level_other(player_type *caster_ptr)
@@ -276,7 +277,7 @@ bool tele_town(player_type *caster_ptr)
 
     if (num == 0) {
         msg_print(_("まだ行けるところがない。", "You have not yet visited any town."));
-        msg_print(NULL);
+        msg_print(nullptr);
         screen_load();
         return false;
     }

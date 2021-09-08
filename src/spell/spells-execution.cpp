@@ -20,9 +20,9 @@
  * @param realm 魔法領域のID
  * @param spell 各領域の魔法ID
  * @param mode 求める処理
- * @return 各領域魔法に各種テキストを求めた場合は文字列参照ポインタ、そうでない場合はNULLポインタを返す。
+ * @return 各領域魔法に各種テキストを求めた場合は文字列参照ポインタ、そうでない場合はnullptrポインタを返す。
  */
-concptr exe_spell(player_type *caster_ptr, REALM_IDX realm, SPELL_IDX spell, spell_type mode)
+concptr exe_spell(player_type *caster_ptr, int16_t realm, SPELL_IDX spell, spell_type mode)
 {
 	switch (realm)
 	{
@@ -41,5 +41,5 @@ concptr exe_spell(player_type *caster_ptr, REALM_IDX realm, SPELL_IDX spell, spe
 	case REALM_HEX:      return do_hex_spell(caster_ptr, spell, mode);
 	}
 
-	return NULL;
+	return nullptr;
 }

@@ -16,8 +16,6 @@
 #include "monster/monster-info.h"
 #include "monster/monster-status.h"
 #include "monster/monster-update.h"
-#include "object-hook/hook-checker.h"
-#include "object-hook/hook-enchant.h"
 #include "object/object-mark-types.h"
 #include "object/tval-types.h"
 #include "realm/realm-song-numbers.h"
@@ -39,7 +37,7 @@
  * @param known 地形から危険フラグを外すならTRUE
  * @return 効力があった場合TRUEを返す
  */
-static bool detect_feat_flag(player_type *caster_ptr, POSITION range, int flag, bool known)
+static bool detect_feat_flag(player_type *caster_ptr, POSITION range, FF flag, bool known)
 {
     if (d_info[caster_ptr->dungeon_idx].flags.has(DF::DARKNESS))
         range /= 3;
@@ -52,7 +50,7 @@ static bool detect_feat_flag(player_type *caster_ptr, POSITION range, int flag, 
             if (dist > range)
                 continue;
             g_ptr = &caster_ptr->current_floor_ptr->grid_array[y][x];
-            if (flag == FF_TRAP) {
+            if (flag == FF::TRAP) {
                 /* Mark as detected */
                 if (dist <= range && known) {
                     if (dist <= range - 1)
@@ -87,9 +85,9 @@ static bool detect_feat_flag(player_type *caster_ptr, POSITION range, int flag, 
  */
 bool detect_traps(player_type *caster_ptr, POSITION range, bool known)
 {
-    bool detect = detect_feat_flag(caster_ptr, range, FF_TRAP, known);
+    bool detect = detect_feat_flag(caster_ptr, range, FF::TRAP, known);
     if (!known && detect)
-        detect_feat_flag(caster_ptr, range, FF_TRAP, true);
+        detect_feat_flag(caster_ptr, range, FF::TRAP, true);
 
     if (known || detect)
         caster_ptr->dtrap = true;
@@ -111,7 +109,7 @@ bool detect_traps(player_type *caster_ptr, POSITION range, bool known)
  */
 bool detect_doors(player_type *caster_ptr, POSITION range)
 {
-    bool detect = detect_feat_flag(caster_ptr, range, FF_DOOR, true);
+    bool detect = detect_feat_flag(caster_ptr, range, FF::DOOR, true);
 
     if (music_singing(caster_ptr, MUSIC_DETECT) && get_singing_count(caster_ptr) > 0)
         detect = false;
@@ -130,7 +128,7 @@ bool detect_doors(player_type *caster_ptr, POSITION range)
  */
 bool detect_stairs(player_type *caster_ptr, POSITION range)
 {
-    bool detect = detect_feat_flag(caster_ptr, range, FF_STAIRS, true);
+    bool detect = detect_feat_flag(caster_ptr, range, FF::STAIRS, true);
 
     if (music_singing(caster_ptr, MUSIC_DETECT) && get_singing_count(caster_ptr) > 0)
         detect = false;
@@ -149,7 +147,7 @@ bool detect_stairs(player_type *caster_ptr, POSITION range)
  */
 bool detect_treasure(player_type *caster_ptr, POSITION range)
 {
-    bool detect = detect_feat_flag(caster_ptr, range, FF_HAS_GOLD, true);
+    bool detect = detect_feat_flag(caster_ptr, range, FF::HAS_GOLD, true);
 
     if (music_singing(caster_ptr, MUSIC_DETECT) && get_singing_count(caster_ptr) > 6)
         detect = false;
@@ -177,9 +175,9 @@ bool detect_objects_gold(player_type *caster_ptr, POSITION range)
     for (OBJECT_IDX i = 1; i < caster_ptr->current_floor_ptr->o_max; i++) {
         object_type *o_ptr = &caster_ptr->current_floor_ptr->o_list[i];
 
-        if (!object_is_valid(o_ptr))
+        if (!o_ptr->is_valid())
             continue;
-        if (object_is_held_monster(o_ptr))
+        if (o_ptr->is_held_by_monster())
             continue;
 
         y = o_ptr->iy;
@@ -223,9 +221,9 @@ bool detect_objects_normal(player_type *caster_ptr, POSITION range)
     for (OBJECT_IDX i = 1; i < caster_ptr->current_floor_ptr->o_max; i++) {
         object_type *o_ptr = &caster_ptr->current_floor_ptr->o_list[i];
 
-        if (!object_is_valid(o_ptr))
+        if (!o_ptr->is_valid())
             continue;
-        if (object_is_held_monster(o_ptr))
+        if (o_ptr->is_held_by_monster())
             continue;
 
         POSITION y = o_ptr->iy;
@@ -278,9 +276,9 @@ bool detect_objects_magic(player_type *caster_ptr, POSITION range)
     for (OBJECT_IDX i = 1; i < caster_ptr->current_floor_ptr->o_max; i++) {
         object_type *o_ptr = &caster_ptr->current_floor_ptr->o_list[i];
 
-        if (!object_is_valid(o_ptr))
+        if (!o_ptr->is_valid())
             continue;
-        if (object_is_held_monster(o_ptr))
+        if (o_ptr->is_held_by_monster())
             continue;
 
         POSITION y = o_ptr->iy;
@@ -290,7 +288,7 @@ bool detect_objects_magic(player_type *caster_ptr, POSITION range)
             continue;
 
         tv = o_ptr->tval;
-        if (object_is_artifact(o_ptr) || object_is_ego(o_ptr) || (tv == TV_WHISTLE) || (tv == TV_AMULET) || (tv == TV_RING) || (tv == TV_STAFF)
+        if (o_ptr->is_artifact() || o_ptr->is_ego() || (tv == TV_WHISTLE) || (tv == TV_AMULET) || (tv == TV_RING) || (tv == TV_STAFF)
             || (tv == TV_WAND) || (tv == TV_ROD) || (tv == TV_SCROLL) || (tv == TV_POTION) || (tv == TV_LIFE_BOOK) || (tv == TV_SORCERY_BOOK)
             || (tv == TV_NATURE_BOOK) || (tv == TV_CHAOS_BOOK) || (tv == TV_DEATH_BOOK) || (tv == TV_TRUMP_BOOK) || (tv == TV_ARCANE_BOOK)
             || (tv == TV_CRAFT_BOOK) || (tv == TV_DEMON_BOOK) || (tv == TV_CRUSADE_BOOK) || (tv == TV_MUSIC_BOOK) || (tv == TV_HISSATSU_BOOK)
@@ -571,7 +569,7 @@ bool detect_monsters_string(player_type *caster_ptr, POSITION range, concptr Mat
  * @param match_flag 感知フラグ
  * @return 効力があった場合TRUEを返す
  */
-bool detect_monsters_xxx(player_type *caster_ptr, POSITION range, u32b match_flag)
+bool detect_monsters_xxx(player_type *caster_ptr, POSITION range, uint32_t match_flag)
 {
     if (d_info[caster_ptr->dungeon_idx].flags.has(DF::DARKNESS))
         range /= 3;
@@ -615,7 +613,7 @@ bool detect_monsters_xxx(player_type *caster_ptr, POSITION range, u32b match_fla
         }
 
         msg_format(_("%sの存在を感じとった！", "You sense the presence of %s!"), desc_monsters);
-        msg_print(NULL);
+        msg_print(nullptr);
     }
 
     return flag;

@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "system/h-type.h"
+#include <stdint.h>
 
 #define VERSION_NAME "SBband" /*!< バリアント名称 / Name of the version/variant */
 

@@ -13,7 +13,6 @@
 #include "mind/mind-mirror-master.h"
 #include "mind/snipe-types.h"
 #include "object-enchant/tr-types.h"
-#include "object-hook/hook-enchant.h"
 #include "object-hook/hook-expendable.h"
 #include "object/object-flags.h"
 #include "object/object-info.h"
@@ -28,29 +27,53 @@
 #include "util/bit-flags-calculator.h"
 #include "view/display-messages.h"
 
-ObjectBreaker::ObjectBreaker(tr_type ignore_flg, player_type *player_ptr)
+ObjectBreaker::ObjectBreaker(tr_type ignore_flg)
     : ignore_flg(ignore_flg)
-    , player_ptr(player_ptr)
 {
 }
 
-BreakerAcid::BreakerAcid(player_type *player_ptr)
-    : ObjectBreaker(TR_IGNORE_ACID, player_ptr)
+BreakerAcid::BreakerAcid()
+    : ObjectBreaker(TR_IGNORE_ACID)
 {
 }
 
-BreakerElec::BreakerElec(player_type *player_ptr)
-    : ObjectBreaker(TR_IGNORE_ELEC, player_ptr)
+BreakerElec::BreakerElec()
+    : ObjectBreaker(TR_IGNORE_ELEC)
 {
 }
 
-BreakerFire::BreakerFire(player_type *player_ptr)
-    : ObjectBreaker(TR_IGNORE_FIRE, player_ptr)
+BreakerFire::BreakerFire()
+    : ObjectBreaker(TR_IGNORE_FIRE)
 {
 }
 
-BreakerCold::BreakerCold(player_type *player_ptr)
-    : ObjectBreaker(TR_IGNORE_COLD, player_ptr)
+BreakerCold::BreakerCold()
+    : ObjectBreaker(TR_IGNORE_COLD)
+{
+}
+
+ObjectBreaker::ObjectBreaker(tr_type ignore_flg)
+    : ignore_flg(ignore_flg)
+{
+}
+
+BreakerAcid::BreakerAcid()
+    : ObjectBreaker(TR_IGNORE_ACID)
+{
+}
+
+BreakerElec::BreakerElec()
+    : ObjectBreaker(TR_IGNORE_ELEC)
+{
+}
+
+BreakerFire::BreakerFire()
+    : ObjectBreaker(TR_IGNORE_FIRE)
+{
+}
+
+BreakerCold::BreakerCold()
+    : ObjectBreaker(TR_IGNORE_COLD)
 {
 }
 
@@ -224,11 +247,10 @@ bool BreakerCold::hates(object_type *o_ptr) const
  */
 bool ObjectBreaker::can_destroy(object_type *o_ptr) const
 {
-    BIT_FLAGS flgs[TR_FLAG_SIZE];
     if (!this->hates(o_ptr))
         return false;
-    object_flags(this->player_ptr, o_ptr, flgs);
-    if (has_flag(flgs, this->ignore_flg))
+    auto flgs = object_flags(o_ptr);
+    if (flgs.has(this->ignore_flg))
         return false;
     return true;
 }

@@ -89,8 +89,9 @@ bool activate_scare(player_type *user_ptr)
     if (music_singing_any(user_ptr))
         stop_singing(user_ptr);
 
-    if (hex_spelling_any(user_ptr))
-        stop_hex_spell_all(user_ptr);
+    if (RealmHex(user_ptr).is_spelling_any()) {
+        (void)RealmHex(user_ptr).stop_all_spells();
+    }
 
     msg_print(_("あなたは力強い突風を吹き鳴らした。周囲の敵が震え上っている!", "You wind a mighty blast; your enemies tremble!"));
     (void)turn_monsters(user_ptr, (3 * user_ptr->lev / 2) + 10);
@@ -234,14 +235,14 @@ bool activate_extra_detection(player_type *user_ptr)
     msg_print(_("明るく輝いている...", "It glows brightly..."));
     detect_all(user_ptr, DETECT_RAD_DEFAULT);
     probing(user_ptr);
-    identify_fully(user_ptr, false, TV_NONE);
+    identify_fully(user_ptr, false);
     return true;
 }
 
 bool activate_fully_identification(player_type *user_ptr)
 {
     msg_print(_("黄色く輝いている...", "It glows yellow..."));
-    identify_fully(user_ptr, false, TV_NONE);
+    identify_fully(user_ptr, false);
     return true;
 }
 
@@ -252,7 +253,7 @@ bool activate_fully_identification(player_type *user_ptr)
  */
 bool activate_identification(player_type *user_ptr)
 {
-    return ident_spell(user_ptr, false, TV_NONE);
+    return ident_spell(user_ptr, false);
 }
 
 bool activate_pesticide(player_type *user_ptr)

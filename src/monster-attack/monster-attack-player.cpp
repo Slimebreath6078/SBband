@@ -44,7 +44,6 @@
 #include "player/player-damage.h"
 #include "player/player-skill.h"
 #include "player/special-defense-types.h"
-#include "realm/realm-hex-numbers.h"
 #include "spell-kind/spells-teleport.h"
 #include "spell-realm/spells-crusade.h"
 #include "spell-realm/spells-hex.h"
@@ -131,7 +130,7 @@ static bool effect_protecion_from_evil(player_type *target_ptr, monap_type *mona
 
 static void describe_silly_attacks(monap_type *monap_ptr)
 {
-    if (monap_ptr->act == NULL)
+    if (monap_ptr->act == nullptr)
         return;
 
     if (monap_ptr->do_silly_attack) {
@@ -253,7 +252,7 @@ static void monster_explode(player_type *target_ptr, monap_type *monap_ptr)
 
     sound(SOUND_EXPLODE);
     MonsterDamageProcessor mdp(target_ptr, monap_ptr->m_idx, monap_ptr->m_ptr->hp + 1, &monap_ptr->fear);
-    if (mdp.mon_take_hit(NULL)) {
+    if (mdp.mon_take_hit(nullptr)) {
         monap_ptr->blinked = false;
         monap_ptr->alive = false;
     }
@@ -279,7 +278,9 @@ static void describe_attack_evasion(player_type *target_ptr, monap_type *monap_p
 
 static void gain_armor_exp(player_type *target_ptr, monap_type *monap_ptr)
 {
-    if (!object_is_armour(target_ptr, &target_ptr->inventory_list[INVEN_MAIN_HAND]) && !object_is_armour(target_ptr, &target_ptr->inventory_list[INVEN_SUB_HAND]))
+    const auto o_ptr_mh = &target_ptr->inventory_list[INVEN_MAIN_HAND];
+    const auto o_ptr_sh = &target_ptr->inventory_list[INVEN_SUB_HAND];
+    if (!o_ptr_mh->is_armour() && !o_ptr_sh->is_armour())
         return;
 
     int cur = target_ptr->skill_exp[SKILL_SHIELD];
@@ -395,7 +396,7 @@ static bool process_monster_blows(player_type *target_ptr, monap_type *monap_ptr
     for (int ap_cnt = 0; ap_cnt < MAX_NUM_BLOWS; ap_cnt++) {
         monap_ptr->obvious = false;
         monap_ptr->damage = 0;
-        monap_ptr->act = NULL;
+        monap_ptr->act = nullptr;
         monap_ptr->effect = r_ptr->blow[ap_cnt].effect;
         monap_ptr->method = r_ptr->blow[ap_cnt].method;
         monap_ptr->d_dice = r_ptr->blow[ap_cnt].d_dice;
@@ -460,7 +461,7 @@ static bool process_monster_blows(player_type *target_ptr, monap_type *monap_ptr
  */
 static void eyes_on_eyes(player_type *target_ptr, monap_type *monap_ptr)
 {
-    if (((target_ptr->tim_eyeeye == 0) && !hex_spelling(target_ptr, HEX_EYE_FOR_EYE)) || (monap_ptr->get_damage == 0) || target_ptr->is_dead)
+    if (((target_ptr->tim_eyeeye == 0) && !RealmHex(target_ptr).is_spelling_specific(HEX_EYE_FOR_EYE)) || (monap_ptr->get_damage == 0) || target_ptr->is_dead)
         return;
 
 #ifdef JP
@@ -480,7 +481,7 @@ static void thief_teleport(player_type *target_ptr, monap_type *monap_ptr)
     if (!monap_ptr->blinked || !monap_ptr->alive || target_ptr->is_dead)
         return;
 
-    if (teleport_barrier(target_ptr, monap_ptr->m_idx)) {
+    if (RealmHex(target_ptr).check_hex_barrier(monap_ptr->m_idx, HEX_ANTI_TELE)) {
         msg_print(_("泥棒は笑って逃げ...ようとしたがバリアに防がれた。", "The thief flees laughing...? But a magic barrier obstructs it."));
     } else {
         msg_print(_("泥棒は笑って逃げた！", "The thief flees laughing!"));
@@ -490,7 +491,7 @@ static void thief_teleport(player_type *target_ptr, monap_type *monap_ptr)
 
 static void postprocess_monster_blows(player_type *target_ptr, monap_type *monap_ptr)
 {
-    revenge_store(target_ptr, monap_ptr->get_damage);
+    RealmHex(target_ptr).store_vengeful_damage(monap_ptr->get_damage);
     eyes_on_eyes(target_ptr, monap_ptr);
     musou_counterattack(target_ptr, monap_ptr);
     thief_teleport(target_ptr, monap_ptr);

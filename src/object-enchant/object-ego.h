@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+#include "object-enchant/tr-flags.h"
 #include "object-enchant/tr-types.h"
 #include "object-enchant/trg-types.h"
 #include "system/angband.h"
@@ -253,7 +254,7 @@ struct ego_item_type {
 
     PRICE cost{}; //!< コスト
 
-    BIT_FLAGS flags[TR_FLAG_SIZE]{}; //!< 能力/耐性フラグ
+    TrFlags flags{}; //!< 能力/耐性フラグ
     EnumClassFlagGroup<TRG> gen_flags; //!< 生成時適用フラグ
     std::vector<ego_generate_type> xtra_flags{}; //!< 追加能力/耐性フラグ
 
@@ -263,7 +264,7 @@ struct ego_item_type {
 extern EGO_IDX max_e_idx;
 extern std::vector<ego_item_type> e_info;
 
-typedef struct object_type object_type;
-typedef struct player_type player_type;
+struct object_type;;
+struct player_type;
 byte get_random_ego(byte slot, bool good);
-void apply_ego(player_type *player_ptr, object_type *o_ptr, DEPTH lev);
+void apply_ego(object_type *o_ptr, DEPTH lev);

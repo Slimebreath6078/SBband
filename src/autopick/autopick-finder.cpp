@@ -24,7 +24,7 @@
 #include "util/int-char-converter.h"
 #include "util/string-processor.h"
 
-/*
+/*!
  * @brief 与えられたアイテムが自動拾いのリストに登録されているかどうかを検索する
  * @param player_ptr プレーヤーへの参照ポインタ
  * @o_ptr アイテムへの参照ポインタ
@@ -50,15 +50,15 @@ int find_autopick_list(player_type *player_ptr, object_type *o_ptr)
     return -1;
 }
 
-/*
- * Choose an item for search
+/*!
+ * @brief Choose an item for search
  */
 bool get_object_for_search(player_type *player_ptr, object_type **o_handle, concptr *search_strp)
 {
     concptr q = _("どのアイテムを検索しますか? ", "Enter which item? ");
     concptr s = _("アイテムを持っていない。", "You have nothing to enter.");
     object_type *o_ptr;
-    o_ptr = choose_object(player_ptr, NULL, q, s, USE_INVEN | USE_FLOOR | USE_EQUIP, TV_NONE);
+    o_ptr = choose_object(player_ptr, nullptr, q, s, USE_INVEN | USE_FLOOR | USE_EQUIP);
     if (!o_ptr)
         return false;
 
@@ -70,8 +70,8 @@ bool get_object_for_search(player_type *player_ptr, object_type **o_handle, conc
     return true;
 }
 
-/*
- * Prepare for search by destroyed object
+/*!
+ * @brief Prepare for search by destroyed object
  */
 bool get_destroyed_object_for_search(player_type *player_ptr, object_type **o_handle, concptr *search_strp)
 {
@@ -86,16 +86,15 @@ bool get_destroyed_object_for_search(player_type *player_ptr, object_type **o_ha
     return true;
 }
 
-/*
- * Choose an item or string for search
+/*!
+ * @brief Choose an item or string for search
+ * @details
+ * Text color
+ * TERM_YELLOW : Overwrite mode
+ * TERM_WHITE : Insert mode
  */
 byte get_string_for_search(player_type *player_ptr, object_type **o_handle, concptr *search_strp)
 {
-    /*
-     * Text color
-     * TERM_YELLOW : Overwrite mode
-     * TERM_WHITE : Insert mode
-     */
     byte color = TERM_YELLOW;
     char buf[MAX_NLEN + 20];
     const int len = 80;
@@ -173,7 +172,7 @@ byte get_string_for_search(player_type *player_ptr, object_type **o_handle, conc
                 return (back ? -1 : 1);
             string_free(*search_strp);
             *search_strp = string_make(buf);
-            *o_handle = NULL;
+            *o_handle = nullptr;
             return (back ? -1 : 1);
 
         case KTRL('i'):
@@ -234,9 +233,9 @@ byte get_string_for_search(player_type *player_ptr, object_type **o_handle, conc
             c = (char)skey;
             if (color != TERM_WHITE) {
                 if (color == TERM_L_GREEN) {
-                    *o_handle = NULL;
+                    *o_handle = nullptr;
                     string_free(*search_strp);
-                    *search_strp = NULL;
+                    *search_strp = nullptr;
                 }
 
                 buf[0] = '\0';
@@ -276,18 +275,18 @@ byte get_string_for_search(player_type *player_ptr, object_type **o_handle, conc
         }
         }
 
-        if (*o_handle == NULL || color == TERM_L_GREEN)
+        if (*o_handle == nullptr || color == TERM_L_GREEN)
             continue;
 
-        *o_handle = NULL;
+        *o_handle = nullptr;
         buf[0] = '\0';
         string_free(*search_strp);
-        *search_strp = NULL;
+        *search_strp = nullptr;
     }
 }
 
-/*
- * Search next line matches for o_ptr
+/*!
+ * @brief Search next line matches for o_ptr
  */
 void search_for_object(player_type *player_ptr, text_body_type *tb, object_type *o_ptr, bool forward)
 {
@@ -341,8 +340,8 @@ void search_for_object(player_type *player_ptr, text_body_type *tb, object_type 
     tb->dirty_flags |= DIRTY_INACTIVE;
 }
 
-/*
- * Search next line matches to the string
+/*!
+ * @brief Search next line matches to the string
  */
 void search_for_string(text_body_type *tb, concptr search_str, bool forward)
 {

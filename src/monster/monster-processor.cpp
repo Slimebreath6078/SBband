@@ -310,7 +310,7 @@ void process_angar(player_type *target_ptr, MONSTER_IDX m_idx, bool see_m)
         gets_angry = true;
 
     if (is_pet(m_ptr)
-        && ((((r_ptr->flags1 & RF1_UNIQUE) || (r_ptr->flags7 & RF7_NAZGUL)) && monster_has_hostile_align(target_ptr, NULL, 10, -10, r_ptr))
+        && ((((r_ptr->flags1 & RF1_UNIQUE) || (r_ptr->flags7 & RF7_NAZGUL)) && monster_has_hostile_align(target_ptr, nullptr, 10, -10, r_ptr))
             || (r_ptr->flagsr & RFR_RES_ALL)))
         gets_angry = true;
 
@@ -410,7 +410,7 @@ bool decide_monster_multiplication(player_type *target_ptr, MONSTER_IDX m_idx, P
         }
     }
 
-    if (multiply_barrier(target_ptr, m_idx))
+    if (RealmHex(target_ptr).check_hex_barrier(m_idx, HEX_ANTI_MULTI))
         k = 8;
 
     if ((k < 4) && (!k || !randint0(k * MON_MULT_ADJ))) {

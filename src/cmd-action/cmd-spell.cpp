@@ -31,6 +31,7 @@
 #include "object-hook/hook-magic.h"
 #include "object/item-tester-hooker.h"
 #include "object/item-use-flags.h"
+#include "object/object-info.h"
 #include "player-info/self-info.h"
 #include "player-status/player-energy.h"
 #include "player/attack-defense-types.h"
@@ -83,7 +84,7 @@ concptr KWD_RANDOM = _("ランダム", "random");
  * Zangband uses this array instead of the spell flags table, as there
  * are 5 realms of magic, each with 4 spellbooks and 8 spells per book -- TY
  */
-const u32b fake_spell_flags[4] = { 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000 };
+const uint32_t fake_spell_flags[4] = { 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000 };
 
 /*!
  * @brief
@@ -298,7 +299,7 @@ static bool spell_okay(player_type *caster_ptr, int spell, bool learned, bool st
  * The "known" should be TRUE for cast/pray, FALSE for study
  * </pre>
  */
-static int get_spell(player_type *caster_ptr, SPELL_IDX *sn, concptr prompt, OBJECT_SUBTYPE_VALUE sval, bool learned, REALM_IDX use_realm)
+static int get_spell(player_type *caster_ptr, SPELL_IDX *sn, concptr prompt, OBJECT_SUBTYPE_VALUE sval, bool learned, int16_t use_realm)
 {
     int i;
     SPELL_IDX spell = -1;
@@ -576,6 +577,20 @@ static void confirm_use_force(player_type *caster_ptr, bool browse_only)
     }
 }
 
+static FuncItemTester get_castable_spellbook_tester(player_type *caster_ptr)
+{
+    return FuncItemTester([](auto p_ptr, auto o_ptr) { return check_book_realm(p_ptr, o_ptr->tval, o_ptr->sval); }, caster_ptr);
+}
+
+static FuncItemTester get_learnable_spellbook_tester(player_type *caster_ptr)
+{
+    if (caster_ptr->realm2 == REALM_NONE) {
+        return get_castable_spellbook_tester(caster_ptr);
+    } else {
+        return FuncItemTester(item_tester_learn_spell, caster_ptr);
+    }
+}
+
 /*!
  * @brief プレイヤーの魔法と技能を閲覧するコマンドのメインルーチン /
  * Peruse the spells/prayers in a book
@@ -591,7 +606,7 @@ void do_cmd_browse(player_type *caster_ptr)
 {
     OBJECT_IDX item;
     OBJECT_SUBTYPE_VALUE sval;
-    REALM_IDX use_realm = 0;
+    int16_t use_realm = 0;
     int j, line;
     SPELL_IDX spell = -1;
     int num = 0;
@@ -602,7 +617,6 @@ void do_cmd_browse(player_type *caster_ptr)
     object_type *o_ptr;
 
     concptr q, s;
-    tval_type tval = TV_NONE;
 
     /* Warriors are illiterate */
     if (!(caster_ptr->realm1 || caster_ptr->realm2) && (caster_ptr->pclass != CLASS_SORCERER) && (caster_ptr->pclass != CLASS_RED_MAGE)) {
@@ -622,17 +636,13 @@ void do_cmd_browse(player_type *caster_ptr)
     }
 
     /* Restrict choices to "useful" books */
-    if (caster_ptr->realm2 == REALM_NONE)
-        tval = mp_ptr->spell_book;
-    else
-        item_tester_hook = item_tester_learn_spell;
+    auto item_tester = get_learnable_spellbook_tester(caster_ptr);
 
     q = _("どの本を読みますか? ", "Browse which book? ");
     s = _("読める本がない。", "You have no books that you can read.");
 
-    o_ptr = choose_object(caster_ptr, &item, q, s, (USE_INVEN | USE_FLOOR | (caster_ptr->pclass == CLASS_FORCETRAINER ? USE_FORCE : 0)), tval);
+    o_ptr = choose_object(caster_ptr, &item, q, s, (USE_INVEN | USE_FLOOR | (caster_ptr->pclass == CLASS_FORCETRAINER ? USE_FORCE : 0)), item_tester);
 
-    item_tester_hook = NULL;
     if (!o_ptr) {
         if (item == INVEN_FORCE) /* the_force */
         {
@@ -707,7 +717,7 @@ void do_cmd_browse(player_type *caster_ptr)
  * @param caster_ptr プレーヤーへの参照ポインタ
  * @param next_realm 変更先の魔法領域ID
  */
-static void change_realm2(player_type *caster_ptr, REALM_IDX next_realm)
+static void change_realm2(player_type *caster_ptr, int16_t next_realm)
 {
     int i, j = 0;
     char tmp[80];
@@ -757,7 +767,6 @@ void do_cmd_study(player_type *caster_ptr)
     concptr p = spell_category_name(mp_ptr->spell_book);
     object_type *o_ptr;
     concptr q, s;
-    tval_type tval = TV_NONE;
 
     if (!caster_ptr->realm1) {
         msg_print(_("本を読むことができない！", "You cannot read books!"));
@@ -788,18 +797,15 @@ void do_cmd_study(player_type *caster_ptr)
     msg_format("You can learn %d new %s%s.", caster_ptr->new_spells, p, (caster_ptr->new_spells == 1 ? "" : "s"));
 #endif
 
-    msg_print(NULL);
+    msg_print(nullptr);
 
     /* Restrict choices to "useful" books */
-    if (caster_ptr->realm2 == REALM_NONE)
-        tval = mp_ptr->spell_book;
-    else
-        item_tester_hook = item_tester_learn_spell;
+    auto item_tester = get_learnable_spellbook_tester(caster_ptr);
 
     q = _("どの本から学びますか? ", "Study which book? ");
     s = _("読める本がない。", "You have no books that you can read.");
 
-    o_ptr = choose_object(caster_ptr, &item, q, s, (USE_INVEN | USE_FLOOR), tval);
+    o_ptr = choose_object(caster_ptr, &item, q, s, (USE_INVEN | USE_FLOOR), item_tester);
 
     if (!o_ptr)
         return;
@@ -976,10 +982,10 @@ bool do_cmd_cast(player_type *caster_ptr)
     OBJECT_IDX item;
     OBJECT_SUBTYPE_VALUE sval;
     SPELL_IDX spell;
-    REALM_IDX realm;
+    int16_t realm;
     int chance;
     int increment = 0;
-    REALM_IDX use_realm;
+    int16_t use_realm;
     MANA_POINT need_mana;
 
     concptr prayer;
@@ -1009,14 +1015,17 @@ bool do_cmd_cast(player_type *caster_ptr)
         return false;
 
     if (caster_ptr->realm1 == REALM_HEX) {
-        if (hex_spell_fully(caster_ptr)) {
-            bool flag = false;
+        if (RealmHex(caster_ptr).is_casting_full_capacity()) {
+            auto flag = false;
             msg_print(_("これ以上新しい呪文を詠唱することはできない。", "Can not cast more spells."));
             flush();
-            if (caster_ptr->lev >= 35)
-                flag = stop_hex_spell(caster_ptr);
-            if (!flag)
+            if (caster_ptr->lev >= 35) {
+                flag = RealmHex(caster_ptr).stop_one_spell();
+            }
+
+            if (!flag) {
                 return false;
+            }
         }
     }
 
@@ -1032,7 +1041,10 @@ bool do_cmd_cast(player_type *caster_ptr)
     q = _("どの呪文書を使いますか? ", "Use which book? ");
     s = _("呪文書がない！", "You have no spell books!");
 
-    o_ptr = choose_object(caster_ptr, &item, q, s, (USE_INVEN | USE_FLOOR | (caster_ptr->pclass == CLASS_FORCETRAINER ? USE_FORCE : 0)), mp_ptr->spell_book);
+    auto item_tester = get_castable_spellbook_tester(caster_ptr);
+
+    o_ptr = choose_object(
+        caster_ptr, &item, q, s, (USE_INVEN | USE_FLOOR | (caster_ptr->pclass == CLASS_FORCETRAINER ? USE_FORCE : 0)), item_tester);
     if (!o_ptr) {
         if (item == INVEN_FORCE) /* the_force */
         {
@@ -1080,7 +1092,7 @@ bool do_cmd_cast(player_type *caster_ptr)
 
     use_realm = tval2realm(o_ptr->tval);
     if (use_realm == REALM_HEX) {
-        if (hex_spelling(caster_ptr, spell)) {
+        if (RealmHex(caster_ptr).is_spelling_specific(spell)) {
             msg_print(_("その呪文はすでに詠唱中だ。", "You are already casting it."));
             return false;
         }
@@ -1315,8 +1327,8 @@ bool do_cmd_cast(player_type *caster_ptr)
             break;
         }
         if (any_bits(mp_ptr->spell_xtra, extra_magic_gain_exp)) {
-            s16b cur_exp = caster_ptr->spell_exp[(increment ? 32 : 0) + spell];
-            s16b exp_gain = 0;
+            int16_t cur_exp = caster_ptr->spell_exp[(increment ? 32 : 0) + spell];
+            int16_t exp_gain = 0;
 
             if (cur_exp < SPELL_EXP_BEGINNER)
                 exp_gain += 60;

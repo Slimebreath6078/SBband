@@ -7,7 +7,7 @@
  /*
  * Convert an "attr"/"char" pair into a "pict" (P)
  */
-#define PICT(A, C) ((((u16b)(A)) << 8) | ((byte)(C)))
+#define PICT(A, C) ((((uint16_t)(A)) << 8) | ((byte)(C)))
 
 /*
  * Standard window names
@@ -116,7 +116,7 @@ const concptr window_flag_desc[32] =
 	_("呪文一覧", "Display spell list"),
 	_("キャラクタ情報", "Display character"),
 	_("視界内のモンスター表示", "Display monsters in sight"),
-	NULL,
+	nullptr,
 	_("メッセージ", "Display messages"),
 	_("ダンジョン全体図", "Display overhead view"),
 	_("モンスターの思い出", "Display monster recall"),
@@ -124,25 +124,25 @@ const concptr window_flag_desc[32] =
 	_("自分の周囲を表示", "Display dungeon view"),
 	_("記念撮影", "Display snap-shot"),
 	_("足元/床上のアイテム一覧", "Display items on floor"),
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL,
-	NULL
+	nullptr,
+	nullptr,
+	nullptr,
+	nullptr,
+	nullptr,
+	nullptr,
+	nullptr,
+	nullptr,
+	nullptr,
+	nullptr,
+	nullptr,
+	nullptr,
+	nullptr,
+	nullptr,
+	nullptr,
+	nullptr,
+	nullptr,
+	nullptr,
+	nullptr
 };
 
 
@@ -346,7 +346,7 @@ const concptr ident_info[] =
 	"~:Fluid terrain (or miscellaneous item)",
 #endif
 
-	NULL
+	nullptr
 };
 
 /*
@@ -525,7 +525,7 @@ static TERM_COLOR spell_color(EFFECT_ID type)
  * If the distance is not "one", we (may) return "*".
  * </pre>
  */
-u16b bolt_pict(POSITION y, POSITION x, POSITION ny, POSITION nx, EFFECT_ID typ)
+uint16_t bolt_pict(POSITION y, POSITION x, POSITION ny, POSITION nx, EFFECT_ID typ)
 {
 	int base;
 

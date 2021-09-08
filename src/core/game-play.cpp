@@ -175,7 +175,7 @@ static void reset_world_info(player_type *player_ptr)
     current_world_ptr->timewalk_m_idx = 0;
     player_ptr->now_damaged = false;
     now_message = 0;
-    current_world_ptr->start_time = time(NULL) - 1;
+    current_world_ptr->start_time = time(nullptr) - 1;
     record_o_name[0] = '\0';
 }
 
@@ -242,7 +242,7 @@ static void generate_world(player_type *player_ptr, bool new_game)
     if (player_ptr->pclass != CLASS_SORCERER) {
         if (player_ptr->pseikaku == PERSONALITY_SEXY)
             s_info[player_ptr->pclass].w_max[TV_HAFTED - TV_WEAPON_BEGIN][SV_WHIP] = WEAPON_EXP_MASTER;
-        if (player_ptr->prace == RACE_MERFOLK) {
+        if (player_ptr->prace == player_race_type::MERFOLK) {
             s_info[player_ptr->pclass].w_max[TV_POLEARM - TV_WEAPON_BEGIN][SV_TRIDENT] = WEAPON_EXP_MASTER;
             s_info[player_ptr->pclass].w_max[TV_POLEARM - TV_WEAPON_BEGIN][SV_TRIFURCATE_SPEAR] = WEAPON_EXP_MASTER;
         }
@@ -343,7 +343,7 @@ static void process_game_turn(player_type *player_ptr)
         if (!player_ptr->is_dead)
             wipe_monsters_list(player_ptr);
 
-        msg_print(NULL);
+        msg_print(nullptr);
         load_game = false;
         decide_arena_death(player_ptr);
         if (player_ptr->is_dead)
@@ -394,7 +394,7 @@ void play_game(player_type *player_ptr, bool new_game, bool browsing_movie)
     if (player_ptr->chp < 0 && !cheat_immortal)
         player_ptr->is_dead = true;
 
-    if (player_ptr->prace == RACE_ANDROID)
+    if (player_ptr->prace == player_race_type::ANDROID)
         calc_android_exp(player_ptr);
 
     init_riding_pet(player_ptr, new_game);
@@ -403,5 +403,5 @@ void play_game(player_type *player_ptr, bool new_game, bool browsing_movie)
     select_floor_music(player_ptr);
     process_game_turn(player_ptr);
     close_game(player_ptr);
-    quit(NULL);
+    quit(nullptr);
 }

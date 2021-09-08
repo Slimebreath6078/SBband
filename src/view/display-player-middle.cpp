@@ -37,9 +37,9 @@ static void display_player_melee_bonus(player_type *creature_ptr, int hand, int 
     HIT_POINT show_todam = creature_ptr->dis_to_d[hand];
     object_type *o_ptr = &creature_ptr->inventory_list[INVEN_MAIN_HAND + hand];
 
-    if (object_is_known(o_ptr))
+    if (o_ptr->is_known())
         show_tohit += o_ptr->to_h;
-    if (object_is_known(o_ptr))
+    if (o_ptr->is_known())
         show_todam += o_ptr->to_d;
 
     show_tohit += creature_ptr->skill_thn / BTH_PLUS_ADJ;
@@ -94,9 +94,9 @@ static void display_hit_damage(player_type *creature_ptr)
     object_type *o_ptr = &creature_ptr->inventory_list[INVEN_BOW];
     HIT_PROB show_tohit = creature_ptr->dis_to_h_b;
     HIT_POINT show_todam = 0;
-    if (object_is_known(o_ptr))
+    if (o_ptr->is_known())
         show_tohit += o_ptr->to_h;
-    if (object_is_known(o_ptr))
+    if (o_ptr->is_known())
         show_todam += o_ptr->to_d;
 
     if ((o_ptr->sval == SV_LIGHT_XBOW) || (o_ptr->sval == SV_HEAVY_XBOW))
@@ -221,23 +221,23 @@ static void display_player_speed(player_type *creature_ptr, TERM_COLOR attr, int
  */
 static void display_player_exp(player_type *creature_ptr)
 {
-    int e = (creature_ptr->prace == RACE_ANDROID) ? ENTRY_EXP_ANDR : ENTRY_CUR_EXP;
+    int e = (creature_ptr->prace == player_race_type::ANDROID) ? ENTRY_EXP_ANDR : ENTRY_CUR_EXP;
     if (creature_ptr->exp >= creature_ptr->max_exp)
         display_player_one_line(e, format("%ld", creature_ptr->exp), TERM_L_GREEN);
     else
         display_player_one_line(e, format("%ld", creature_ptr->exp), TERM_YELLOW);
 
-    if (creature_ptr->prace != RACE_ANDROID)
+    if (creature_ptr->prace != player_race_type::ANDROID)
         display_player_one_line(ENTRY_MAX_EXP, format("%ld", creature_ptr->max_exp), TERM_L_GREEN);
 
-    e = (creature_ptr->prace == RACE_ANDROID) ? ENTRY_EXP_TO_ADV_ANDR : ENTRY_EXP_TO_ADV;
+    e = (creature_ptr->prace == player_race_type::ANDROID) ? ENTRY_EXP_TO_ADV_ANDR : ENTRY_EXP_TO_ADV;
 
     if (creature_ptr->lev >= PY_MAX_LEVEL)
         display_player_one_line(e, "*****", TERM_L_GREEN);
-    else if (creature_ptr->prace == RACE_ANDROID)
-        display_player_one_line(e, format("%ld", (s32b)(player_exp_a[creature_ptr->lev - 1] * creature_ptr->expfact / 100L)), TERM_L_GREEN);
+    else if (creature_ptr->prace == player_race_type::ANDROID)
+        display_player_one_line(e, format("%ld", (int32_t)(player_exp_a[creature_ptr->lev - 1] * creature_ptr->expfact / 100L)), TERM_L_GREEN);
     else
-        display_player_one_line(e, format("%ld", (s32b)(player_exp[creature_ptr->lev - 1] * creature_ptr->expfact / 100L)), TERM_L_GREEN);
+        display_player_one_line(e, format("%ld", (int32_t)(player_exp[creature_ptr->lev - 1] * creature_ptr->expfact / 100L)), TERM_L_GREEN);
 }
 
 /*!
@@ -279,9 +279,9 @@ static void display_playtime_in_game(player_type *creature_ptr)
  */
 static void display_real_playtime(void)
 {
-    u32b play_hour = current_world_ptr->play_time / (60 * 60);
-    u32b play_min = (current_world_ptr->play_time / 60) % 60;
-    u32b play_sec = current_world_ptr->play_time % 60;
+    uint32_t play_hour = current_world_ptr->play_time / (60 * 60);
+    uint32_t play_min = (current_world_ptr->play_time / 60) % 60;
+    uint32_t play_sec = current_world_ptr->play_time % 60;
     display_player_one_line(ENTRY_PLAY_TIME, format("%.2lu:%.2lu:%.2lu", play_hour, play_min, play_sec), TERM_L_GREEN);
 }
 

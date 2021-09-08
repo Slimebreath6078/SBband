@@ -28,7 +28,6 @@
 #include "object-enchant/tr-types.h"
 #include "object-enchant/trc-types.h"
 #include "object-enchant/trg-types.h"
-#include "object-hook/hook-enchant.h"
 #include "object/object-kind.h"
 #include "player/player-status-flags.h"
 #include "sv-definition/sv-armor-types.h"
@@ -112,7 +111,7 @@ void apply_magic_to_object(player_type *owner_ptr, object_type *o_ptr, DEPTH lev
         }
     }
 
-    if (object_is_fixed_artifact(o_ptr)) {
+    if (o_ptr->is_fixed_artifact()) {
         artifact_type *a_ptr = apply_artifact(owner_ptr, o_ptr);
         a_ptr->cur_num = 1;
         if (current_world_ptr->character_dungeon)
@@ -180,16 +179,16 @@ void apply_magic_to_object(player_type *owner_ptr, object_type *o_ptr, DEPTH lev
 
     if ((o_ptr->tval == TV_SOFT_ARMOR) && (o_ptr->sval == SV_ABUNAI_MIZUGI) && (owner_ptr->pseikaku == PERSONALITY_SEXY)) {
         o_ptr->pval = 3;
-        add_flag(o_ptr->art_flags, TR_STR);
-        add_flag(o_ptr->art_flags, TR_INT);
-        add_flag(o_ptr->art_flags, TR_WIS);
-        add_flag(o_ptr->art_flags, TR_DEX);
-        add_flag(o_ptr->art_flags, TR_CON);
-        add_flag(o_ptr->art_flags, TR_CHR);
+        o_ptr->art_flags.set(TR_STR);
+        o_ptr->art_flags.set(TR_INT);
+        o_ptr->art_flags.set(TR_WIS);
+        o_ptr->art_flags.set(TR_DEX);
+        o_ptr->art_flags.set(TR_CON);
+        o_ptr->art_flags.set(TR_CHR);
     }
 
-    if (object_is_ego(o_ptr)) {
-        apply_ego(owner_ptr, o_ptr, lev);
+    if (o_ptr->is_ego()) {
+        apply_ego(o_ptr, lev);
         return;
     }
 
@@ -205,10 +204,10 @@ void apply_magic_to_object(player_type *owner_ptr, object_type *o_ptr, DEPTH lev
         if (k_ptr->gen_flags.has(TRG::PERMA_CURSE))
             o_ptr->curse_flags.set(TRC::PERMA_CURSE);
         if (k_ptr->gen_flags.has(TRG::RANDOM_CURSE0))
-            o_ptr->curse_flags.set(get_curse(owner_ptr, 0, o_ptr));
+            o_ptr->curse_flags.set(get_curse(0, o_ptr));
         if (k_ptr->gen_flags.has(TRG::RANDOM_CURSE1))
-            o_ptr->curse_flags.set(get_curse(owner_ptr, 1, o_ptr));
+            o_ptr->curse_flags.set(get_curse(1, o_ptr));
         if (k_ptr->gen_flags.has(TRG::RANDOM_CURSE2))
-            o_ptr->curse_flags.set(get_curse(owner_ptr, 2, o_ptr));
+            o_ptr->curse_flags.set(get_curse(2, o_ptr));
     }
 }

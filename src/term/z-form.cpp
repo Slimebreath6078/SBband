@@ -107,7 +107,7 @@
  * Format("%s", concptr s)
  *   Append the string "s".
  *   Do not use the "+" or "0" flags.
- *   Note that a "NULL" value of "s" is converted to the empty string.
+ *   Note that a "nullptr" value of "s" is converted to the empty string.
  *
  * Format("%V", vptr v)
  *   Note -- possibly significant mode flag
@@ -121,7 +121,7 @@
  *
  *
  * For examples below, assume "int n = 0; int m = 100; char buf[100];",
- * plus "char *s = NULL;", and unknown values "char *txt; int i;".
+ * plus "char *s = nullptr;", and unknown values "char *txt; int i;".
  *
  * For example: "n = strnfmt(buf, -1, "(Max %d)", i);" will have a
  * similar effect as "sprintf(buf, "(Max %d)", i); n = strlen(buf);".
@@ -492,10 +492,10 @@ uint vstrnfmt(char *buf, uint max, concptr fmt, va_list vp)
         case 'x':
         case 'X': {
             if (do_long) {
-                unsigned long arg;
+                ulong arg;
 
                 /* Access next argument */
-                arg = va_arg(vp, unsigned long);
+                arg = va_arg(vp, ulong);
 
                 sprintf(tmp, aux, arg);
             } else if (do_long_long) {
@@ -506,10 +506,10 @@ uint vstrnfmt(char *buf, uint max, concptr fmt, va_list vp)
 
                 sprintf(tmp, aux, arg);
             } else {
-                unsigned int arg;
+                uint arg;
 
                 /* Access next argument */
-                arg = va_arg(vp, unsigned int);
+                arg = va_arg(vp, uint);
                 sprintf(tmp, aux, arg);
             }
 
@@ -554,7 +554,7 @@ uint vstrnfmt(char *buf, uint max, concptr fmt, va_list vp)
             /* Access next argument */
             arg = va_arg(vp, concptr);
 
-            /* Hack -- convert NULL to EMPTY */
+            /* Hack -- convert nullptr to EMPTY */
             if (!arg)
                 arg = "";
 
@@ -648,8 +648,8 @@ uint vstrnfmt(char *buf, uint max, concptr fmt, va_list vp)
  */
 char *vformat(concptr fmt, va_list vp)
 {
-    static char *format_buf = NULL;
-    static huge format_len = 0;
+    static char *format_buf = nullptr;
+    static ulong format_len = 0;
 
     /* Initial allocation */
     if (!format_buf) {

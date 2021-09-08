@@ -146,15 +146,19 @@ static void print_monster_dead_by_monster(player_type *player_ptr, mam_pp_type *
     }
 
     if (mam_pp_ptr->note) {
+        sound_type kill_sound = monster_living(mam_pp_ptr->m_ptr->r_idx) ? SOUND_KILL : SOUND_N_KILL;
+        sound(kill_sound);
         msg_format(_("%^s%s", "%^s%s"), mam_pp_ptr->m_name, mam_pp_ptr->note);
         return;
     }
 
     if (!monster_living(mam_pp_ptr->m_ptr->r_idx)) {
+        sound(SOUND_N_KILL);
         msg_format(_("%^sは破壊された。", "%^s is destroyed."), mam_pp_ptr->m_name);
         return;
     }
 
+        sound(SOUND_KILL);
     msg_format(_("%^sは殺された。", "%^s is killed."), mam_pp_ptr->m_name);
 }
 
@@ -175,8 +179,6 @@ static bool check_monster_hp(player_type *player_ptr, mam_pp_type *mam_pp_ptr)
         return false;
     }
 
-    sound_type kill_sound = monster_living(mam_pp_ptr->m_ptr->r_idx) ? SOUND_KILL : SOUND_N_KILL;
-    sound(kill_sound);
     *(mam_pp_ptr->dead) = true;
     print_monster_dead_by_monster(player_ptr, mam_pp_ptr);
     monster_gain_exp(player_ptr, mam_pp_ptr->who, mam_pp_ptr->m_ptr->r_idx);
@@ -246,7 +248,7 @@ static void fall_off_horse_by_melee(player_type *player_ptr, mam_pp_type *mam_pp
  * @param dam ダメージ量
  * @param dead 目標となったモンスターの死亡状態を返す参照ポインタ
  * @param fear 目標となったモンスターの恐慌状態を返す参照ポインタ
- * @param note 目標モンスターが死亡した場合の特別メッセージ(NULLならば標準表示を行う)
+ * @param note 目標モンスターが死亡した場合の特別メッセージ(nullptrならば標準表示を行う)
  * @param who 打撃を行ったモンスターの参照ID
  * @todo 打撃が当たった時の後処理 (爆発持ちのモンスターを爆発させる等)なので、関数名を変更する必要あり
  */

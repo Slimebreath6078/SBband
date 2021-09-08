@@ -127,7 +127,7 @@ static void kingly(player_type *winner_ptr)
 void close_game(player_type *player_ptr)
 {
     handle_stuff(player_ptr);
-    msg_print(NULL);
+    msg_print(nullptr);
     flush();
     signals_ignore_tstp();
 

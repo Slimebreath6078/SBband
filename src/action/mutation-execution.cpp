@@ -26,7 +26,6 @@
 #include "mutation/mutation-flag-types.h"
 #include "mutation/mutation-techniques.h"
 #include "object-enchant/item-feeling.h"
-#include "object-hook/hook-checker.h"
 #include "player-info/self-info.h"
 #include "player-status/player-energy.h"
 #include "player/player-damage.h"
@@ -149,7 +148,7 @@ bool exe_mutation_power(player_type *creature_ptr, MUTA power)
     case MUTA::DET_CURSE:
         for (int i = 0; i < INVEN_TOTAL; i++) {
             object_type *o_ptr = &creature_ptr->inventory_list[i];
-            if ((o_ptr->k_idx == 0) || !object_is_cursed(o_ptr))
+            if ((o_ptr->k_idx == 0) || !o_ptr->is_cursed())
                 continue;
 
             o_ptr->feeling = FEEL_CURSED;
@@ -283,8 +282,9 @@ bool exe_mutation_power(player_type *creature_ptr, MUTA power)
         fire_bolt(creature_ptr, GF_COLD, dir, 2 * lvl);
         return true;
     }
-    case MUTA::LAUNCHER:
-        return do_cmd_throw(creature_ptr, 2 + lvl / 40, false, -1);
+    case MUTA::LAUNCHER: {
+        return ThrowCommand(creature_ptr).do_cmd_throw(2 + lvl / 40, false, -1);
+    }
     default:
         PlayerEnergy(creature_ptr).reset_player_turn();
         msg_format(_("能力 %s は実装されていません。", "Power %s not implemented. Oops."), power);

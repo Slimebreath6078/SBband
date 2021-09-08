@@ -27,7 +27,6 @@
 #include "monster/monster-update.h"
 #include "mutation/mutation-flag-types.h"
 #include "object-enchant/tr-types.h"
-#include "object-hook/hook-checker.h"
 #include "object/object-flags.h"
 #include "player/player-move.h"
 #include "player/player-status.h"
@@ -515,15 +514,14 @@ void teleport_away_followable(player_type *tracer_ptr, MONSTER_IDX m_idx)
     if (tracer_ptr->muta.has(MUTA::VTELEPORT) || (tracer_ptr->pclass == CLASS_IMITATOR))
         follow = true;
     else {
-        BIT_FLAGS flgs[TR_FLAG_SIZE];
         object_type *o_ptr;
         INVENTORY_IDX i;
 
         for (i = INVEN_MAIN_HAND; i < INVEN_TOTAL; i++) {
             o_ptr = &tracer_ptr->inventory_list[i];
-            if (o_ptr->k_idx && !object_is_cursed(o_ptr)) {
-                object_flags(tracer_ptr, o_ptr, flgs);
-                if (has_flag(flgs, TR_TELEPORT)) {
+            if (o_ptr->k_idx && !o_ptr->is_cursed()) {
+                auto flgs = object_flags(o_ptr);
+                if (flgs.has(TR_TELEPORT)) {
                     follow = true;
                     break;
                 }
@@ -558,11 +556,11 @@ bool exe_dimension_door(player_type *caster_ptr, POSITION x, POSITION y)
 {
     PLAYER_LEVEL plev = caster_ptr->lev;
 
-    caster_ptr->energy_need += (s16b)((s32b)(60 - plev) * ENERGY_NEED() / 100L);
+    caster_ptr->energy_need += (int16_t)((int32_t)(60 - plev) * ENERGY_NEED() / 100L);
 
     if (!cave_player_teleportable_bold(caster_ptr, y, x, TELEPORT_SPONTANEOUS) || (distance(y, x, caster_ptr->y, caster_ptr->x) > plev / 2 + 10)
         || (!randint0(plev / 10 + 10))) {
-        caster_ptr->energy_need += (s16b)((s32b)(60 - plev) * ENERGY_NEED() / 100L);
+        caster_ptr->energy_need += (int16_t)((int32_t)(60 - plev) * ENERGY_NEED() / 100L);
         teleport_player(caster_ptr, (plev + 2) * 2, TELEPORT_PASSIVE);
         return false;
     }

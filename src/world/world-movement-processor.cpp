@@ -19,6 +19,28 @@
 #include "view/display-messages.h"
 #include "world/world.h"
 
+
+/*!
+ * @brief プレイヤーの現在ダンジョンIDと階層に応じて、ダンジョン内ランクエの自動放棄を行う
+ * @param creature_ptr プレーヤーへの参照ポインタ
+ */
+void check_random_quest_auto_failure(player_type *creature_ptr)
+{
+    if (creature_ptr->dungeon_idx != DUNGEON_ANGBAND) {
+        return;
+    }
+    for (auto i = MIN_RANDOM_QUEST; i < MAX_RANDOM_QUEST + 1; i++) {
+        auto q_ptr = &quest[i];
+        if ((q_ptr->type == QUEST_TYPE_RANDOM) && (q_ptr->status == QUEST_STATUS_TAKEN) && (q_ptr->level < creature_ptr->current_floor_ptr->dun_level)) {
+            q_ptr->status = QUEST_STATUS_FAILED;
+            q_ptr->complev = (byte)creature_ptr->lev;
+            update_playtime();
+            q_ptr->comptime = current_world_ptr->play_time;
+            r_info[q_ptr->r_idx].flags1 &= ~(RF1_QUESTOR);
+        }
+    }
+}
+
 /*!
  * @brief 10ゲームターンが進行するごとに帰還の残り時間カウントダウンと発動を処理する。
  * / Handle involuntary movement once every 10 game turns
@@ -47,7 +69,7 @@ void execute_recall(player_type *creature_ptr)
         if (creature_ptr->dungeon_idx)
             creature_ptr->recall_dungeon = creature_ptr->dungeon_idx;
         if (record_stair)
-            exe_write_diary(creature_ptr, DIARY_RECALL, floor_ptr->dun_level, NULL);
+            exe_write_diary(creature_ptr, DIARY_RECALL, floor_ptr->dun_level, nullptr);
 
         floor_ptr->dun_level = 0;
         creature_ptr->dungeon_idx = 0;
@@ -62,7 +84,7 @@ void execute_recall(player_type *creature_ptr)
     msg_print(_("下に引きずり降ろされる感じがする！", "You feel yourself yanked downwards!"));
     creature_ptr->dungeon_idx = creature_ptr->recall_dungeon;
     if (record_stair)
-        exe_write_diary(creature_ptr, DIARY_RECALL, floor_ptr->dun_level, NULL);
+        exe_write_diary(creature_ptr, DIARY_RECALL, floor_ptr->dun_level, nullptr);
 
     floor_ptr->dun_level = max_dlv[creature_ptr->dungeon_idx];
     if (floor_ptr->dun_level < 1)
@@ -94,22 +116,7 @@ void execute_recall(player_type *creature_ptr)
     prepare_change_floor_mode(creature_ptr, CFM_FIRST_FLOOR);
     creature_ptr->leaving = true;
 
-    if (creature_ptr->dungeon_idx != DUNGEON_ANGBAND) {
-        sound(SOUND_TPLEVEL);
-        return;
-    }
-
-    for (int i = MIN_RANDOM_QUEST; i < MAX_RANDOM_QUEST + 1; i++) {
-        quest_type *const q_ptr = &quest[i];
-        if ((q_ptr->type == QUEST_TYPE_RANDOM) && (q_ptr->status == QUEST_STATUS_TAKEN) && (q_ptr->level < floor_ptr->dun_level)) {
-            q_ptr->status = QUEST_STATUS_FAILED;
-            q_ptr->complev = (byte)creature_ptr->lev;
-            update_playtime();
-            q_ptr->comptime = current_world_ptr->play_time;
-            r_info[q_ptr->r_idx].flags1 &= ~(RF1_QUESTOR);
-        }
-    }
-
+    check_random_quest_auto_failure(creature_ptr);
     sound(SOUND_TPLEVEL);
 }
 

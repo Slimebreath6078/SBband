@@ -65,12 +65,12 @@ static void process_fishing(player_type *creature_ptr)
     if (one_in_(1000)) {
         MONRACE_IDX r_idx;
         bool success = false;
-        get_mon_num_prep(creature_ptr, monster_is_fishing_target, NULL);
+        get_mon_num_prep(creature_ptr, monster_is_fishing_target, nullptr);
         r_idx = get_mon_num(creature_ptr, 0,
             is_in_dungeon(creature_ptr) ? creature_ptr->current_floor_ptr->dun_level
                                                        : wilderness[creature_ptr->wilderness_y][creature_ptr->wilderness_x].level,
             0);
-        msg_print(NULL);
+        msg_print(nullptr);
         if (r_idx && one_in_(2)) {
             POSITION y, x;
             y = creature_ptr->y + ddy[creature_ptr->fishing_dir];
@@ -223,8 +223,8 @@ void process_player(player_type *creature_ptr)
     }
 
     if (creature_ptr->action == ACTION_LEARN) {
-        s32b cost = 0L;
-        u32b cost_frac = (creature_ptr->msp + 30L) * 256L;
+        int32_t cost = 0L;
+        uint32_t cost_frac = (creature_ptr->msp + 30L) * 256L;
         s64b_lshift(&cost, &cost_frac, 16);
         if (s64b_cmp(creature_ptr->csp, creature_ptr->csp_frac, cost, cost_frac) < 0) {
             creature_ptr->csp = 0;
@@ -312,7 +312,7 @@ void process_player(player_type *creature_ptr)
             if (creature_ptr->timewalk || creature_ptr->energy_use > 400) {
                 creature_ptr->energy_need += creature_ptr->energy_use * TURNS_PER_TICK / 10;
             } else {
-                creature_ptr->energy_need += (s16b)((s32b)creature_ptr->energy_use * ENERGY_NEED() / 100L);
+                creature_ptr->energy_need += (int16_t)((int32_t)creature_ptr->energy_use * ENERGY_NEED() / 100L);
             }
 
             if (creature_ptr->image)
@@ -385,7 +385,7 @@ void process_player(player_type *creature_ptr)
                 creature_ptr->window_flags |= (PW_OVERHEAD | PW_DUNGEON);
 
                 msg_print(_("「時は動きだす…」", "You feel time flowing around you once more."));
-                msg_print(NULL);
+                msg_print(nullptr);
                 creature_ptr->timewalk = false;
                 creature_ptr->energy_need = ENERGY_NEED();
 
@@ -421,12 +421,18 @@ void process_upkeep_with_speed(player_type *creature_ptr)
         return;
 
     while (creature_ptr->enchant_energy_need <= 0) {
-        if (!load)
+        if (!load) {
             check_music(creature_ptr);
-        if (!load)
-            check_hex(creature_ptr);
-        if (!load)
-            revenge_spell(creature_ptr);
+        }
+
+        RealmHex realm_hex(creature_ptr);
+        if (!load) {
+            realm_hex.decrease_mana();
+        }
+
+        if (!load) {
+            realm_hex.continue_revenge();
+        }
 
         creature_ptr->enchant_energy_need += ENERGY_NEED();
     }

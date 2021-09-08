@@ -25,14 +25,14 @@
  * @param o_ptr 投擲するオブジェクトの構造体参照ポインタ
  * @param flgs 特別に追加するフラグを返す参照ポインタ
  */
-void torch_flags(object_type *o_ptr, BIT_FLAGS *flgs)
+void torch_flags(object_type *o_ptr, TrFlags &flgs)
 {
     if ((o_ptr->tval != TV_LITE) || (o_ptr->sval != SV_LITE_TORCH) || (o_ptr->xtra4 <= 0))
         return;
 
-    add_flag(flgs, TR_BRAND_FIRE);
-    add_flag(flgs, TR_KILL_UNDEAD);
-    add_flag(flgs, TR_THROW);
+    flgs.set(TR_BRAND_FIRE);
+    flgs.set(TR_KILL_UNDEAD);
+    flgs.set(TR_THROW);
 }
 
 /*!
@@ -77,8 +77,7 @@ void update_lite_radius(player_type *creature_ptr)
     for (int i = INVEN_MAIN_HAND; i < INVEN_TOTAL; i++) {
         object_type *o_ptr;
         o_ptr = &creature_ptr->inventory_list[i];
-        BIT_FLAGS flgs[TR_FLAG_SIZE];
-        object_flags(creature_ptr, o_ptr, flgs);
+        auto flgs = object_flags(o_ptr);
 
         if (!o_ptr->k_idx)
             continue;
@@ -86,7 +85,7 @@ void update_lite_radius(player_type *creature_ptr)
         if (o_ptr->name2 == EGO_LITE_SHINE)
             creature_ptr->cur_lite++;
 
-        if (!has_flag(flgs, TR_DARK_SOURCE)) {
+        if (flgs.has_not(TR_DARK_SOURCE)) {
             if (o_ptr->tval == TV_LITE) {
                 if ((o_ptr->sval == SV_LITE_TORCH) && !(o_ptr->xtra4 > 0))
                     continue;
@@ -97,22 +96,22 @@ void update_lite_radius(player_type *creature_ptr)
         }
 
         POSITION rad = 0;
-        if (has_flag(flgs, TR_LITE_1) && !has_flag(flgs, TR_DARK_SOURCE))
+        if (flgs.has(TR_LITE_1) && flgs.has_not(TR_DARK_SOURCE))
             rad += 1;
 
-        if (has_flag(flgs, TR_LITE_2) && !has_flag(flgs, TR_DARK_SOURCE))
+        if (flgs.has(TR_LITE_2) && flgs.has_not(TR_DARK_SOURCE))
             rad += 2;
 
-        if (has_flag(flgs, TR_LITE_3) && !has_flag(flgs, TR_DARK_SOURCE))
+        if (flgs.has(TR_LITE_3) && flgs.has_not(TR_DARK_SOURCE))
             rad += 3;
 
-        if (has_flag(flgs, TR_LITE_M1))
+        if (flgs.has(TR_LITE_M1))
             rad -= 1;
 
-        if (has_flag(flgs, TR_LITE_M2))
+        if (flgs.has(TR_LITE_M2))
             rad -= 2;
 
-        if (has_flag(flgs, TR_LITE_M3))
+        if (flgs.has(TR_LITE_M3))
             rad -= 3;
 
         creature_ptr->cur_lite += rad;

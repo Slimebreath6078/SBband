@@ -12,7 +12,7 @@
  */
 void rd_lore(monster_race *r_ptr)
 {
-    s16b tmp16s;
+    int16_t tmp16s;
     rd_s16b(&tmp16s);
     r_ptr->r_sights = (MONSTER_NUMBER)tmp16s;
 
@@ -30,10 +30,15 @@ void rd_lore(monster_race *r_ptr)
 
     rd_byte(&r_ptr->r_wake);
     rd_byte(&r_ptr->r_ignore);
-    rd_byte(&r_ptr->r_xtra1);
-    rd_byte(&r_ptr->r_xtra2);
 
     byte tmp8u;
+    rd_byte(&tmp8u);
+    r_ptr->r_can_evolve = tmp8u > 0;
+    if (loading_savefile_version_is_older_than(6)) {
+        // かつては未使用フラグr_ptr->r_xtra2だった.
+        rd_byte(&tmp8u);
+    }
+
     rd_byte(&tmp8u);
     r_ptr->r_drop_gold = (ITEM_NUMBER)tmp8u;
     rd_byte(&tmp8u);
@@ -74,7 +79,7 @@ void rd_lore(monster_race *r_ptr)
 
 errr load_lore(void)
 {
-    u16b loading_max_r_idx;
+    uint16_t loading_max_r_idx;
     rd_u16b(&loading_max_r_idx);
 
     monster_race *r_ptr;

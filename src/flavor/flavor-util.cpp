@@ -2,7 +2,6 @@
 #include "flavor/flag-inscriptions-table.h"
 #include "object-enchant/object-ego.h"
 #include "object-enchant/tr-types.h"
-#include "object-hook/hook-enchant.h"
 #include "object/object-flags.h"
 #include "object/object-kind.h"
 #include "perception/object-perception.h"
@@ -141,7 +140,7 @@ static void add_inscription(char **short_flavor, concptr str) { *short_flavor = 
  * sprintf(t, "%+d", n), and return a pointer to the terminator.
  * Note that we always print a sign, either "+" or "-".
  */
-static char *inscribe_flags_aux(std::vector<flag_insc_table>& fi_vec, BIT_FLAGS flgs[TR_FLAG_SIZE], bool kanji, char *ptr)
+static char *inscribe_flags_aux(std::vector<flag_insc_table> &fi_vec, const TrFlags &flgs, bool kanji, char *ptr)
 {
 #ifdef JP
 #else
@@ -149,7 +148,7 @@ static char *inscribe_flags_aux(std::vector<flag_insc_table>& fi_vec, BIT_FLAGS 
 #endif
 
     for (flag_insc_table &fi : fi_vec)
-        if (has_flag(flgs, fi.flag) && (fi.except_flag == -1 || !has_flag(flgs, fi.except_flag)))
+        if (flgs.has(fi.flag) && (fi.except_flag == -1 || flgs.has_not(static_cast<tr_type>(fi.except_flag))))
             add_inscription(&ptr, _(kanji ? fi.japanese : fi.english, fi.english));
 
     return ptr;
@@ -162,10 +161,10 @@ static char *inscribe_flags_aux(std::vector<flag_insc_table>& fi_vec, BIT_FLAGS 
  * @param flgs 対応するオブジェクトのフラグ文字列
  * @return 1つでも該当の特性があったらTRUEを返す。
  */
-static bool has_flag_of(std::vector<flag_insc_table>& fi_vec, BIT_FLAGS flgs[TR_FLAG_SIZE])
+static bool has_flag_of(std::vector<flag_insc_table> &fi_vec, const TrFlags &flgs)
 {
     for (flag_insc_table &fi : fi_vec)
-        if (has_flag(flgs, fi.flag) && (fi.except_flag == -1 || !has_flag(flgs, fi.except_flag)))
+        if (flgs.has(fi.flag) && (fi.except_flag == -1 || flgs.has_not(static_cast<tr_type>(fi.except_flag))))
             return true;
 
     return false;
@@ -179,45 +178,41 @@ static bool has_flag_of(std::vector<flag_insc_table>& fi_vec, BIT_FLAGS flgs[TR_
  * @param all TRUEならばベースアイテム上で明らかなフラグは省略する
  * @return ptrと同じアドレス
  */
-char *get_ability_abbreviation(player_type *player_ptr, char *short_flavor, object_type *o_ptr, bool kanji, bool all)
+char *get_ability_abbreviation(char *short_flavor, object_type *o_ptr, bool kanji, bool all)
 {
     char *prev_ptr = short_flavor;
-    BIT_FLAGS flgs[TR_FLAG_SIZE];
-    object_flags(player_ptr, o_ptr, flgs);
+    auto flgs = object_flags(o_ptr);
     if (!all) {
         object_kind *k_ptr = &k_info[o_ptr->k_idx];
-        for (int j = 0; j < TR_FLAG_SIZE; j++)
-            flgs[j] &= ~k_ptr->flags[j];
+        flgs.reset(k_ptr->flags);
 
-        if (object_is_fixed_artifact(o_ptr)) {
+        if (o_ptr->is_fixed_artifact()) {
             artifact_type *a_ptr = &a_info[o_ptr->name1];
-            for (int j = 0; j < TR_FLAG_SIZE; j++)
-                flgs[j] &= ~a_ptr->flags[j];
+            flgs.reset(a_ptr->flags);
         }
 
-        if (object_is_ego(o_ptr)) {
+        if (o_ptr->is_ego()) {
             ego_item_type *e_ptr = &e_info[o_ptr->name2];
-            for (int j = 0; j < TR_FLAG_SIZE; j++)
-                flgs[j] &= ~e_ptr->flags[j];
+            flgs.reset(e_ptr->flags);
         }
     }
 
     if (has_dark_flag(flgs)) {
-        if (has_flag(flgs, TR_LITE_1))
-            remove_flag(flgs, TR_LITE_1);
+        if (flgs.has(TR_LITE_1))
+            flgs.reset(TR_LITE_1);
 
-        if (has_flag(flgs, TR_LITE_2))
-            remove_flag(flgs, TR_LITE_2);
+        if (flgs.has(TR_LITE_2))
+            flgs.reset(TR_LITE_2);
 
-        if (has_flag(flgs, TR_LITE_3))
-            remove_flag(flgs, TR_LITE_3);
+        if (flgs.has(TR_LITE_3))
+            flgs.reset(TR_LITE_3);
     } else if (has_lite_flag(flgs)) {
-        add_flag(flgs, TR_LITE_1);
-        if (has_flag(flgs, TR_LITE_2))
-            remove_flag(flgs, TR_LITE_2);
+        flgs.set(TR_LITE_1);
+        if (flgs.has(TR_LITE_2))
+            flgs.reset(TR_LITE_2);
 
-        if (has_flag(flgs, TR_LITE_3))
-            remove_flag(flgs, TR_LITE_3);
+        if (flgs.has(TR_LITE_3))
+            flgs.reset(TR_LITE_3);
     }
 
     if (has_flag_of(flag_insc_plus, flgs) && kanji)
@@ -316,11 +311,11 @@ char *get_ability_abbreviation(player_type *player_ptr, char *short_flavor, obje
  * @param buff 特性短縮表記を格納する文字列ポインタ
  * @param o_ptr 特性短縮表記を得たいオブジェクト構造体の参照ポインタ
  */
-void get_inscription(player_type *player_ptr, char *buff, object_type *o_ptr)
+void get_inscription(char *buff, object_type *o_ptr)
 {
     concptr insc = quark_str(o_ptr->inscription);
     char *ptr = buff;
-    if (!object_is_fully_known(o_ptr)) {
+    if (!o_ptr->is_fully_known()) {
         while (*insc) {
             if (*insc == '#')
                 break;
@@ -360,7 +355,7 @@ void get_inscription(player_type *player_ptr, char *buff, object_type *o_ptr)
             } else
                 all = false;
 
-            ptr = get_ability_abbreviation(player_ptr, ptr, o_ptr, kanji, all);
+            ptr = get_ability_abbreviation(ptr, o_ptr, kanji, all);
             if (ptr == start)
                 add_inscription(&ptr, " ");
         } else
@@ -457,6 +452,12 @@ char *object_desc_count_japanese(char *t, object_type *o_ptr)
 }
 #endif
 
-bool has_lite_flag(BIT_FLAGS *flags) { return has_flag(flags, TR_LITE_1) || has_flag(flags, TR_LITE_2) || has_flag(flags, TR_LITE_3); }
+bool has_lite_flag(const TrFlags &flags)
+{
+    return flags.has(TR_LITE_1) || flags.has(TR_LITE_2) || flags.has(TR_LITE_3);
+}
 
-bool has_dark_flag(BIT_FLAGS *flags) { return has_flag(flags, TR_LITE_M1) || has_flag(flags, TR_LITE_M2) || has_flag(flags, TR_LITE_M3); }
+bool has_dark_flag(const TrFlags &flags)
+{
+    return flags.has(TR_LITE_M1) || flags.has(TR_LITE_M2) || flags.has(TR_LITE_M3);
+}

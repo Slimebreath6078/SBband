@@ -19,7 +19,6 @@
 #include "monster/monster-processor-util.h"
 #include "monster/smart-learn-types.h"
 #include "object-enchant/tr-types.h"
-#include "object-hook/hook-enchant.h"
 #include "object/object-flags.h"
 #include "object/object-mark-types.h"
 #include "system/floor-type-definition.h"
@@ -34,57 +33,57 @@
 /*!
  * @brief オブジェクトのフラグを更新する
  */
-static void update_object_flags(BIT_FLAGS *flgs, BIT_FLAGS *flg2, BIT_FLAGS *flg3, BIT_FLAGS *flgr)
+static void update_object_flags(const TrFlags &flgs, BIT_FLAGS *flg2, BIT_FLAGS *flg3, BIT_FLAGS *flgr)
 {
-    if (has_flag(flgs, TR_SLAY_DRAGON))
+    if (flgs.has(TR_SLAY_DRAGON))
         *flg3 |= (RF3_DRAGON);
-    if (has_flag(flgs, TR_KILL_DRAGON))
+    if (flgs.has(TR_KILL_DRAGON))
         *flg3 |= (RF3_DRAGON);
-    if (has_flag(flgs, TR_SLAY_TROLL))
+    if (flgs.has(TR_SLAY_TROLL))
         *flg3 |= (RF3_TROLL);
-    if (has_flag(flgs, TR_KILL_TROLL))
+    if (flgs.has(TR_KILL_TROLL))
         *flg3 |= (RF3_TROLL);
-    if (has_flag(flgs, TR_SLAY_GIANT))
+    if (flgs.has(TR_SLAY_GIANT))
         *flg3 |= (RF3_GIANT);
-    if (has_flag(flgs, TR_KILL_GIANT))
+    if (flgs.has(TR_KILL_GIANT))
         *flg3 |= (RF3_GIANT);
-    if (has_flag(flgs, TR_SLAY_ORC))
+    if (flgs.has(TR_SLAY_ORC))
         *flg3 |= (RF3_ORC);
-    if (has_flag(flgs, TR_KILL_ORC))
+    if (flgs.has(TR_KILL_ORC))
         *flg3 |= (RF3_ORC);
-    if (has_flag(flgs, TR_SLAY_DEMON))
+    if (flgs.has(TR_SLAY_DEMON))
         *flg3 |= (RF3_DEMON);
-    if (has_flag(flgs, TR_KILL_DEMON))
+    if (flgs.has(TR_KILL_DEMON))
         *flg3 |= (RF3_DEMON);
-    if (has_flag(flgs, TR_SLAY_UNDEAD))
+    if (flgs.has(TR_SLAY_UNDEAD))
         *flg3 |= (RF3_UNDEAD);
-    if (has_flag(flgs, TR_KILL_UNDEAD))
+    if (flgs.has(TR_KILL_UNDEAD))
         *flg3 |= (RF3_UNDEAD);
-    if (has_flag(flgs, TR_SLAY_ANIMAL))
+    if (flgs.has(TR_SLAY_ANIMAL))
         *flg3 |= (RF3_ANIMAL);
-    if (has_flag(flgs, TR_KILL_ANIMAL))
+    if (flgs.has(TR_KILL_ANIMAL))
         *flg3 |= (RF3_ANIMAL);
-    if (has_flag(flgs, TR_SLAY_EVIL))
+    if (flgs.has(TR_SLAY_EVIL))
         *flg3 |= (RF3_EVIL);
-    if (has_flag(flgs, TR_KILL_EVIL))
+    if (flgs.has(TR_KILL_EVIL))
         *flg3 |= (RF3_EVIL);
-    if (has_flag(flgs, TR_SLAY_GOOD))
+    if (flgs.has(TR_SLAY_GOOD))
         *flg3 |= (RF3_GOOD);
-    if (has_flag(flgs, TR_KILL_GOOD))
+    if (flgs.has(TR_KILL_GOOD))
         *flg3 |= (RF3_GOOD);
-    if (has_flag(flgs, TR_SLAY_HUMAN))
+    if (flgs.has(TR_SLAY_HUMAN))
         *flg2 |= (RF2_HUMAN);
-    if (has_flag(flgs, TR_KILL_HUMAN))
+    if (flgs.has(TR_KILL_HUMAN))
         *flg2 |= (RF2_HUMAN);
-    if (has_flag(flgs, TR_BRAND_ACID))
+    if (flgs.has(TR_BRAND_ACID))
         *flgr |= (RFR_IM_ACID);
-    if (has_flag(flgs, TR_BRAND_ELEC))
+    if (flgs.has(TR_BRAND_ELEC))
         *flgr |= (RFR_IM_ELEC);
-    if (has_flag(flgs, TR_BRAND_FIRE))
+    if (flgs.has(TR_BRAND_FIRE))
         *flgr |= (RFR_IM_FIRE);
-    if (has_flag(flgs, TR_BRAND_COLD))
+    if (flgs.has(TR_BRAND_COLD))
         *flgr |= (RFR_IM_COLD);
-    if (has_flag(flgs, TR_BRAND_POIS))
+    if (flgs.has(TR_BRAND_POIS))
         *flgr |= (RFR_IM_POIS);
 }
 
@@ -159,7 +158,7 @@ void update_object_by_monster_movement(player_type *target_ptr, turn_flags *turn
 
     turn_flags_ptr->do_take = (r_ptr->flags2 & RF2_TAKE_ITEM) != 0;
     for (auto it = g_ptr->o_idx_list.begin(); it != g_ptr->o_idx_list.end();) {
-        BIT_FLAGS flgs[TR_FLAG_SIZE], flg2 = 0L, flg3 = 0L, flgr = 0L;
+        BIT_FLAGS flg2 = 0L, flg3 = 0L, flgr = 0L;
         GAME_TEXT m_name[MAX_NLEN], o_name[MAX_NLEN];
         OBJECT_IDX this_o_idx = *it++;
         object_type *o_ptr = &target_ptr->current_floor_ptr->o_list[this_o_idx];
@@ -170,12 +169,12 @@ void update_object_by_monster_movement(player_type *target_ptr, turn_flags *turn
                 continue;
         }
 
-        object_flags(target_ptr, o_ptr, flgs);
+        auto flgs = object_flags(o_ptr);
         describe_flavor(target_ptr, o_name, o_ptr, 0);
         monster_desc(target_ptr, m_name, m_ptr, MD_INDEF_HIDDEN);
         update_object_flags(flgs, &flg2, &flg3, &flgr);
 
-        bool is_special_object = object_is_artifact(o_ptr) || ((r_ptr->flags3 & flg3) != 0) || ((r_ptr->flags2 & flg2) != 0)
+        bool is_special_object = o_ptr->is_artifact() || ((r_ptr->flags3 & flg3) != 0) || ((r_ptr->flags2 & flg2) != 0)
             || (((~(r_ptr->flagsr) & flgr) != 0) && !(r_ptr->flagsr & RFR_RES_ALL));
         monster_pickup_object(target_ptr, turn_flags_ptr, m_idx, o_ptr, is_special_object, ny, nx, m_name, o_name, this_o_idx);
     }
