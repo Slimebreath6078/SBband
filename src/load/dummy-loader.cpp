@@ -42,7 +42,7 @@ void rd_dummy2(void)
  */
 void rd_dummy_monsters()
 {
-    s16b tmp16s;
+    int16_t tmp16s;
     rd_s16b(&tmp16s);
     for (int i = 0; i < tmp16s; i++) {
         monster_type dummy_mon;

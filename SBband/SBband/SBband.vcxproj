@@ -270,6 +270,7 @@
     <ClCompile Include="..\..\src\action\movement-execution.cpp" />
     <ClCompile Include="..\..\src\core\score-util.cpp" />
     <ClCompile Include="..\..\src\inventory\inventory-damage.cpp" />
+    <ClCompile Include="..\..\src\object-use\throw-execution.cpp" />
     <ClCompile Include="..\..\src\system\grid-type-definition.cpp" />
     <ClCompile Include="..\..\src\grid\feature-action-flags.cpp" />
     <ClCompile Include="..\..\src\main-win\commandline-win.cpp" />
@@ -468,9 +469,6 @@
     <ClCompile Include="..\..\src\mspell\mspell-dispel.cpp" />
     <ClCompile Include="..\..\src\mutation\mutation-techniques.cpp" />
     <ClCompile Include="..\..\src\artifact\random-art-pval-investor.cpp" />
-    <ClCompile Include="..\..\src\object-hook\hook-bow.cpp" />
-    <ClCompile Include="..\..\src\object-hook\hook-checker.cpp" />
-    <ClCompile Include="..\..\src\object-hook\hook-enchant.cpp" />
     <ClCompile Include="..\..\src\object-hook\hook-expendable.cpp" />
     <ClCompile Include="..\..\src\object-hook\hook-magic.cpp" />
     <ClCompile Include="..\..\src\object-hook\hook-perception.cpp" />
@@ -900,14 +898,12 @@
     <ClCompile Include="..\..\src\wizard\tval-descriptions-table.cpp" />
     <ClCompile Include="..\..\src\load\quest-loader.cpp" />
     <ClCompile Include="..\..\src\view\display-store.cpp" />
-    <ClCompile Include="..\..\src\action\throw-util.cpp" />
     <ClInclude Include="..\..\src\action\action-limited.h" />
     <ClInclude Include="..\..\src\action\activation-execution.h" />
     <ClInclude Include="..\..\src\action\mutation-execution.h" />
     <ClInclude Include="..\..\src\action\open-close-execution.h" />
     <ClInclude Include="..\..\src\action\open-util.h" />
     <ClInclude Include="..\..\src\action\run-execution.h" />
-    <ClInclude Include="..\..\src\action\throw-util.h" />
     <ClInclude Include="..\..\src\action\travel-execution.h" />
     <ClInclude Include="..\..\src\action\tunnel-execution.h" />
     <ClInclude Include="..\..\src\action\weapon-shield.h" />
@@ -958,6 +954,7 @@
     <ClInclude Include="..\..\src\dungeon\dungeon-flag-mask.h" />
     <ClInclude Include="..\..\src\grid\feature-action-flags.h" />
     <ClInclude Include="..\..\src\inventory\inventory-damage.h" />
+    <ClInclude Include="..\..\src\load\savedata-old-flag-types.h" />
     <ClInclude Include="..\..\src\main-win\commandline-win.h" />
     <ClInclude Include="..\..\src\main-win\graphics-win.h" />
     <ClInclude Include="..\..\src\main-win\main-win-term.h" />
@@ -972,6 +969,7 @@
     <ClInclude Include="..\..\src\object-enchant\apply-magic-helm.h" />
     <ClInclude Include="..\..\src\object-enchant\apply-magic-ring.h" />
     <ClInclude Include="..\..\src\object-enchant\apply-magic-shield.h" />
+    <ClInclude Include="..\..\src\object-use\throw-execution.h" />
     <ClInclude Include="..\..\src\object\object-index-list.h" />
     <ClInclude Include="..\..\src\player-info\alignment.h" />
     <ClInclude Include="..\..\src\player-info\equipment-info.h" />
@@ -1181,9 +1179,6 @@
     <ClInclude Include="..\..\src\mutation\mutation-techniques.h" />
     <ClInclude Include="..\..\src\artifact\random-art-pval-investor.h" />
     <ClInclude Include="..\..\src\object-hook\hook-armor.h" />
-    <ClInclude Include="..\..\src\object-hook\hook-bow.h" />
-    <ClInclude Include="..\..\src\object-hook\hook-checker.h" />
-    <ClInclude Include="..\..\src\object-hook\hook-enchant.h" />
     <ClInclude Include="..\..\src\object-hook\hook-expendable.h" />
     <ClInclude Include="..\..\src\object-hook\hook-magic.h" />
     <ClInclude Include="..\..\src\object-hook\hook-perception.h" />
@@ -1282,6 +1277,7 @@
     <ClInclude Include="..\..\src\term\screen-processor.h" />
     <ClInclude Include="..\..\src\util\bit-flags-calculator.h" />
     <ClInclude Include="..\..\src\util\buffer-shaper.h" />
+    <ClInclude Include="..\..\src\util\enum-converter.h" />
     <ClInclude Include="..\..\src\util\flag-group.h" />
     <ClInclude Include="..\..\src\util\int-char-converter.h" />
     <ClInclude Include="..\..\src\util\point-2d.h" />

@@ -211,10 +211,7 @@ static errr exe_reading_savefile(player_type *creature_ptr)
         return load_store_result;
 
     rd_s16b(&creature_ptr->pet_follow_distance);
-    char *buf;
-    C_MAKE(buf, SCREEN_BUF_MAX_SIZE, char);
-    rd_string(buf, SCREEN_BUF_MAX_SIZE);
-    C_KILL(buf, SCREEN_BUF_MAX_SIZE, char);
+    rd_u16b(&creature_ptr->pet_extra_flags);
 
     errr restore_dungeon_result = restore_dungeon(creature_ptr);
     if (restore_dungeon_result != 0)

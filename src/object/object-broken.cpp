@@ -52,31 +52,6 @@ BreakerCold::BreakerCold()
 {
 }
 
-ObjectBreaker::ObjectBreaker(tr_type ignore_flg)
-    : ignore_flg(ignore_flg)
-{
-}
-
-BreakerAcid::BreakerAcid()
-    : ObjectBreaker(TR_IGNORE_ACID)
-{
-}
-
-BreakerElec::BreakerElec()
-    : ObjectBreaker(TR_IGNORE_ELEC)
-{
-}
-
-BreakerFire::BreakerFire()
-    : ObjectBreaker(TR_IGNORE_FIRE)
-{
-}
-
-BreakerCold::BreakerCold()
-    : ObjectBreaker(TR_IGNORE_COLD)
-{
-}
-
 /*!
  * @brief アイテムが酸で破損するかどうかを判定する
  * @param o_ptr アイテムの情報参照ポインタ

@@ -117,30 +117,11 @@ void rd_item(object_type *o_ptr)
         o_ptr->marked = 0;
 
     /* Object flags */
-    if (loading_savefile_version_is_older_than(7)) {
-        constexpr savedata_item_older_than_7_flag_type old_savefile_art_flags[] = {
-            SAVE_ITEM_OLDER_THAN_7_ART_FLAGS0,
-            SAVE_ITEM_OLDER_THAN_7_ART_FLAGS1,
-            SAVE_ITEM_OLDER_THAN_7_ART_FLAGS2,
-            SAVE_ITEM_OLDER_THAN_7_ART_FLAGS3,
-            SAVE_ITEM_OLDER_THAN_7_ART_FLAGS4,
-        };
-        auto start = 0;
-        for (auto f : old_savefile_art_flags) {
-            if (flags & f) {
-                uint32_t tmp32u;
-                rd_u32b(&tmp32u);
-                migrate_bitflag_to_flaggroup(o_ptr->art_flags, tmp32u, start);
-            }
-            start += 32;
-        }
-    } else {
-        if (flags & SAVE_ITEM_ART_FLAGS) {
+    if (flags & SAVE_ITEM_ART_FLAGS) {
             rd_FlagGroup(o_ptr->art_flags, rd_byte);
         } else {
             o_ptr->art_flags.clear();
         }
-    }
 
     if (flags & SAVE_ITEM_CURSE_FLAGS) {
         rd_FlagGroup(o_ptr->curse_flags, rd_byte);
