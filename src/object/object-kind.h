@@ -2,10 +2,11 @@
 
 #include "system/angband.h"
 
+#include "object-enchant/tr-flags.h"
 #include "object-enchant/trg-types.h"
 #include "object/tval-types.h"
-#include "util/flag-group.h"
 #include "system/system-variables.h"
+#include "util/flag-group.h"
 
 #include <string>
 #include <vector>
@@ -33,7 +34,7 @@ typedef struct object_kind {
 
     PRICE cost{}; /*!< ベースアイテムの基本価値 / Object "base cost" */
 
-    BIT_FLAGS flags[TR_FLAG_SIZE]{}; /*!< ベースアイテムの基本特性ビット配列 / Flags */
+    TrFlags flags{}; /*!< ベースアイテムの基本特性ビット配列 / Flags */
 
     EnumClassFlagGroup<TRG> gen_flags; /*!< ベースアイテムの生成特性ビット配列 / flags for generate */
 
@@ -54,11 +55,11 @@ typedef struct object_kind {
     bool aware{}; /*!< ベースアイテムが鑑定済かどうか /  The player is "aware" of the item's effects */
     bool tried{}; /*!< ベースアイテムを未鑑定のまま試したことがあるか /  The player has "tried" one of the items */
 
-    ACTIVATION_IDX act_idx{}; /*!< 発動能力のID /  Activative ability index */
+    int16_t act_idx{}; /*!< 発動能力のID /  Activative ability index */
 } object_kind;
 
 extern std::vector<object_kind> k_info;
 extern KIND_OBJECT_IDX max_k_idx;
 
-typedef struct object_type object_type;
+struct object_type;
 SYMBOL_CODE object_char(object_type *o_ptr);

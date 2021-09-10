@@ -28,7 +28,7 @@
  * #ACTION_NONE / #ACTION_SEARCH / #ACTION_REST / #ACTION_LEARN / #ACTION_FISH / #ACTION_KAMAE / #ACTION_KATA / #ACTION_SING / #ACTION_HAYAGAKE / #ACTION_SPELL
  * から選択。
  */
-void set_action(player_type *creature_ptr, ACTION_IDX typ)
+void set_action(player_type *creature_ptr, uint8_t typ)
 {
     int prev_typ = creature_ptr->action;
     if (typ == prev_typ) {
@@ -83,8 +83,9 @@ void set_action(player_type *creature_ptr, ACTION_IDX typ)
     if (prev_typ == ACTION_SING)
         stop_singing(creature_ptr);
 
-    if (prev_typ == ACTION_SPELL)
-        stop_hex_spell(creature_ptr);
+    if (prev_typ == ACTION_SPELL) {
+        (void)RealmHex(creature_ptr).stop_one_spell();
+    }
 
     switch (creature_ptr->action) {
     case ACTION_SEARCH: {

@@ -27,8 +27,6 @@
 #include "object-enchant/special-object-flags.h"
 #include "object-enchant/tr-types.h"
 #include "object-enchant/trg-types.h"
-#include "object-hook/hook-checker.h"
-#include "object-hook/hook-enchant.h"
 #include "object-hook/hook-quest.h"
 #include "object/object-flags.h"
 #include "object/object-info.h"
@@ -203,7 +201,7 @@ static void shuffle_flavors(tval_type tval)
         if (!k_ptr->flavor)
             continue;
 
-        if (has_flag(k_ptr->flags, TR_FIXED_FLAVOR))
+        if (k_ptr->flags.has(TR_FIXED_FLAVOR))
             continue;
 
         k_idx_list[k_idx_list_num] = i;
@@ -213,12 +211,12 @@ static void shuffle_flavors(tval_type tval)
     for (KIND_OBJECT_IDX i = 0; i < k_idx_list_num; i++) {
         object_kind *k1_ptr = &k_info[k_idx_list[i]];
         object_kind *k2_ptr = &k_info[k_idx_list[randint0(k_idx_list_num)]];
-        s16b tmp = k1_ptr->flavor;
+        int16_t tmp = k1_ptr->flavor;
         k1_ptr->flavor = k2_ptr->flavor;
         k2_ptr->flavor = tmp;
     }
 
-    C_KILL(k_idx_list, max_k_idx, s16b);
+    C_KILL(k_idx_list, max_k_idx, int16_t);
 }
 
 /*!
@@ -227,7 +225,7 @@ static void shuffle_flavors(tval_type tval)
  */
 void flavor_init(void)
 {
-    u32b state_backup[4];
+    uint32_t state_backup[4];
     Rand_state_backup(state_backup);
     Rand_state_set(current_world_ptr->seed_flavor);
     for (KIND_OBJECT_IDX i = 0; i < max_k_idx; i++) {

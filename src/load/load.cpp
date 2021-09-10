@@ -40,6 +40,7 @@
 #include "system/player-type-definition.h"
 #include "system/system-variables.h"
 #include "util/angband-files.h"
+#include "util/enum-converter.h"
 #include "view/display-messages.h"
 #include "world/world.h"
 
@@ -54,7 +55,7 @@ static errr load_town_quest(player_type *creature_ptr)
     if (load_town_result != 0)
         return load_town_result;
 
-    u16b max_quests_load;
+    uint16_t max_quests_load;
     byte max_rquests_load;
     errr load_quest_result = load_quest_info(&max_quests_load, &max_rquests_load);
     if (load_quest_result != 0)
@@ -104,7 +105,7 @@ static void load_player_world(player_type *creature_ptr)
 
 static errr load_hp(player_type *creature_ptr)
 {
-    u16b tmp16u;
+    uint16_t tmp16u;
     rd_u16b(&tmp16u);
     if (tmp16u > PY_MAX_LEVEL) {
         load_note(format(_("ヒットポイント配列が大きすぎる(%u)！", "Too many (%u) hitpoint entries!"), tmp16u));
@@ -112,7 +113,7 @@ static errr load_hp(player_type *creature_ptr)
     }
 
     for (int i = 0; i < tmp16u; i++) {
-        s16b tmp16s;
+        int16_t tmp16s;
         rd_s16b(&tmp16s);
         creature_ptr->player_hp[i] = (HIT_POINT)tmp16s;
     }
@@ -134,8 +135,8 @@ static void load_spells(player_type *creature_ptr)
 
 static errr verify_checksum()
 {
-    u32b n_v_check = v_check;
-    u32b o_v_check;
+    uint32_t n_v_check = v_check;
+    uint32_t o_v_check;
     rd_u32b(&o_v_check);
     if (o_v_check == n_v_check)
         return 0;
@@ -146,8 +147,8 @@ static errr verify_checksum()
 
 static errr verify_encoded_checksum()
 {
-    u32b n_x_check = x_check;
-    u32b o_x_check;
+    uint32_t n_x_check = x_check;
+    uint32_t o_x_check;
     rd_u32b(&o_x_check);
     if (o_x_check == n_x_check)
         return 0;
@@ -191,7 +192,7 @@ static errr exe_reading_savefile(player_type *creature_ptr)
         return load_hp_result;
 
     sp_ptr = &sex_info[creature_ptr->psex];
-    rp_ptr = &race_info[creature_ptr->prace];
+    rp_ptr = &race_info[enum2i(creature_ptr->prace)];
     cp_ptr = &class_info[creature_ptr->pclass];
     ap_ptr = &personality_info[creature_ptr->pseikaku];
 
@@ -210,7 +211,7 @@ static errr exe_reading_savefile(player_type *creature_ptr)
         return load_store_result;
 
     rd_s16b(&creature_ptr->pet_follow_distance);
-    rd_s16b(&creature_ptr->pet_extra_flags);
+    rd_u16b(&creature_ptr->pet_extra_flags);
 
     errr restore_dungeon_result = restore_dungeon(creature_ptr);
     if (restore_dungeon_result != 0)
@@ -262,7 +263,7 @@ bool load_savedata(player_type *player_ptr, bool *new_game)
 #ifndef WINDOWS
     if (access(savefile, 0) < 0) {
         msg_print(_("セーブファイルがありません。", "Savefile does not exist."));
-        msg_print(NULL);
+        msg_print(nullptr);
         *new_game = true;
         return true;
     }
@@ -294,7 +295,7 @@ bool load_savedata(player_type *player_ptr, bool *new_game)
 
     if (err) {
         msg_format("%s: %s", what, savefile);
-        msg_print(NULL);
+        msg_print(nullptr);
         return false;
     }
 
@@ -318,7 +319,7 @@ bool load_savedata(player_type *player_ptr, bool *new_game)
         msg_format(_("エラー(%s)がバージョン%d.%d.%d.%d 用セーブファイル読み込み中に発生。", "Error (%s) reading %d.%d.%d.% savefile."), what,
             current_world_ptr->h_ver_major, current_world_ptr->h_ver_minor, current_world_ptr->h_ver_patch, current_world_ptr->h_ver_extra);
 
-        msg_print(NULL);
+        msg_print(nullptr);
         return false;
     }
 
@@ -335,7 +336,7 @@ bool load_savedata(player_type *player_ptr, bool *new_game)
     }
 
     current_world_ptr->character_loaded = true;
-    u32b tmp = counts_read(player_ptr, 2);
+    uint32_t tmp = counts_read(player_ptr, 2);
     if (tmp > player_ptr->count)
         player_ptr->count = tmp;
 

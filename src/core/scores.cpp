@@ -31,6 +31,7 @@
 #include "term/screen-processor.h"
 #include "term/term-color-types.h"
 #include "util/angband-files.h"
+#include "util/enum-converter.h"
 #include "util/int-char-converter.h"
 #include "util/string-processor.h"
 #include "view/display-messages.h"
@@ -169,7 +170,7 @@ errr top_twenty(player_type *current_player_ptr)
     /* Save the player info */
     sprintf(the_score.uid, "%7u", current_player_ptr->player_uid);
     sprintf(the_score.sex, "%c", (current_player_ptr->psex ? 'm' : 'f'));
-    snprintf(buf, sizeof(buf), "%2d", MIN(current_player_ptr->prace, MAX_RACES));
+    snprintf(buf, sizeof(buf), "%2d", MIN(enum2i(current_player_ptr->prace), MAX_RACES));
     memcpy(the_score.p_r, buf, 3);
     snprintf(buf, sizeof(buf), "%2d", MIN(current_player_ptr->pclass, MAX_CLASS));
     memcpy(the_score.p_c, buf, 3);
@@ -177,9 +178,9 @@ errr top_twenty(player_type *current_player_ptr)
     memcpy(the_score.p_a, buf, 3);
 
     /* Save the level and such */
-    sprintf(the_score.cur_lev, "%3d", MIN((u16b)current_player_ptr->lev, 999));
+    sprintf(the_score.cur_lev, "%3d", MIN((uint16_t)current_player_ptr->lev, 999));
     sprintf(the_score.cur_dun, "%3d", (int)current_player_ptr->current_floor_ptr->dun_level);
-    sprintf(the_score.max_lev, "%3d", MIN((u16b)current_player_ptr->max_plv, 999));
+    sprintf(the_score.max_lev, "%3d", MIN((uint16_t)current_player_ptr->max_plv, 999));
     sprintf(the_score.max_dun, "%3d", (int)max_dlv[current_player_ptr->dungeon_idx]);
 
     /* Save the cause of death (31 chars) */
@@ -224,13 +225,13 @@ errr top_twenty(player_type *current_player_ptr)
 
     /* Hack -- Display the top fifteen scores */
     if (j < 10) {
-        display_scores(0, 15, j, NULL);
+        display_scores(0, 15, j, nullptr);
         return 0;
     }
 
     /* Display the scores surrounding the player */
-    display_scores(0, 5, j, NULL);
-    display_scores(j - 2, j + 7, j, NULL);
+    display_scores(0, 5, j, nullptr);
+    display_scores(j - 2, j + 7, j, nullptr);
     return 0;
 }
 
@@ -247,7 +248,7 @@ errr predict_score(player_type *current_player_ptr)
     /* No score file */
     if (highscore_fd < 0) {
         msg_print(_("スコア・ファイルが使用できません。", "Score file unavailable."));
-        msg_print(NULL);
+        msg_print(nullptr);
         return 0;
     }
 
@@ -272,7 +273,7 @@ errr predict_score(player_type *current_player_ptr)
     /* Save the player info */
     sprintf(the_score.uid, "%7u", current_player_ptr->player_uid);
     sprintf(the_score.sex, "%c", (current_player_ptr->psex ? 'm' : 'f'));
-    snprintf(buf, sizeof(buf), "%2d", MIN(current_player_ptr->prace, MAX_RACES));
+    snprintf(buf, sizeof(buf), "%2d", MIN(enum2i(current_player_ptr->prace), MAX_RACES));
     memcpy(the_score.p_r, buf, 3);
     snprintf(buf, sizeof(buf), "%2d", MIN(current_player_ptr->pclass, MAX_CLASS));
     memcpy(the_score.p_c, buf, 3);
@@ -280,9 +281,9 @@ errr predict_score(player_type *current_player_ptr)
     memcpy(the_score.p_a, buf, 3);
 
     /* Save the level and such */
-    sprintf(the_score.cur_lev, "%3d", MIN((u16b)current_player_ptr->lev, 999));
+    sprintf(the_score.cur_lev, "%3d", MIN((uint16_t)current_player_ptr->lev, 999));
     sprintf(the_score.cur_dun, "%3d", (int)current_player_ptr->current_floor_ptr->dun_level);
-    sprintf(the_score.max_lev, "%3d", MIN((u16b)current_player_ptr->max_plv, 999));
+    sprintf(the_score.max_lev, "%3d", MIN((uint16_t)current_player_ptr->max_plv, 999));
     sprintf(the_score.max_dun, "%3d", (int)max_dlv[current_player_ptr->dungeon_idx]);
 
     /* Hack -- no cause of death */
@@ -298,7 +299,7 @@ errr predict_score(player_type *current_player_ptr)
         return 0;
     }
 
-    display_scores(0, 5, -1, NULL);
+    display_scores(0, 5, -1, nullptr);
     display_scores(j - 2, j + 7, j, &the_score);
     return 0;
 }
@@ -317,7 +318,7 @@ void show_highclass(player_type *current_player_ptr)
 
     if (highscore_fd < 0) {
         msg_print(_("スコア・ファイルが使用できません。", "Score file unavailable."));
-        msg_print(NULL);
+        msg_print(nullptr);
         return;
     }
 
@@ -353,9 +354,9 @@ void show_highclass(player_type *current_player_ptr)
     }
 
 #ifdef JP
-    sprintf(out_val, "あなた) %sの%s (レベル %2d)", race_info[current_player_ptr->prace].title, current_player_ptr->name, current_player_ptr->lev);
+    sprintf(out_val, "あなた) %sの%s (レベル %2d)", race_info[enum2i(current_player_ptr->prace)].title, current_player_ptr->name, current_player_ptr->lev);
 #else
-    sprintf(out_val, "You) %s the %s (Level %2d)", current_player_ptr->name, race_info[current_player_ptr->prace].title, current_player_ptr->lev);
+    sprintf(out_val, "You) %s the %s (Level %2d)", current_player_ptr->name, race_info[enum2i(current_player_ptr->prace)].title, current_player_ptr->lev);
 #endif
 
     prt(out_val, (m + 8), 0);
@@ -395,7 +396,7 @@ void race_score(player_type *current_player_ptr, int race_num)
 
     if (highscore_fd < 0) {
         msg_print(_("スコア・ファイルが使用できません。", "Score file unavailable."));
-        msg_print(NULL);
+        msg_print(nullptr);
         return;
     }
 
@@ -433,11 +434,11 @@ void race_score(player_type *current_player_ptr, int race_num)
     }
 
     /* add player if qualified */
-    if ((current_player_ptr->prace == race_num) && (current_player_ptr->lev >= lastlev)) {
+    if ((enum2i(current_player_ptr->prace) == race_num) && (current_player_ptr->lev >= lastlev)) {
 #ifdef JP
-        sprintf(out_val, "あなた) %sの%s (レベル %2d)", race_info[current_player_ptr->prace].title, current_player_ptr->name, current_player_ptr->lev);
+        sprintf(out_val, "あなた) %sの%s (レベル %2d)", race_info[enum2i(current_player_ptr->prace)].title, current_player_ptr->name, current_player_ptr->lev);
 #else
-        sprintf(out_val, "You) %s the %s (Level %3d)", current_player_ptr->name, race_info[current_player_ptr->prace].title, current_player_ptr->lev);
+        sprintf(out_val, "You) %s the %s (Level %3d)", current_player_ptr->name, race_info[enum2i(current_player_ptr->prace)].title, current_player_ptr->lev);
 #endif
 
         prt(out_val, (m + 8), 0);
@@ -456,7 +457,7 @@ void race_legends(player_type *current_player_ptr)
     for (int i = 0; i < MAX_RACES; i++) {
         race_score(current_player_ptr, i);
         msg_print(_("何かキーを押すとゲームに戻ります", "Hit any key to continue"));
-        msg_print(NULL);
+        msg_print(nullptr);
         for (int j = 5; j < 19; j++)
             prt("", j, 0);
     }
@@ -473,35 +474,35 @@ bool check_score(player_type *current_player_ptr)
     /* No score file */
     if (highscore_fd < 0) {
         msg_print(_("スコア・ファイルが使用できません。", "Score file unavailable."));
-        msg_print(NULL);
+        msg_print(nullptr);
         return false;
     }
 
     /* Wizard-mode pre-empts scoring */
     if (current_world_ptr->noscore & 0x000F) {
         msg_print(_("ウィザード・モードではスコアが記録されません。", "Score not registered for wizards."));
-        msg_print(NULL);
+        msg_print(nullptr);
         return false;
     }
 
     /* Cheaters are not scored */
     if (current_world_ptr->noscore & 0xFF00) {
         msg_print(_("詐欺をやった人はスコアが記録されません。", "Score not registered for cheaters."));
-        msg_print(NULL);
+        msg_print(nullptr);
         return false;
     }
 
     /* Interupted */
     if (!current_world_ptr->total_winner && streq(current_player_ptr->died_from, _("強制終了", "Interrupting"))) {
         msg_print(_("強制終了のためスコアが記録されません。", "Score not registered due to interruption."));
-        msg_print(NULL);
+        msg_print(nullptr);
         return false;
     }
 
     /* Quitter */
     if (!current_world_ptr->total_winner && streq(current_player_ptr->died_from, _("途中終了", "Quitting"))) {
         msg_print(_("途中終了のためスコアが記録されません。", "Score not registered due to quitting."));
-        msg_print(NULL);
+        msg_print(nullptr);
         return false;
     }
     return true;

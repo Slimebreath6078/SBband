@@ -92,11 +92,11 @@ void apply_magic_others(player_type *owner_ptr, object_type *o_ptr, int power)
                 o_ptr->xtra4 = 0;
 
                 if (o_ptr->sval == SV_LITE_TORCH) {
-                    add_flag(o_ptr->art_flags, TR_LITE_M1);
+                    o_ptr->art_flags.set(TR_LITE_M1);
                 } else if (o_ptr->sval == SV_LITE_LANTERN) {
-                    add_flag(o_ptr->art_flags, TR_LITE_M2);
+                    o_ptr->art_flags.set(TR_LITE_M2);
                 } else if (o_ptr->sval == SV_LITE_FEANOR) {
-                    add_flag(o_ptr->art_flags, TR_LITE_M3);
+                    o_ptr->art_flags.set(TR_LITE_M3);
                 }
                 break;
             }
@@ -155,7 +155,7 @@ void apply_magic_others(player_type *owner_ptr, object_type *o_ptr, int power)
     case TV_CORPSE: {
         PARAMETER_VALUE i = 1;
         int check;
-        u32b match = 0;
+        uint32_t match = 0;
         monster_race *r_ptr;
         if (o_ptr->sval == SV_SKELETON) {
             match = RF9_DROP_SKELETON;
@@ -163,7 +163,7 @@ void apply_magic_others(player_type *owner_ptr, object_type *o_ptr, int power)
             match = RF9_DROP_CORPSE;
         }
 
-        get_mon_num_prep(owner_ptr, item_monster_okay, NULL);
+        get_mon_num_prep(owner_ptr, item_monster_okay, nullptr);
         while (true) {
             i = get_mon_num(owner_ptr, 0, floor_ptr->dun_level, 0);
             r_ptr = &r_info[i];

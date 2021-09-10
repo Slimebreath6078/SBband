@@ -35,7 +35,7 @@ void rd_options(void)
     rd_byte(&b);
     mana_warn = b;
 
-    u16b c;
+    uint16_t c;
     rd_u16b(&c);
 
     if (c & 0x0002)

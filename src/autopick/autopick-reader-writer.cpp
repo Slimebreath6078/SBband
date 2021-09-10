@@ -9,8 +9,8 @@
 #include "util/string-processor.h"
 #include "view/display-messages.h"
 
-/*
- * Load an autopick preference file
+/*!
+ * @brief Load an autopick preference file
  */
 void autopick_load_pref(player_type *player_ptr, bool disp_mes)
 {
@@ -35,8 +35,8 @@ void autopick_load_pref(player_type *player_ptr, bool disp_mes)
     }
 }
 
-/*
- *  Get file name for autopick preference
+/*!
+ * @brief Get file name for autopick preference
  */
 concptr pickpref_filename(player_type *player_ptr, int filename_mode)
 {
@@ -50,16 +50,16 @@ concptr pickpref_filename(player_type *player_ptr, int filename_mode)
         return format("%s-%s.prf", namebase, player_ptr->base_name);
 
     default:
-        return NULL;
+        return nullptr;
     }
 }
 
-/*
- * Read whole lines of a file to memory
+/*!
+ * @brief Read whole lines of a file to memory
  */
 static concptr *read_text_lines(concptr filename)
 {
-    concptr *lines_list = NULL;
+    concptr *lines_list = nullptr;
     FILE *fff;
 
     int lines = 0;
@@ -68,7 +68,7 @@ static concptr *read_text_lines(concptr filename)
     path_build(buf, sizeof(buf), ANGBAND_DIR_USER, filename);
     fff = angband_fopen(buf, "r");
     if (!fff)
-        return NULL;
+        return nullptr;
 
     C_MAKE(lines_list, MAX_LINES, concptr);
     while (angband_fgets(fff, buf, sizeof(buf)) == 0) {
@@ -84,21 +84,21 @@ static concptr *read_text_lines(concptr filename)
     return lines_list;
 }
 
-/*
- * Copy the default autopick file to the user directory
+/*!
+ * @brief Copy the default autopick file to the user directory
  */
 static void prepare_default_pickpref(player_type *player_ptr)
 {
     const concptr messages[] = { _("あなたは「自動拾いエディタ」を初めて起動しました。", "You have activated the Auto-Picker Editor for the first time."),
         _("自動拾いのユーザー設定ファイルがまだ書かれていないので、", "Since user pref file for autopick is not yet created,"),
-        _("基本的な自動拾い設定ファイルをlib/pref/picktype.prfからコピーします。", "the default setting is loaded from lib/pref/pickpref.prf ."), NULL };
+        _("基本的な自動拾い設定ファイルをlib/pref/picktype.prfからコピーします。", "the default setting is loaded from lib/pref/pickpref.prf ."), nullptr };
 
     concptr filename = pickpref_filename(player_ptr, PT_DEFAULT);
     for (int i = 0; messages[i]; i++) {
         msg_print(messages[i]);
     }
 
-    msg_print(NULL);
+    msg_print(nullptr);
     char buf[1024];
     path_build(buf, sizeof(buf), ANGBAND_DIR_USER, filename);
     FILE *user_fp;
@@ -129,8 +129,8 @@ static void prepare_default_pickpref(player_type *player_ptr)
     angband_fclose(pref_fp);
 }
 
-/*
- * Read an autopick prefence file to memory
+/*!
+ * @brief Read an autopick prefence file to memory
  * Prepare default if no user file is found
  */
 concptr *read_pickpref_text_lines(player_type *player_ptr, int *filename_mode_p)
@@ -161,8 +161,8 @@ concptr *read_pickpref_text_lines(player_type *player_ptr, int *filename_mode_p)
     return lines_list;
 }
 
-/*
- * Write whole lines of memory to a file.
+/*!
+ * @brief Write whole lines of memory to a file.
  */
 bool write_text_lines(concptr filename, concptr *lines_list)
 {

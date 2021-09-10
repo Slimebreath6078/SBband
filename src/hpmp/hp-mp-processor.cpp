@@ -11,6 +11,8 @@
 #include "grid/grid.h"
 #include "hpmp/hp-mp-regenerator.h"
 #include "inventory/inventory-slot-types.h"
+#include "main/sound-definitions-table.h"
+#include "main/sound-of-music.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags2.h"
 #include "monster-race/race-flags3.h"
@@ -39,6 +41,7 @@
 #include "util/bit-flags-calculator.h"
 #include "view/display-messages.h"
 #include "world/world.h"
+#include <functional>
 
 /*!
  * @brief 地形によるダメージを与える / Deal damage from feature.
@@ -58,7 +61,7 @@ static bool deal_damege_by_feat(player_type *creature_ptr, grid_type *g_ptr, con
     feature_type *f_ptr = &f_info[g_ptr->feat];
     int damage = 0;
 
-    if (has_flag(f_ptr->flags, FF_DEEP)) {
+    if (f_ptr->flags.has(FF::DEEP)) {
         damage = 6000 + randint0(4000);
     } else if (!creature_ptr->levitation) {
         damage = 3000 + randint0(2000);
@@ -79,14 +82,14 @@ static bool deal_damege_by_feat(player_type *creature_ptr, grid_type *g_ptr, con
 
         take_hit(creature_ptr, DAMAGE_NOESCAPE, damage, format(_("%sの上に浮遊したダメージ", "flying over %s"), f_info[g_ptr->get_feat_mimic()].name.c_str()));
 
-        if (additional_effect != NULL)
+        if (additional_effect != nullptr)
             additional_effect(creature_ptr, damage);
     } else {
         concptr name = f_info[creature_ptr->current_floor_ptr->grid_array[creature_ptr->y][creature_ptr->x].get_feat_mimic()].name.c_str();
         msg_format(_("%s%s！", "The %s %s!"), name, msg_normal);
         take_hit(creature_ptr, DAMAGE_NOESCAPE, damage, name);
 
-        if (additional_effect != NULL)
+        if (additional_effect != nullptr)
             additional_effect(creature_ptr, damage);
     }
 
@@ -105,7 +108,9 @@ void process_player_hp_mp(player_type *creature_ptr)
     int upkeep_factor = 0;
     int regen_amount = PY_REGEN_NORMAL;
     if (creature_ptr->poisoned && !is_invuln(creature_ptr)) {
-        take_hit(creature_ptr, DAMAGE_NOESCAPE, 1, _("毒", "poison"));
+        if (take_hit(creature_ptr, DAMAGE_NOESCAPE, 1, _("毒", "poison")) > 0) {
+            sound(SOUND_DAMAGE_OVER_TIME);
+        }
     }
 
     if (creature_ptr->cut && !is_invuln(creature_ptr)) {
@@ -126,7 +131,9 @@ void process_player_hp_mp(player_type *creature_ptr)
             dam = 1;
         }
 
-        take_hit(creature_ptr, DAMAGE_NOESCAPE, dam, _("致命傷", "a fatal wound"));
+        if (take_hit(creature_ptr, DAMAGE_NOESCAPE, dam, _("致命傷", "a fatal wound")) > 0) {
+            sound(SOUND_DAMAGE_OVER_TIME);
+        }
     }
 
     if (player_race_life(creature_ptr) == PlayerRaceLife::UNDEAD && player_race_has_flag(creature_ptr, TR_VUL_LITE)) {
@@ -140,10 +147,9 @@ void process_player_hp_mp(player_type *creature_ptr)
 
         object_type *o_ptr;
         o_ptr = &creature_ptr->inventory_list[INVEN_LITE];
-        BIT_FLAGS flgs[TR_FLAG_SIZE];
-        object_flags(creature_ptr, o_ptr, flgs);
+        auto flgs = object_flags(o_ptr);
 
-        if (creature_ptr->inventory_list[INVEN_LITE].tval && !has_flag(flgs, TR_DARK_SOURCE) && !has_resist_lite(creature_ptr)) {
+        if (creature_ptr->inventory_list[INVEN_LITE].tval && flgs.has_not(TR_DARK_SOURCE) && !has_resist_lite(creature_ptr)) {
             GAME_TEXT o_name[MAX_NLEN];
             char ouch[MAX_NLEN + 40];
             describe_flavor(creature_ptr, o_name, o_ptr, (OD_OMIT_PREFIX | OD_NAME_ONLY));
@@ -158,40 +164,56 @@ void process_player_hp_mp(player_type *creature_ptr)
         }
     }
 
-    if (has_flag(f_ptr->flags, FF_LAVA) && !is_invuln(creature_ptr) && !has_immune_fire(creature_ptr)) {
-        cave_no_regen = deal_damege_by_feat(
-            creature_ptr, g_ptr, _("熱で火傷した！", "The heat burns you!"), _("で火傷した！", "burns you!"), calc_fire_damage_rate, NULL);
+    if (f_ptr->flags.has(FF::LAVA) && !is_invuln(creature_ptr) && !has_immune_fire(creature_ptr)) {
+        if (deal_damege_by_feat(creature_ptr, g_ptr, _("熱で火傷した！", "The heat burns you!"), _("で火傷した！", "burns you!"),
+                                calc_fire_damage_rate, nullptr)) {
+            cave_no_regen = true;
+            sound(SOUND_TERRAIN_DAMAGE);
+        }
     }
 
-    if (has_flag(f_ptr->flags, FF_COLD_PUDDLE) && !is_invuln(creature_ptr) && !has_immune_cold(creature_ptr)) {
-        cave_no_regen = deal_damege_by_feat(
-            creature_ptr, g_ptr, _("冷気に覆われた！", "The cold engulfs you!"), _("に凍えた！", "frostbites you!"), calc_cold_damage_rate, NULL);
+    if (f_ptr->flags.has(FF::COLD_PUDDLE) && !is_invuln(creature_ptr) && !has_immune_cold(creature_ptr)) {
+        if (deal_damege_by_feat(creature_ptr, g_ptr, _("冷気に覆われた！", "The cold engulfs you!"), _("に凍えた！", "frostbites you!"),
+                                calc_cold_damage_rate, nullptr)) {
+            cave_no_regen = true;
+            sound(SOUND_TERRAIN_DAMAGE);
+        }
     }
 
-    if (has_flag(f_ptr->flags, FF_ELEC_PUDDLE) && !is_invuln(creature_ptr) && !has_immune_elec(creature_ptr)) {
-        cave_no_regen = deal_damege_by_feat(
-            creature_ptr, g_ptr, _("電撃を受けた！", "The electricity shocks you!"), _("に感電した！", "shocks you!"), calc_elec_damage_rate, NULL);
+    if (f_ptr->flags.has(FF::ELEC_PUDDLE) && !is_invuln(creature_ptr) && !has_immune_elec(creature_ptr)) {
+        if (deal_damege_by_feat(creature_ptr, g_ptr, _("電撃を受けた！", "The electricity shocks you!"), _("に感電した！", "shocks you!"),
+                                calc_elec_damage_rate, nullptr)) {
+            cave_no_regen = true;
+            sound(SOUND_TERRAIN_DAMAGE);
+        }
     }
 
-    if (has_flag(f_ptr->flags, FF_ACID_PUDDLE) && !is_invuln(creature_ptr) && !has_immune_acid(creature_ptr)) {
-        cave_no_regen = deal_damege_by_feat(
-            creature_ptr, g_ptr, _("酸が飛び散った！", "The acid melts you!"), _("に溶かされた！", "melts you!"), calc_acid_damage_rate, NULL);
+    if (f_ptr->flags.has(FF::ACID_PUDDLE) && !is_invuln(creature_ptr) && !has_immune_acid(creature_ptr)) {
+        if (deal_damege_by_feat(creature_ptr, g_ptr, _("酸が飛び散った！", "The acid melts you!"), _("に溶かされた！", "melts you!"),
+                                calc_acid_damage_rate, nullptr)) {
+            cave_no_regen = true;
+            sound(SOUND_TERRAIN_DAMAGE);
+        }
     }
 
-    if (has_flag(f_ptr->flags, FF_POISON_PUDDLE) && !is_invuln(creature_ptr)) {
-        cave_no_regen = deal_damege_by_feat(creature_ptr, g_ptr, _("毒気を吸い込んだ！", "The gas poisons you!"), _("に毒された！", "poisons you!"),
+    if (f_ptr->flags.has(FF::POISON_PUDDLE) && !is_invuln(creature_ptr)) {
+        if (deal_damege_by_feat(creature_ptr, g_ptr, _("毒気を吸い込んだ！", "The gas poisons you!"), _("に毒された！", "poisons you!"),
             calc_acid_damage_rate, [](player_type *creature_ptr, int damage) {
                 if (!has_resist_pois(creature_ptr))
                     (void)set_poisoned(creature_ptr, creature_ptr->poisoned + damage);
-            });
+                                })) {
+            cave_no_regen = true;
+            sound(SOUND_TERRAIN_DAMAGE);
+        }
     }
 
-    if (has_flag(f_ptr->flags, FF_WATER) && has_flag(f_ptr->flags, FF_DEEP) && !creature_ptr->levitation && !creature_ptr->can_swim
+    if (f_ptr->flags.has_all_of({FF::WATER, FF::DEEP}) && !creature_ptr->levitation && !creature_ptr->can_swim
         && !has_resist_water(creature_ptr)) {
         if (calc_inventory_weight(creature_ptr) > calc_weight_limit(creature_ptr)) {
             msg_print(_("溺れている！", "You are drowning!"));
             take_hit(creature_ptr, DAMAGE_NOESCAPE, randint1(creature_ptr->lev), _("溺れ", "drowning"));
             cave_no_regen = true;
+            sound(SOUND_TERRAIN_DAMAGE);
         }
     }
 
@@ -239,7 +261,7 @@ void process_player_hp_mp(player_type *creature_ptr)
      * reduced below 0 hp by being inside a stone wall; others
      * WILL BE!
      */
-    if (!has_flag(f_ptr->flags, FF_MOVE) && !has_flag(f_ptr->flags, FF_CAN_FLY)) {
+    if (f_ptr->flags.has_none_of({FF::MOVE, FF::CAN_FLY})) {
         if (!is_invuln(creature_ptr) && !creature_ptr->wraith_form && !creature_ptr->tim_pass_wall
             && ((creature_ptr->chp > (creature_ptr->lev / 5)) || !has_pass_wall(creature_ptr))) {
             concptr dam_desc;
@@ -298,13 +320,13 @@ void process_player_hp_mp(player_type *creature_ptr)
     if ((creature_ptr->csp == 0) && (creature_ptr->csp_frac == 0)) {
         while (upkeep_factor > 100) {
             msg_print(_("こんなに多くのペットを制御できない！", "Too many pets to control at once!"));
-            msg_print(NULL);
+            msg_print(nullptr);
             do_cmd_pet_dismiss(creature_ptr);
 
             upkeep_factor = calculate_upkeep(creature_ptr);
 
             msg_format(_("維持ＭＰは %d%%", "Upkeep: %d%% mana."), upkeep_factor);
-            msg_print(NULL);
+            msg_print(nullptr);
         }
     }
 

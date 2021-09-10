@@ -15,7 +15,6 @@
 #include "monster-race/monster-race.h"
 #include "monster/monster-info.h"
 #include "monster/monster-list.h"
-#include "object-hook/hook-checker.h"
 #include "save/floor-writer.h"
 #include "system/angband-version.h"
 #include "system/floor-type-definition.h"
@@ -50,12 +49,12 @@ errr rd_saved_floor(player_type *player_ptr, saved_floor_type *sf_ptr)
     player_ptr->x = player_ptr->y = 0;
 
     if (!sf_ptr) {
-        s16b tmp16s;
+        int16_t tmp16s;
         rd_s16b(&tmp16s);
         floor_ptr->dun_level = (DEPTH)tmp16s;
         floor_ptr->base_level = floor_ptr->dun_level;
     } else {
-        s16b tmp16s;
+        int16_t tmp16s;
         rd_s16b(&tmp16s);
         if (tmp16s != sf_ptr->floor_id)
             return 171;
@@ -70,12 +69,12 @@ errr rd_saved_floor(player_type *player_ptr, saved_floor_type *sf_ptr)
             return 171;
         floor_ptr->dun_level = sf_ptr->dun_level;
 
-        s32b tmp32s;
+        int32_t tmp32s;
         rd_s32b(&tmp32s);
         if (tmp32s != sf_ptr->last_visit)
             return 171;
 
-        u32b tmp32u;
+        uint32_t tmp32u;
         rd_u32b(&tmp32u);
         if (tmp32u != sf_ptr->visit_mark)
             return 171;
@@ -89,13 +88,13 @@ errr rd_saved_floor(player_type *player_ptr, saved_floor_type *sf_ptr)
             return 171;
     }
 
-    s16b tmp16s;
+    int16_t tmp16s;
     rd_s16b(&tmp16s);
     floor_ptr->base_level = (DEPTH)tmp16s;
     rd_s16b(&tmp16s);
     floor_ptr->num_repro = (MONSTER_NUMBER)tmp16s;
 
-    u16b tmp16u;
+    uint16_t tmp16u;
     rd_u16b(&tmp16u);
     player_ptr->y = (POSITION)tmp16u;
 
@@ -109,7 +108,7 @@ errr rd_saved_floor(player_type *player_ptr, saved_floor_type *sf_ptr)
 
     rd_byte(&player_ptr->feeling);
 
-    u16b limit;
+    uint16_t limit;
     rd_u16b(&limit);
     C_MAKE(templates, limit, grid_template_type);
 
@@ -129,7 +128,7 @@ errr rd_saved_floor(player_type *player_ptr, saved_floor_type *sf_ptr)
         byte count;
         rd_byte(&count);
 
-        u16b id = 0;
+        uint16_t id = 0;
         byte tmp8u;
         do {
             rd_byte(&tmp8u);
@@ -199,8 +198,8 @@ errr rd_saved_floor(player_type *player_ptr, saved_floor_type *sf_ptr)
  */
 static bool load_floor_aux(player_type *player_ptr, saved_floor_type *sf_ptr)
 {
-    u32b n_x_check, n_v_check;
-    u32b o_x_check, o_v_check;
+    uint32_t n_x_check, n_v_check;
+    uint32_t o_x_check, o_v_check;
 
     load_xor_byte = 0;
     byte tmp8u;
@@ -215,7 +214,7 @@ static bool load_floor_aux(player_type *player_ptr, saved_floor_type *sf_ptr)
     current_world_ptr->h_ver_major = H_VER_MAJOR;
     loading_savefile_version = SAVEFILE_VERSION;
 
-    u32b tmp32u;
+    uint32_t tmp32u;
     rd_u32b(&tmp32u);
     if (saved_floor_file_sign != tmp32u)
         return false;
@@ -261,15 +260,15 @@ bool load_floor(player_type *player_ptr, saved_floor_type *sf_ptr, BIT_FLAGS mod
     kanji_code = 1;
 #endif
 
-    FILE *old_fff = NULL;
+    FILE *old_fff = nullptr;
     byte old_xor_byte = 0;
-    u32b old_v_check = 0;
-    u32b old_x_check = 0;
+    uint32_t old_v_check = 0;
+    uint32_t old_x_check = 0;
     byte old_h_ver_major = 0;
     byte old_h_ver_minor = 0;
     byte old_h_ver_patch = 0;
     byte old_h_ver_extra = 0;
-    u32b old_loading_savefile_version = 0;
+    uint32_t old_loading_savefile_version = 0;
     if (mode & SLF_SECOND) {
         old_fff = loading_savefile;
         old_xor_byte = load_xor_byte;

@@ -8,7 +8,7 @@
 void set_monster_blow_method(lore_type *lore_ptr, int m)
 {
     rbm_type method = lore_ptr->r_ptr->blow[m].method;
-    lore_ptr->p = NULL;
+    lore_ptr->p = nullptr;
     lore_ptr->pc = TERM_WHITE;
     switch (method) {
     case RBM_HIT:
@@ -111,7 +111,7 @@ void set_monster_blow_method(lore_type *lore_ptr, int m)
 void set_monster_blow_effect(lore_type *lore_ptr, int m)
 {
     rbe_type effect = lore_ptr->r_ptr->blow[m].effect;
-    lore_ptr->q = NULL;
+    lore_ptr->q = nullptr;
     lore_ptr->qc = TERM_WHITE;
     switch (effect) {
     case RBE_SUPERHURT:
@@ -252,6 +252,10 @@ void set_monster_blow_effect(lore_type *lore_ptr, int m)
     case RBE_STUN:
         lore_ptr->q = _("朦朧とさせる", "stun");
         lore_ptr->qc = TERM_ORANGE;
+        break;
+    case RBE_HUNGRY:
+        lore_ptr->q = _("空腹を進行させる", "increase hunger");
+        lore_ptr->qc = TERM_L_BLUE;
         break;
     case RBE_FLAVOR:
         // フレーバー打撃には何の効果もないので付加説明もない。

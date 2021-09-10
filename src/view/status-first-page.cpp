@@ -128,13 +128,13 @@ static bool calc_weapon_one_hand(object_type *o_ptr, int hand, int *damage, int 
  * @param flgs オブジェクトフラグ群
  * @return 強化後の素手ダメージ
  */
-static int strengthen_basedam(player_type *creature_ptr, object_type *o_ptr, int basedam, BIT_FLAGS *flgs)
+static int strengthen_basedam(player_type *creature_ptr, object_type *o_ptr, int basedam, const TrFlags &flgs)
 {
-    if (object_is_fully_known(o_ptr) && ((o_ptr->name1 == ART_VORPAL_BLADE) || (o_ptr->name1 == ART_CHAINSWORD))) {
+    if (o_ptr->is_fully_known() && ((o_ptr->name1 == ART_VORPAL_BLADE) || (o_ptr->name1 == ART_CHAINSWORD))) {
         /* vorpal blade */
         basedam *= 5;
         basedam /= 3;
-    } else if (has_flag(flgs, TR_VORPAL)) {
+    } else if (flgs.has(TR_VORPAL)) {
         /* vorpal flag only */
         basedam *= 11;
         basedam /= 9;
@@ -142,7 +142,7 @@ static int strengthen_basedam(player_type *creature_ptr, object_type *o_ptr, int
 
     // 理力
     bool is_force = creature_ptr->pclass != CLASS_SAMURAI;
-    is_force &= has_flag(flgs, TR_FORCE_WEAPON);
+    is_force &= flgs.has(TR_FORCE_WEAPON);
     is_force &= creature_ptr->csp > (o_ptr->dd * o_ptr->ds / 5);
     if (is_force)
         basedam = basedam * 7 / 2;
@@ -245,7 +245,7 @@ static void calc_two_hands(player_type *creature_ptr, int *damage, int *to_h)
 {
     object_type *o_ptr;
     o_ptr = &creature_ptr->inventory_list[INVEN_BOW];
-    BIT_FLAGS flgs[TR_FLAG_SIZE];
+
     for (int i = 0; i < 2; i++) {
         int basedam;
         damage[i] = creature_ptr->dis_to_d[i] * 100;
@@ -264,13 +264,13 @@ static void calc_two_hands(player_type *creature_ptr, int *damage, int *to_h)
         bool poison_needle = false;
         if ((o_ptr->tval == TV_SWORD) && (o_ptr->sval == SV_POISON_NEEDLE))
             poison_needle = true;
-        if (object_is_known(o_ptr)) {
+        if (o_ptr->is_known()) {
             damage[i] += o_ptr->to_d * 100;
             to_h[i] += o_ptr->to_h;
         }
 
         basedam = ((o_ptr->dd + creature_ptr->to_dd[i]) * (o_ptr->ds + creature_ptr->to_ds[i] + 1)) * 50;
-        object_flags_known(creature_ptr, o_ptr, flgs);
+        auto flgs = object_flags_known(o_ptr);
 
         bool impact = creature_ptr->impact != 0;
         basedam = calc_expect_crit(creature_ptr, o_ptr->weight, to_h[i], basedam, creature_ptr->dis_to_h[i], poison_needle, impact);

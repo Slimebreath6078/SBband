@@ -53,23 +53,22 @@ object_type *choose_warning_item(player_type *creature_ptr)
 
     /* Paranoia -- Player has no warning ability */
     if (!creature_ptr->warning)
-        return NULL;
+        return nullptr;
 
     /* Search Inventory */
     int number = 0;
     for (int i = INVEN_MAIN_HAND; i < INVEN_TOTAL; i++) {
-        BIT_FLAGS flgs[TR_FLAG_SIZE];
         object_type *o_ptr = &creature_ptr->inventory_list[i];
 
-        object_flags(creature_ptr, o_ptr, flgs);
-        if (has_flag(flgs, TR_WARNING)) {
+        auto flgs = object_flags(o_ptr);
+        if (flgs.has(TR_WARNING)) {
             choices[number] = i;
             number++;
         }
     }
 
     /* Choice one of them */
-    return number ? &creature_ptr->inventory_list[choices[randint0(number)]] : NULL;
+    return number ? &creature_ptr->inventory_list[choices[randint0(number)]] : nullptr;
 }
 
 /*!
@@ -160,7 +159,7 @@ static void spell_damcalc(player_type *target_ptr, monster_type *m_ptr, EFFECT_I
 
     case GF_NETHER:
         dam = dam * calc_nether_damage_rate(target_ptr, CALC_MAX) / 100;
-        if (is_specific_player_race(target_ptr, RACE_SPECTRE)) {
+        if (is_specific_player_race(target_ptr, player_race_type::SPECTRE)) {
             ignore_wraith_form = true;
             dam = 0;
         }
@@ -495,7 +494,7 @@ bool process_warning(player_type *creature_ptr, POSITION xx, POSITION yy)
         return true;
 
     object_type *o_ptr = choose_warning_item(creature_ptr);
-    if (o_ptr != NULL)
+    if (o_ptr != nullptr)
         describe_flavor(creature_ptr, o_name, o_ptr, (OD_OMIT_PREFIX | OD_NAME_ONLY));
     else
         strcpy(o_name, _("体", "body")); /* Warning ability without item */

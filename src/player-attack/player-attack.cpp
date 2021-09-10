@@ -63,7 +63,7 @@
  * @brief プレイヤーの攻撃情報を初期化する(コンストラクタ以外の分)
  */
 static player_attack_type *initialize_player_attack_type(
-    player_attack_type *pa_ptr, player_type *attacker_ptr, POSITION y, POSITION x, s16b hand, combat_options mode, bool *fear, bool *mdeath)
+    player_attack_type *pa_ptr, player_type *attacker_ptr, POSITION y, POSITION x, int16_t hand, combat_options mode, bool *fear, bool *mdeath)
 {
     auto floor_ptr = attacker_ptr->current_floor_ptr;
     auto g_ptr = &floor_ptr->grid_array[y][x];
@@ -171,7 +171,7 @@ static void get_attack_exp(player_type *attacker_ptr, player_attack_type *pa_ptr
         return;
     }
 
-    if (!object_is_melee_weapon(o_ptr) || ((r_ptr->level + 10) <= attacker_ptr->lev))
+    if (!o_ptr->is_melee_weapon() || ((r_ptr->level + 10) <= attacker_ptr->lev))
         return;
 
     get_weapon_exp(attacker_ptr, pa_ptr);
@@ -208,7 +208,7 @@ static void calc_num_blow(player_type *attacker_ptr, player_attack_type *pa_ptr)
  */
 static chaotic_effect select_chaotic_effect(player_type *attacker_ptr, player_attack_type *pa_ptr)
 {
-    if (!(has_flag(pa_ptr->flags, TR_CHAOTIC)) || one_in_(2))
+    if (pa_ptr->flags.has_not(TR_CHAOTIC) || one_in_(2))
         return CE_NONE;
 
     if (one_in_(10))
@@ -234,7 +234,7 @@ static chaotic_effect select_chaotic_effect(player_type *attacker_ptr, player_at
  */
 static MagicalBrandEffect select_magical_brand_effect(player_type *attacker_ptr, player_attack_type *pa_ptr)
 {
-    if (!has_flag(pa_ptr->flags, TR_BRAND_MAGIC))
+    if (pa_ptr->flags.has_not(TR_BRAND_MAGIC))
         return MagicalBrandEffect::NONE;
 
     if (one_in_(10))
@@ -437,7 +437,7 @@ static void apply_damage_negative_effect(player_attack_type *pa_ptr, bool is_zan
 static bool check_fear_death(player_type *attacker_ptr, player_attack_type *pa_ptr, const int num, const bool is_lowlevel)
 {
     MonsterDamageProcessor mdp(attacker_ptr, pa_ptr->m_idx, pa_ptr->attack_damage, pa_ptr->fear);
-    if (!mdp.mon_take_hit(NULL))
+    if (!mdp.mon_take_hit(nullptr))
         return false;
 
     *(pa_ptr->mdeath) = true;
@@ -482,15 +482,14 @@ static void apply_actual_attack(
     sound(SOUND_HIT);
     print_surprise_attack(pa_ptr);
 
-    object_flags(attacker_ptr, o_ptr, pa_ptr->flags);
+    pa_ptr->flags = object_flags(o_ptr);
     pa_ptr->chaos_effect = select_chaotic_effect(attacker_ptr, pa_ptr);
     pa_ptr->magical_effect = select_magical_brand_effect(attacker_ptr, pa_ptr);
     decide_blood_sucking(attacker_ptr, pa_ptr);
 
-    // process_monk_attackの中でplayer_type->magic_num1[0] を書き換えているので、ここでhex_spelling() の判定をしないとダメ.
-    bool vorpal_cut
-        = (has_flag(pa_ptr->flags, TR_VORPAL) || hex_spelling(attacker_ptr, HEX_RUNESWORD)) && (randint1(vorpal_chance * 3 / 2) == 1) && !is_zantetsu_nullified;
-
+    // process_monk_attackの中でplayer_type->magic_num1[0] を書き換えているので、ここでis_spelling_specific() の判定をしないとダメ.
+    bool vorpal_cut = (pa_ptr->flags.has(TR_VORPAL) || RealmHex(attacker_ptr).is_spelling_specific(HEX_RUNESWORD)) && (randint1(vorpal_chance * 3 / 2) == 1)
+        && !is_zantetsu_nullified;
     calc_attack_damage(attacker_ptr, pa_ptr, do_quake, vorpal_cut, vorpal_chance);
     apply_damage_bonus(attacker_ptr, pa_ptr);
     apply_damage_negative_effect(pa_ptr, is_zantetsu_nullified, is_ej_nullified);
@@ -533,7 +532,7 @@ static void cause_earthquake(player_type *attacker_ptr, player_attack_type *pa_p
  * @details
  * If no "weapon" is available, then "punch" the monster one time.
  */
-void exe_player_attack_to_monster(player_type *attacker_ptr, POSITION y, POSITION x, bool *fear, bool *mdeath, s16b hand, combat_options mode)
+void exe_player_attack_to_monster(player_type *attacker_ptr, POSITION y, POSITION x, bool *fear, bool *mdeath, int16_t hand, combat_options mode)
 {
     bool do_quake = false;
     bool drain_msg = true;
@@ -603,7 +602,7 @@ void massacre(player_type *caster_ptr)
         POSITION x = caster_ptr->x + ddx_ddd[dir];
         g_ptr = &caster_ptr->current_floor_ptr->grid_array[y][x];
         m_ptr = &caster_ptr->current_floor_ptr->m_list[g_ptr->m_idx];
-        if (g_ptr->m_idx && (m_ptr->ml || cave_has_flag_bold(caster_ptr->current_floor_ptr, y, x, FF_PROJECT)))
+        if (g_ptr->m_idx && (m_ptr->ml || cave_has_flag_bold(caster_ptr->current_floor_ptr, y, x, FF::PROJECT)))
             do_cmd_attack(caster_ptr, y, x, HISSATSU_NONE);
     }
 }

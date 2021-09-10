@@ -4,9 +4,9 @@
 #include "load/angband-version-comparer.h"
 #include "load/load-util.h"
 #include "load/savedata-flag-types.h"
+#include "load/savedata-old-flag-types.h"
 #include "object-enchant/object-ego.h"
 #include "object-enchant/tr-types.h"
-#include "object-hook/hook-enchant.h"
 #include "object/object-flags.h"
 #include "object/object-kind.h"
 #include "sv-definition/sv-lite-types.h"
@@ -52,7 +52,7 @@ void rd_item(object_type *o_ptr)
     } else
         o_ptr->number = 1;
 
-    s16b tmp16s;
+    int16_t tmp16s;
     rd_s16b(&tmp16s);
     o_ptr->weight = tmp16s;
 
@@ -117,30 +117,11 @@ void rd_item(object_type *o_ptr)
         o_ptr->marked = 0;
 
     /* Object flags */
-    if (flags & SAVE_ITEM_ART_FLAGS0)
-        rd_u32b(&o_ptr->art_flags[0]);
-    else
-        o_ptr->art_flags[0] = 0;
-
-    if (flags & SAVE_ITEM_ART_FLAGS1)
-        rd_u32b(&o_ptr->art_flags[1]);
-    else
-        o_ptr->art_flags[1] = 0;
-
-    if (flags & SAVE_ITEM_ART_FLAGS2)
-        rd_u32b(&o_ptr->art_flags[2]);
-    else
-        o_ptr->art_flags[2] = 0;
-
-    if (flags & SAVE_ITEM_ART_FLAGS3)
-        rd_u32b(&o_ptr->art_flags[3]);
-    else
-        o_ptr->art_flags[3] = 0;
-
-    if (flags & SAVE_ITEM_ART_FLAGS4)
-        rd_u32b(&o_ptr->art_flags[4]);
-    else
-        o_ptr->art_flags[4] = 0;
+    if (flags & SAVE_ITEM_ART_FLAGS) {
+            rd_FlagGroup(o_ptr->art_flags, rd_byte);
+        } else {
+            o_ptr->art_flags.clear();
+        }
 
     if (flags & SAVE_ITEM_CURSE_FLAGS) {
         rd_FlagGroup(o_ptr->curse_flags, rd_byte);
@@ -213,7 +194,7 @@ void rd_item(object_type *o_ptr)
  */
 errr load_item(void)
 {
-    u16b loading_max_k_idx;
+    uint16_t loading_max_k_idx;
     rd_u16b(&loading_max_k_idx);
 
     object_kind *k_ptr;
@@ -242,7 +223,7 @@ errr load_item(void)
  */
 errr load_artifact(void)
 {
-    u16b loading_max_a_idx;
+    uint16_t loading_max_a_idx;
     rd_u16b(&loading_max_a_idx);
 
     artifact_type *a_ptr;

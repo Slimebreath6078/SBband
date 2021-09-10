@@ -5,9 +5,9 @@
 #include "monster/monster-timed-effect-types.h"
 #include "system/angband.h"
 
-typedef struct grid_type grid_type;
-typedef struct object_type object_type;
-typedef struct monster_type monster_type;
+struct grid_type;;
+struct object_type;;
+struct monster_type;
 typedef struct floor_type {
     DUNGEON_IDX dungeon_idx;
     grid_type *grid_array[MAX_HGT];
@@ -29,8 +29,8 @@ typedef struct floor_type {
     MONSTER_IDX m_max; /* Number of allocated monsters */
     MONSTER_IDX m_cnt; /* Number of live monsters */
 
-    s16b *mproc_list[MAX_MTIMED]; /*!< The array to process dungeon monsters[max_m_idx] */
-    s16b mproc_max[MAX_MTIMED]; /*!< Number of monsters to be processed */
+    int16_t *mproc_list[MAX_MTIMED]; /*!< The array to process dungeon monsters[max_m_idx] */
+    int16_t mproc_max[MAX_MTIMED]; /*!< Number of monsters to be processed */
 
     POSITION_IDX lite_n; //!< Array of grids lit by player lite
     POSITION lite_y[LITE_MAX];

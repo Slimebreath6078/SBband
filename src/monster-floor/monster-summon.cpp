@@ -1,6 +1,7 @@
 ﻿#include "monster-floor/monster-summon.h"
 #include "dungeon/dungeon-flag-types.h"
 #include "dungeon/dungeon.h"
+#include "floor/geometry.h"
 #include "floor/wild.h"
 #include "main/sound-definitions-table.h"
 #include "main/sound-of-music.h"
@@ -50,7 +51,7 @@ static bool summon_specific_okay(player_type *player_ptr, MONRACE_IDX r_idx)
         if (monster_has_hostile_align(player_ptr, m_ptr, 0, 0, r_ptr))
             return false;
     } else if (summon_specific_who < 0) {
-        if (monster_has_hostile_align(player_ptr, NULL, 10, -10, r_ptr) && !one_in_(ABS(player_ptr->alignment) / 2 + 1))
+        if (monster_has_hostile_align(player_ptr, nullptr, 10, -10, r_ptr) && !one_in_(ABS(player_ptr->alignment) / 2 + 1))
             return false;
     }
 
@@ -61,7 +62,7 @@ static bool summon_specific_okay(player_type *player_ptr, MONRACE_IDX r_idx)
         return true;
 
     if ((summon_specific_who < 0) && ((r_ptr->flags1 & RF1_UNIQUE) || (r_ptr->flags7 & RF7_NAZGUL))
-        && monster_has_hostile_align(player_ptr, NULL, 10, -10, r_ptr))
+        && monster_has_hostile_align(player_ptr, nullptr, 10, -10, r_ptr))
         return false;
 
     if ((r_ptr->flags7 & RF7_CHAMELEON) && d_info[player_ptr->dungeon_idx].flags.has(DF::CHAMELEON))
@@ -147,7 +148,25 @@ bool summon_specific(player_type *player_ptr, MONSTER_IDX who, POSITION y1, POSI
     }
 
     summon_specific_type = SUMMON_NONE;
-    sound(SOUND_SUMMON);
+
+    bool notice = false;
+    if (who <= 0) {
+        notice = true;
+    } else {
+        monster_type *m_ptr = &player_ptr->current_floor_ptr->m_list[who];
+        if (is_pet(m_ptr)) {
+            notice = true;
+        } else if (is_seen(player_ptr, m_ptr)) {
+            notice = true;
+        } else if (player_can_see_bold(player_ptr, y, x)) {
+            notice = true;
+        }
+    }
+
+    if (notice) {
+        sound(SOUND_SUMMON);
+    }
+
     return true;
 }
 

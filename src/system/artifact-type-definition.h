@@ -2,6 +2,7 @@
 
 #include "system/angband.h"
 
+#include "object-enchant/tr-flags.h"
 #include "object-enchant/trg-types.h"
 #include "system/object-type-definition.h"
 #include "util/flag-group.h"
@@ -31,7 +32,7 @@ typedef struct artifact_type {
 	DICE_SID ds{};	/*!< ダイス値 / Damage when hits */
 	WEIGHT weight{};		/*!< 重量 / Weight */
 	PRICE cost{};			/*!< 基本価格 / Artifact "cost" */
-	BIT_FLAGS flags[TR_FLAG_SIZE]{};       /*! アイテムフラグ / Artifact Flags */
+	TrFlags flags{};       /*! アイテムフラグ / Artifact Flags */
 	EnumClassFlagGroup<TRG> gen_flags;	/*! アイテム生成フラグ / flags for generate */
 	DEPTH level{};		/*! 基本生成階 / Artifact level */
 	RARITY rarity{};		/*! レアリティ / Artifact rarity */

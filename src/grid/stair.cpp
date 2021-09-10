@@ -5,7 +5,6 @@
 #include "floor/cave.h"
 #include "grid/feature.h"
 #include "grid/grid.h"
-#include "object-hook/hook-enchant.h"
 #include "system/floor-type-definition.h"
 #include "system/grid-type-definition.h"
 #include "system/object-type-definition.h"
@@ -64,13 +63,13 @@ void place_random_stairs(player_type *player_ptr, POSITION y, POSITION x)
 bool cave_valid_bold(floor_type *floor_ptr, POSITION y, POSITION x)
 {
     grid_type *g_ptr = &floor_ptr->grid_array[y][x];
-    if (g_ptr->cave_has_flag(FF_PERMANENT))
+    if (g_ptr->cave_has_flag(FF::PERMANENT))
         return false;
 
     for (const auto this_o_idx : g_ptr->o_idx_list) {
         object_type *o_ptr;
         o_ptr = &floor_ptr->o_list[this_o_idx];
-        if (object_is_artifact(o_ptr))
+        if (o_ptr->is_artifact())
             return false;
     }
 

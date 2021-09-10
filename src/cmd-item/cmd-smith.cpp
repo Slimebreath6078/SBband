@@ -24,7 +24,6 @@
 #include "object-enchant/tr-types.h"
 #include "object-enchant/trc-types.h"
 #include "object-hook/hook-armor.h"
-#include "object-hook/hook-enchant.h"
 #include "object-hook/hook-weapon.h"
 #include "object/item-tester-hooker.h"
 #include "object/item-use-flags.h"
@@ -40,13 +39,15 @@
 #include "util/int-char-converter.h"
 #include "view/display-messages.h"
 
+#include <memory>
+
 /*!
  * エッセンス情報の構造体 / A structure for smithing
  */
 typedef struct {
     int add; /* TR flag number or special essence id */
     concptr add_name; /* Name of this ability */
-    ESSENCE_IDX type; /* Menu number */
+    int32_t type; /* Menu number */
     int essence; /* Index for carrying essences */
     int value; /* Needed value to add this ability */
 } essence_type;
@@ -97,7 +98,7 @@ static essence_type essence_info[] = { { TR_STR, "腕力", 4, TR_STR, 20 }, { TR
     { ESSENCE_SH_COLD, "冷気オーラ", 7, -1, 50 }, { ESSENCE_RESISTANCE, "全耐性", 2, -1, 150 }, { ESSENCE_SUSTAIN, "装備保持", 10, -1, 10 },
     { ESSENCE_SLAY_GLOVE, "殺戮の小手", 1, TR_ES_ATTACK, 200 },
 
-    { -1, NULL, 0, -1, 0 } };
+    { -1, nullptr, 0, -1, 0 } };
 #else
 static essence_type essence_info[] = { { TR_STR, "strength", 4, TR_STR, 20 }, { TR_INT, "intelligence", 4, TR_INT, 20 }, { TR_WIS, "wisdom", 4, TR_WIS, 20 },
     { TR_DEX, "dexterity", 4, TR_DEX, 20 }, { TR_CON, "constitution", 4, TR_CON, 20 }, { TR_CHR, "charisma", 4, TR_CHR, 20 },
@@ -149,7 +150,7 @@ static essence_type essence_info[] = { { TR_STR, "strength", 4, TR_STR, 20 }, { 
     { ESSENCE_RESISTANCE, "resistance", 2, -1, 150 }, { ESSENCE_SUSTAIN, "elements proof", 10, -1, 10 },
     { ESSENCE_SLAY_GLOVE, "gauntlets of slaying", 1, TR_ES_ATTACK, 200 },
 
-    { -1, NULL, 0, -1, 0 } };
+    { -1, nullptr, 0, -1, 0 } };
 #endif
 
 /*!
@@ -163,7 +164,7 @@ concptr essence_name[] = { "腕力", "知能", "賢さ", "器用さ", "耐久力
     "", "", "反魔法", "", "", "警告", "", "", "", "浮遊", "永久光源", "可視透明", "テレパシー", "遅消化", "急速回復", "", "", "", "", "", "", "", "",
     "テレポート", "", "", "攻撃", "防御",
 
-    NULL };
+    nullptr };
 
 #else
 
@@ -175,7 +176,7 @@ concptr essence_name[] = { "strength", "intelligen.", "wisdom", "dexterity", "co
     "", "anti magic", "", "", "warning", "", "", "", "levitation", "perm. light", "see invis.", "telepathy", "slow dige.", "regen.", "", "", "", "", "", "", "",
     "", "teleport", "", "", "weapon enc.", "armor enc.",
 
-    NULL };
+    nullptr };
 #endif
 
 static concptr const kaji_tips[5] = {
@@ -224,14 +225,13 @@ static void display_essence(player_type *creature_ptr)
  */
 static void drain_essence(player_type *creature_ptr)
 {
-    int drain_value[sizeof(creature_ptr->magic_num1) / sizeof(s32b)];
+    int drain_value[sizeof(creature_ptr->magic_num1) / sizeof(int32_t)];
     size_t i;
     OBJECT_IDX item;
     int dec = 4;
     bool observe = false;
     int old_ds, old_dd, old_to_h, old_to_d, old_ac, old_to_a, old_pval, old_name2;
     TIME_EFFECT old_timeout;
-    BIT_FLAGS old_flgs[TR_FLAG_SIZE], new_flgs[TR_FLAG_SIZE];
     object_type *o_ptr;
     concptr q, s;
     POSITION iy, ix;
@@ -241,16 +241,14 @@ static void drain_essence(player_type *creature_ptr)
     for (i = 0; i < sizeof(drain_value) / sizeof(int); i++)
         drain_value[i] = 0;
 
-    item_tester_hook = object_is_weapon_armour_ammo;
-
     q = _("どのアイテムから抽出しますか？", "Extract from which item? ");
     s = _("抽出できるアイテムがありません。", "You have nothing you can extract from.");
 
-    o_ptr = choose_object(creature_ptr, &item, q, s, (USE_INVEN | USE_FLOOR | IGNORE_BOTHHAND_SLOT), TV_NONE);
+    o_ptr = choose_object(creature_ptr, &item, q, s, (USE_INVEN | USE_FLOOR | IGNORE_BOTHHAND_SLOT), FuncItemTester(&object_type::is_weapon_armour_ammo));
     if (!o_ptr)
         return;
 
-    if (object_is_known(o_ptr) && !object_is_nameless(creature_ptr, o_ptr)) {
+    if (o_ptr->is_known() && !o_ptr->is_nameless()) {
         GAME_TEXT o_name[MAX_NLEN];
         describe_flavor(creature_ptr, o_name, o_ptr, (OD_OMIT_PREFIX | OD_NAME_ONLY));
         if (!get_check(format(_("本当に%sから抽出してよろしいですか？", "Really extract from %s? "), o_name)))
@@ -259,25 +257,25 @@ static void drain_essence(player_type *creature_ptr)
 
     PlayerEnergy(creature_ptr).set_player_turn_energy(100);
 
-    object_flags(creature_ptr, o_ptr, old_flgs);
-    if (has_flag(old_flgs, TR_KILL_DRAGON))
-        add_flag(old_flgs, TR_SLAY_DRAGON);
-    if (has_flag(old_flgs, TR_KILL_ANIMAL))
-        add_flag(old_flgs, TR_SLAY_ANIMAL);
-    if (has_flag(old_flgs, TR_KILL_EVIL))
-        add_flag(old_flgs, TR_SLAY_EVIL);
-    if (has_flag(old_flgs, TR_KILL_UNDEAD))
-        add_flag(old_flgs, TR_SLAY_UNDEAD);
-    if (has_flag(old_flgs, TR_KILL_DEMON))
-        add_flag(old_flgs, TR_SLAY_DEMON);
-    if (has_flag(old_flgs, TR_KILL_ORC))
-        add_flag(old_flgs, TR_SLAY_ORC);
-    if (has_flag(old_flgs, TR_KILL_TROLL))
-        add_flag(old_flgs, TR_SLAY_TROLL);
-    if (has_flag(old_flgs, TR_KILL_GIANT))
-        add_flag(old_flgs, TR_SLAY_GIANT);
-    if (has_flag(old_flgs, TR_KILL_HUMAN))
-        add_flag(old_flgs, TR_SLAY_HUMAN);
+    auto old_flgs = object_flags(o_ptr);
+    if (old_flgs.has(TR_KILL_DRAGON))
+        old_flgs.set(TR_SLAY_DRAGON);
+    if (old_flgs.has(TR_KILL_ANIMAL))
+        old_flgs.set(TR_SLAY_ANIMAL);
+    if (old_flgs.has(TR_KILL_EVIL))
+        old_flgs.set(TR_SLAY_EVIL);
+    if (old_flgs.has(TR_KILL_UNDEAD))
+        old_flgs.set(TR_SLAY_UNDEAD);
+    if (old_flgs.has(TR_KILL_DEMON))
+        old_flgs.set(TR_SLAY_DEMON);
+    if (old_flgs.has(TR_KILL_ORC))
+        old_flgs.set(TR_SLAY_ORC);
+    if (old_flgs.has(TR_KILL_TROLL))
+        old_flgs.set(TR_SLAY_TROLL);
+    if (old_flgs.has(TR_KILL_GIANT))
+        old_flgs.set(TR_SLAY_GIANT);
+    if (old_flgs.has(TR_KILL_HUMAN))
+        old_flgs.set(TR_SLAY_HUMAN);
 
     old_to_a = o_ptr->to_a;
     old_ac = o_ptr->ac;
@@ -290,41 +288,41 @@ static void drain_essence(player_type *creature_ptr)
     old_timeout = o_ptr->timeout;
     if (o_ptr->curse_flags.has_any_of({ TRC::CURSED, TRC::HEAVY_CURSE, TRC::PERMA_CURSE }))
         dec--;
-    if (has_flag(old_flgs, TR_ADD_L_CURSE))
+    if (old_flgs.has(TR_ADD_L_CURSE))
         dec--;
-    if (has_flag(old_flgs, TR_ADD_H_CURSE))
+    if (old_flgs.has(TR_ADD_H_CURSE))
         dec--;
-    if (has_flag(old_flgs, TR_AGGRAVATE))
+    if (old_flgs.has(TR_AGGRAVATE))
         dec--;
-    if (has_flag(old_flgs, TR_NO_TELE))
+    if (old_flgs.has(TR_NO_TELE))
         dec--;
-    if (has_flag(old_flgs, TR_DRAIN_EXP))
+    if (old_flgs.has(TR_DRAIN_EXP))
         dec--;
-    if (has_flag(old_flgs, TR_DRAIN_HP))
+    if (old_flgs.has(TR_DRAIN_HP))
         dec--;
-    if (has_flag(old_flgs, TR_DRAIN_MANA))
+    if (old_flgs.has(TR_DRAIN_MANA))
         dec--;
-    if (has_flag(old_flgs, TR_CALL_ANIMAL))
+    if (old_flgs.has(TR_CALL_ANIMAL))
         dec--;
-    if (has_flag(old_flgs, TR_CALL_DEMON))
+    if (old_flgs.has(TR_CALL_DEMON))
         dec--;
-    if (has_flag(old_flgs, TR_CALL_DRAGON))
+    if (old_flgs.has(TR_CALL_DRAGON))
         dec--;
-    if (has_flag(old_flgs, TR_CALL_UNDEAD))
+    if (old_flgs.has(TR_CALL_UNDEAD))
         dec--;
-    if (has_flag(old_flgs, TR_COWARDICE))
+    if (old_flgs.has(TR_COWARDICE))
         dec--;
-    if (has_flag(old_flgs, TR_LOW_MELEE))
+    if (old_flgs.has(TR_LOW_MELEE))
         dec--;
-    if (has_flag(old_flgs, TR_LOW_AC))
+    if (old_flgs.has(TR_LOW_AC))
         dec--;
-    if (has_flag(old_flgs, TR_HARD_SPELL))
+    if (old_flgs.has(TR_HARD_SPELL))
         dec--;
-    if (has_flag(old_flgs, TR_FAST_DIGEST))
+    if (old_flgs.has(TR_FAST_DIGEST))
         dec--;
-    if (has_flag(old_flgs, TR_SLOW_REGEN))
+    if (old_flgs.has(TR_SLOW_REGEN))
         dec--;
-    if (has_flag(old_flgs, TR_TY_CURSE))
+    if (old_flgs.has(TR_TY_CURSE))
         dec--;
 
     iy = o_ptr->iy;
@@ -332,7 +330,7 @@ static void drain_essence(player_type *creature_ptr)
     marked = o_ptr->marked;
     number = o_ptr->number;
 
-    o_ptr->prep(creature_ptr, o_ptr->k_idx);
+    o_ptr->prep(o_ptr->k_idx);
 
     o_ptr->iy = iy;
     o_ptr->ix = ix;
@@ -344,16 +342,17 @@ static void drain_essence(player_type *creature_ptr)
     object_aware(creature_ptr, o_ptr);
     object_known(o_ptr);
 
-    object_flags(creature_ptr, o_ptr, new_flgs);
+    auto new_flgs = object_flags(o_ptr);
 
     for (i = 0; essence_info[i].add_name; i++) {
         essence_type *es_ptr = &essence_info[i];
         PARAMETER_VALUE pval = 0;
+        const auto drain_flag = static_cast<tr_type>(es_ptr->add);
 
-        if (es_ptr->add < TR_FLAG_MAX && is_pval_flag(es_ptr->add) && old_pval)
-            pval = (has_flag(new_flgs, es_ptr->add)) ? old_pval - o_ptr->pval : old_pval;
+        if (es_ptr->add < TR_FLAG_MAX && TR_PVAL_FLAG_MASK.has(drain_flag) && old_pval)
+            pval = new_flgs.has(drain_flag) ? old_pval - o_ptr->pval : old_pval;
 
-        if (es_ptr->add < TR_FLAG_MAX && (!has_flag(new_flgs, es_ptr->add) || pval) && has_flag(old_flgs, es_ptr->add)) {
+        if (es_ptr->add < TR_FLAG_MAX && (new_flgs.has_not(drain_flag) || pval) && old_flgs.has(drain_flag)) {
             if (pval) {
                 drain_value[es_ptr->essence] += 10 * pval;
             } else if (es_ptr->essence != -2) {
@@ -375,30 +374,30 @@ static void drain_essence(player_type *creature_ptr)
         }
     }
 
-    if ((has_flag(old_flgs, TR_FORCE_WEAPON)) && !(has_flag(new_flgs, TR_FORCE_WEAPON))) {
+    if ((old_flgs.has(TR_FORCE_WEAPON)) && new_flgs.has_not(TR_FORCE_WEAPON)) {
         drain_value[TR_INT] += 5;
         drain_value[TR_WIS] += 5;
     }
-    if ((has_flag(old_flgs, TR_VORPAL)) && !(has_flag(new_flgs, TR_VORPAL))) {
+    if ((old_flgs.has(TR_VORPAL)) && new_flgs.has_not(TR_VORPAL)) {
         drain_value[TR_BRAND_POIS] += 5;
         drain_value[TR_BRAND_ACID] += 5;
         drain_value[TR_BRAND_ELEC] += 5;
         drain_value[TR_BRAND_FIRE] += 5;
         drain_value[TR_BRAND_COLD] += 5;
     }
-    if ((has_flag(old_flgs, TR_DEC_MANA)) && !(has_flag(new_flgs, TR_DEC_MANA))) {
+    if ((old_flgs.has(TR_DEC_MANA)) && new_flgs.has_not(TR_DEC_MANA)) {
         drain_value[TR_INT] += 10;
     }
-    if ((has_flag(old_flgs, TR_XTRA_MIGHT)) && !(has_flag(new_flgs, TR_XTRA_MIGHT))) {
+    if ((old_flgs.has(TR_XTRA_MIGHT)) && new_flgs.has_not(TR_XTRA_MIGHT)) {
         drain_value[TR_STR] += 10;
     }
-    if ((has_flag(old_flgs, TR_XTRA_SHOTS)) && !(has_flag(new_flgs, TR_XTRA_SHOTS))) {
+    if ((old_flgs.has(TR_XTRA_SHOTS)) && new_flgs.has_not(TR_XTRA_SHOTS)) {
         drain_value[TR_DEX] += 10;
     }
     if (old_name2 == EGO_2WEAPON) {
         drain_value[TR_DEX] += 20;
     }
-    if (object_is_weapon_ammo(o_ptr)) {
+    if (o_ptr->is_weapon_ammo()) {
         if (old_ds > o_ptr->ds)
             drain_value[TR_ES_ATTACK] += (old_ds - o_ptr->ds) * 10;
 
@@ -437,7 +436,7 @@ static void drain_essence(player_type *creature_ptr)
 
             creature_ptr->magic_num1[i] += drain_value[i];
             creature_ptr->magic_num1[i] = MIN(20000, creature_ptr->magic_num1[i]);
-            msg_print(NULL);
+            msg_print(nullptr);
             msg_format("%s...%d%s", essence_name[i], drain_value[i], _("。", ". "));
         }
     }
@@ -540,7 +539,7 @@ static COMMAND_CODE choose_essence(void)
  * @brief エッセンスを実際に付加する
  * @param mode エッセンスの大別ID
  */
-static void add_essence(player_type *creature_ptr, ESSENCE_IDX mode)
+static void add_essence(player_type *creature_ptr, int32_t mode)
 {
     OBJECT_IDX item;
     int max_num = 0;
@@ -556,7 +555,6 @@ static void add_essence(player_type *creature_ptr, ESSENCE_IDX mode)
     int use_essence;
     essence_type *es_ptr;
     bool able[22] = { 0 };
-    tval_type tval = TV_NONE;
     int menu_line = (use_menu ? 1 : 0);
 
     for (i = 0; essence_info[i].add_name; i++) {
@@ -792,25 +790,29 @@ static void add_essence(player_type *creature_ptr, ESSENCE_IDX mode)
     }
     es_ptr = &essence_info[num[i]];
 
-    if (es_ptr->add == ESSENCE_SLAY_GLOVE)
-        tval = TV_GLOVES;
-    else if (mode == 1 || mode == 5)
-        item_tester_hook = item_tester_hook_melee_ammo;
-    else if (es_ptr->add == ESSENCE_ATTACK)
-        item_tester_hook = object_allow_enchant_weapon;
-    else if (es_ptr->add == ESSENCE_AC)
-        item_tester_hook = object_is_armour;
-    else
-        item_tester_hook = object_is_weapon_armour_ammo;
+    auto decide_item_tester = [es_ptr, mode]() -> std::unique_ptr<ItemTester> {
+        if (es_ptr->add == ESSENCE_SLAY_GLOVE)
+            return std::make_unique<TvalItemTester>(TV_GLOVES);
+        else if (mode == 1 || mode == 5)
+            return std::make_unique<FuncItemTester>(&object_type::is_melee_ammo);
+        else if (es_ptr->add == ESSENCE_ATTACK)
+            return std::make_unique<FuncItemTester>(&object_type::allow_enchant_weapon);
+        else if (es_ptr->add == ESSENCE_AC)
+            return std::make_unique<FuncItemTester>(&object_type::is_armour);
+        else
+            return std::make_unique<FuncItemTester>(&object_type::is_weapon_armour_ammo);
+    };
+
+    auto item_tester = decide_item_tester();
 
     q = _("どのアイテムを改良しますか？", "Improve which item? ");
     s = _("改良できるアイテムがありません。", "You have nothing to improve.");
 
-    o_ptr = choose_object(creature_ptr, &item, q, s, (USE_INVEN | USE_FLOOR | IGNORE_BOTHHAND_SLOT), tval);
+    o_ptr = choose_object(creature_ptr, &item, q, s, (USE_INVEN | USE_FLOOR | IGNORE_BOTHHAND_SLOT), *item_tester);
     if (!o_ptr)
         return;
 
-    if ((mode != 10) && (object_is_artifact(o_ptr) || object_is_smith(creature_ptr, o_ptr))) {
+    if ((mode != 10) && (o_ptr->is_artifact() || o_ptr->is_smith())) {
         msg_print(_("そのアイテムはこれ以上改良できない。", "This item can not be improved any further."));
         return;
     }
@@ -830,7 +832,7 @@ static void add_essence(player_type *creature_ptr, ESSENCE_IDX mode)
             msg_print(_("エッセンスが足りない。", "You don't have enough essences."));
             return;
         }
-        if (is_pval_flag(es_ptr->add)) {
+        if (es_ptr->add < TR_FLAG_MAX && TR_PVAL_FLAG_MASK.has(static_cast<tr_type>(es_ptr->add))) {
             if (o_ptr->pval < 0) {
                 msg_print(_("このアイテムの能力修正を強化することはできない。", "You cannot increase magic number of this item."));
                 return;
@@ -967,10 +969,10 @@ static void add_essence(player_type *creature_ptr, ESSENCE_IDX mode)
             return;
         }
         if (es_ptr->add == ESSENCE_SUSTAIN) {
-            add_flag(o_ptr->art_flags, TR_IGNORE_ACID);
-            add_flag(o_ptr->art_flags, TR_IGNORE_ELEC);
-            add_flag(o_ptr->art_flags, TR_IGNORE_FIRE);
-            add_flag(o_ptr->art_flags, TR_IGNORE_COLD);
+            o_ptr->art_flags.set(TR_IGNORE_ACID);
+            o_ptr->art_flags.set(TR_IGNORE_ELEC);
+            o_ptr->art_flags.set(TR_IGNORE_FIRE);
+            o_ptr->art_flags.set(TR_IGNORE_COLD);
         } else {
             o_ptr->xtra3 = es_ptr->add + 1;
         }
@@ -991,14 +993,11 @@ static void erase_essence(player_type *creature_ptr)
     concptr q, s;
     object_type *o_ptr;
     GAME_TEXT o_name[MAX_NLEN];
-    BIT_FLAGS flgs[TR_FLAG_SIZE];
-
-    item_tester_hook = object_is_smith;
 
     q = _("どのアイテムのエッセンスを消去しますか？", "Remove from which item? ");
     s = _("エッセンスを付加したアイテムがありません。", "You have nothing with added essence to remove.");
 
-    o_ptr = choose_object(creature_ptr, &item, q, s, (USE_INVEN | USE_FLOOR), TV_NONE);
+    o_ptr = choose_object(creature_ptr, &item, q, s, (USE_INVEN | USE_FLOOR), FuncItemTester(&object_type::is_smith));
     if (!o_ptr)
         return;
 
@@ -1018,8 +1017,8 @@ static void erase_essence(player_type *creature_ptr)
             o_ptr->to_d = 0;
     }
     o_ptr->xtra3 = 0;
-    object_flags(creature_ptr, o_ptr, flgs);
-    if (!(has_pval_flags(flgs)))
+    auto flgs = object_flags(o_ptr);
+    if (flgs.has_none_of(TR_PVAL_FLAG_MASK))
         o_ptr->pval = 0;
     msg_print(_("エッセンスを取り去った。", "You removed all essence you have added."));
     creature_ptr->update |= (PU_COMBINE | PU_REORDER);

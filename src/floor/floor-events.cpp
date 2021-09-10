@@ -25,8 +25,6 @@
 #include "monster/monster-status.h"
 #include "object-enchant/object-ego.h"
 #include "object-enchant/special-object-flags.h"
-#include "object-hook/hook-checker.h"
-#include "object-hook/hook-enchant.h"
 #include "object/object-kind.h"
 #include "object/object-mark-types.h"
 #include "object/object-value.h"
@@ -78,11 +76,11 @@ void night_falls(player_type *subject_ptr)
             for (POSITION x = 0; x < floor_ptr->width; x++) {
                 grid_type *g_ptr = &floor_ptr->grid_array[y][x];
                 feature_type *f_ptr = &f_info[g_ptr->get_feat_mimic()];
-                if (g_ptr->is_mirror() || has_flag(f_ptr->flags, FF_QUEST_ENTER) || has_flag(f_ptr->flags, FF_ENTRANCE))
+                if (g_ptr->is_mirror() || f_ptr->flags.has(FF::QUEST_ENTER) || f_ptr->flags.has(FF::ENTRANCE))
                     continue;
 
                 g_ptr->info &= ~(CAVE_GLOW);
-                if (!has_flag(f_ptr->flags, FF_REMEMBER)) {
+                if (f_ptr->flags.has_not(FF::REMEMBER)) {
                     g_ptr->info &= ~(CAVE_MARK);
                     note_spot(subject_ptr, y, x);
                 }
@@ -145,16 +143,16 @@ static byte get_dungeon_feeling(player_type *subject_ptr)
         object_type *o_ptr = &floor_ptr->o_list[i];
         object_kind *k_ptr = &k_info[o_ptr->k_idx];
         int delta = 0;
-        if (!object_is_valid(o_ptr) || (object_is_known(o_ptr) && ((o_ptr->marked & OM_TOUCHED) != 0)) || ((o_ptr->ident & IDENT_SENSE) != 0))
+        if (!o_ptr->is_valid() || (o_ptr->is_known() && ((o_ptr->marked & OM_TOUCHED) != 0)) || ((o_ptr->ident & IDENT_SENSE) != 0))
             continue;
 
-        if (object_is_ego(o_ptr)) {
+        if (o_ptr->is_ego()) {
             ego_item_type *e_ptr = &e_info[o_ptr->name2];
             delta += e_ptr->rating * base;
         }
 
-        if (object_is_artifact(o_ptr)) {
-            PRICE cost = object_value_real(subject_ptr, o_ptr);
+        if (o_ptr->is_artifact()) {
+            PRICE cost = object_value_real(o_ptr);
             delta += 10 * base;
             if (cost > 10000L)
                 delta += 10 * base;
@@ -184,16 +182,16 @@ static byte get_dungeon_feeling(player_type *subject_ptr)
         if (o_ptr->tval == TV_HELM && o_ptr->sval == SV_DRAGON_HELM)
             delta += 5 * base;
 
-        if (o_ptr->tval == TV_RING && o_ptr->sval == SV_RING_SPEED && !object_is_cursed(o_ptr))
+        if (o_ptr->tval == TV_RING && o_ptr->sval == SV_RING_SPEED && !o_ptr->is_cursed())
             delta += 25 * base;
 
-        if (o_ptr->tval == TV_RING && o_ptr->sval == SV_RING_LORDLY && !object_is_cursed(o_ptr))
+        if (o_ptr->tval == TV_RING && o_ptr->sval == SV_RING_LORDLY && !o_ptr->is_cursed())
             delta += 15 * base;
 
-        if (o_ptr->tval == TV_AMULET && o_ptr->sval == SV_AMULET_THE_MAGI && !object_is_cursed(o_ptr))
+        if (o_ptr->tval == TV_AMULET && o_ptr->sval == SV_AMULET_THE_MAGI && !o_ptr->is_cursed())
             delta += 15 * base;
 
-        if (!object_is_cursed(o_ptr) && !object_is_broken(o_ptr) && k_ptr->level > floor_ptr->dun_level)
+        if (!o_ptr->is_cursed() && !o_ptr->is_broken() && k_ptr->level > floor_ptr->dun_level)
             delta += (k_ptr->level - floor_ptr->dun_level) * base;
 
         rating += rating_boost(delta);
@@ -274,7 +272,7 @@ void glow_deep_lava_and_bldg(player_type *subject_ptr)
         for (POSITION x = 0; x < floor_ptr->width; x++) {
             grid_type *g_ptr;
             g_ptr = &floor_ptr->grid_array[y][x];
-            if (!has_flag(f_info[g_ptr->get_feat_mimic()].flags, FF_GLOW))
+            if (f_info[g_ptr->get_feat_mimic()].flags.has_not(FF::GLOW))
                 continue;
 
             for (DIRECTION i = 0; i < 9; i++) {

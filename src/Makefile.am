@@ -13,7 +13,6 @@ SBband_SOURCES = \
 	action/open-close-execution.cpp action/open-close-execution.h \
 	action/racial-execution.cpp action/racial-execution.h \
 	action/run-execution.cpp action/run-execution.h \
-	action/throw-util.cpp action/throw-util.h \
 	action/travel-execution.cpp action/travel-execution.h \
 	action/tunnel-execution.cpp action/tunnel-execution.h \
 	action/weapon-shield.cpp action/weapon-shield.h \
@@ -355,6 +354,7 @@ SBband_SOURCES = \
 	load/player-attack-loader.cpp load/player-attack-loader.h \
 	load/player-info-loader.cpp load/player-info-loader.h \
 	load/savedata-flag-types.h \
+	load/savedata-old-flag-types.h \
 	load/store-loader.cpp load/store-loader.h \
 	load/world-loader.cpp load/world-loader.h \
 	\
@@ -587,14 +587,12 @@ SBband_SOURCES = \
 	object-enchant/object-ego.cpp object-enchant/object-ego.h \
 	object-enchant/item-apply-magic.h object-enchant/item-feeling.h \
 	object-enchant/old-ego-extra-values.h object-enchant/special-object-flags.h \
+	object-enchant/tr-flags.h \
 	object-enchant/tr-types.h object-enchant/trc-types.h \
 	object-enchant/trg-types.h \
 	object-enchant/vorpal-weapon.cpp object-enchant/vorpal-weapon.h \
 	\
 	object-hook/hook-armor.cpp object-hook/hook-armor.h \
-	object-hook/hook-bow.cpp object-hook/hook-bow.h \
-	object-hook/hook-checker.cpp object-hook/hook-checker.h \
-	object-hook/hook-enchant.cpp object-hook/hook-enchant.h \
 	object-hook/hook-expendable.cpp object-hook/hook-expendable.h \
 	object-hook/hook-magic.cpp object-hook/hook-magic.h \
 	object-hook/hook-perception.cpp object-hook/hook-perception.h \
@@ -603,6 +601,7 @@ SBband_SOURCES = \
 	\
 	object-use/quaff-execution.cpp object-use/quaff-execution.h \
 	object-use/read-execution.cpp object-use/read-execution.h \
+	object-use/throw-execution.cpp object-use/throw-execution.h \
 	\
 	perception/identification.cpp perception/identification.h \
 	perception/object-perception.cpp perception/object-perception.h \
@@ -865,6 +864,7 @@ SBband_SOURCES = \
 	util/angband-files.cpp util/angband-files.h \
 	util/buffer-shaper.cpp util/buffer-shaper.h \
 	util/bit-flags-calculator.h \
+	util/enum-converter.h \
 	util/flag-group.h \
 	util/int-char-converter.h \
 	util/object-sort.cpp util/object-sort.h \

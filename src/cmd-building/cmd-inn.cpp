@@ -44,7 +44,7 @@ static bool is_healthy_stay(player_type *customer_ptr)
 	if (!customer_ptr->poisoned && !customer_ptr->cut) return true;
 
 	msg_print(_("あなたに必要なのは部屋ではなく、治療者です。", "You need a healer, not a room."));
-	msg_print(NULL);
+	msg_print(nullptr);
 	msg_print(_("すみません、でもうちで誰かに死なれちゃ困りますんで。", "Sorry, but I don't want anyone dying in here."));
 	return false;
 }
@@ -83,7 +83,7 @@ static void write_diary_stay_inn(player_type *customer_ptr, int prev_hour)
  */
 static void pass_game_turn_by_stay(void)
 {
-	s32b oldturn = current_world_ptr->game_turn;
+	int32_t oldturn = current_world_ptr->game_turn;
 	current_world_ptr->game_turn =
 		(current_world_ptr->game_turn / (TURNS_PER_TICK * TOWN_DAWN / 2) + 1) *
 		(TURNS_PER_TICK * TOWN_DAWN / 2);
@@ -109,7 +109,7 @@ static bool has_a_nightmare(player_type *customer_ptr)
 
 	while (true)
 	{
-		sanity_blast(customer_ptr, NULL, false);
+		sanity_blast(customer_ptr, nullptr, false);
 		if (!one_in_(3)) break;
 	}
 
@@ -200,7 +200,7 @@ static bool stay_inn(player_type *customer_ptr)
 
 	if ((prev_hour >= 18) && (prev_hour <= 23)) {
 		determine_daily_bounty(customer_ptr, false); /* Update daily bounty */
-		exe_write_diary(customer_ptr, DIARY_DIALY, 0, NULL);
+		exe_write_diary(customer_ptr, DIARY_DIALY, 0, nullptr);
 	}
 
 	customer_ptr->chp = customer_ptr->mhp;

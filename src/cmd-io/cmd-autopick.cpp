@@ -88,7 +88,7 @@ void do_cmd_edit_autopick(player_type *player_ptr)
 	char buf[MAX_LINELEN];
 	int i;
 	int key = -1;
-	static s32b old_autosave_turn = 0L;
+	static int32_t old_autosave_turn = 0L;
 	ape_quittance quit = APE_QUIT;
 
 	text_body_type text_body;
@@ -103,10 +103,10 @@ void do_cmd_edit_autopick(player_type *player_ptr)
 	tb->old_wid = tb->old_hgt = -1;
 	tb->old_com_id = 0;
 
-	tb->yank = NULL;
-	tb->search_o_ptr = NULL;
-	tb->search_str = NULL;
-	tb->last_destroyed = NULL;
+	tb->yank = nullptr;
+	tb->search_o_ptr = nullptr;
+	tb->search_str = nullptr;
+	tb->last_destroyed = nullptr;
 	tb->dirty_flags = DIRTY_ALL | DIRTY_MODE | DIRTY_EXPRESSION;
 	tb->dirty_line = -1;
 	tb->filename_mode = PT_DEFAULT;
@@ -207,7 +207,7 @@ void do_cmd_edit_autopick(player_type *player_ptr)
 	kill_yank_chain(tb);
 
 	process_autopick_file(player_ptr, buf);
-	current_world_ptr->start_time = (u32b)time(NULL);
+	current_world_ptr->start_time = (uint32_t)time(nullptr);
 	cx_save = tb->cx;
 	cy_save = tb->cy;
 }

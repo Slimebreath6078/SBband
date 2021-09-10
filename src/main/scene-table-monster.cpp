@@ -19,7 +19,7 @@ struct scene_monster_info {
     MONSTER_IDX m_idx;
     monster_race *ap_r_ptr;
     GAME_TURN last_seen; //!< 最後に対象モンスター見たゲームターン
-    u32b mute_until; //!< この時間に到達するまでモンスターBGMは設定しない
+    uint32_t mute_until; //!< この時間に到達するまでモンスターBGMは設定しない
 };
 
 scene_monster_info scene_target_monster;
@@ -41,7 +41,7 @@ inline static bool is_unknown_monster(monster_race *ap_r_ptr)
 
 void clear_scene_target_monster()
 {
-    scene_target_monster.ap_r_ptr = NULL;
+    scene_target_monster.ap_r_ptr = nullptr;
 }
 
 static GAME_TURN get_game_turn()
@@ -60,7 +60,7 @@ static GAME_TURN get_game_turn()
  */
 void set_temp_mute_scene_monster(int sec)
 {
-    scene_target_monster.mute_until = (u32b)time(NULL) + sec;
+    scene_target_monster.mute_until = (uint32_t)time(nullptr) + sec;
 }
 
 /*!
@@ -70,7 +70,7 @@ void set_temp_mute_scene_monster(int sec)
  */
 inline static bool can_mute_scene_monster()
 {
-    return (scene_target_monster.mute_until > time(NULL));
+    return (scene_target_monster.mute_until > time(nullptr));
 }
 
 /*!
