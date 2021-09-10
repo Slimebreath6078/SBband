@@ -11,7 +11,7 @@ PERCENTAGE breakage_chance(PlayerType *player_ptr, object_type *o_ptr, bool has_
 
 class ObjectBreaker {
 protected:
-    ObjectBreaker(tr_type ignore_flg, tr_type resist_flg, tr_type immute_flg);
+    ObjectBreaker(tr_type ignore_flg, tr_type resist_flg, tr_type immune_flg);
     ObjectBreaker() = delete;
 
 public:
@@ -22,7 +22,7 @@ public:
 private:
     tr_type ignore_flg;
     tr_type resist_flg;
-    tr_type immute_flg;
+    tr_type immune_flg;
 };
 
 class BreakerAcid : public ObjectBreaker {
