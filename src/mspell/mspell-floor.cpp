@@ -379,15 +379,17 @@ MonsterSpellResult spell_RF6_DARKNESS(player_type *target_ptr, POSITION y, POSIT
     res.learnable = monster_to_player && !can_use_lite_area;
 
     if (can_use_lite_area) {
-        monspell_message(target_ptr, m_idx, t_idx, _("%^sが何かをつぶやいた。", "%^s mumbles."),
-            _("%^sが辺りを明るく照らした。", "%^s cast a spell to light up."), _("%^sが辺りを明るく照らした。", "%^s cast a spell to light up."), TARGET_TYPE);
+        monspell_message(target_ptr, m_idx, t_idx, 
+            SpellMsg(_("%^sが何かをつぶやいた。", "%^s mumbles."),
+            _("%^sが辺りを明るく照らした。", "%^s cast a spell to light up."), _("%^sが辺りを明るく照らした。", "%^s cast a spell to light up.")), TARGET_TYPE);
 
         if (see_monster(target_ptr, t_idx) && monster_to_monster) {
             msg_format(_("%^sは白い光に包まれた。", "%^s is surrounded by a white light."), t_name);
         }
     } else {
-        monspell_message(target_ptr, m_idx, t_idx, _("%^sが何かをつぶやいた。", "%^s mumbles."), _("%^sが暗闇の中で手を振った。", "%^s gestures in shadow."),
-            _("%^sが暗闇の中で手を振った。", "%^s gestures in shadow."), TARGET_TYPE);
+        monspell_message(target_ptr, m_idx, t_idx, 
+            SpellMsg(_("%^sが何かをつぶやいた。", "%^s mumbles."), _("%^sが暗闇の中で手を振った。", "%^s gestures in shadow."),
+            _("%^sが暗闇の中で手を振った。", "%^s gestures in shadow.")), TARGET_TYPE);
 
         if (see_monster(target_ptr, t_idx) && monster_to_monster) {
             msg_format(_("%^sは暗闇に包まれた。", "%^s is surrounded by darkness."), t_name);
@@ -454,8 +456,9 @@ MonsterSpellResult spell_RF6_RAISE_DEAD(player_type *target_ptr, MONSTER_IDX m_i
 {
     monster_type *m_ptr = &target_ptr->current_floor_ptr->m_list[m_idx];
 
-    monspell_message(target_ptr, m_idx, t_idx, _("%^sが何かをつぶやいた。", "%^s mumbles."),
-        _("%^sが死者復活の呪文を唱えた。", "%^s casts a spell to revive corpses."), _("%^sが死者復活の呪文を唱えた。", "%^s casts a spell to revive corpses."),
+    monspell_message(target_ptr, m_idx, t_idx, 
+        SpellMsg(_("%^sが何かをつぶやいた。", "%^s mumbles."),
+        _("%^sが死者復活の呪文を唱えた。", "%^s casts a spell to revive corpses."), _("%^sが死者復活の呪文を唱えた。", "%^s casts a spell to revive corpses.")),
         TARGET_TYPE);
 
     animate_dead(target_ptr, m_idx, m_ptr->fy, m_ptr->fx);
