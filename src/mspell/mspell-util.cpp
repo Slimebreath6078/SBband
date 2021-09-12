@@ -116,7 +116,7 @@ bool monspell_message(player_type* target_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_
 * @param msg2 モンスター対象とする場合のメッセージ
 * @param TARGET_TYPE プレイヤーを対象とする場合MONSTER_TO_PLAYER、モンスターを対象とする場合MONSTER_TO_MONSTER
 */
-void simple_monspell_message(player_type* target_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, concptr msg1, concptr msg2, int TARGET_TYPE)
+void simple_monspell_message(player_type* target_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, concptr msg_to_player, concptr msg_to_mons, int TARGET_TYPE)
 {
-    monspell_message_base(target_ptr, m_idx, t_idx, msg1, msg2, msg1, msg2, target_ptr->blind > 0, TARGET_TYPE);
+    monspell_message_base(target_ptr, m_idx, t_idx, msg_to_player, msg_to_mons, msg_to_player, msg_to_mons, target_ptr->blind > 0, TARGET_TYPE);
 }
