@@ -37,11 +37,11 @@ MonsterSpellResult spell_RF4_SHOOT(player_type *target_ptr, POSITION y, POSITION
     bool notice;
     if (any_bits(r_ptr->flags3, RF3_KAN_SEN)) {
         notice = monspell_message(target_ptr, m_idx, t_idx, 
-            SpellMsg(_("%^sが奇妙な音を発した。", "%^s makes a strange noise."), _("%^sが艦砲射撃をした。", "%^s bombards."),
+            SpellMsg_blind(_("%^sが奇妙な音を発した。", "%^s makes a strange noise."), _("%^sが艦砲射撃をした。", "%^s bombards."),
             _("%^sが%sに艦砲射撃をした。", "%^s bombards %s.")), TARGET_TYPE);
     } else {
         notice = monspell_message(target_ptr, m_idx, t_idx, 
-            SpellMsg(_("%^sが奇妙な音を発した。", "%^s makes a strange noise."), _("%^sが矢を放った。", "%^s fires an arrow."),
+            SpellMsg_blind(_("%^sが奇妙な音を発した。", "%^s makes a strange noise."), _("%^sが矢を放った。", "%^s fires an arrow."),
             _("%^sが%sに矢を放った。", "%^s fires an arrow at %s.")), TARGET_TYPE);
     }
 
@@ -72,7 +72,7 @@ MonsterSpellResult spell_RF4_SHOOT(player_type *target_ptr, POSITION y, POSITION
 MonsterSpellResult spell_RF5_BO_ACID(player_type *target_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
 {
     monspell_message(target_ptr, m_idx, t_idx, 
-        SpellMsg(_("%^sが何かをつぶやいた。", "%^s mumbles."),
+        SpellMsg_blind(_("%^sが何かをつぶやいた。", "%^s mumbles."),
         _("%^sがアシッド・ボルトの呪文を唱えた。", "%^s casts an acid bolt."),
         _("%sが%sに向かってアシッド・ボルトの呪文を唱えた。", "%^s casts an acid bolt at %s.")), TARGET_TYPE);
 
@@ -103,7 +103,7 @@ MonsterSpellResult spell_RF5_BO_ACID(player_type *target_ptr, POSITION y, POSITI
 MonsterSpellResult spell_RF5_BO_ELEC(player_type *target_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
 {
     monspell_message(target_ptr, m_idx, t_idx, 
-        SpellMsg(_("%^sが何かをつぶやいた。", "%^s mumbles."),
+        SpellMsg_blind(_("%^sが何かをつぶやいた。", "%^s mumbles."),
         _("%^sがサンダー・ボルトの呪文を唱えた。", "%^s casts a lightning bolt."),
         _("%^sが%sに向かってサンダー・ボルトの呪文を唱えた。", "%^s casts a lightning bolt at %s.")), TARGET_TYPE);
 
@@ -134,7 +134,7 @@ MonsterSpellResult spell_RF5_BO_ELEC(player_type *target_ptr, POSITION y, POSITI
 MonsterSpellResult spell_RF5_BO_FIRE(player_type *target_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
 {
     monspell_message(target_ptr, m_idx, t_idx, 
-        SpellMsg(_("%^sが何かをつぶやいた。", "%^s mumbles."),
+        SpellMsg_blind(_("%^sが何かをつぶやいた。", "%^s mumbles."),
         _("%^sがファイア・ボルトの呪文を唱えた。", "%^s casts a fire bolt."),
         _("%^sが%sに向かってファイア・ボルトの呪文を唱えた。", "%^s casts a fire bolt at %s.")), TARGET_TYPE);
 
@@ -165,7 +165,7 @@ MonsterSpellResult spell_RF5_BO_FIRE(player_type *target_ptr, POSITION y, POSITI
 MonsterSpellResult spell_RF5_BO_COLD(player_type *target_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
 {
     monspell_message(target_ptr, m_idx, t_idx, 
-        SpellMsg(_("%^sが何かをつぶやいた。", "%^s mumbles."),
+        SpellMsg_blind(_("%^sが何かをつぶやいた。", "%^s mumbles."),
         _("%^sがアイス・ボルトの呪文を唱えた。", "%^s casts a frost bolt."),
         _("%^sが%sに向かってアイス・ボルトの呪文を唱えた。", "%^s casts a frost bolt at %s.")), TARGET_TYPE);
 
@@ -196,7 +196,7 @@ MonsterSpellResult spell_RF5_BO_COLD(player_type *target_ptr, POSITION y, POSITI
 MonsterSpellResult spell_RF5_BO_NETH(player_type *target_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
 {
     monspell_message(target_ptr, m_idx, t_idx, 
-        SpellMsg(_("%^sが何かをつぶやいた。", "%^s mumbles."), _("%^sが地獄の矢の呪文を唱えた。", "%^s casts a nether bolt."),
+        SpellMsg_blind(_("%^sが何かをつぶやいた。", "%^s mumbles."), _("%^sが地獄の矢の呪文を唱えた。", "%^s casts a nether bolt."),
         _("%^sが%sに向かって地獄の矢の呪文を唱えた。", "%^s casts a nether bolt at %s.")), TARGET_TYPE);
 
     const auto dam = monspell_damage(target_ptr, RF_ABILITY::BO_NETH, m_idx, DAM_ROLL);
@@ -226,7 +226,7 @@ MonsterSpellResult spell_RF5_BO_NETH(player_type *target_ptr, POSITION y, POSITI
 MonsterSpellResult spell_RF5_BO_WATE(player_type *target_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
 {
     monspell_message(target_ptr, m_idx, t_idx, 
-        SpellMsg(_("%^sが何かをつぶやいた。", "%^s mumbles."),
+        SpellMsg_blind(_("%^sが何かをつぶやいた。", "%^s mumbles."),
         _("%^sがウォーター・ボルトの呪文を唱えた。", "%^s casts a water bolt."),
         _("%^sが%sに向かってウォーター・ボルトの呪文を唱えた。", "%^s casts a water bolt at %s.")), TARGET_TYPE);
 
@@ -256,7 +256,7 @@ MonsterSpellResult spell_RF5_BO_WATE(player_type *target_ptr, POSITION y, POSITI
 MonsterSpellResult spell_RF5_BO_MANA(player_type *target_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
 {
     monspell_message(target_ptr, m_idx, t_idx, 
-        SpellMsg(_("%^sが何かをつぶやいた。", "%^s mumbles."), _("%^sが魔力の矢の呪文を唱えた。", "%^s casts a mana bolt."),
+        SpellMsg_blind(_("%^sが何かをつぶやいた。", "%^s mumbles."), _("%^sが魔力の矢の呪文を唱えた。", "%^s casts a mana bolt."),
         _("%^sが%sに向かって魔力の矢の呪文を唱えた。", "%^s casts a mana bolt at %s.")), TARGET_TYPE);
 
     const auto dam = monspell_damage(target_ptr, RF_ABILITY::BO_MANA, m_idx, DAM_ROLL);
@@ -285,7 +285,7 @@ MonsterSpellResult spell_RF5_BO_MANA(player_type *target_ptr, POSITION y, POSITI
 MonsterSpellResult spell_RF5_BO_PLAS(player_type *target_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
 {
     monspell_message(target_ptr, m_idx, t_idx, 
-        SpellMsg(_("%^sが何かをつぶやいた。", "%^s mumbles."),
+        SpellMsg_blind(_("%^sが何かをつぶやいた。", "%^s mumbles."),
         _("%^sがプラズマ・ボルトの呪文を唱えた。", "%^s casts a plasma bolt."),
         _("%^sが%sに向かってプラズマ・ボルトの呪文を唱えた。", "%^s casts a plasma bolt at %s.")), TARGET_TYPE);
 
@@ -315,7 +315,7 @@ MonsterSpellResult spell_RF5_BO_PLAS(player_type *target_ptr, POSITION y, POSITI
 MonsterSpellResult spell_RF5_BO_ICEE(player_type *target_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
 {
     monspell_message(target_ptr, m_idx, t_idx, 
-        SpellMsg(_("%^sが何かをつぶやいた。", "%^s mumbles."), _("%^sが極寒の矢の呪文を唱えた。", "%^s casts an ice bolt."),
+        SpellMsg_blind(_("%^sが何かをつぶやいた。", "%^s mumbles."), _("%^sが極寒の矢の呪文を唱えた。", "%^s casts an ice bolt."),
         _("%^sが%sに向かって極寒の矢の呪文を唱えた。", "%^s casts an ice bolt at %s.")), TARGET_TYPE);
 
     const auto dam = monspell_damage(target_ptr, RF_ABILITY::BO_ICEE, m_idx, DAM_ROLL);
@@ -345,7 +345,7 @@ MonsterSpellResult spell_RF5_BO_ICEE(player_type *target_ptr, POSITION y, POSITI
 MonsterSpellResult spell_RF5_MISSILE(player_type *target_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
 {
     monspell_message(target_ptr, m_idx, t_idx, 
-        SpellMsg(_("%^sが何かをつぶやいた。", "%^s mumbles."),
+        SpellMsg_blind(_("%^sが何かをつぶやいた。", "%^s mumbles."),
         _("%^sがマジック・ミサイルの呪文を唱えた。", "%^s casts a magic missile."),
         _("%^sが%sに向かってマジック・ミサイルの呪文を唱えた。", "%^s casts a magic missile at %s.")), TARGET_TYPE);
 

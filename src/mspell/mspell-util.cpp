@@ -8,7 +8,7 @@
 #include "system/player-type-definition.h"
 #include "view/display-messages.h"
 
-SpellMsg::SpellMsg(concptr msg_blind, concptr msg_mons_to_player, concptr msg_mons_to_mons)
+SpellMsg_blind::SpellMsg_blind(concptr msg_blind, concptr msg_mons_to_player, concptr msg_mons_to_mons)
  : msg_blind(msg_blind)
  , msg_mons_to_player(msg_mons_to_player)
  , msg_mons_to_mons(msg_mons_to_mons)
@@ -101,7 +101,7 @@ bool monspell_message_base(player_type* target_ptr, MONSTER_IDX m_idx, MONSTER_I
 * @param TARGET_TYPE プレイヤーを対象とする場合MONSTER_TO_PLAYER、モンスターを対象とする場合MONSTER_TO_MONSTER
  * @return メッセージを表示した場合trueを返す。
  */
-bool monspell_message(player_type* target_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, const SpellMsg &msgs, int TARGET_TYPE)
+bool monspell_message(player_type* target_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, const SpellMsg_blind &msgs, int TARGET_TYPE)
 {
     return monspell_message_base(target_ptr, m_idx, t_idx, msgs.msg_blind, msgs.msg_blind, msgs.msg_mons_to_player, 
                                 msgs.msg_mons_to_mons, target_ptr->blind > 0, TARGET_TYPE);

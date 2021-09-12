@@ -27,7 +27,7 @@
  * @param TARGET_TYPE プレイヤーを対象とする場合MONSTER_TO_PLAYER、モンスターを対象とする場合MONSTER_TO_MONSTER
  */
 static MonsterSpellResult spell_RF5_CAUSE(player_type *target_ptr, int GF_TYPE, HIT_POINT dam, POSITION y, POSITION x, MONSTER_IDX m_idx, MONSTER_IDX t_idx,
-    const SpellMsg &msgs, int TARGET_TYPE)
+    const SpellMsg_blind &msgs, int TARGET_TYPE)
 {
     auto res = MonsterSpellResult::make_valid(dam);
     res.learnable = TARGET_TYPE == MONSTER_TO_PLAYER;
@@ -56,7 +56,7 @@ static MonsterSpellResult spell_RF5_CAUSE(player_type *target_ptr, int GF_TYPE, 
  */
 MonsterSpellResult spell_RF5_CAUSE_1(player_type *target_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
 {
-    SpellMsg msgs = SpellMsg(_("%^sが何かをつぶやいた。", "%^s mumbles."), 
+    SpellMsg_blind msgs = SpellMsg_blind(_("%^sが何かをつぶやいた。", "%^s mumbles."), 
     _("%^sがあなたを指さして呪った。", "%^s points at you and curses."), 
     _("%^sは%sを指さして呪いをかけた。", "%^s points at %s and curses."));
 
@@ -78,7 +78,7 @@ MonsterSpellResult spell_RF5_CAUSE_1(player_type *target_ptr, POSITION y, POSITI
  */
 MonsterSpellResult spell_RF5_CAUSE_2(player_type *target_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
 {
-    SpellMsg msgs = SpellMsg(_("%^sが何かをつぶやいた。", "%^s mumbles."),
+    SpellMsg_blind msgs = SpellMsg_blind(_("%^sが何かをつぶやいた。", "%^s mumbles."),
     _("%^sがあなたを指さして恐ろしげに呪った。", "%^s points at you and curses horribly."),
     _("%^sは%sを指さして恐ろしげに呪いをかけた。", "%^s points at %s and curses horribly."));
 
@@ -100,7 +100,7 @@ MonsterSpellResult spell_RF5_CAUSE_2(player_type *target_ptr, POSITION y, POSITI
  */
 MonsterSpellResult spell_RF5_CAUSE_3(player_type *target_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
 {
-    SpellMsg msgs = SpellMsg(_("%^sが何かを大声で叫んだ。", "%^s mumbles loudly."),
+    SpellMsg_blind msgs = SpellMsg_blind(_("%^sが何かを大声で叫んだ。", "%^s mumbles loudly."),
     _("%^sがあなたを指さして恐ろしげに呪文を唱えた！", "%^s points at you, incanting terribly!"),
     _("%^sは%sを指さし、恐ろしげに呪文を唱えた！", "%^s points at %s, incanting terribly!"));
 
@@ -122,7 +122,7 @@ MonsterSpellResult spell_RF5_CAUSE_3(player_type *target_ptr, POSITION y, POSITI
  */
 MonsterSpellResult spell_RF5_CAUSE_4(player_type *target_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
 {
-    SpellMsg msgs = SpellMsg(_("%^sが「お前は既に死んでいる」と叫んだ。", "%^s screams the word 'DIE!'"),
+    SpellMsg_blind msgs = SpellMsg_blind(_("%^sが「お前は既に死んでいる」と叫んだ。", "%^s screams the word 'DIE!'"),
     _("%^sがあなたの秘孔を突いて「お前は既に死んでいる」と叫んだ。", "%^s points at you, screaming the word DIE!"),
     _("%^sが%sの秘孔を突いて、「お前は既に死んでいる」と叫んだ。", "%^s points at %s, screaming the word, 'DIE!'"));
 
