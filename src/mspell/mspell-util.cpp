@@ -8,6 +8,12 @@
 #include "system/player-type-definition.h"
 #include "view/display-messages.h"
 
+SpellMsg_blind::SpellMsg_blind(concptr msg_blind, concptr msg_mons_to_player, concptr msg_mons_to_mons)
+ : msg_blind(msg_blind)
+ , msg_mons_to_player(msg_mons_to_player)
+ , msg_mons_to_mons(msg_mons_to_mons)
+ {}
+
 /*!
 * @brief プレイヤーがモンスターを見ることができるかの判定 /
 * @param floor_ptr 現在フロアへの参照ポインタ
@@ -91,15 +97,14 @@ bool monspell_message_base(player_type* target_ptr, MONSTER_IDX m_idx, MONSTER_I
 * @param target_ptr プレーヤーへの参照ポインタ
 * @param m_idx 呪文を唱えるモンスターID
 * @param t_idx 呪文を受けるモンスターID。プレイヤーの場合はdummyで0とする。
-* @param msg1 プレイヤーが盲目状態のメッセージ
-* @param msg2 プレイヤーが盲目でなく、プレイヤーを対象とする場合のメッセージ
-* @param msg3 プレイヤーが盲目でなく、モンスター対象とする場合のメッセージ
+* @param msgs メッセージの構造体（盲目時メッセージ, 対プレイヤー、非盲目時メッセージ, 対モンスターのメッセージ）
 * @param TARGET_TYPE プレイヤーを対象とする場合MONSTER_TO_PLAYER、モンスターを対象とする場合MONSTER_TO_MONSTER
  * @return メッセージを表示した場合trueを返す。
  */
-bool monspell_message(player_type* target_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, concptr msg1, concptr msg2, concptr msg3, int TARGET_TYPE)
+bool monspell_message(player_type* target_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, const SpellMsg_blind &msgs, int TARGET_TYPE)
 {
-    return monspell_message_base(target_ptr, m_idx, t_idx, msg1, msg1, msg2, msg3, target_ptr->blind > 0, TARGET_TYPE);
+    return monspell_message_base(target_ptr, m_idx, t_idx, msgs.msg_blind, msgs.msg_blind, msgs.msg_mons_to_player, 
+                                msgs.msg_mons_to_mons, target_ptr->blind > 0, TARGET_TYPE);
 }
 
 /*!
@@ -111,7 +116,7 @@ bool monspell_message(player_type* target_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_
 * @param msg2 モンスター対象とする場合のメッセージ
 * @param TARGET_TYPE プレイヤーを対象とする場合MONSTER_TO_PLAYER、モンスターを対象とする場合MONSTER_TO_MONSTER
 */
-void simple_monspell_message(player_type* target_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, concptr msg1, concptr msg2, int TARGET_TYPE)
+void simple_monspell_message(player_type* target_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, concptr msg_to_player, concptr msg_to_mons, int TARGET_TYPE)
 {
-    monspell_message_base(target_ptr, m_idx, t_idx, msg1, msg2, msg1, msg2, target_ptr->blind > 0, TARGET_TYPE);
+    monspell_message_base(target_ptr, m_idx, t_idx, msg_to_player, msg_to_mons, msg_to_player, msg_to_mons, target_ptr->blind > 0, TARGET_TYPE);
 }

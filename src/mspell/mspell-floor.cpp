@@ -318,9 +318,10 @@ MonsterSpellResult spell_RF6_TELE_LEVEL(player_type *target_ptr, MONSTER_IDX m_i
     if (TARGET_TYPE == MONSTER_TO_PLAYER) {
         resist = (has_resist_nexus(target_ptr) != 0);
         saving_throw = (randint0(100 + rlev / 2) < target_ptr->skill_sav);
-        spell_badstatus_message(target_ptr, m_idx, t_idx, _("%^sが何か奇妙な言葉をつぶやいた。", "%^s mumbles strangely."),
+        spell_badstatus_message_to_player(target_ptr, m_idx, 
+            SpellMsgBadStatusToPlayer(_("%^sが何か奇妙な言葉をつぶやいた。", "%^s mumbles strangely."),
             _("%^sがあなたの足を指さした。", "%^s gestures at your feet."), _("しかし効果がなかった！", "You are unaffected!"),
-            _("しかし効力を跳ね返した！", "You resist the effects!"), resist, saving_throw, TARGET_TYPE);
+            _("しかし効力を跳ね返した！", "You resist the effects!")), resist, saving_throw);
 
         if (!resist && !saving_throw) {
             teleport_level(target_ptr, 0);
@@ -336,8 +337,9 @@ MonsterSpellResult spell_RF6_TELE_LEVEL(player_type *target_ptr, MONSTER_IDX m_i
     resist = tr_ptr->flagsr & (RFR_EFF_RES_NEXU_MASK | RFR_RES_TELE);
     saving_throw = (tr_ptr->flags1 & RF1_QUESTOR) || (tr_ptr->level > randint1((rlev - 10) < 1 ? 1 : (rlev - 10)) + 10);
 
-    spell_badstatus_message(target_ptr, m_idx, t_idx, _("%^sが%sの足を指さした。", "%^s gestures at %s's feet."),
-        _("%^sには効果がなかった。", "%^s is unaffected!"), _("%^sは効力を跳ね返した！", "%^s resist the effects!"), "", resist, saving_throw, TARGET_TYPE);
+    spell_badstatus_message_to_mons(target_ptr, m_idx, t_idx, 
+        SpellMsgBadStatusToMons(_("%^sが%sの足を指さした。", "%^s gestures at %s's feet."),
+        _("%^sには効果がなかった。", "%^s is unaffected!"), _("%^sは効力を跳ね返した！", "%^s resist the effects!"), ""), resist, saving_throw);
 
     if (!resist && !saving_throw) {
         teleport_level(target_ptr, (t_idx == target_ptr->riding) ? 0 : t_idx);
@@ -379,15 +381,17 @@ MonsterSpellResult spell_RF6_DARKNESS(player_type *target_ptr, POSITION y, POSIT
     res.learnable = monster_to_player && !can_use_lite_area;
 
     if (can_use_lite_area) {
-        monspell_message(target_ptr, m_idx, t_idx, _("%^sが何かをつぶやいた。", "%^s mumbles."),
-            _("%^sが辺りを明るく照らした。", "%^s cast a spell to light up."), _("%^sが辺りを明るく照らした。", "%^s cast a spell to light up."), TARGET_TYPE);
+        monspell_message(target_ptr, m_idx, t_idx, 
+            SpellMsg_blind(_("%^sが何かをつぶやいた。", "%^s mumbles."),
+            _("%^sが辺りを明るく照らした。", "%^s cast a spell to light up."), _("%^sが辺りを明るく照らした。", "%^s cast a spell to light up.")), TARGET_TYPE);
 
         if (see_monster(target_ptr, t_idx) && monster_to_monster) {
             msg_format(_("%^sは白い光に包まれた。", "%^s is surrounded by a white light."), t_name);
         }
     } else {
-        monspell_message(target_ptr, m_idx, t_idx, _("%^sが何かをつぶやいた。", "%^s mumbles."), _("%^sが暗闇の中で手を振った。", "%^s gestures in shadow."),
-            _("%^sが暗闇の中で手を振った。", "%^s gestures in shadow."), TARGET_TYPE);
+        monspell_message(target_ptr, m_idx, t_idx, 
+            SpellMsg_blind(_("%^sが何かをつぶやいた。", "%^s mumbles."), _("%^sが暗闇の中で手を振った。", "%^s gestures in shadow."),
+            _("%^sが暗闇の中で手を振った。", "%^s gestures in shadow.")), TARGET_TYPE);
 
         if (see_monster(target_ptr, t_idx) && monster_to_monster) {
             msg_format(_("%^sは暗闇に包まれた。", "%^s is surrounded by darkness."), t_name);
@@ -454,8 +458,9 @@ MonsterSpellResult spell_RF6_RAISE_DEAD(player_type *target_ptr, MONSTER_IDX m_i
 {
     monster_type *m_ptr = &target_ptr->current_floor_ptr->m_list[m_idx];
 
-    monspell_message(target_ptr, m_idx, t_idx, _("%^sが何かをつぶやいた。", "%^s mumbles."),
-        _("%^sが死者復活の呪文を唱えた。", "%^s casts a spell to revive corpses."), _("%^sが死者復活の呪文を唱えた。", "%^s casts a spell to revive corpses."),
+    monspell_message(target_ptr, m_idx, t_idx, 
+        SpellMsg_blind(_("%^sが何かをつぶやいた。", "%^s mumbles."),
+        _("%^sが死者復活の呪文を唱えた。", "%^s casts a spell to revive corpses."), _("%^sが死者復活の呪文を唱えた。", "%^s casts a spell to revive corpses.")),
         TARGET_TYPE);
 
     animate_dead(target_ptr, m_idx, m_ptr->fy, m_ptr->fx);

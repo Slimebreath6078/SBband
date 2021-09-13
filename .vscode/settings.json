@@ -1,5 +1,19 @@
 {
     "files.associations": {
-        "ratio": "cpp"
+        "ratio": "cpp",
+        "algorithm": "cpp",
+        "array": "cpp",
+        "atomic": "cpp",
+        "charconv": "cpp",
+        "chrono": "cpp",
+        "deque": "cpp",
+        "format": "cpp",
+        "thread": "cpp",
+        "tuple": "cpp",
+        "vector": "cpp",
+        "xmemory": "cpp",
+        "xstring": "cpp",
+        "xtree": "cpp",
+        "xutility": "cpp"
     }
 }
