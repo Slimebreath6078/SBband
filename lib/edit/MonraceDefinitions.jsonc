@@ -87534,6 +87534,66 @@
         "en": "She has almost same old characteristics though her atmosphere changed a little. On the other hand, her rigging and torpedo became immensely formidable. "
       },
       "sex": "FEMALE"
+    },
+    //出典「Under Party」
+    {
+      "id": 1366,
+      "name": {
+        "ja": "『コンクリートバスター』",
+        "en": "Concrete Buster"
+      },
+      "symbol": {
+        "character": "p",
+        "color": "Yellow"
+      },
+      "speed": 15,
+      "hit_point": "40d40",
+      "vision": 20,
+      "armor_class": 80,
+      "alertness": 5,
+      "level": 35,
+      "rarity": 3,
+      "exp": 3000,
+      "blows": [
+        {
+          "method": "PUNCH",
+          "effect": "HURT",
+          "damage_dice": "4d6"
+        },
+        {
+          "method": "CRUSH",
+          "effect": "HURT",
+          "damage_dice": "20d2"
+        },
+        {
+          "method": "KICK",
+          "effect": "HURT",
+          "damage_dice": "4d6"
+        }
+      ],
+      "flags": [
+        "FORCE_MAXHP",
+        "UNIQUE",
+        "HUMAN",
+        "EVIL",
+        "HAS_LITE_1",
+        "BASH_DOOR",
+        "MOVE_BODY",
+        "NO_FEAR",
+        "NO_CONF",
+        "NO_SLEEP",
+        "ONLY_ITEM",
+        "DROP_GOOD",
+        "DROP_4D2",
+        "DROP_1D2",
+        "DROP_CORPSE",
+        "DROP_SKELETON"
+      ],
+      "flavor": {
+        "ja": "彼はただの工事士に見えるが、その服装と仮面が怪しさを醸している。彼に見つかったら逃げることは難しい、隙を見て喰らいつけ！",
+        "en": "He looks like a constructor. But his dress and mask describe him abnormal. He don't easily let his found enemies escape. Watch for an attack chance and take it!"
+      },
+      "sex": "MALE"
     }
   ]
 }
