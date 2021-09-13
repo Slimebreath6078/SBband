@@ -26610,3 +26610,37 @@ F:DROP_4D2 | ONLY_ITEM | DROP_CORPSE | DROP_SKELETON |
 S:1_IN_4 | ROCKET | SHOOT |
 D:「戦闘は嫌いではないけど好きじゃないです。ただ普通に戦ってただけ……だけど、今は指揮官のためなら……もう少し、強くなれる気がするのです」
 D:（Manjuu「アズールレーン」）
+
+
+#出典「Under Party」
+N:1347:『コンクリートバスター』
+E:Concrete Buster
+G:p:y
+I:125:40d40:20:80:5
+W:35:3:0:3000:0:0
+B:PUNCH:HURT:4d6
+B:CRUSH:HURT:20d2
+B:KICK:HURT:4d6
+F:FORCE_MAXHP | UNIQUE | MALE | HUMAN | EVIL | HAS_LITE_1 | BASH_DOOR | MOVE_BODY |
+F:NO_FEAR | NO_CONF | NO_SLEEP
+F:ONLY_ITEM | DROP_GOOD | DROP_4D2 | DROP_1D2 | DROP_CORPSE | DROP_SKELETON |
+D:$He looks like a constructor. But his dress and mask are make him abnormal.
+D:$He don't easily miss his found enemies. Watch for an attack chance!
+D:彼はただの工事士に見えるが、その服装と仮面が怪しさを醸している。
+D:彼に見つかったら逃げることは難しい、隙を見て喰らいつけ！
+
+
+N:1348:『ミズノアオイ』
+E:Mizuno Aoi
+G:p:B
+I:115:40d35:30:60:0
+W:33:2:0:2800:0:0
+B:SHOOT:HURT:17d2
+B:SLASH:HURT:20d2
+B:SLASH:HURT:20d2
+B:SLASH:HURT:20d2
+F:UNIQUE | FORCE_MAXHP | FEMALE | HUMAN | GOOD | FRIENDLY | HAS_LITE_1 | TAKE_ITEM | BASH_DOOR |
+F:DROP_2D2 | DROP_4D2 | ONLY_ITEM | DROP_GOOD | DROP_CORPSE | DROP_SKELETON |
+S:1_IN_6 | SHOOT | ROCKET |
+D:$She is going to caves for sweeping because the murder body went to this world.
+D:とある殺人集団がこの世界に逃げ込んでいると聞き、掃討のために迷宮へと赴いた。
