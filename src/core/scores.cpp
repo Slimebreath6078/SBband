@@ -21,7 +21,7 @@
 #include "io/input-key-acceptor.h"
 #include "io/signal-handlers.h"
 #include "io/uid-checker.h"
-#include "player/player-class.h"
+#include "player-info/class-info.h"
 #include "player/player-personality.h"
 #include "player/player-status.h"
 #include "player/race-info-table.h"
@@ -133,7 +133,7 @@ static int highscore_add(high_score *score)
  * @brief スコアの過去二十位内ランキングを表示する
  * Enters a players name on a hi-score table, if "legal", and in any
  * case, displays some relevant portion of the high score list.
- * @param current_player_ptr スコアに適用するための現在プレイヤークリーチャー参照ポインタ
+ * @param current_player_ptr プレイヤーへの参照ポインタ
  * @return エラーコード
  * @details
  * Assumes "signals_ignore_tstp()" has been called.
