@@ -1,11 +1,11 @@
-﻿#include "load/load-util.h"
+#include "load/load-util.h"
 #include "player/attack-defense-types.h"
 #include "system/player-type-definition.h"
 
-void set_zangband_action(player_type *creature_ptr)
+void set_zangband_action(player_type *player_ptr)
 {
     byte tmp8u;
     rd_byte(&tmp8u);
     if (tmp8u)
-        creature_ptr->action = ACTION_LEARN;
+        player_ptr->action = ACTION_LEARN;
 }

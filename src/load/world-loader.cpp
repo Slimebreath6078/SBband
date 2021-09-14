@@ -24,25 +24,25 @@ static void rd_hengband_dungeons(void)
     }
 }
 
-void rd_dungeons(player_type *creature_ptr)
+void rd_dungeons(player_type *player_ptr)
 {
     rd_hengband_dungeons();
 
-    if (creature_ptr->max_plv < creature_ptr->lev)
-        creature_ptr->max_plv = creature_ptr->lev;
+    if (player_ptr->max_plv < player_ptr->lev)
+        player_ptr->max_plv = player_ptr->lev;
 }
 
 /*!
  * @brief 現実変容処理の有無及びその残りターン数を読み込む
- * @param creature_ptr プレーヤーへの参照ポインタ
+ * @param player_ptr プレイヤーへの参照ポインタ
  */
-void rd_alter_reality(player_type *creature_ptr)
+void rd_alter_reality(player_type *player_ptr)
 {
     int16_t tmp16s;
     rd_s16b(&tmp16s);
-    creature_ptr->recall_dungeon = (byte)tmp16s;
+    player_ptr->recall_dungeon = (byte)tmp16s;
 
-    rd_s16b(&creature_ptr->alter_reality);
+    rd_s16b(&player_ptr->alter_reality);
 }
 
 void set_gambling_monsters(void)
@@ -57,16 +57,16 @@ void set_gambling_monsters(void)
 /*!
  * @details 自動拾い関係はこれしかないのでworldに突っ込むことにする。必要があれば再分割する
  */
-void rd_autopick(player_type *creature_ptr)
+void rd_autopick(player_type *player_ptr)
 {
     byte tmp8u;
     rd_byte(&tmp8u);
-    creature_ptr->autopick_autoregister = tmp8u != 0;
+    player_ptr->autopick_autoregister = tmp8u != 0;
 }
 
-static void set_undead_turn_limit(player_type *creature_ptr)
+static void set_undead_turn_limit(player_type *player_ptr)
 {
-    switch (creature_ptr->start_race) {
+    switch (player_ptr->start_race) {
     case player_race_type::VAMPIRE:
     case player_race_type::SKELETON:
     case player_race_type::ZOMBIE:
@@ -79,12 +79,12 @@ static void set_undead_turn_limit(player_type *creature_ptr)
     }
 }
 
-static void rd_world_info(player_type *creature_ptr)
+static void rd_world_info(player_type *player_ptr)
 {
-    set_undead_turn_limit(creature_ptr);
+    set_undead_turn_limit(player_ptr);
     current_world_ptr->dungeon_turn_limit = TURNS_PER_TICK * TOWN_DAWN * (MAX_DAYS - 1) + TURNS_PER_TICK * TOWN_DAWN * 3 / 4;
-    rd_s32b(&creature_ptr->current_floor_ptr->generated_turn);
-    rd_s32b(&creature_ptr->feeling_turn);
+    rd_s32b(&player_ptr->current_floor_ptr->generated_turn);
+    rd_s32b(&player_ptr->feeling_turn);
 
     rd_s32b(&current_world_ptr->game_turn);
     rd_s32b(&current_world_ptr->dungeon_turn);
@@ -92,41 +92,41 @@ static void rd_world_info(player_type *creature_ptr)
     rd_s32b(&current_world_ptr->arena_start_turn);
 
     rd_s16b(&current_world_ptr->today_mon);
-    rd_s16b(&creature_ptr->today_mon);
+    rd_s16b(&player_ptr->today_mon);
 }
 
-void rd_visited_towns(player_type *creature_ptr)
+void rd_visited_towns(player_type *player_ptr)
 {
     int32_t tmp32s;
     rd_s32b(&tmp32s);
-    creature_ptr->visit = (BIT_FLAGS)tmp32s;
+    player_ptr->visit = (BIT_FLAGS)tmp32s;
 }
 
-void rd_global_configurations(player_type *creature_ptr)
+void rd_global_configurations(player_type *player_ptr)
 {
     rd_u32b(&current_world_ptr->seed_flavor);
     rd_u32b(&current_world_ptr->seed_town);
 
-    rd_u16b(&creature_ptr->panic_save);
+    rd_u16b(&player_ptr->panic_save);
     rd_u16b(&current_world_ptr->total_winner);
     rd_u16b(&current_world_ptr->noscore);
 
     byte tmp8u;
     rd_byte(&tmp8u);
-    creature_ptr->is_dead = (bool)tmp8u;
+    player_ptr->is_dead = (bool)tmp8u;
 
-    rd_byte(&creature_ptr->feeling);
-    rd_world_info(creature_ptr);
+    rd_byte(&player_ptr->feeling);
+    rd_world_info(player_ptr);
 }
 
-void load_wilderness_info(player_type *creature_ptr)
+void load_wilderness_info(player_type *player_ptr)
 {
-    rd_s32b(&creature_ptr->wilderness_x);
-    rd_s32b(&creature_ptr->wilderness_y);
+    rd_s32b(&player_ptr->wilderness_x);
+    rd_s32b(&player_ptr->wilderness_y);
     
-    rd_byte((byte *)&creature_ptr->wild_mode);
+    rd_byte((byte *)&player_ptr->wild_mode);
 
-    rd_byte((byte *)&creature_ptr->ambush_flag);
+    rd_byte((byte *)&player_ptr->ambush_flag);
 }
 
 errr analyze_wilderness(void)

@@ -1,6 +1,6 @@
 ﻿#include "core/turn-compensator.h"
 #include "floor/floor-town.h"
-#include "player/player-race-types.h"
+#include "player-info/race-types.h"
 #include "store/store-owners.h"
 #include "store/store-util.h"
 #include "store/store.h"
@@ -29,7 +29,7 @@ int32_t turn_real(player_type *player_ptr, int32_t hoge)
 
 /*!
  * @brief ターンのオーバーフローに対する対処
- * @param player_ptr プレーヤーへの参照ポインタ
+ * @param player_ptr プレイヤーへの参照ポインタ
  * @details ターン及びターンを記録する変数をターンの限界の1日前まで巻き戻す.
  * @return 修正をかけた後のゲームターン
  */

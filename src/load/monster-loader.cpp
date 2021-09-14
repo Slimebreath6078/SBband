@@ -9,7 +9,7 @@
 
 /*!
  * @brief モンスターを読み込む(現版) / Read a monster (New method)
- * @param player_ptr プレーヤーへの参照ポインタ
+ * @param player_ptr プレイヤーへの参照ポインタ
  * @param m_ptr モンスター保存先ポインタ
  */
 void rd_monster(monster_type *m_ptr)

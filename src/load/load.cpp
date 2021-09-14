@@ -10,6 +10,7 @@
  */
 
 #include "load/load.h"
+#include "core/asking-player.h"
 #include "dungeon/quest.h"
 #include "game-option/birth-options.h"
 #include "game-option/runtime-arguments.h"
@@ -31,9 +32,9 @@
 #include "load/quest-loader.h"
 #include "load/store-loader.h"
 #include "load/world-loader.h"
-#include "player/player-class.h"
+#include "player-info/class-info.h"
+#include "player-info/race-info.h"
 #include "player/player-personality.h"
-#include "player/player-race.h"
 #include "player/player-sex.h"
 #include "player/race-info-table.h"
 #include "system/angband-version.h"
@@ -46,10 +47,10 @@
 
 /*!
  * @brief 変愚蛮怒 v2.1.3で追加された街とクエストについて読み込む
- * @param creature_ptr プレーヤーへの参照ポインタ
+ * @param player_ptr プレイヤーへの参照ポインタ
  * @return エラーコード
  */
-static errr load_town_quest(player_type *creature_ptr)
+static errr load_town_quest(player_type *player_ptr)
 {
     errr load_town_result = load_town();
     if (load_town_result != 0)
@@ -61,9 +62,9 @@ static errr load_town_quest(player_type *creature_ptr)
     if (load_quest_result != 0)
         return load_quest_result;
 
-    analyze_quests(creature_ptr, max_quests_load, max_rquests_load);
+    analyze_quests(player_ptr, max_quests_load, max_rquests_load);
 
-    load_wilderness_info(creature_ptr);
+    load_wilderness_info(player_ptr);
     return analyze_wilderness();
 }
 
@@ -84,26 +85,26 @@ static void rd_winner_class()
     rd_FlagGroup(current_world_ptr->sf_retired, rd_byte);
 }
 
-static void load_player_world(player_type *creature_ptr)
+static void load_player_world(player_type *player_ptr)
 {
     rd_total_play_time();
     rd_winner_class();
-    rd_base_info(creature_ptr);
-    rd_player_info(creature_ptr);
+    rd_base_info(player_ptr);
+    rd_player_info(player_ptr);
     rd_byte((byte *)&preserve_mode);
-    rd_byte((byte *)&creature_ptr->wait_report_score);
+    rd_byte((byte *)&player_ptr->wait_report_score);
     rd_dummy2();
-    rd_global_configurations(creature_ptr);
-    rd_extra(creature_ptr);
+    rd_global_configurations(player_ptr);
+    rd_extra(player_ptr);
 
-    if (creature_ptr->energy_need < -999)
-        creature_ptr->timewalk = true;
+    if (player_ptr->energy_need < -999)
+        player_ptr->timewalk = true;
 
     if (arg_fiddle)
         load_note(_("特別情報をロードしました", "Loaded extra information"));
 }
 
-static errr load_hp(player_type *creature_ptr)
+static errr load_hp(player_type *player_ptr)
 {
     uint16_t tmp16u;
     rd_u16b(&tmp16u);
@@ -115,22 +116,22 @@ static errr load_hp(player_type *creature_ptr)
     for (int i = 0; i < tmp16u; i++) {
         int16_t tmp16s;
         rd_s16b(&tmp16s);
-        creature_ptr->player_hp[i] = (HIT_POINT)tmp16s;
+        player_ptr->player_hp[i] = (HIT_POINT)tmp16s;
     }
 
     return 0;
 }
 
-static void load_spells(player_type *creature_ptr)
+static void load_spells(player_type *player_ptr)
 {
-    rd_u32b(&creature_ptr->spell_learned1);
-    rd_u32b(&creature_ptr->spell_learned2);
-    rd_u32b(&creature_ptr->spell_worked1);
-    rd_u32b(&creature_ptr->spell_worked2);
-    rd_u32b(&creature_ptr->spell_forgotten1);
-    rd_u32b(&creature_ptr->spell_forgotten2);
-    rd_s16b(&creature_ptr->learned_spells);
-    rd_s16b(&creature_ptr->add_spells);
+    rd_u32b(&player_ptr->spell_learned1);
+    rd_u32b(&player_ptr->spell_learned2);
+    rd_u32b(&player_ptr->spell_worked1);
+    rd_u32b(&player_ptr->spell_worked2);
+    rd_u32b(&player_ptr->spell_forgotten1);
+    rd_u32b(&player_ptr->spell_forgotten2);
+    rd_s16b(&player_ptr->learned_spells);
+    rd_s16b(&player_ptr->add_spells);
 }
 
 static errr verify_checksum()
@@ -161,7 +162,7 @@ static errr verify_encoded_checksum()
  * @brief セーブファイル読み込み処理の実体 / Actually read the savefile
  * @return エラーコード
  */
-static errr exe_reading_savefile(player_type *creature_ptr)
+static errr exe_reading_savefile(player_type *player_ptr)
 {
     rd_version_info();
     rd_dummy3();
@@ -175,7 +176,7 @@ static errr exe_reading_savefile(player_type *creature_ptr)
     if (load_item_result != 0)
         return load_item_result;
 
-    errr load_town_quest_result = load_town_quest(creature_ptr);
+    errr load_town_quest_result = load_town_quest(player_ptr);
     if (load_town_quest_result != 0)
         return load_town_quest_result;
 
@@ -186,34 +187,34 @@ static errr exe_reading_savefile(player_type *creature_ptr)
     if (load_artifact_result != 0)
         return load_artifact_result;
 
-    load_player_world(creature_ptr);
-    errr load_hp_result = load_hp(creature_ptr);
+    load_player_world(player_ptr);
+    errr load_hp_result = load_hp(player_ptr);
     if (load_hp_result != 0)
         return load_hp_result;
 
-    sp_ptr = &sex_info[creature_ptr->psex];
-    rp_ptr = &race_info[enum2i(creature_ptr->prace)];
-    cp_ptr = &class_info[creature_ptr->pclass];
-    ap_ptr = &personality_info[creature_ptr->pseikaku];
+    sp_ptr = &sex_info[player_ptr->psex];
+    rp_ptr = &race_info[enum2i(player_ptr->prace)];
+    cp_ptr = &class_info[player_ptr->pclass];
+    ap_ptr = &personality_info[player_ptr->pseikaku];
 
-    mp_ptr = &m_info[creature_ptr->pclass];
+    mp_ptr = &m_info[player_ptr->pclass];
 
-    load_spells(creature_ptr);
-    if (creature_ptr->pclass == CLASS_MINDCRAFTER)
-        creature_ptr->add_spells = 0;
+    load_spells(player_ptr);
+    if (player_ptr->pclass == CLASS_MINDCRAFTER)
+        player_ptr->add_spells = 0;
 
-    errr load_inventory_result = load_inventory(creature_ptr);
+    errr load_inventory_result = load_inventory(player_ptr);
     if (load_inventory_result != 0)
         return load_inventory_result;
 
-    errr load_store_result = load_store(creature_ptr);
+    errr load_store_result = load_store(player_ptr);
     if (load_store_result != 0)
         return load_store_result;
 
-    rd_s16b(&creature_ptr->pet_follow_distance);
-    rd_u16b(&creature_ptr->pet_extra_flags);
+    rd_s16b(&player_ptr->pet_follow_distance);
+    rd_u16b(&player_ptr->pet_extra_flags);
 
-    errr restore_dungeon_result = restore_dungeon(creature_ptr);
+    errr restore_dungeon_result = restore_dungeon(player_ptr);
     if (restore_dungeon_result != 0)
         return restore_dungeon_result;
 
@@ -226,7 +227,7 @@ static errr exe_reading_savefile(player_type *creature_ptr)
 
 /*!
  * @brief セーブファイル読み込み処理 (UIDチェック等含む) / Reading the savefile (including UID check)
- * @param player_ptr プレーヤーへの参照ポインタ
+ * @param player_ptr プレイヤーへの参照ポインタ
  * @return エラーコード
  */
 static errr rd_savefile(player_type *player_ptr)
@@ -245,10 +246,25 @@ static errr rd_savefile(player_type *player_ptr)
     return err;
 }
 
+/**
+ * @brief セーブデータから引き継いでプレイできるかどうか調べる
+ *
+ * @param player_ptr プレイヤーへの参照ポインタ
+ * @return 引き継ぎ可能ならtrue、そうでなければfalseを返す
+ */
+static bool can_takeover_savefile(const player_type *player_ptr)
+{
+    if (loading_savefile_version_is_older_than(8) && player_ptr->pclass == CLASS_SMITH) {
+        return false;
+    }
+
+    return true;
+}
+
 /*!
  * @brief セーブデータ読み込みのメインルーチン /
  * Attempt to Load a "savefile"
- * @param creature_ptr プレーヤーへの参照ポインタ
+ * @param player_ptr プレイヤーへの参照ポインタ
  * @param new_game セーブデータの新規作成が必要か否か
  * @return セーブデータが読み込めればtrue
  */
@@ -321,6 +337,19 @@ bool load_savedata(player_type *player_ptr, bool *new_game)
 
         msg_print(nullptr);
         return false;
+    }
+
+    if (!can_takeover_savefile(player_ptr)) {
+        msg_format(_("このセーブデータの続きをプレイすることはできません。", "You can't play the rest of the game from this save data."));
+        msg_print(nullptr);
+        if (!get_check(_("最初からプレイを始めますか？(モンスターの思い出は引き継がれます)",
+                "Play from the beginning? (Monster recalls will be inherited.) "))) {
+            msg_format(_("ゲームを終了します。", "Exit the game."));
+            msg_print(nullptr);
+            return false;
+        }
+        player_ptr->is_dead = true;
+        player_ptr->wait_report_score = false;
     }
 
     if (player_ptr->is_dead) {
