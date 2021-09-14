@@ -5,6 +5,18 @@
 struct MonsterSpellResult;
 
 struct player_type;
+
+class BoltProjector{
+    protected:
+        BoltProjector();
+        bool virtual view_message();
+        void virtual smart_learn();
+    public:
+        virtual ~BoltProjector() = default;
+        MonsterSpellResult project();
+    private :
+};
+
 MonsterSpellResult spell_RF4_SHOOT(player_type *player_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE);
 MonsterSpellResult spell_RF5_BO_ACID(player_type *player_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE);
 MonsterSpellResult spell_RF5_BO_ELEC(player_type *player_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE);
