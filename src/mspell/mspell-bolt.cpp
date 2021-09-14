@@ -19,6 +19,18 @@
 #include "system/player-type-definition.h"
 #include "util/bit-flags-calculator.h"
 
+BoltProjector::BoltProjector(player_type *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, const SpellMsg_blind &msgs, int TARGET_TYPE)
+    :   player_ptr(player_ptr)
+    ,   m_idx(m_idx)
+    ,   t_idx(t_idx)
+    ,   TARGET_TYPE(TARGET_TYPE)
+    ,   msgs(msgs)
+{}
+
+bool BoltProjector::view_message(){
+    return monspell_message(player_ptr, m_idx, t_idx, msgs, TARGET_TYPE);
+}
+
 /*!
  * @brief RF4_SHOOTの処理。射撃。 /
  * @param player_ptr プレイヤーへの参照ポインタ
