@@ -80,9 +80,6 @@
     <ClCompile Include="..\..\src\player\race-info-table.cpp">
       <Filter>player</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\player\mimic-info-table.cpp">
-      <Filter>player</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\main\sound-definitions-table.cpp">
       <Filter>main</Filter>
     </ClCompile>
@@ -389,9 +386,6 @@
     <ClCompile Include="..\..\src\room\rooms-pit-nest.cpp">
       <Filter>room</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\player\player-class.cpp">
-      <Filter>player</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\player\player-damage.cpp">
       <Filter>player</Filter>
     </ClCompile>
@@ -399,9 +393,6 @@
       <Filter>player</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\player\player-personality.cpp">
-      <Filter>player</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\player\player-race.cpp">
       <Filter>player</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\player\player-sex.cpp">
@@ -475,9 +466,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\floor\geometry.cpp">
       <Filter>floor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\player\patron.cpp">
-      <Filter>player</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\birth\history.cpp">
       <Filter>birth</Filter>
@@ -684,9 +672,6 @@
       <Filter>cmd-item</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\cmd-item\cmd-read.cpp">
-      <Filter>cmd-item</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\cmd-item\cmd-smith.cpp">
       <Filter>cmd-item</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\cmd-item\cmd-usestaff.cpp">
@@ -2304,6 +2289,33 @@
     <ClCompile Include="..\..\src\object-use\throw-execution.cpp">
       <Filter>object-use</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\player-info\class-info.cpp">
+      <Filter>player-info</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\player-info\mimic-info-table.cpp">
+      <Filter>player-info</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\player-info\race-info.cpp">
+      <Filter>player-info</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\object-enchant\object-smith.cpp">
+      <Filter>object-enchant</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\object-enchant\smith-info.cpp">
+      <Filter>object-enchant</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\object-enchant\smith-tables.cpp">
+      <Filter>object-enchant</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\player-base\player-class.cpp">
+      <Filter>player-base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\player-base\player-race.cpp">
+      <Filter>player-base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\player\patron.cpp">
+      <Filter>player</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\combat\shoot.h">
@@ -2382,9 +2394,6 @@
       <Filter>market</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\player\race-info-table.h">
-      <Filter>player</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\player\mimic-info-table.h">
       <Filter>player</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\main\sound-definitions-table.h">
@@ -2720,9 +2729,6 @@
     <ClInclude Include="..\..\src\room\rooms-vault.h">
       <Filter>room</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\player\player-class.h">
-      <Filter>player</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\player\player-damage.h">
       <Filter>player</Filter>
     </ClInclude>
@@ -2730,9 +2736,6 @@
       <Filter>player</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\player\player-personality.h">
-      <Filter>player</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\player\player-race.h">
       <Filter>player</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\player\player-sex.h">
@@ -3045,9 +3048,6 @@
       <Filter>cmd-item</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\cmd-item\cmd-read.h">
-      <Filter>cmd-item</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\cmd-item\cmd-smith.h">
       <Filter>cmd-item</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\cmd-item\cmd-usestaff.h">
@@ -4956,6 +4956,39 @@
     <ClInclude Include="..\..\src\util\enum-converter.h">
       <Filter>util</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\player-info\class-info.h">
+      <Filter>player-info</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\player-info\class-types.h">
+      <Filter>player-info</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\player-info\mimic-info-table.h">
+      <Filter>player-info</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\player-info\race-info.h">
+      <Filter>player-info</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\player-info\race-types.h">
+      <Filter>player-info</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\object-enchant\object-smith.h">
+      <Filter>object-enchant</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\object-enchant\smith-info.h">
+      <Filter>object-enchant</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\object-enchant\smith-tables.h">
+      <Filter>object-enchant</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\object-enchant\smith-types.h">
+      <Filter>object-enchant</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\player-base\player-class.h">
+      <Filter>player-base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\player-base\player-race.h">
+      <Filter>player-base</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\wall.bmp" />
@@ -5171,6 +5204,9 @@
     </Filter>
     <Filter Include="avatar">
       <UniqueIdentifier>{953acb44-db6d-4bd8-bb0b-5692524bad93}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="player-base">
+      <UniqueIdentifier>{3681ebed-58b6-4ed1-819d-d0ba389dfe42}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
