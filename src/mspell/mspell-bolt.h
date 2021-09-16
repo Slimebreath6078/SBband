@@ -1,7 +1,9 @@
 ﻿#pragma once
 
 #include "system/angband.h"
+#include "monster-race/race-ability-flags.h"
 #include "mspell/mspell-util.h"
+#include "system/h-type.h"
 
 struct MonsterSpellResult;
 
@@ -9,7 +11,7 @@ struct player_type;
 
 class BoltProjector{
     protected:
-        BoltProjector(player_type *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, const SpellMsg_blind &msgs, int TARGET_TYPE);
+        BoltProjector(player_type *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, const SpellMsg_blind &msgs, int TARGET_TYPE, RF_ABILITY ms_type, EFFECT_ID typ);
         BoltProjector() = delete;
         player_type *player_ptr;
         MONSTER_IDX m_idx;
@@ -19,9 +21,11 @@ class BoltProjector{
         void virtual smart_learn();
     public:
         virtual ~BoltProjector() = default;
-        MonsterSpellResult project();
+        MonsterSpellResult project(POSITION y, POSITION x);
     private :
         SpellMsg_blind msgs;
+        RF_ABILITY ms_type;
+        EFFECT_ID typ;
 };
 
 MonsterSpellResult spell_RF4_SHOOT(player_type *player_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE);
