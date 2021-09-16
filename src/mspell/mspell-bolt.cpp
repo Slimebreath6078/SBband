@@ -47,6 +47,11 @@ bool BoltProjector::view_message(){
     return monspell_message(player_ptr, m_idx, t_idx, msgs, TARGET_TYPE);
 }
 
+void BoltProjector::smart_learn()
+{
+    update_smart_learn(player_ptr, m_idx, DRS_REFLECT);
+}
+
 /*!
  * @brief RF4_SHOOTの処理。射撃。 /
  * @param player_ptr プレイヤーへの参照ポインタ
