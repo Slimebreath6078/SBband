@@ -18,6 +18,7 @@ class CAUSE_Projector{
         RF_ABILITY ms_type;
         EFFECT_ID typ;
         int TARGET_TYPE;
+        MonsterSpellResult spell_RF5_CAUSE(HIT_POINT dam, POSITION y, POSITION x);
     public:
         virtual ~CAUSE_Projector() = default;
         MonsterSpellResult project(POSITION y, POSITION x);

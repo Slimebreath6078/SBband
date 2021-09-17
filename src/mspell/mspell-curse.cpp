@@ -26,19 +26,11 @@ CAUSE_Projector::CAUSE_Projector(player_type *player_ptr, MONSTER_IDX m_idx, MON
 
 /*!
  * @brief RF5_CAUSE_* の処理関数
- * @param player_ptr プレイヤーへの参照ポインタ
- * @param GF_TYPE 攻撃に使用する属性
  * @param dam 攻撃に使用するダメージ量
  * @param y 対象の地点のy座標
  * @param x 対象の地点のx座標
- * @param m_idx 呪文を唱えるモンスターID
- * @param t_idx 呪文を受けるモンスターID。プレイヤーの場合はdummyで0とする。
- * @param msgs メッセージの構造体（対プレイヤー、盲目時メッセージ, 対プレイヤー、非盲目時メッセージ, 対モンスターのメッセージ）
- * @param MS_TYPE 呪文の番号
- * @param TARGET_TYPE プレイヤーを対象とする場合MONSTER_TO_PLAYER、モンスターを対象とする場合MONSTER_TO_MONSTER
  */
-static MonsterSpellResult spell_RF5_CAUSE(player_type *player_ptr, int GF_TYPE, HIT_POINT dam, POSITION y, POSITION x, MONSTER_IDX m_idx, MONSTER_IDX t_idx,
-    const SpellMsg_blind &msgs, int TARGET_TYPE)
+MonsterSpellResult CAUSE_Projector::spell_RF5_CAUSE(HIT_POINT dam, POSITION y, POSITION x)
 {
     auto res = MonsterSpellResult::make_valid(dam);
     res.learnable = TARGET_TYPE == MONSTER_TO_PLAYER;
@@ -49,7 +41,7 @@ static MonsterSpellResult spell_RF5_CAUSE(player_type *player_ptr, int GF_TYPE, 
 
     monspell_message(player_ptr, m_idx, t_idx, msgs, TARGET_TYPE);
 
-    breath(player_ptr, y, x, m_idx, GF_TYPE, dam, 0, false, TARGET_TYPE);
+    breath(player_ptr, y, x, m_idx, typ, dam, 0, false, TARGET_TYPE);
 
     return res;
 }
