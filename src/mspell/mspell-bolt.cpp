@@ -19,7 +19,7 @@
 #include "system/player-type-definition.h"
 #include "util/bit-flags-calculator.h"
 
-BoltProjector::BoltProjector(player_type *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, const SpellMsg_blind &msgs, int TARGET_TYPE, RF_ABILITY ms_type, EFFECT_ID typ)
+BoltProjector::BoltProjector(player_type *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, const SpellMsg_blind &msgs, int TARGET_TYPE, RF_ABILITY ms_type, EFFECT_ID typ, int SOUND)
     :   player_ptr(player_ptr)
     ,   m_idx(m_idx)
     ,   t_idx(t_idx)
@@ -27,10 +27,12 @@ BoltProjector::BoltProjector(player_type *player_ptr, MONSTER_IDX m_idx, MONSTER
     ,   msgs(msgs)
     ,   ms_type(ms_type)
     ,   typ(typ)
+    ,   SOUND(SOUND)
 {}
 
 MonsterSpellResult BoltProjector::project(POSITION y, POSITION x){
-    view_message();
+    if (view_message())
+        play_sound();
     
     const auto dam = monspell_damage(player_ptr, ms_type, m_idx, DAM_ROLL);
     const auto proj_res = bolt(player_ptr, m_idx, y, x, typ, dam, TARGET_TYPE);
@@ -41,6 +43,10 @@ MonsterSpellResult BoltProjector::project(POSITION y, POSITION x){
     res.learnable = proj_res.affected_player;
 
     return res;
+}
+
+void BoltProjector::play_sound(){
+    sound(SOUND);
 }
 
 bool BoltProjector::view_message(){
