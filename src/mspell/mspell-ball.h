@@ -9,7 +9,7 @@ struct MonsterSpellResult;
 
 class BallProjector{
     protected:
-        BallProjector(player_type *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, const SpellMsg_blind &msgs, byte rad, int TARGET_TYPE, RF_ABILITY ms_type, EFFECT_ID typ);
+        BallProjector(player_type *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, const SpellMsg_blind &msgs, byte rad, int TARGET_TYPE, RF_ABILITY ms_type, EFFECT_ID typ, int SOUND);
         BallProjector() = delete;
         player_type *player_ptr;
         MONSTER_IDX m_idx;
@@ -25,6 +25,8 @@ class BallProjector{
         SpellMsg_blind msgs;
         RF_ABILITY ms_type;
         EFFECT_ID typ;
+        int SOUND;
+        void play_sound();
 };
 
 struct player_type;

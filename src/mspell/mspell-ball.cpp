@@ -1,5 +1,6 @@
 ﻿#include "mspell/mspell-ball.h"
 #include "effect/effect-processor.h"
+#include "main/sound-definitions-table.h"
 #include "main/sound-of-music.h"
 #include "mind/drs-types.h"
 #include "monster-race/race-ability-flags.h"
@@ -17,7 +18,7 @@
 #include "system/player-type-definition.h"
 #include "view/display-messages.h"
 
-BallProjector::BallProjector(player_type *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, const SpellMsg_blind &msgs, byte rad, int TARGET_TYPE, RF_ABILITY ms_type, EFFECT_ID typ)
+BallProjector::BallProjector(player_type *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, const SpellMsg_blind &msgs, byte rad, int TARGET_TYPE, RF_ABILITY ms_type, EFFECT_ID typ, int SOUND)
     : player_ptr(player_ptr)
     , m_idx(m_idx)
     , t_idx(t_idx)
@@ -26,10 +27,12 @@ BallProjector::BallProjector(player_type *player_ptr, MONSTER_IDX m_idx, MONSTER
     , msgs(msgs)
     , ms_type(ms_type)
     , typ(typ)
+    , SOUND(SOUND)
 {}
 
 MonsterSpellResult BallProjector::project(POSITION y, POSITION x){
-    view_message();
+    if (view_message())
+        play_sound();
 
     const auto dam = monspell_damage(player_ptr, ms_type, m_idx, DAM_ROLL);
     const auto proj_res = breath(player_ptr, y, x, m_idx, typ, dam, rad, false, TARGET_TYPE);
@@ -40,6 +43,10 @@ MonsterSpellResult BallProjector::project(POSITION y, POSITION x){
     res.learnable = proj_res.affected_player;
 
     return res;
+}
+
+void BallProjector::play_sound(){
+    sound(SOUND);
 }
 
 bool BallProjector::view_message(){
