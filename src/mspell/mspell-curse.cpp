@@ -13,6 +13,17 @@
 #include "system/player-type-definition.h"
 #include "view/display-messages.h"
 
+CAUSE_Projector::CAUSE_Projector(player_type *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, const SpellMsg_blind &msgs,
+    RF_ABILITY ms_type, EFFECT_ID typ, int TARGET_TYPE)
+    : player_ptr(player_ptr)
+    , m_idx(m_idx)
+    , t_idx(t_idx)
+    , ms_type(ms_type)
+    , typ(typ)
+    , TARGET_TYPE(TARGET_TYPE)
+    , msgs(msgs)
+{}
+
 /*!
  * @brief RF5_CAUSE_* の処理関数
  * @param player_ptr プレイヤーへの参照ポインタ
