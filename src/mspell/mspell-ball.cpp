@@ -46,6 +46,9 @@ bool BallProjector::view_message(){
     return monspell_message(player_ptr, m_idx, t_idx, msgs, TARGET_TYPE);
 }
 
+void BallProjector::smart_learn()
+{}
+
 /*!
  * @brief RF4_BA_NUKEの処理。放射能球。 /
  * @param player_ptr プレイヤーへの参照ポインタ
