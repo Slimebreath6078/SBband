@@ -72,10 +72,10 @@ static MonsterSpellResult monspell_to_player_impl(player_type *player_ptr, RF_AB
     case RF_ABILITY::DRAIN_MANA: return spell_RF5_DRAIN_MANA(player_ptr, y, x, m_idx, 0, MONSTER_TO_PLAYER);  /* RF5_DRAIN_MANA */
     case RF_ABILITY::MIND_BLAST: return spell_RF5_MIND_BLAST(player_ptr, y, x, m_idx, 0, MONSTER_TO_PLAYER);  /* RF5_MIND_BLAST */
     case RF_ABILITY::BRAIN_SMASH: return spell_RF5_BRAIN_SMASH(player_ptr, y, x, m_idx, 0, MONSTER_TO_PLAYER); /* RF5_MIND_BLAST */
-    case RF_ABILITY::CAUSE_1: return spell_RF5_CAUSE_1(player_ptr, y, x, m_idx, 0, MONSTER_TO_PLAYER); /* RF5_CAUSE_1 */
-    case RF_ABILITY::CAUSE_2: return spell_RF5_CAUSE_2(player_ptr, y, x, m_idx, 0, MONSTER_TO_PLAYER); /* RF5_CAUSE_2 */
-    case RF_ABILITY::CAUSE_3: return spell_RF5_CAUSE_3(player_ptr, y, x, m_idx, 0, MONSTER_TO_PLAYER); /* RF5_CAUSE_3 */
-    case RF_ABILITY::CAUSE_4: return spell_RF5_CAUSE_4(player_ptr, y, x, m_idx, 0, MONSTER_TO_PLAYER); /* RF5_CAUSE_4 */
+    case RF_ABILITY::CAUSE_1: return CAUSE_1_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF5_CAUSE_1 */
+    case RF_ABILITY::CAUSE_2: return CAUSE_2_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF5_CAUSE_2 */
+    case RF_ABILITY::CAUSE_3: return CAUSE_3_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF5_CAUSE_3 */
+    case RF_ABILITY::CAUSE_4: return CAUSE_4_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF5_CAUSE_4 */
     case RF_ABILITY::BO_ACID: return BO_ACID_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF5_BO_ACID */
     case RF_ABILITY::BO_ELEC: return BO_ELEC_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF5_BO_ELEC */
     case RF_ABILITY::BO_FIRE: return BO_FIRE_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF5_BO_FIRE */
@@ -180,10 +180,10 @@ static MonsterSpellResult monspell_to_monster_impl(
     case RF_ABILITY::DRAIN_MANA: return spell_RF5_DRAIN_MANA(player_ptr, y, x, m_idx, t_idx, MONSTER_TO_MONSTER); /* RF5_DRAIN_MANA */
     case RF_ABILITY::MIND_BLAST: return spell_RF5_MIND_BLAST(player_ptr, y, x, m_idx, t_idx, MONSTER_TO_MONSTER); /* RF5_MIND_BLAST */
     case RF_ABILITY::BRAIN_SMASH: return spell_RF5_BRAIN_SMASH(player_ptr, y, x, m_idx, t_idx, MONSTER_TO_MONSTER); /* RF5_BRAIN_SMASH */
-    case RF_ABILITY::CAUSE_1: return spell_RF5_CAUSE_1(player_ptr, y, x, m_idx, t_idx, MONSTER_TO_MONSTER); /* RF5_CAUSE_1 */
-    case RF_ABILITY::CAUSE_2: return spell_RF5_CAUSE_2(player_ptr, y, x, m_idx, t_idx, MONSTER_TO_MONSTER); /* RF5_CAUSE_2 */
-    case RF_ABILITY::CAUSE_3: return spell_RF5_CAUSE_3(player_ptr, y, x, m_idx, t_idx, MONSTER_TO_MONSTER); /* RF5_CAUSE_3 */
-    case RF_ABILITY::CAUSE_4: return spell_RF5_CAUSE_4(player_ptr, y, x, m_idx, t_idx, MONSTER_TO_MONSTER); /* RF5_CAUSE_4 */
+    case RF_ABILITY::CAUSE_1: return CAUSE_1_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF5_CAUSE_1 */
+    case RF_ABILITY::CAUSE_2: return CAUSE_2_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF5_CAUSE_2 */
+    case RF_ABILITY::CAUSE_3: return CAUSE_3_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF5_CAUSE_3 */
+    case RF_ABILITY::CAUSE_4: return CAUSE_4_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF5_CAUSE_4 */
     case RF_ABILITY::BO_ACID: return BO_ACID_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF5_BO_ACID */
     case RF_ABILITY::BO_ELEC: return BO_ELEC_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF5_BO_ELEC */
     case RF_ABILITY::BO_FIRE: return BO_FIRE_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF5_BO_FIRE */

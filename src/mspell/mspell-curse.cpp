@@ -52,90 +52,34 @@ MonsterSpellResult CAUSE_Projector::project(POSITION y, POSITION x){
     return this->spell_RF5_CAUSE(dam, y, x);
 }
 
-/*!
- * @brief RF5_CAUSE_1の処理。軽傷の呪い。 /
- * @param player_ptr プレイヤーへの参照ポインタ
- * @param y 対象の地点のy座標
- * @param x 対象の地点のx座標
- * @param m_idx 呪文を唱えるモンスターID
- * @param t_idx 呪文を受けるモンスターID。プレイヤーの場合はdummyで0とする。
- * @param TARGET_TYPE プレイヤーを対象とする場合MONSTER_TO_PLAYER、モンスターを対象とする場合MONSTER_TO_MONSTER
- *
- * プレイヤーが対象ならラーニング可。
- */
-MonsterSpellResult spell_RF5_CAUSE_1(player_type *player_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
-{
-    SpellMsg_blind msgs = SpellMsg_blind(_("%^sが何かをつぶやいた。", "%^s mumbles."), 
-    _("%^sがあなたを指さして呪った。", "%^s points at you and curses."), 
-    _("%^sは%sを指さして呪いをかけた。", "%^s points at %s and curses."));
+CAUSE_1_Projector::CAUSE_1_Projector(player_type *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
+    : CAUSE_Projector(player_ptr, m_idx, t_idx,
+        SpellMsg_blind(_("%^sが何かをつぶやいた。", "%^s mumbles."), 
+        _("%^sがあなたを指さして呪った。", "%^s points at you and curses."), 
+        _("%^sは%sを指さして呪いをかけた。", "%^s points at %s and curses.")),
+        RF_ABILITY::CAUSE_1, GF_CAUSE_1, TARGET_TYPE)
+{}
 
-    const auto dam = monspell_damage(player_ptr, RF_ABILITY::CAUSE_1, m_idx, DAM_ROLL);
+CAUSE_2_Projector::CAUSE_2_Projector(player_type *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
+    : CAUSE_Projector(player_ptr, m_idx, t_idx,
+        SpellMsg_blind(_("%^sが何かをつぶやいた。", "%^s mumbles."),
+        _("%^sがあなたを指さして恐ろしげに呪った。", "%^s points at you and curses horribly."),
+        _("%^sは%sを指さして恐ろしげに呪いをかけた。", "%^s points at %s and curses horribly.")),
+        RF_ABILITY::CAUSE_2, GF_CAUSE_2, TARGET_TYPE)
+{}
 
-    return spell_RF5_CAUSE(player_ptr, GF_CAUSE_1, dam, y, x, m_idx, t_idx, msgs, TARGET_TYPE);
-}
+CAUSE_3_Projector::CAUSE_3_Projector(player_type *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
+    : CAUSE_Projector(player_ptr, m_idx, t_idx,
+        SpellMsg_blind(_("%^sが何かを大声で叫んだ。", "%^s mumbles loudly."),
+        _("%^sがあなたを指さして恐ろしげに呪文を唱えた！", "%^s points at you, incanting terribly!"),
+        _("%^sは%sを指さし、恐ろしげに呪文を唱えた！", "%^s points at %s, incanting terribly!")),
+        RF_ABILITY::CAUSE_3, GF_CAUSE_3, TARGET_TYPE)
+{}
 
-/*!
- * @brief RF5_CAUSE_2の処理。重傷の呪い。 /
- * @param player_ptr プレイヤーへの参照ポインタ
- * @param y 対象の地点のy座標
- * @param x 対象の地点のx座標
- * @param m_idx 呪文を唱えるモンスターID
- * @param t_idx 呪文を受けるモンスターID。プレイヤーの場合はdummyで0とする。
- * @param TARGET_TYPE プレイヤーを対象とする場合MONSTER_TO_PLAYER、モンスターを対象とする場合MONSTER_TO_MONSTER
- *
- * プレイヤーが対象ならラーニング可。
- */
-MonsterSpellResult spell_RF5_CAUSE_2(player_type *player_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
-{
-    SpellMsg_blind msgs = SpellMsg_blind(_("%^sが何かをつぶやいた。", "%^s mumbles."),
-    _("%^sがあなたを指さして恐ろしげに呪った。", "%^s points at you and curses horribly."),
-    _("%^sは%sを指さして恐ろしげに呪いをかけた。", "%^s points at %s and curses horribly."));
-
-    const auto dam = monspell_damage(player_ptr, RF_ABILITY::CAUSE_2, m_idx, DAM_ROLL);
-
-    return spell_RF5_CAUSE(player_ptr, GF_CAUSE_2, dam, y, x, m_idx, t_idx, msgs, TARGET_TYPE);
-}
-
-/*!
- * @brief RF5_CAUSE_3の処理。致命傷の呪い。 /
- * @param player_ptr プレイヤーへの参照ポインタ
- * @param y 対象の地点のy座標
- * @param x 対象の地点のx座標
- * @param m_idx 呪文を唱えるモンスターID
- * @param t_idx 呪文を受けるモンスターID。プレイヤーの場合はdummyで0とする。
- * @param TARGET_TYPE プレイヤーを対象とする場合MONSTER_TO_PLAYER、モンスターを対象とする場合MONSTER_TO_MONSTER
- *
- * プレイヤーが対象ならラーニング可。
- */
-MonsterSpellResult spell_RF5_CAUSE_3(player_type *player_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
-{
-    SpellMsg_blind msgs = SpellMsg_blind(_("%^sが何かを大声で叫んだ。", "%^s mumbles loudly."),
-    _("%^sがあなたを指さして恐ろしげに呪文を唱えた！", "%^s points at you, incanting terribly!"),
-    _("%^sは%sを指さし、恐ろしげに呪文を唱えた！", "%^s points at %s, incanting terribly!"));
-
-    const auto dam = monspell_damage(player_ptr, RF_ABILITY::CAUSE_3, m_idx, DAM_ROLL);
-
-    return spell_RF5_CAUSE(player_ptr, GF_CAUSE_3, dam, y, x, m_idx, t_idx, msgs, TARGET_TYPE);
-}
-
-/*!
- * @brief RF5_CAUSE_4の処理。秘孔を突く。 /
- * @param player_ptr プレイヤーへの参照ポインタ
- * @param y 対象の地点のy座標
- * @param x 対象の地点のx座標
- * @param m_idx 呪文を唱えるモンスターID
- * @param t_idx 呪文を受けるモンスターID。プレイヤーの場合はdummyで0とする。
- * @param TARGET_TYPE プレイヤーを対象とする場合MONSTER_TO_PLAYER、モンスターを対象とする場合MONSTER_TO_MONSTER
- *
- * プレイヤーが対象ならラーニング可。
- */
-MonsterSpellResult spell_RF5_CAUSE_4(player_type *player_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
-{
-    SpellMsg_blind msgs = SpellMsg_blind(_("%^sが「お前は既に死んでいる」と叫んだ。", "%^s screams the word 'DIE!'"),
-    _("%^sがあなたの秘孔を突いて「お前は既に死んでいる」と叫んだ。", "%^s points at you, screaming the word DIE!"),
-    _("%^sが%sの秘孔を突いて、「お前は既に死んでいる」と叫んだ。", "%^s points at %s, screaming the word, 'DIE!'"));
-
-    const auto dam = monspell_damage(player_ptr, RF_ABILITY::CAUSE_4, m_idx, DAM_ROLL);
-
-    return spell_RF5_CAUSE(player_ptr, GF_CAUSE_4, dam, y, x, m_idx, t_idx, msgs, TARGET_TYPE);
-}
+CAUSE_4_Projector::CAUSE_4_Projector(player_type *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
+    : CAUSE_Projector(player_ptr, m_idx, t_idx,
+        SpellMsg_blind(_("%^sが「お前は既に死んでいる」と叫んだ。", "%^s screams the word 'DIE!'"),
+        _("%^sがあなたの秘孔を突いて「お前は既に死んでいる」と叫んだ。", "%^s points at you, screaming the word DIE!"),
+        _("%^sが%sの秘孔を突いて、「お前は既に死んでいる」と叫んだ。", "%^s points at %s, screaming the word, 'DIE!'")),
+        RF_ABILITY::CAUSE_4, GF_CAUSE_4, TARGET_TYPE)
+{}
