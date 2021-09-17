@@ -46,6 +46,12 @@ MonsterSpellResult CAUSE_Projector::spell_RF5_CAUSE(HIT_POINT dam, POSITION y, P
     return res;
 }
 
+MonsterSpellResult CAUSE_Projector::project(POSITION y, POSITION x){
+    const auto dam = monspell_damage(player_ptr, ms_type, m_idx, DAM_ROLL);
+
+    return this->spell_RF5_CAUSE(dam, y, x);
+}
+
 /*!
  * @brief RF5_CAUSE_1の処理。軽傷の呪い。 /
  * @param player_ptr プレイヤーへの参照ポインタ
