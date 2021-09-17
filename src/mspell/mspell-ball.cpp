@@ -16,6 +16,7 @@
 #include "system/monster-type-definition.h"
 #include "system/player-type-definition.h"
 #include "view/display-messages.h"
+
 BallProjector::BallProjector(player_type *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, const SpellMsg_blind &msgs, int TARGET_TYPE, RF_ABILITY ms_type, EFFECT_ID typ)
     : player_ptr(player_ptr)
     , m_idx(m_idx)
@@ -25,6 +26,11 @@ BallProjector::BallProjector(player_type *player_ptr, MONSTER_IDX m_idx, MONSTER
     , ms_type(ms_type)
     , typ(typ)
 {}
+
+bool BallProjector::view_message(){
+    return monspell_message(player_ptr, m_idx, t_idx, msgs, TARGET_TYPE);
+}
+
 /*!
  * @brief RF4_BA_NUKEの処理。放射能球。 /
  * @param player_ptr プレイヤーへの参照ポインタ
