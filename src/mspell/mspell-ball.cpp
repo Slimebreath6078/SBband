@@ -17,15 +17,30 @@
 #include "system/player-type-definition.h"
 #include "view/display-messages.h"
 
-BallProjector::BallProjector(player_type *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, const SpellMsg_blind &msgs, int TARGET_TYPE, RF_ABILITY ms_type, EFFECT_ID typ)
+BallProjector::BallProjector(player_type *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, const SpellMsg_blind &msgs, byte rad, int TARGET_TYPE, RF_ABILITY ms_type, EFFECT_ID typ)
     : player_ptr(player_ptr)
     , m_idx(m_idx)
     , t_idx(t_idx)
     , TARGET_TYPE(TARGET_TYPE)
+    , rad(rad)
     , msgs(msgs)
     , ms_type(ms_type)
     , typ(typ)
 {}
+
+MonsterSpellResult BallProjector::project(POSITION y, POSITION x){
+    view_message();
+
+    const auto dam = monspell_damage(player_ptr, ms_type, m_idx, DAM_ROLL);
+    const auto proj_res = breath(player_ptr, y, x, m_idx, typ, dam, rad, false, TARGET_TYPE);
+    if (TARGET_TYPE == MONSTER_TO_PLAYER)
+        smart_learn();
+
+    auto res = MonsterSpellResult::make_valid(dam);
+    res.learnable = proj_res.affected_player;
+
+    return res;
+}
 
 bool BallProjector::view_message(){
     return monspell_message(player_ptr, m_idx, t_idx, msgs, TARGET_TYPE);
