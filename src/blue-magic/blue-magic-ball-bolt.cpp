@@ -22,6 +22,16 @@ ball_caster::ball_caster(player_type *player_ptr, bmc_type *bmc_ptr, concptr msg
     , rad(rad)
 {}
 
+bool ball_caster::project(){
+    if (!get_aim_dir(this->player_ptr, &this->bmc_ptr->dir))
+        return false;
+
+    msg_print(this->msg);
+    bmc_ptr->damage = monspell_bluemage_damage(this->player_ptr, this->ms_type, this->bmc_ptr->plev, DAM_ROLL);
+    fire_ball(this->player_ptr, typ, this->bmc_ptr->dir, bmc_ptr->damage, rad);
+    return true;
+}
+
 bool cast_blue_ball_acid(player_type *player_ptr, bmc_type *bmc_ptr)
 {
     if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
