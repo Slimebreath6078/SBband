@@ -129,3 +129,21 @@ class MISSILE_Projector : public BoltProjector{
     private:
         void smart_learn();
 };
+
+class BO_LITE_Projector : public BoltProjector{
+    public:
+        BO_LITE_Projector(player_type *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE);
+        BO_LITE_Projector() = delete;
+        virtual ~BO_LITE_Projector() = default;
+    private:
+        void smart_learn();
+};
+
+class BO_DARK_Projector : public BoltProjector{
+    public:
+        BO_DARK_Projector(player_type *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE);
+        BO_DARK_Projector() = delete;
+        virtual ~BO_DARK_Projector() = default;
+    private:
+        void smart_learn();
+};

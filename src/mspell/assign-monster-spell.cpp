@@ -124,6 +124,8 @@ static MonsterSpellResult monspell_to_player_impl(player_type *player_ptr, RF_AB
     case RF_ABILITY::S_HI_DRAGON: return spell_RF6_S_HI_DRAGON(player_ptr, y, x, m_idx, 0, MONSTER_TO_PLAYER); /* RF6_S_HI_DRAGON */
     case RF_ABILITY::S_AMBERITES: return spell_RF6_S_AMBERITES(player_ptr, y, x, m_idx, 0, MONSTER_TO_PLAYER); /* RF6_S_AMBERITES */
     case RF_ABILITY::S_UNIQUE: return spell_RF6_S_UNIQUE(player_ptr, y, x, m_idx, 0, MONSTER_TO_PLAYER); /* RF6_S_UNIQUE */
+    case RF_ABILITY::BO_LITE: return BO_LITE_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* BO_LITE */
+    case RF_ABILITY::BO_DARK: return BO_DARK_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* BO_DARK */
     default: break;
     }
     // clang-format on
@@ -232,6 +234,8 @@ static MonsterSpellResult monspell_to_monster_impl(
     case RF_ABILITY::S_HI_DRAGON: return spell_RF6_S_HI_DRAGON(player_ptr, y, x, m_idx, t_idx, MONSTER_TO_MONSTER); /* RF6_S_HI_DRAGON */
     case RF_ABILITY::S_AMBERITES: return spell_RF6_S_AMBERITES(player_ptr, y, x, m_idx, t_idx, MONSTER_TO_MONSTER); /* RF6_S_AMBERITES */
     case RF_ABILITY::S_UNIQUE: return spell_RF6_S_UNIQUE(player_ptr, y, x, m_idx, t_idx, MONSTER_TO_MONSTER); /* RF6_S_UNIQUE */
+    case RF_ABILITY::BO_LITE: return BO_LITE_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* BO_LITE */
+    case RF_ABILITY::BO_DARK: return BO_DARK_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* BO_DARK */
     default: break;
     }
     // clang-format on
