@@ -21,6 +21,15 @@ curse_caster::curse_caster(player_type *player_ptr, bmc_type *bmc_ptr, RF_ABILIT
     , typ(typ)
 {}
 
+bool curse_caster::project(){
+    if (!get_aim_dir(this->player_ptr, &this->bmc_ptr->dir))
+        return false;
+
+    this->bmc_ptr->damage = monspell_bluemage_damage(this->player_ptr, this->ms_type, this->bmc_ptr->plev, DAM_ROLL);
+    fire_ball_hide(this->player_ptr, this->typ, this->bmc_ptr->dir, this->bmc_ptr->damage, 0);
+    return true;
+}
+
 bool cast_blue_drain_mana(player_type *player_ptr, bmc_type *bmc_ptr)
 {
     if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
