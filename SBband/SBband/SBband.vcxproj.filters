@@ -1703,9 +1703,6 @@
     <ClCompile Include="..\..\src\mspell\specified-summon.cpp">
       <Filter>mspell</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\blue-magic\blue-magic-ball-bolt.cpp">
-      <Filter>blue-magic</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\blue-magic\blue-magic-spirit-curse.cpp">
       <Filter>blue-magic</Filter>
     </ClCompile>
@@ -2315,6 +2312,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\player\patron.cpp">
       <Filter>player</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\blue-magic\blue-magic-ball.cpp">
+      <Filter>blue-magic</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -4313,9 +4313,6 @@
     <ClInclude Include="..\..\src\mspell\specified-summon.h">
       <Filter>mspell</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\blue-magic\blue-magic-ball-bolt.h">
-      <Filter>blue-magic</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\blue-magic\blue-magic-spirit-curse.h">
       <Filter>blue-magic</Filter>
     </ClInclude>
@@ -4988,6 +4985,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\player-base\player-race.h">
       <Filter>player-base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\blue-magic\blue-magic-ball.h">
+      <Filter>blue-magic</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
