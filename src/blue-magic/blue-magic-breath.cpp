@@ -22,6 +22,16 @@ breath_caster::breath_caster(player_type *player_ptr, bmc_type *bmc_ptr, concptr
     , typ(typ)
 {}
 
+bool breath_caster::project(){
+    if (!get_aim_dir(this->player_ptr, &this->bmc_ptr->dir))
+        return false;
+
+    msg_format(_("%sのブレスを吐いた。", "You breathe %s."), this->typ_name);
+    this->bmc_ptr->damage = monspell_bluemage_damage(this->player_ptr, this->ms_type, this->bmc_ptr->plev, DAM_ROLL);
+    fire_breath(this->player_ptr, this->typ, this->bmc_ptr->dir, this->bmc_ptr->damage, (this->bmc_ptr->plev > 40 ? 3 : 2));
+    return true;
+}
+
 bool cast_blue_breath_acid(player_type *player_ptr, bmc_type *bmc_ptr)
 {
     if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
