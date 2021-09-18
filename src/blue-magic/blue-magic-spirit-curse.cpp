@@ -14,6 +14,13 @@
 #include "target/target-getter.h"
 #include "view/display-messages.h"
 
+curse_caster::curse_caster(player_type *player_ptr, bmc_type *bmc_ptr, RF_ABILITY ms_type, EFFECT_ID typ)
+    : player_ptr(player_ptr)
+    , bmc_ptr(bmc_ptr)
+    , ms_type(ms_type)
+    , typ(typ)
+{}
+
 bool cast_blue_drain_mana(player_type *player_ptr, bmc_type *bmc_ptr)
 {
     if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
