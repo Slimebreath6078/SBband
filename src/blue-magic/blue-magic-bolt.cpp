@@ -21,6 +21,16 @@ bolt_caster::bolt_caster(player_type *player_ptr, bmc_type *bmc_ptr, concptr msg
     , typ(typ)
 {}
 
+bool bolt_caster::project(){
+    if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
+        return false;
+
+    msg_print(msg);
+    bmc_ptr->damage = monspell_bluemage_damage(player_ptr, ms_type, bmc_ptr->plev, DAM_ROLL);
+    fire_bolt(player_ptr, typ, bmc_ptr->dir, bmc_ptr->damage);
+    return true;
+}
+
 bool cast_blue_bolt_acid(player_type *player_ptr, bmc_type *bmc_ptr)
 {
     if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
