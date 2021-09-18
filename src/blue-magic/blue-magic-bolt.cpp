@@ -31,134 +31,50 @@ bool bolt_caster::project(){
     return true;
 }
 
-bool cast_blue_bolt_acid(player_type *player_ptr, bmc_type *bmc_ptr)
-{
-    if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
-        return false;
+bolt_acid_caster::bolt_acid_caster(player_type *player_ptr, bmc_type *bmc_ptr)
+    : bolt_caster(player_ptr, bmc_ptr, _("アシッド・ボルトの呪文を唱えた。", "You cast an acid bolt."), RF_ABILITY::BO_ACID, GF_ACID)
+{}
 
-    msg_print(_("アシッド・ボルトの呪文を唱えた。", "You cast an acid bolt."));
-    bmc_ptr->damage = monspell_bluemage_damage(player_ptr, RF_ABILITY::BO_ACID, bmc_ptr->plev, DAM_ROLL);
-    fire_bolt(player_ptr, GF_ACID, bmc_ptr->dir, bmc_ptr->damage);
-    return true;
-}
+bolt_elec_caster::bolt_elec_caster(player_type *player_ptr, bmc_type *bmc_ptr)
+    : bolt_caster(player_ptr, bmc_ptr, _("サンダー・ボルトの呪文を唱えた。", "You cast a lightning bolt."), RF_ABILITY::BO_ELEC, GF_ELEC)
+{}
 
-bool cast_blue_bolt_elec(player_type *player_ptr, bmc_type *bmc_ptr)
-{
-    if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
-        return false;
+bolt_fire_caster::bolt_fire_caster(player_type *player_ptr, bmc_type *bmc_ptr)
+    : bolt_caster(player_ptr, bmc_ptr, _("ファイア・ボルトの呪文を唱えた。", "You cast a fire bolt."), RF_ABILITY::BO_FIRE, GF_FIRE)
+{}
 
-    msg_print(_("サンダー・ボルトの呪文を唱えた。", "You cast a lightning bolt."));
-    bmc_ptr->damage = monspell_bluemage_damage(player_ptr, RF_ABILITY::BO_ELEC, bmc_ptr->plev, DAM_ROLL);
-    fire_bolt(player_ptr, GF_ELEC, bmc_ptr->dir, bmc_ptr->damage);
-    return true;
-}
+bolt_cold_caster::bolt_cold_caster(player_type *player_ptr, bmc_type *bmc_ptr)
+    : bolt_caster(player_ptr, bmc_ptr, _("アイス・ボルトの呪文を唱えた。", "You cast a frost bolt."), RF_ABILITY::BO_COLD, GF_COLD)
+{}
 
-bool cast_blue_bolt_fire(player_type *player_ptr, bmc_type *bmc_ptr)
-{
-    if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
-        return false;
+bolt_nether_caster::bolt_nether_caster(player_type *player_ptr, bmc_type *bmc_ptr)
+    : bolt_caster(player_ptr, bmc_ptr, _("地獄の矢の呪文を唱えた。", "You cast a nether bolt."), RF_ABILITY::BO_NETH, GF_NETHER)
+{}
 
-    msg_print(_("ファイア・ボルトの呪文を唱えた。", "You cast a fire bolt."));
-    bmc_ptr->damage = monspell_bluemage_damage(player_ptr, RF_ABILITY::BO_FIRE, bmc_ptr->plev, DAM_ROLL);
-    fire_bolt(player_ptr, GF_FIRE, bmc_ptr->dir, bmc_ptr->damage);
-    return true;
-}
+bolt_water_caster::bolt_water_caster(player_type *player_ptr, bmc_type *bmc_ptr)
+    : bolt_caster(player_ptr, bmc_ptr, _("ウォーター・ボルトの呪文を唱えた。", "You cast a water bolt."), RF_ABILITY::BO_WATE, GF_WATER)
+{}
 
-bool cast_blue_bolt_cold(player_type *player_ptr, bmc_type *bmc_ptr)
-{
-    if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
-        return false;
+bolt_mana_caster::bolt_mana_caster(player_type *player_ptr, bmc_type *bmc_ptr)
+    : bolt_caster(player_ptr, bmc_ptr, _("魔力の矢の呪文を唱えた。", "You cast a mana bolt."), RF_ABILITY::BO_MANA, GF_MANA)
+{}
 
-    msg_print(_("アイス・ボルトの呪文を唱えた。", "You cast a frost bolt."));
-    bmc_ptr->damage = monspell_bluemage_damage(player_ptr, RF_ABILITY::BO_COLD, bmc_ptr->plev, DAM_ROLL);
-    fire_bolt(player_ptr, GF_COLD, bmc_ptr->dir, bmc_ptr->damage);
-    return true;
-}
+bolt_plasma_caster::bolt_plasma_caster(player_type *player_ptr, bmc_type *bmc_ptr)
+    : bolt_caster(player_ptr, bmc_ptr, _("プラズマ・ボルトの呪文を唱えた。", "You cast a plasma bolt."), RF_ABILITY::BO_PLAS, GF_PLASMA)
+{}
 
-bool cast_blue_bolt_nether(player_type *player_ptr, bmc_type *bmc_ptr)
-{
-    if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
-        return false;
+bolt_icee_caster::bolt_icee_caster(player_type *player_ptr, bmc_type *bmc_ptr)
+    : bolt_caster(player_ptr, bmc_ptr, _("極寒の矢の呪文を唱えた。", "You cast a ice bolt."), RF_ABILITY::BO_ICEE, GF_ICE)
+{}
 
-    msg_print(_("地獄の矢の呪文を唱えた。", "You cast a nether bolt."));
-    bmc_ptr->damage = monspell_bluemage_damage(player_ptr, RF_ABILITY::BO_NETH, bmc_ptr->plev, DAM_ROLL);
-    fire_bolt(player_ptr, GF_NETHER, bmc_ptr->dir, bmc_ptr->damage);
-    return true;
-}
+bolt_missile_caster::bolt_missile_caster(player_type *player_ptr, bmc_type *bmc_ptr)
+    : bolt_caster(player_ptr, bmc_ptr, _("マジック・ミサイルの呪文を唱えた。", "You cast a magic missile."), RF_ABILITY::MISSILE, GF_MISSILE)
+{}
 
-bool cast_blue_bolt_water(player_type *player_ptr, bmc_type *bmc_ptr)
-{
-    if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
-        return false;
+bolt_lite_caster::bolt_lite_caster(player_type *player_ptr, bmc_type *bmc_ptr)
+    : bolt_caster(player_ptr, bmc_ptr, _("スターライトアローを放った。", "You fire a starlight arrow."), RF_ABILITY::BO_LITE, GF_LITE)
+{}
 
-    msg_print(_("ウォーター・ボルトの呪文を唱えた。", "You cast a water bolt."));
-    bmc_ptr->damage = monspell_bluemage_damage(player_ptr, RF_ABILITY::BO_WATE, bmc_ptr->plev, DAM_ROLL);
-    fire_bolt(player_ptr, GF_WATER, bmc_ptr->dir, bmc_ptr->damage);
-    return true;
-}
-
-bool cast_blue_bolt_mana(player_type *player_ptr, bmc_type *bmc_ptr)
-{
-    if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
-        return false;
-
-    msg_print(_("魔力の矢の呪文を唱えた。", "You cast a mana bolt."));
-    bmc_ptr->damage = monspell_bluemage_damage(player_ptr, RF_ABILITY::BO_MANA, bmc_ptr->plev, DAM_ROLL);
-    fire_bolt(player_ptr, GF_MANA, bmc_ptr->dir, bmc_ptr->damage);
-    return true;
-}
-
-bool cast_blue_bolt_plasma(player_type *player_ptr, bmc_type *bmc_ptr)
-{
-    if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
-        return false;
-
-    msg_print(_("プラズマ・ボルトの呪文を唱えた。", "You cast a plasma bolt."));
-    bmc_ptr->damage = monspell_bluemage_damage(player_ptr, RF_ABILITY::BO_PLAS, bmc_ptr->plev, DAM_ROLL);
-    fire_bolt(player_ptr, GF_PLASMA, bmc_ptr->dir, bmc_ptr->damage);
-    return true;
-}
-
-bool cast_blue_bolt_icee(player_type *player_ptr, bmc_type *bmc_ptr)
-{
-    if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
-        return false;
-
-    msg_print(_("極寒の矢の呪文を唱えた。", "You cast a ice bolt."));
-    bmc_ptr->damage = monspell_bluemage_damage(player_ptr, RF_ABILITY::BO_ICEE, bmc_ptr->plev, DAM_ROLL);
-    fire_bolt(player_ptr, GF_ICE, bmc_ptr->dir, bmc_ptr->damage);
-    return true;
-}
-
-bool cast_blue_bolt_missile(player_type *player_ptr, bmc_type *bmc_ptr)
-{
-    if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
-        return false;
-
-    msg_print(_("マジック・ミサイルの呪文を唱えた。", "You cast a magic missile."));
-    bmc_ptr->damage = monspell_bluemage_damage(player_ptr, RF_ABILITY::MISSILE, bmc_ptr->plev, DAM_ROLL);
-    fire_bolt(player_ptr, GF_MISSILE, bmc_ptr->dir, bmc_ptr->damage);
-    return true;
-}
-
-bool cast_blue_bolt_lite(player_type *player_ptr, bmc_type *bmc_ptr)
-{
-    if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
-        return false;
-
-    msg_print(_("スターライトアローを放った。", "You fire a starlight arrow."));
-    bmc_ptr->damage = monspell_bluemage_damage(player_ptr, RF_ABILITY::BO_LITE, bmc_ptr->plev, DAM_ROLL);
-    fire_bolt(player_ptr, GF_ICE, bmc_ptr->dir, bmc_ptr->damage);
-    return true;
-}
-
-bool cast_blue_bolt_dark(player_type *player_ptr, bmc_type *bmc_ptr)
-{
-    if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
-        return false;
-
-    msg_print(_("暗黒の矢の呪文を唱えた。", "You cast a dark bolt."));
-    bmc_ptr->damage = monspell_bluemage_damage(player_ptr, RF_ABILITY::BO_DARK, bmc_ptr->plev, DAM_ROLL);
-    fire_bolt(player_ptr, GF_ICE, bmc_ptr->dir, bmc_ptr->damage);
-    return true;
-}
+bolt_dark_caster::bolt_dark_caster(player_type *player_ptr, bmc_type *bmc_ptr)
+    : bolt_caster(player_ptr, bmc_ptr, _("暗黒の矢の呪文を唱えた。", "You cast a dark bolt."), RF_ABILITY::BO_DARK, GF_DARK)
+{}
