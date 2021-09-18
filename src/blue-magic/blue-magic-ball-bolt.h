@@ -4,8 +4,26 @@
  * @brief 青魔法のボール/ボルト系呪文ヘッダ
  */
 
+#include "monster-race/race-ability-flags.h"
+#include "system/h-type.h"
+
 struct bmc_type;
 struct player_type;
+
+class ball_caster{
+    protected:
+        ball_caster(player_type *player_ptr, bmc_type *bmc_ptr, concptr msg, RF_ABILITY ms_type, EFFECT_ID typ, POSITION rad);
+    public:
+        ~ball_caster() = default;
+        bool project();
+    private:
+        player_type *player_ptr;
+        bmc_type *bmc_ptr;
+        concptr msg;
+        RF_ABILITY ms_type;
+        EFFECT_ID typ;
+        POSITION rad;
+};
 bool cast_blue_ball_acid(player_type *player_ptr, bmc_type *bmc_ptr);
 bool cast_blue_ball_elec(player_type *player_ptr, bmc_type *bmc_ptr);
 bool cast_blue_ball_fire(player_type *player_ptr, bmc_type *bmc_ptr);

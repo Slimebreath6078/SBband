@@ -13,6 +13,15 @@
 #include "target/target-getter.h"
 #include "view/display-messages.h"
 
+ball_caster::ball_caster(player_type *player_ptr, bmc_type *bmc_ptr, concptr msg, RF_ABILITY ms_type, EFFECT_ID typ, POSITION rad)
+    : player_ptr(player_ptr)
+    , bmc_ptr(bmc_ptr)
+    , msg(msg)
+    , ms_type(ms_type)
+    , typ(typ)
+    , rad(rad)
+{}
+
 bool cast_blue_ball_acid(player_type *player_ptr, bmc_type *bmc_ptr)
 {
     if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
