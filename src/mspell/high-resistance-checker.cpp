@@ -85,6 +85,9 @@ static void check_lite_resistance(msr_type *msr_ptr)
 
     if (int_outof(msr_ptr->r_ptr, 50))
         msr_ptr->ability_flags.reset(RF_ABILITY::BA_LITE);
+
+    if (int_outof(msr_ptr->r_ptr, 50))
+        msr_ptr->ability_flags.reset(RF_ABILITY::BO_LITE);
 }
 
 static void check_dark_resistance(player_type *player_ptr, msr_type *msr_ptr)
@@ -95,6 +98,7 @@ static void check_dark_resistance(player_type *player_ptr, msr_type *msr_ptr)
     if (player_race_has_flag(player_ptr, TR_IM_DARK)) {
         msr_ptr->ability_flags.reset(RF_ABILITY::BR_DARK);
         msr_ptr->ability_flags.reset(RF_ABILITY::BA_DARK);
+        msr_ptr->ability_flags.reset(RF_ABILITY::BO_DARK);
         return;
     }
 
@@ -103,6 +107,9 @@ static void check_dark_resistance(player_type *player_ptr, msr_type *msr_ptr)
 
     if (int_outof(msr_ptr->r_ptr, 50))
         msr_ptr->ability_flags.reset(RF_ABILITY::BA_DARK);
+
+    if (int_outof(msr_ptr->r_ptr, 50))
+        msr_ptr->ability_flags.reset(RF_ABILITY::BO_DARK);
 }
 
 static void check_conf_resistance(msr_type *msr_ptr)
@@ -172,6 +179,12 @@ static void check_reflection(msr_type *msr_ptr)
 
     if (int_outof(msr_ptr->r_ptr, 150))
         msr_ptr->ability_flags.reset(RF_ABILITY::MISSILE);
+
+    if (int_outof(msr_ptr->r_ptr, 150))
+        msr_ptr->ability_flags.reset(RF_ABILITY::BO_LITE);
+
+    if (int_outof(msr_ptr->r_ptr, 150))
+        msr_ptr->ability_flags.reset(RF_ABILITY::BO_DARK);
 }
 
 void check_high_resistances(player_type *player_ptr, msr_type *msr_ptr)
