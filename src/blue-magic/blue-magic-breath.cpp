@@ -14,6 +14,14 @@
 #include "target/target-getter.h"
 #include "view/display-messages.h"
 
+breath_caster::breath_caster(player_type *player_ptr, bmc_type *bmc_ptr, concptr typ_name, RF_ABILITY ms_type, EFFECT_ID typ)
+    : player_ptr(player_ptr)
+    , bmc_ptr(bmc_ptr)
+    , typ_name(typ_name)
+    , ms_type(ms_type)
+    , typ(typ)
+{}
+
 bool cast_blue_breath_acid(player_type *player_ptr, bmc_type *bmc_ptr)
 {
     if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
