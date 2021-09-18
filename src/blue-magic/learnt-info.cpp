@@ -150,6 +150,8 @@ void learnt_info(player_type *player_ptr, char *p, RF_ABILITY power)
     case RF_ABILITY::BO_PLAS:
     case RF_ABILITY::BO_ICEE:
     case RF_ABILITY::MISSILE:
+    case RF_ABILITY::BO_LITE:
+    case RF_ABILITY::BO_DARK:
         set_bluemage_damage(player_ptr, power, plev, KWD_DAM, p);
         break;
     case RF_ABILITY::HASTE:

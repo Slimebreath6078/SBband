@@ -377,6 +377,10 @@ static bool switch_cast_blue_magic(player_type *player_ptr, bmc_type *bmc_ptr, R
         return cast_blue_summon_amberite(player_ptr, bmc_ptr);
     case RF_ABILITY::S_UNIQUE:
         return cast_blue_summon_unique(player_ptr, bmc_ptr);
+    case RF_ABILITY::BO_LITE:
+        return cast_blue_bolt_lite(player_ptr, bmc_ptr);
+    case RF_ABILITY::BO_DARK:
+        return cast_blue_bolt_dark(player_ptr, bmc_ptr);
     default:
         msg_print("hoge?");
         return true;
