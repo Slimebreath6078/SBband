@@ -415,6 +415,12 @@ static HIT_POINT monspell_damage_base(
         return -1;
     case RF_ABILITY::S_UNIQUE:
         return -1;
+    case RF_ABILITY::BO_LITE:
+    case RF_ABILITY::BO_DARK:
+        dam = powerful ? 60 : 40;
+        dice_num = 1;
+        dice_side = powerful ? rlev * 4 : rlev * 2;
+        break;
     case RF_ABILITY::MAX:
         return -1;
     }
