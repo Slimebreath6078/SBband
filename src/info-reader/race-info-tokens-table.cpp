@@ -283,6 +283,8 @@ const std::unordered_map<std::string_view, RF_ABILITY> r_info_ability_flags = {
 	{"S_HI_DRAGON", RF_ABILITY::S_HI_DRAGON },
 	{"S_AMBERITES", RF_ABILITY::S_AMBERITES },
 	{"S_UNIQUE", RF_ABILITY::S_UNIQUE },
+	{"BO_LITE", RF_ABILITY::BO_LITE },
+	{"BO_DARK", RF_ABILITY::BO_DARK },
 };
 /* clang-format on */
 

@@ -103,6 +103,20 @@ MISSILE_Projector::MISSILE_Projector(player_type *player_ptr, MONSTER_IDX m_idx,
             _("%^sが%sに向かってマジック・ミサイルの呪文を唱えた。", "%^s casts a magic missile at %s.")), TARGET_TYPE, RF_ABILITY::MISSILE, GF_MISSILE, SOUND_MAX)
 {}
 
+BO_LITE_Projector::BO_LITE_Projector(player_type *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
+    :   BoltProjector(player_ptr,m_idx,t_idx,
+            SpellMsg_blind(_("%^sが何かをつぶやいた。", "%^s mumbles."),
+            _("%^sがスターライトアローを放った。", "%^s fires a starlight arrow."),
+            _("%^sが%sに向かってスターライトアローを放った。", "%^s fires a starlight arrow at %s.")), TARGET_TYPE, RF_ABILITY::BO_LITE, GF_LITE, SOUND_MAX)
+{}
+
+BO_DARK_Projector::BO_DARK_Projector(player_type *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
+    :   BoltProjector(player_ptr,m_idx,t_idx,
+            SpellMsg_blind(_("%^sが何かをつぶやいた。", "%^s mumbles."),
+            _("%^sが暗黒の矢の呪文を唱えた。。", "%^s casts a dark bolt."),
+            _("%^sが%sに向かって暗黒の矢の呪文を唱えた。", "%^s casts a dark bolt at %s.")), TARGET_TYPE, RF_ABILITY::BO_DARK, GF_DARK, SOUND_MAX)
+{}
+
 MonsterSpellResult BoltProjector::project(POSITION y, POSITION x){
     if (view_message())
         play_sound();
@@ -199,5 +213,17 @@ void BO_ICEE_Projector::smart_learn()
 
 void MISSILE_Projector::smart_learn()
 {
+    BoltProjector::smart_learn();
+}
+
+void BO_LITE_Projector::smart_learn()
+{
+    update_smart_learn(player_ptr, m_idx, DRS_LITE);
+    BoltProjector::smart_learn();
+}
+
+void BO_DARK_Projector::smart_learn()
+{
+    update_smart_learn(player_ptr, m_idx, DRS_DARK);
     BoltProjector::smart_learn();
 }

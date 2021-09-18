@@ -246,6 +246,8 @@ static bool check_thrown_mspell(player_type *player_ptr, msa_type *msa_ptr)
     case RF_ABILITY::PSY_SPEAR:
     case RF_ABILITY::DARKNESS:
     case RF_ABILITY::FORGET:
+    case RF_ABILITY::BO_LITE:
+    case RF_ABILITY::BO_DARK:
         return false;
     default:
         return true;

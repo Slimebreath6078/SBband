@@ -261,3 +261,25 @@ bool cast_blue_bolt_missile(player_type *player_ptr, bmc_type *bmc_ptr)
     fire_bolt(player_ptr, GF_MISSILE, bmc_ptr->dir, bmc_ptr->damage);
     return true;
 }
+
+bool cast_blue_bolt_lite(player_type *player_ptr, bmc_type *bmc_ptr)
+{
+    if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
+        return false;
+
+    msg_print(_("スターライトアローを放った。", "You fire a starlight arrow."));
+    bmc_ptr->damage = monspell_bluemage_damage(player_ptr, RF_ABILITY::BO_LITE, bmc_ptr->plev, DAM_ROLL);
+    fire_bolt(player_ptr, GF_ICE, bmc_ptr->dir, bmc_ptr->damage);
+    return true;
+}
+
+bool cast_blue_bolt_dark(player_type *player_ptr, bmc_type *bmc_ptr)
+{
+    if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
+        return false;
+
+    msg_print(_("暗黒の矢の呪文を唱えた。", "You cast a dark bolt."));
+    bmc_ptr->damage = monspell_bluemage_damage(player_ptr, RF_ABILITY::BO_DARK, bmc_ptr->plev, DAM_ROLL);
+    fire_bolt(player_ptr, GF_ICE, bmc_ptr->dir, bmc_ptr->damage);
+    return true;
+}

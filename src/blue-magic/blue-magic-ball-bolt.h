@@ -29,3 +29,5 @@ bool cast_blue_bolt_mana(player_type *player_ptr, bmc_type *bmc_ptr);
 bool cast_blue_bolt_plasma(player_type *player_ptr, bmc_type *bmc_ptr);
 bool cast_blue_bolt_icee(player_type *player_ptr, bmc_type *bmc_ptr);
 bool cast_blue_bolt_missile(player_type *player_ptr, bmc_type *bmc_ptr);
+bool cast_blue_bolt_lite(player_type *player_ptr, bmc_type *bmc_ptr);
+bool cast_blue_bolt_dark(player_type *player_ptr, bmc_type *bmc_ptr);

@@ -1048,6 +1048,22 @@ static bool use_mane(player_type *player_ptr, RF_ABILITY spell)
             summon_specific(player_ptr, -1, target_row, target_col, plev, SUMMON_HI_UNDEAD, (mode | u_mode));
         break;
     }
+    case RF_ABILITY::BO_LITE:
+        if (!get_aim_dir(player_ptr, &dir))
+            return false;
+        else
+            msg_print(_("スターライトアローを放った。", "You fire a starlight arrow."));
+
+        fire_bolt(player_ptr, GF_LITE, dir, damage);
+        break;
+    case RF_ABILITY::BO_DARK:
+        if (!get_aim_dir(player_ptr, &dir))
+            return false;
+        else
+            msg_print(_("暗黒の矢の呪文を唱えた。", "You cast a dark bolt."));
+
+        fire_bolt(player_ptr, GF_DARK, dir, damage);
+        break;
     default:
         msg_print("hoge?");
     }

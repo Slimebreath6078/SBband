@@ -335,6 +335,18 @@ void set_bolt_types(player_type *player_ptr, lore_type *lore_ptr)
         lore_ptr->vp[lore_ptr->vn] = lore_ptr->tmp_msg[lore_ptr->vn];
         lore_ptr->color[lore_ptr->vn++] = TERM_SLATE;
     }
+
+    if (lore_ptr->ability_flags.has(RF_ABILITY::BO_LITE)) {
+        set_damage(player_ptr, lore_ptr, RF_ABILITY::BO_LITE, _("スターライトアロー%s", "fire starlight arrow%s"));
+        lore_ptr->vp[lore_ptr->vn] = lore_ptr->tmp_msg[lore_ptr->vn];
+        lore_ptr->color[lore_ptr->vn++] = TERM_YELLOW;
+    }
+
+    if (lore_ptr->ability_flags.has(RF_ABILITY::BO_DARK)) {
+        set_damage(player_ptr, lore_ptr, RF_ABILITY::BO_DARK, _("暗黒の矢%s", "produce dark bolts%s"));
+        lore_ptr->vp[lore_ptr->vn] = lore_ptr->tmp_msg[lore_ptr->vn];
+        lore_ptr->color[lore_ptr->vn++] = TERM_L_DARK;
+    }
 }
 
 void set_status_types(lore_type *lore_ptr)
