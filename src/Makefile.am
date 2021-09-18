@@ -75,6 +75,7 @@ SBband_SOURCES = \
 	birth/birth-wizard.cpp birth/birth-wizard.h \
 	\
 	blue-magic/blue-magic-ball.cpp blue-magic/blue-magic-ball.h \
+	blue-magic/blue-magic-bolt.cpp blue-magic/blue-magic-bolt.h \
 	blue-magic/blue-magic-breath.cpp blue-magic/blue-magic-breath.h \
 	blue-magic/blue-magic-caster.cpp blue-magic/blue-magic-caster.h \
 	blue-magic/blue-magic-checker.cpp blue-magic/blue-magic-checker.h \

@@ -10,6 +10,19 @@
 struct bmc_type;
 struct player_type;
 
+class bolt_caster{
+    protected:
+        bolt_caster(player_type *player_ptr, bmc_type *bmc_ptr, concptr msg, RF_ABILITY ms_type, EFFECT_ID typ);
+    public:
+        ~bolt_caster() = default;
+        bool project();
+    private:
+        player_type *player_ptr;
+        bmc_type *bmc_ptr;
+        concptr msg;
+        RF_ABILITY ms_type;
+        EFFECT_ID typ;
+};
 bool cast_blue_bolt_acid(player_type *player_ptr, bmc_type *bmc_ptr);
 bool cast_blue_bolt_elec(player_type *player_ptr, bmc_type *bmc_ptr);
 bool cast_blue_bolt_fire(player_type *player_ptr, bmc_type *bmc_ptr);

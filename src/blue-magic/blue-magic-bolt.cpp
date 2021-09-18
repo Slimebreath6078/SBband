@@ -3,7 +3,7 @@
  * @brief 青魔法のボール/ボルト系呪文定義
  */
 
-#include "blue-magic/blue-magic-ball-bolt.h"
+#include "blue-magic/blue-magic-bolt.h"
 #include "blue-magic/blue-magic-util.h"
 #include "monster-race/race-ability-flags.h"
 #include "mspell/mspell-damage-calculator.h"
@@ -12,6 +12,14 @@
 #include "system/player-type-definition.h"
 #include "target/target-getter.h"
 #include "view/display-messages.h"
+
+bolt_caster::bolt_caster(player_type *player_ptr, bmc_type *bmc_ptr, concptr msg, RF_ABILITY ms_type, EFFECT_ID typ)
+    : player_ptr(player_ptr)
+    , bmc_ptr(bmc_ptr)
+    , msg(msg)
+    , ms_type(ms_type)
+    , typ(typ)
+{}
 
 bool cast_blue_bolt_acid(player_type *player_ptr, bmc_type *bmc_ptr)
 {

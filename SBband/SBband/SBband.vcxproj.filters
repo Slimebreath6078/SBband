@@ -2316,6 +2316,9 @@
     <ClCompile Include="..\..\src\blue-magic\blue-magic-ball.cpp">
       <Filter>blue-magic</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\blue-magic\blue-magic-bolt.cpp">
+      <Filter>blue-magic</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\combat\shoot.h">
@@ -4987,6 +4990,9 @@
       <Filter>player-base</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\blue-magic\blue-magic-ball.h">
+      <Filter>blue-magic</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\blue-magic\blue-magic-bolt.h">
       <Filter>blue-magic</Filter>
     </ClInclude>
   </ItemGroup>
