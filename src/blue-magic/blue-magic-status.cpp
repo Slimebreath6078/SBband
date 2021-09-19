@@ -10,6 +10,15 @@
 #include "target/target-getter.h"
 #include "view/display-messages.h"
 
+status_caster::status_caster(player_type *player_ptr, bmc_type *bmc_ptr, concptr msg, std::function<bool(player_type *, DIRECTION, PLAYER_LEVEL)> func,
+    PLAYER_LEVEL level)
+    : player_ptr(player_ptr)
+    , bmc_ptr(bmc_ptr)
+    , msg(msg)
+    , func(std::move(func))
+    , level(level)
+{}
+
 bool cast_blue_scare(player_type *player_ptr, bmc_type *bmc_ptr)
 {
     if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
