@@ -19,6 +19,17 @@ status_caster::status_caster(player_type *player_ptr, bmc_type *bmc_ptr, concptr
     , level(level)
 {}
 
+bool status_caster::project(){
+    if (!get_aim_dir(this->player_ptr, &this->bmc_ptr->dir))
+        return false;
+
+    if(this->msg != nullptr)
+        msg_print(this->msg);
+
+    this->func(this->player_ptr, this->bmc_ptr->dir, this->bmc_ptr->plev + 10);
+    return true;
+}
+
 bool cast_blue_scare(player_type *player_ptr, bmc_type *bmc_ptr)
 {
     if (!get_aim_dir(player_ptr, &bmc_ptr->dir))

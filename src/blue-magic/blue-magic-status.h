@@ -16,7 +16,7 @@ class status_caster{
         status_caster(player_type *player_ptr, bmc_type *bmc_ptr, concptr msg, std::function<bool(player_type *, DIRECTION, PLAYER_LEVEL)> func, PLAYER_LEVEL level);
         status_caster() = delete;
     public:
-        ~status_caster() = default;
+        virtual ~status_caster() = default;
         bool project();
     private:
         player_type *player_ptr;
