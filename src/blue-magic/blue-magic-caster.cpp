@@ -4,7 +4,8 @@
  */
 
 #include "blue-magic/blue-magic-caster.h"
-#include "blue-magic/blue-magic-ball-bolt.h"
+#include "blue-magic/blue-magic-ball.h"
+#include "blue-magic/blue-magic-bolt.h"
 #include "blue-magic/blue-magic-breath.h"
 #include "blue-magic/blue-magic-spirit-curse.h"
 #include "blue-magic/blue-magic-status.h"
@@ -187,117 +188,117 @@ static bool switch_cast_blue_magic(player_type *player_ptr, bmc_type *bmc_ptr, R
     case RF_ABILITY::SHOOT:
         return cast_blue_shoot(player_ptr, bmc_ptr);
     case RF_ABILITY::BR_ACID:
-        return cast_blue_breath_acid(player_ptr, bmc_ptr);
+        return breath_acid_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BR_ELEC:
-        return cast_blue_breath_elec(player_ptr, bmc_ptr);
+        return breath_elec_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BR_FIRE:
-        return cast_blue_breath_fire(player_ptr, bmc_ptr);
+        return breath_fire_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BR_COLD:
-        return cast_blue_breath_cold(player_ptr, bmc_ptr);
+        return breath_cold_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BR_POIS:
-        return cast_blue_breath_pois(player_ptr, bmc_ptr);
+        return breath_pois_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BR_NETH:
-        return cast_blue_breath_nether(player_ptr, bmc_ptr);
+        return breath_nether_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BR_LITE:
-        return cast_blue_breath_lite(player_ptr, bmc_ptr);
+        return breath_lite_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BR_DARK:
-        return cast_blue_breath_dark(player_ptr, bmc_ptr);
+        return breath_dark_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BR_CONF:
-        return cast_blue_breath_conf(player_ptr, bmc_ptr);
+        return breath_conf_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BR_SOUN:
-        return cast_blue_breath_sound(player_ptr, bmc_ptr);
+        return breath_sound_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BR_CHAO:
-        return cast_blue_breath_chaos(player_ptr, bmc_ptr);
+        return breath_chaos_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BR_DISE:
-        return cast_blue_breath_disenchant(player_ptr, bmc_ptr);
+        return breath_disenchant_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BR_NEXU:
-        return cast_blue_breath_nexus(player_ptr, bmc_ptr);
+        return breath_nexus_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BR_TIME:
-        return cast_blue_breath_time(player_ptr, bmc_ptr);
+        return breath_time_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BR_INER:
-        return cast_blue_breath_inertia(player_ptr, bmc_ptr);
+        return breath_inertia_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BR_GRAV:
-        return cast_blue_breath_gravity(player_ptr, bmc_ptr);
+        return breath_gravity_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BR_SHAR:
-        return cast_blue_breath_shards(player_ptr, bmc_ptr);
+        return breath_shards_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BR_PLAS:
-        return cast_blue_breath_plasma(player_ptr, bmc_ptr);
+        return breath_plasma_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BR_FORC:
-        return cast_blue_breath_force(player_ptr, bmc_ptr);
+        return breath_force_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BR_MANA:
-        return cast_blue_breath_mana(player_ptr, bmc_ptr);
+        return breath_mana_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BR_NUKE:
-        return cast_blue_breath_nuke(player_ptr, bmc_ptr);
+        return breath_nuke_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BR_DISI:
-        return cast_blue_breath_disintegration(player_ptr, bmc_ptr);
+        return breath_disintegration_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BA_ACID:
-        return cast_blue_ball_acid(player_ptr, bmc_ptr);
+        return ball_acid_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BA_ELEC:
-        return cast_blue_ball_elec(player_ptr, bmc_ptr);
+        return ball_elec_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BA_FIRE:
-        return cast_blue_ball_fire(player_ptr, bmc_ptr);
+        return ball_fire_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BA_COLD:
-        return cast_blue_ball_cold(player_ptr, bmc_ptr);
+        return ball_cold_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BA_POIS:
-        return cast_blue_ball_pois(player_ptr, bmc_ptr);
+        return ball_pois_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BA_NUKE:
-        return cast_blue_ball_nuke(player_ptr, bmc_ptr);
+        return ball_nuke_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BA_NETH:
-        return cast_blue_ball_nether(player_ptr, bmc_ptr);
+        return ball_nether_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BA_CHAO:
-        return cast_blue_ball_chaos(player_ptr, bmc_ptr);
+        return ball_chaos_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BA_WATE:
-        return cast_blue_ball_water(player_ptr, bmc_ptr);
+        return ball_water_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BA_LITE:
-        return cast_blue_ball_star_burst(player_ptr, bmc_ptr);
+        return ball_star_burst_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BA_DARK:
-        return cast_blue_ball_dark_storm(player_ptr, bmc_ptr);
+        return ball_dark_storm_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BA_MANA:
-        return cast_blue_ball_mana_storm(player_ptr, bmc_ptr);
+        return ball_mana_storm_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::DRAIN_MANA:
-        return cast_blue_drain_mana(player_ptr, bmc_ptr);
+        return drain_mana_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::MIND_BLAST:
-        return cast_blue_mind_blast(player_ptr, bmc_ptr);
+        return mind_blast_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BRAIN_SMASH:
-        return cast_blue_brain_smash(player_ptr, bmc_ptr);
+        return brain_smash_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::CAUSE_1:
-        return cast_blue_curse_1(player_ptr, bmc_ptr);
+        return curse_1_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::CAUSE_2:
-        return cast_blue_curse_2(player_ptr, bmc_ptr);
+        return curse_2_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::CAUSE_3:
-        return cast_blue_curse_3(player_ptr, bmc_ptr);
+        return curse_3_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::CAUSE_4:
-        return cast_blue_curse_4(player_ptr, bmc_ptr);
+        return curse_4_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BO_ACID:
-        return cast_blue_bolt_acid(player_ptr, bmc_ptr);
+        return bolt_acid_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BO_ELEC:
-        return cast_blue_bolt_elec(player_ptr, bmc_ptr);
+        return bolt_elec_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BO_FIRE:
-        return cast_blue_bolt_fire(player_ptr, bmc_ptr);
+        return bolt_fire_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BO_COLD:
-        return cast_blue_bolt_cold(player_ptr, bmc_ptr);
+        return bolt_cold_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BO_NETH:
-        return cast_blue_bolt_nether(player_ptr, bmc_ptr);
+        return bolt_nether_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BO_WATE:
-        return cast_blue_bolt_water(player_ptr, bmc_ptr);
+        return bolt_water_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BO_MANA:
-        return cast_blue_bolt_mana(player_ptr, bmc_ptr);
+        return bolt_mana_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BO_PLAS:
-        return cast_blue_bolt_plasma(player_ptr, bmc_ptr);
+        return bolt_plasma_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BO_ICEE:
-        return cast_blue_bolt_icee(player_ptr, bmc_ptr);
+        return bolt_icee_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::MISSILE:
-        return cast_blue_bolt_missile(player_ptr, bmc_ptr);
+        return bolt_missile_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::SCARE:
-        return cast_blue_scare(player_ptr, bmc_ptr);
+        return scare_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BLIND:
-        return cast_blue_blind(player_ptr, bmc_ptr);
+        return blind_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::CONF:
-        return cast_blue_confusion(player_ptr, bmc_ptr);
+        return confusion_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::SLOW:
-        return cast_blue_slow(player_ptr, bmc_ptr);
+        return slow_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::HOLD:
-        return cast_blue_sleep(player_ptr, bmc_ptr);
+        return sleep_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::HASTE:
         (void)set_fast(player_ptr, randint1(20 + bmc_ptr->plev) + bmc_ptr->plev, false);
         return true;
@@ -346,41 +347,41 @@ static bool switch_cast_blue_magic(player_type *player_ptr, bmc_type *bmc_ptr, R
         (void)animate_dead(player_ptr, 0, player_ptr->y, player_ptr->x);
         return true;
     case RF_ABILITY::S_KIN:
-        return cast_blue_summon_kin(player_ptr, bmc_ptr);
+        return summon_kin_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::S_CYBER:
-        return cast_blue_summon_cyber(player_ptr, bmc_ptr);
+        return summon_cyber_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::S_MONSTER:
-        return cast_blue_summon_monster(player_ptr, bmc_ptr);
+        return summon_monster_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::S_MONSTERS:
-        return cast_blue_summon_monsters(player_ptr, bmc_ptr);
+        return summon_monsters_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::S_ANT:
-        return cast_blue_summon_ant(player_ptr, bmc_ptr);
+        return summon_ant_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::S_SPIDER:
-        return cast_blue_summon_spider(player_ptr, bmc_ptr);
+        return summon_spider_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::S_HOUND:
-        return cast_blue_summon_hound(player_ptr, bmc_ptr);
+        return summon_hound_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::S_HYDRA:
-        return cast_blue_summon_hydra(player_ptr, bmc_ptr);
+        return summon_hydra_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::S_ANGEL:
-        return cast_blue_summon_angel(player_ptr, bmc_ptr);
+        return summon_angel_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::S_DEMON:
-        return cast_blue_summon_demon(player_ptr, bmc_ptr);
+        return summon_demon_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::S_UNDEAD:
-        return cast_blue_summon_undead(player_ptr, bmc_ptr);
+        return summon_undead_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::S_DRAGON:
-        return cast_blue_summon_dragon(player_ptr, bmc_ptr);
+        return summon_dragon_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::S_HI_UNDEAD:
-        return cast_blue_summon_high_undead(player_ptr, bmc_ptr);
+        return summon_high_undead_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::S_HI_DRAGON:
-        return cast_blue_summon_high_dragon(player_ptr, bmc_ptr);
+        return summon_high_dragon_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::S_AMBERITES:
-        return cast_blue_summon_amberite(player_ptr, bmc_ptr);
+        return summon_amberite_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::S_UNIQUE:
-        return cast_blue_summon_unique(player_ptr, bmc_ptr);
+        return summon_unique_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BO_LITE:
-        return cast_blue_bolt_lite(player_ptr, bmc_ptr);
+        return bolt_lite_caster(player_ptr, bmc_ptr).project();
     case RF_ABILITY::BO_DARK:
-        return cast_blue_bolt_dark(player_ptr, bmc_ptr);
+        return bolt_dark_caster(player_ptr, bmc_ptr).project();
     default:
         msg_print("hoge?");
         return true;
