@@ -26,53 +26,26 @@ bool status_caster::project(){
     if(this->msg != nullptr)
         msg_print(this->msg);
 
-    this->func(this->player_ptr, this->bmc_ptr->dir, this->bmc_ptr->plev + 10);
+    this->func(this->player_ptr, this->bmc_ptr->dir, this->level);
     return true;
 }
 
-bool cast_blue_scare(player_type *player_ptr, bmc_type *bmc_ptr)
-{
-    if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
-        return false;
+scare_caster::scare_caster(player_type *player_ptr, bmc_type *bmc_ptr)
+    : status_caster(player_ptr, bmc_ptr, _("恐ろしげな幻覚を作り出した。", "You cast a fearful illusion."), fear_monster, bmc_ptr->plev + 10)
+{}
 
-    msg_print(_("恐ろしげな幻覚を作り出した。", "You cast a fearful illusion."));
-    fear_monster(player_ptr, bmc_ptr->dir, bmc_ptr->plev + 10);
-    return true;
-}
+blind_caster::blind_caster(player_type *player_ptr, bmc_type *bmc_ptr)
+    : status_caster(player_ptr, bmc_ptr, nullptr, confuse_monster, bmc_ptr->plev * 2)
+{}
 
-bool cast_blue_blind(player_type *player_ptr, bmc_type *bmc_ptr)
-{
-    if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
-        return false;
+confusion_caster::confusion_caster(player_type *player_ptr, bmc_type *bmc_ptr)
+    : status_caster(player_ptr, bmc_ptr, _("誘惑的な幻覚をつくり出した。", "You cast a mesmerizing illusion."), confuse_monster, bmc_ptr->plev * 2)
+{}
 
-    confuse_monster(player_ptr, bmc_ptr->dir, bmc_ptr->plev * 2);
-    return true;
-}
+slow_caster::slow_caster(player_type *player_ptr, bmc_type *bmc_ptr)
+    : status_caster(player_ptr, bmc_ptr, nullptr, slow_monster, bmc_ptr->plev)
+{}
 
-bool cast_blue_confusion(player_type *player_ptr, bmc_type *bmc_ptr)
-{
-    if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
-        return false;
-
-    msg_print(_("誘惑的な幻覚をつくり出した。", "You cast a mesmerizing illusion."));
-    confuse_monster(player_ptr, bmc_ptr->dir, bmc_ptr->plev * 2);
-    return true;
-}
-
-bool cast_blue_slow(player_type *player_ptr, bmc_type *bmc_ptr)
-{
-    if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
-        return false;
-
-    slow_monster(player_ptr, bmc_ptr->dir, bmc_ptr->plev);
-    return true;
-}
-
-bool cast_blue_sleep(player_type *player_ptr, bmc_type *bmc_ptr)
-{
-    if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
-        return false;
-
-    sleep_monster(player_ptr, bmc_ptr->dir, bmc_ptr->plev);
-    return true;
-}
+sleep_caster::sleep_caster(player_type *player_ptr, bmc_type *bmc_ptr)
+    : status_caster(player_ptr, bmc_ptr, nullptr, sleep_monster, bmc_ptr->plev)
+{}
