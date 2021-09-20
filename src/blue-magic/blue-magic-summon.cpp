@@ -38,6 +38,27 @@ summon_caster::summon_caster(player_type *player_ptr, bmc_type *bmc_ptr, concptr
     , num(num)
 {}
 
+bool summon_caster::project(){
+    int count = 0;
+
+    msg_print(this->msg);
+    for(const auto& job : summons){
+        for (int k = count; k < num; k++){
+            if(job.summon(this->player_ptr, (bmc_ptr->pet ? -1 : 0), this->player_ptr->y, this->player_ptr->x,
+                this->bmc_ptr->summon_lev, job.type, job.mode)){
+                    count++;
+                    if(!this->bmc_ptr->pet)
+                        msg_print(job.msg_angry);
+            }
+        }
+    }
+
+    if(count == 0)
+        bmc_ptr->no_trump = true;
+
+    return true;
+}
+
 bool cast_blue_summon_kin(player_type *player_ptr, bmc_type *bmc_ptr)
 {
     msg_print(_("援軍を召喚した。", "You summon one of your kin."));
