@@ -12,6 +12,32 @@
 #include "system/player-type-definition.h"
 #include "view/display-messages.h"
 
+summon_list::summon_list(concptr msg_angry, summon_type type, BIT_FLAGS mode, 
+    std::function<bool(player_type *, MONSTER_IDX, POSITION, POSITION, DEPTH, summon_type, BIT_FLAGS)> summon)
+    : msg_angry(msg_angry)
+    , type(type)
+    , mode(mode)
+    , summon(std::move(summon))
+{}
+
+summon_list::summon_list(concptr msg_angry, summon_type type, BIT_FLAGS mode, 
+    std::function<bool(player_type *, DEPTH, POSITION, POSITION, BIT_FLAGS)> summon)
+    : msg_angry(msg_angry)
+    , type(type)
+    , mode(mode)
+    , summon([func = std::move(summon)]
+        (player_type *player_ptr, MONSTER_IDX, POSITION y, POSITION x, DEPTH lev, summon_type, BIT_FLAGS mode)
+        {return func(player_ptr, lev, y, x, mode);})
+{}
+
+summon_caster::summon_caster(player_type *player_ptr, bmc_type *bmc_ptr, concptr msg, std::vector<summon_list> summons, int num)
+    : player_ptr(player_ptr)
+    , bmc_ptr(bmc_ptr)
+    , msg(msg)
+    , summons(std::move(summons))
+    , num(num)
+{}
+
 bool cast_blue_summon_kin(player_type *player_ptr, bmc_type *bmc_ptr)
 {
     msg_print(_("援軍を召喚した。", "You summon one of your kin."));
