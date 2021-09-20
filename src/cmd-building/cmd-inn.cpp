@@ -12,6 +12,8 @@
 #include "status/bad-status-setter.h"
 #include "store/rumor.h"
 #include "system/player-type-definition.h"
+#include "timed-effect/player-stun.h"
+#include "timed-effect/timed-effects.h"
 #include "view/display-messages.h"
 #include "world/world.h"
 
@@ -78,14 +80,14 @@ static void write_diary_stay_inn(player_type *player_ptr, int prev_hour)
  */
 static void pass_game_turn_by_stay(void)
 {
-    int32_t oldturn = current_world_ptr->game_turn;
-    current_world_ptr->game_turn = (current_world_ptr->game_turn / (TURNS_PER_TICK * TOWN_DAWN / 2) + 1) * (TURNS_PER_TICK * TOWN_DAWN / 2);
-    if (current_world_ptr->dungeon_turn >= current_world_ptr->dungeon_turn_limit)
+    int32_t oldturn = w_ptr->game_turn;
+    w_ptr->game_turn = (w_ptr->game_turn / (TURNS_PER_TICK * TOWN_DAWN / 2) + 1) * (TURNS_PER_TICK * TOWN_DAWN / 2);
+    if (w_ptr->dungeon_turn >= w_ptr->dungeon_turn_limit)
         return;
 
-    current_world_ptr->dungeon_turn += MIN((current_world_ptr->game_turn - oldturn), TURNS_PER_TICK * 250) * INN_DUNGEON_TURN_ADJ;
-    if (current_world_ptr->dungeon_turn > current_world_ptr->dungeon_turn_limit)
-        current_world_ptr->dungeon_turn = current_world_ptr->dungeon_turn_limit;
+    w_ptr->dungeon_turn += MIN((w_ptr->game_turn - oldturn), TURNS_PER_TICK * 250) * INN_DUNGEON_TURN_ADJ;
+    if (w_ptr->dungeon_turn > w_ptr->dungeon_turn_limit)
+        w_ptr->dungeon_turn = w_ptr->dungeon_turn_limit;
 }
 
 /*!
@@ -117,9 +119,10 @@ static bool has_a_nightmare(player_type *player_ptr)
  */
 static void back_to_health(player_type *player_ptr)
 {
+    auto effects = player_ptr->effects();
     set_blind(player_ptr, 0);
     set_confused(player_ptr, 0);
-    player_ptr->stun = 0;
+    effects->stun()->reset();
     player_ptr->chp = player_ptr->mhp;
     player_ptr->csp = player_ptr->msp;
 }

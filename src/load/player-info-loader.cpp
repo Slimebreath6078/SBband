@@ -16,6 +16,8 @@
 #include "spell-realm/spells-song.h"
 #include "system/floor-type-definition.h"
 #include "system/player-type-definition.h"
+#include "timed-effect/player-stun.h"
+#include "timed-effect/timed-effects.h"
 #include "world/world.h"
 
 /*!
@@ -67,7 +69,7 @@ void rd_base_info(player_type *player_ptr)
     player_ptr->pseikaku = (player_personality_type)tmp8u;
 
     rd_byte(&tmp8u);
-    player_ptr->psex = static_cast<player_sex>(tmp8u);
+    player_ptr->psex = i2enum<player_sex>(tmp8u);
 
     rd_realms(player_ptr);
 
@@ -141,7 +143,7 @@ void rd_race(player_type *player_ptr)
 void rd_bounty_uniques()
 {
     for (int i = 0; i < MAX_BOUNTY; i++)
-        rd_s16b(&current_world_ptr->bounty_r_idx[i]);
+        rd_s16b(&w_ptr->bounty_r_idx[i]);
 }
 
 /*!
@@ -165,7 +167,7 @@ static void set_imitation(player_type *player_ptr)
     for (int i = 0; i < MAX_MANE; i++) {
         int16_t tmp16s;
         rd_s16b(&tmp16s);
-        player_ptr->mane_spell[i] = static_cast<RF_ABILITY>(tmp16s);
+        player_ptr->mane_spell[i] = i2enum<RF_ABILITY>(tmp16s);
         rd_s16b(&tmp16s);
         player_ptr->mane_dam[i] = (SPELL_IDX)tmp16s;
     }
@@ -256,7 +258,8 @@ static void rd_status(player_type *player_ptr)
     rd_s16b(&player_ptr->slow);
     rd_s16b(&player_ptr->afraid);
     rd_s16b(&player_ptr->cut);
-    rd_s16b(&player_ptr->stun);
+    int16_t tmp16s = player_ptr->effects()->stun()->current();
+    rd_s16b(&tmp16s);
     rd_s16b(&player_ptr->poisoned);
     rd_s16b(&player_ptr->image);
     rd_s16b(&player_ptr->protevil);

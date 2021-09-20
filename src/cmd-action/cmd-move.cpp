@@ -36,6 +36,8 @@
 #include "system/grid-type-definition.h"
 #include "system/player-type-definition.h"
 #include "target/target-getter.h"
+#include "timed-effect/player-stun.h"
+#include "timed-effect/timed-effects.h"
 #include "util/bit-flags-calculator.h"
 #include "view/display-messages.h"
 
@@ -396,9 +398,9 @@ void do_cmd_rest(player_type *player_ptr)
     if ((player_ptr->pclass == CLASS_BARD) && ((get_singing_song_effect(player_ptr) != 0) || (get_interrupting_song_effect(player_ptr) != 0)))
         stop_singing(player_ptr);
 
-    RealmHex realm_hex(player_ptr);
-    if (realm_hex.is_spelling_any()) {
-        (void)realm_hex.stop_all_spells();
+    SpellHex spell_hex(player_ptr);
+    if (spell_hex.is_spelling_any()) {
+        (void)spell_hex.stop_all_spells();
     }
 
     if (command_arg <= 0) {
@@ -429,8 +431,10 @@ void do_cmd_rest(player_type *player_ptr)
     if (command_arg > 100)
         chg_virtue(player_ptr, V_DILIGENCE, -1);
 
+    auto effects = player_ptr->effects();
+    auto is_stunned = effects->stun()->is_stunned();
     if ((player_ptr->chp == player_ptr->mhp) && (player_ptr->csp == player_ptr->msp) && !player_ptr->blind && !player_ptr->confused
-        && !player_ptr->poisoned && !player_ptr->afraid && !player_ptr->stun && !player_ptr->cut && !player_ptr->slow && !player_ptr->paralyzed
+        && !player_ptr->poisoned && !player_ptr->afraid && !is_stunned && !player_ptr->cut && !player_ptr->slow && !player_ptr->paralyzed
         && !player_ptr->image && !player_ptr->word_recall && !player_ptr->alter_reality)
         chg_virtue(player_ptr, V_DILIGENCE, -1);
 

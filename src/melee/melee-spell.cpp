@@ -41,7 +41,7 @@ static bool try_melee_spell(player_type *player_ptr, melee_spell_type *ms_ptr)
 
 static bool disturb_melee_spell(player_type *player_ptr, melee_spell_type *ms_ptr)
 {
-    if (spell_is_inate(ms_ptr->thrown_spell) || !RealmHex(player_ptr).check_hex_barrier(ms_ptr->m_idx, HEX_ANTI_MAGIC))
+    if (spell_is_inate(ms_ptr->thrown_spell) || !SpellHex(player_ptr).check_hex_barrier(ms_ptr->m_idx, HEX_ANTI_MAGIC))
         return false;
 
     if (ms_ptr->see_m)
@@ -54,7 +54,7 @@ static void process_special_melee_spell(player_type *player_ptr, melee_spell_typ
 {
     bool is_special_magic = ms_ptr->m_ptr->ml;
     is_special_magic &= ms_ptr->maneable;
-    is_special_magic &= current_world_ptr->timewalk_m_idx == 0;
+    is_special_magic &= w_ptr->timewalk_m_idx == 0;
     is_special_magic &= !player_ptr->blind;
     is_special_magic &= player_ptr->pclass == CLASS_IMITATOR;
     is_special_magic &= ms_ptr->thrown_spell != RF_ABILITY::SPECIAL;

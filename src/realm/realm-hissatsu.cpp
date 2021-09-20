@@ -66,7 +66,7 @@
 concptr do_hissatsu_spell(player_type *player_ptr, SPELL_IDX spell, spell_type mode)
 {
     bool name = (mode == SPELL_NAME) ? true : false;
-    bool desc = (mode == SPELL_DESC) ? true : false;
+    bool desc = (mode == SPELL_DESCRIPTION) ? true : false;
     bool cast = (mode == SPELL_CAST) ? true : false;
 
     DIRECTION dir;
@@ -1007,9 +1007,9 @@ concptr do_hissatsu_spell(player_type *player_ptr, SPELL_IDX spell, spell_type m
             prt("", 0, 0);
             if (i != '@')
                 return nullptr;
-            if (current_world_ptr->total_winner) {
+            if (w_ptr->total_winner) {
                 take_hit(player_ptr, DAMAGE_FORCE, 9999, "Seppuku");
-                current_world_ptr->total_winner = true;
+                w_ptr->total_winner = true;
             } else {
                 msg_print(_("武士道とは、死ぬことと見つけたり。", "The meaning of bushido is found in death."));
                 take_hit(player_ptr, DAMAGE_FORCE, 9999, "Seppuku");

@@ -19,8 +19,10 @@ enum class RF_ABILITY;
 
 struct floor_type;
 struct object_type;
-;
-typedef struct player_type {
+class TimedEffects;
+struct player_type {
+public:
+    player_type();
     int player_uid{};
     int player_euid{};
     int player_egid{};
@@ -96,8 +98,7 @@ typedef struct player_type {
     TIME_EFFECT image{}; /* Timed -- Hallucination */
     TIME_EFFECT poisoned{}; /* Timed -- Poisoned */
     TIME_EFFECT cut{}; /* Timed -- Cut */
-    TIME_EFFECT stun{}; /* Timed -- Stun */
-
+    
     TIME_EFFECT protevil{}; /* Timed -- Protection */
     TIME_EFFECT invuln{}; /* Timed -- Invulnerable */
     TIME_EFFECT ult_res{}; /* Timed -- Ultimate Resistance */
@@ -188,6 +189,7 @@ typedef struct player_type {
     SUB_EXP weapon_exp[5][64]{}; /* Proficiency of weapons */
     SUB_EXP skill_exp[MAX_SKILLS]{}; /* Proficiency of misc. skill */
 
+    // @todo uint32_tで定義したいが可能か？
     int32_t magic_num1[MAX_SPELLS]{}; /*!< Array for non-spellbook type magic */
     byte magic_num2[MAX_SPELLS]{}; /*!< 魔道具術師の取り込み済魔道具使用回数 / Flags for non-spellbook type magics */
 
@@ -422,6 +424,11 @@ typedef struct player_type {
     POSITION x{}; /*!< ダンジョンの現在X座標 / Player location in dungeon */
     GAME_TEXT name[32]{}; /*!< 現在のプレイヤー名 / Current player's character name */
     char base_name[32]{}; /*!< Stripped version of "player_name" */
-} player_type;
+
+    std::shared_ptr<TimedEffects> effects() const;
+
+private:
+    std::shared_ptr<TimedEffects> timed_effects;
+};
 
 extern player_type *p_ptr;

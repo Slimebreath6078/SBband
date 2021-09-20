@@ -47,6 +47,8 @@
 #include "system/grid-type-definition.h"
 #include "system/player-type-definition.h"
 #include "term/screen-processor.h"
+#include "timed-effect/player-stun.h"
+#include "timed-effect/timed-effects.h"
 #include "util/buffer-shaper.h"
 #include "util/enum-converter.h"
 #include "view/display-messages.h"
@@ -175,10 +177,8 @@ static void decide_mind_chance(player_type *player_ptr, cm_type *cm_ptr)
     if (cm_ptr->chance < cm_ptr->minfail)
         cm_ptr->chance = cm_ptr->minfail;
 
-    if (player_ptr->stun > 50)
-        cm_ptr->chance += 25;
-    else if (player_ptr->stun)
-        cm_ptr->chance += 15;
+    auto player_stun = player_ptr->effects()->stun();
+    cm_ptr->chance += player_stun->get_chance_penalty();
 
     if (cm_ptr->use_mind != mind_kind_type::KI)
         return;
@@ -217,7 +217,7 @@ static void check_mind_mindcrafter(player_type *player_ptr, cm_type *cm_ptr)
     }
 
     if (cm_ptr->b < 90) {
-        set_stun(player_ptr, player_ptr->stun + randint1(8));
+        set_stun(player_ptr, player_ptr->effects()->stun()->current() + randint1(8));
         return;
     }
 
@@ -275,22 +275,22 @@ static bool switch_mind_class(player_type *player_ptr, cm_type *cm_ptr)
 {
     switch (cm_ptr->use_mind) {
     case mind_kind_type::MINDCRAFTER:
-        cm_ptr->cast = cast_mindcrafter_spell(player_ptr, static_cast<mind_mindcrafter_type>(cm_ptr->n));
+        cm_ptr->cast = cast_mindcrafter_spell(player_ptr, i2enum<mind_mindcrafter_type>(cm_ptr->n));
         return true;
     case mind_kind_type::KI:
-        cm_ptr->cast = cast_force_spell(player_ptr, static_cast<mind_force_trainer_type>(cm_ptr->n));
+        cm_ptr->cast = cast_force_spell(player_ptr, i2enum<mind_force_trainer_type>(cm_ptr->n));
         return true;
     case mind_kind_type::BERSERKER:
-        cm_ptr->cast = cast_berserk_spell(player_ptr, static_cast<mind_berserker_type>(cm_ptr->n));
+        cm_ptr->cast = cast_berserk_spell(player_ptr, i2enum<mind_berserker_type>(cm_ptr->n));
         return true;
     case mind_kind_type::MIRROR_MASTER:
         if (player_ptr->current_floor_ptr->grid_array[player_ptr->y][player_ptr->x].is_mirror())
             cm_ptr->on_mirror = true;
 
-        cm_ptr->cast = cast_mirror_spell(player_ptr, static_cast<mind_mirror_master_type>(cm_ptr->n));
+        cm_ptr->cast = cast_mirror_spell(player_ptr, i2enum<mind_mirror_master_type>(cm_ptr->n));
         return true;
     case mind_kind_type::NINJUTSU:
-        cm_ptr->cast = cast_ninja_spell(player_ptr, static_cast<mind_ninja_type>(cm_ptr->n));
+        cm_ptr->cast = cast_ninja_spell(player_ptr, i2enum<mind_ninja_type>(cm_ptr->n));
         return true;
     default:
         msg_format(_("謎の能力:%d, %d", "Mystery power:%d, %d"), cm_ptr->use_mind, cm_ptr->n);

@@ -100,6 +100,8 @@
 #include "system/object-type-definition.h"
 #include "system/player-type-definition.h"
 #include "term/screen-processor.h"
+#include "timed-effect/player-stun.h"
+#include "timed-effect/timed-effects.h"
 #include "util/bit-flags-calculator.h"
 #include "util/enum-converter.h"
 #include "util/quarks.h"
@@ -442,7 +444,7 @@ static void update_bonuses(player_type *player_ptr)
         set_bits(player_ptr->window_flags, PW_PLAYER);
     }
 
-    if (current_world_ptr->character_xtra)
+    if (w_ptr->character_xtra)
         return;
 
     put_equipment_warning(player_ptr);
@@ -491,9 +493,9 @@ static void update_max_hitpoints(player_type *player_ptr)
         mhp += 30;
     if (player_ptr->tsuyoshi)
         mhp += 50;
-    if (RealmHex(player_ptr).is_spelling_specific(HEX_XTRA_MIGHT))
+    if (SpellHex(player_ptr).is_spelling_specific(HEX_XTRA_MIGHT))
         mhp += 15;
-    if (RealmHex(player_ptr).is_spelling_specific(HEX_BUILDING))
+    if (SpellHex(player_ptr).is_spelling_specific(HEX_BUILDING))
         mhp += 60;
     if (player_ptr->mhp == mhp)
         return;
@@ -526,9 +528,9 @@ static void update_num_of_spells(player_type *player_ptr)
 {
     if (!mp_ptr->spell_book)
         return;
-    if (!current_world_ptr->character_generated)
+    if (!w_ptr->character_generated)
         return;
-    if (current_world_ptr->character_xtra)
+    if (w_ptr->character_xtra)
         return;
     if ((player_ptr->pclass == CLASS_SORCERER) || (player_ptr->pclass == CLASS_RED_MAGE)) {
         player_ptr->new_spells = 0;
@@ -954,7 +956,7 @@ static void update_max_mana(player_type *player_ptr)
         set_bits(player_ptr->window_flags, (PW_PLAYER | PW_SPELL));
     }
 
-    if (current_world_ptr->character_xtra)
+    if (w_ptr->character_xtra)
         return;
 
     if (player_ptr->old_cumber_glove != player_ptr->cumber_glove) {
@@ -1442,7 +1444,7 @@ static int16_t calc_num_blow(player_type *player_ptr, int i)
                 mul = 4;
             }
 
-            if (RealmHex(player_ptr).is_spelling_specific(HEX_XTRA_MIGHT) || RealmHex(player_ptr).is_spelling_specific(HEX_BUILDING)) {
+            if (SpellHex(player_ptr).is_spelling_specific(HEX_XTRA_MIGHT) || SpellHex(player_ptr).is_spelling_specific(HEX_BUILDING)) {
                 num++;
                 wgt /= 2;
                 mul += 2;
@@ -1710,7 +1712,7 @@ static ARMOUR_CLASS calc_to_ac(player_type *player_ptr, bool is_real_value)
     }
 
     if (player_ptr->realm1 == REALM_HEX) {
-        if (RealmHex(player_ptr).is_spelling_specific(HEX_ICE_ARMOR)) {
+        if (SpellHex(player_ptr).is_spelling_specific(HEX_ICE_ARMOR)) {
             ac += 30;
         }
 
@@ -1905,7 +1907,7 @@ void put_equipment_warning(player_type *player_ptr)
 
         if (player_ptr->is_icky_wield[i]) {
             msg_print(_("今の装備はどうも自分にふさわしくない気がする。", "You do not feel comfortable with your weapon."));
-            if (current_world_ptr->is_loading_now) {
+            if (w_ptr->is_loading_now) {
                 chg_virtue(player_ptr, V_FAITH, -1);
             }
         } else if (has_melee_weapon(player_ptr, INVEN_MAIN_HAND + i)) {
@@ -1939,7 +1941,7 @@ void put_equipment_warning(player_type *player_ptr)
         && (heavy_armor(player_ptr) != player_ptr->monk_notify_aux)) {
         if (heavy_armor(player_ptr)) {
             msg_print(_("装備が重くてバランスを取れない。", "The weight of your armor disrupts your balance."));
-            if (current_world_ptr->is_loading_now) {
+            if (w_ptr->is_loading_now) {
                 chg_virtue(player_ptr, V_HARMONY, -1);
             }
         } else {
@@ -1968,12 +1970,8 @@ static int16_t calc_to_damage(player_type *player_ptr, INVENTORY_IDX slot, bool 
         damage += 3 + (player_ptr->lev / 5);
     }
 
-    if (player_ptr->stun > 50) {
-        damage -= 20;
-    } else if (player_ptr->stun) {
-        damage -= 5;
-    }
-
+    auto player_stun = player_ptr->effects()->stun();
+    damage -= player_stun->get_damage_penalty();
     if ((player_ptr->pclass == CLASS_PRIEST) && (flgs.has_not(TR_BLESSED)) && ((o_ptr->tval == TV_SWORD) || (o_ptr->tval == TV_POLEARM))) {
         damage -= 2;
     } else if (player_ptr->pclass == CLASS_BERSERKER) {
@@ -1995,7 +1993,7 @@ static int16_t calc_to_damage(player_type *player_ptr, INVENTORY_IDX slot, bool 
     }
 
     if ((player_ptr->realm1 == REALM_HEX) && o_ptr->is_cursed()) {
-        if (RealmHex(player_ptr).is_spelling_specific(HEX_RUNESWORD)) {
+        if (SpellHex(player_ptr).is_spelling_specific(HEX_RUNESWORD)) {
             if (o_ptr->curse_flags.has(TRC::CURSED)) {
                 damage += 5;
             }
@@ -2117,12 +2115,8 @@ static int16_t calc_to_hit(player_type *player_ptr, INVENTORY_IDX slot, bool is_
         hit += 12;
     }
 
-    if (player_ptr->stun > 50) {
-        hit -= 20;
-    } else if (player_ptr->stun) {
-        hit -= 5;
-    }
-
+    auto player_stun = player_ptr->effects()->stun();
+    hit -= player_stun->get_damage_penalty();
     player_hand calc_hand = PLAYER_HAND_OTHER;
     if (slot == INVEN_MAIN_HAND)
         calc_hand = PLAYER_HAND_MAIN;
@@ -2342,12 +2336,8 @@ static int16_t calc_to_hit_bow(player_type *player_ptr, bool is_real_value)
         }
     }
 
-    if (player_ptr->stun > 50) {
-        pow -= 20;
-    } else if (player_ptr->stun) {
-        pow -= 5;
-    }
-
+    auto player_stun = player_ptr->effects()->stun();
+    pow -= player_stun->get_damage_penalty();
     if (is_blessed(player_ptr)) {
         pow += 10;
     }
@@ -2421,12 +2411,8 @@ static int16_t calc_to_damage_misc(player_type *player_ptr)
         to_dam += 3 + (player_ptr->lev / 5);
     }
 
-    if (player_ptr->stun > 50) {
-        to_dam -= 20;
-    } else if (player_ptr->stun) {
-        to_dam -= 5;
-    }
-
+    auto player_stun = player_ptr->effects()->stun();
+    to_dam -= player_stun->get_damage_penalty();
     to_dam += ((int)(adj_str_td[player_ptr->stat_index[A_STR]]) - 128);
     return to_dam;
 }
@@ -2462,12 +2448,8 @@ static int16_t calc_to_hit_misc(player_type *player_ptr)
         to_hit += 12;
     }
 
-    if (player_ptr->stun > 50) {
-        to_hit -= 20;
-    } else if (player_ptr->stun) {
-        to_hit -= 5;
-    }
-
+    auto player_stun = player_ptr->effects()->stun();
+    to_hit -= player_stun->get_damage_penalty();
     to_hit += ((int)(adj_dex_th[player_ptr->stat_index[A_DEX]]) - 128);
     to_hit += ((int)(adj_str_th[player_ptr->stat_index[A_STR]]) - 128);
 
@@ -2544,9 +2526,9 @@ void update_creature(player_type *player_ptr)
         update_num_of_spells(player_ptr);
     }
 
-    if (!current_world_ptr->character_generated)
+    if (!w_ptr->character_generated)
         return;
-    if (current_world_ptr->character_icky_depth > 0)
+    if (w_ptr->character_icky_depth > 0)
         return;
     if (any_bits(player_ptr->update, (PU_UN_LITE))) {
         reset_bits(player_ptr->update, PU_UN_LITE);
@@ -2892,9 +2874,9 @@ long calc_score(player_type *player_ptr)
         mult = 5;
 
     DEPTH max_dl = 0;
-    for (int i = 0; i < current_world_ptr->max_d_idx; i++)
-        if (max_dlv[i] > max_dl)
-            max_dl = max_dlv[i];
+    for (const auto &d_ref : d_info)
+        if (max_dl < max_dlv[d_ref.idx])
+            max_dl = max_dlv[d_ref.idx];
 
     uint32_t point_l = (player_ptr->max_max_exp + (100 * max_dl));
     uint32_t point_h = point_l / 0x10000L;
@@ -2921,7 +2903,7 @@ long calc_score(player_type *player_ptr)
 
     if ((player_ptr->pseikaku == PERSONALITY_MUNCHKIN) && point) {
         point = 1;
-        if (current_world_ptr->total_winner)
+        if (w_ptr->total_winner)
             point = 2;
     }
 
@@ -2937,7 +2919,7 @@ long calc_score(player_type *player_ptr)
  */
 bool is_blessed(player_type *player_ptr)
 {
-    return player_ptr->blessed || music_singing(player_ptr, MUSIC_BLESS) || RealmHex(player_ptr).is_spelling_specific(HEX_BLESS);
+    return player_ptr->blessed || music_singing(player_ptr, MUSIC_BLESS) || SpellHex(player_ptr).is_spelling_specific(HEX_BLESS);
 }
 
 bool is_tim_esp(player_type *player_ptr)
@@ -2969,8 +2951,8 @@ void stop_mouth(player_type *player_ptr)
     if (music_singing_any(player_ptr))
         stop_singing(player_ptr);
 
-    if (RealmHex(player_ptr).is_spelling_any()) {
-        (void)RealmHex(player_ptr).stop_all_spells();
+    if (SpellHex(player_ptr).is_spelling_any()) {
+        (void)SpellHex(player_ptr).stop_all_spells();
     }
 }
 

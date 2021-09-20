@@ -28,10 +28,9 @@
  */
 static void k_info_reset(void)
 {
-    for (int i = 0; i < max_k_idx; i++) {
-        object_kind *k_ptr = &k_info[i];
-        k_ptr->tried = false;
-        k_ptr->aware = false;
+    for (auto &k_ref : k_info) {
+        k_ref.tried = false;
+        k_ref.aware = false;
     }
 }
 
@@ -79,23 +78,24 @@ void player_wipe_without_name(player_type *player_ptr)
     for (int i = 0; i < INVEN_TOTAL; i++)
         (&player_ptr->inventory_list[i])->wipe();
 
-    for (int i = 0; i < max_a_idx; i++) {
-        artifact_type *a_ptr = &a_info[i];
-        a_ptr->cur_num = 0;
+    for (auto &a_ref : a_info) {
+        a_ref.cur_num = 0;
     }
 
     k_info_reset();
-    for (int i = 1; i < max_r_idx; i++) {
-        monster_race *r_ptr = &r_info[i];
-        r_ptr->cur_num = 0;
-        r_ptr->max_num = 100;
-        if (r_ptr->flags1 & RF1_UNIQUE)
-            r_ptr->max_num = 1;
-        else if (r_ptr->flags7 & RF7_NAZGUL)
-            r_ptr->max_num = MAX_NAZGUL_NUM;
+    for (auto &r_ref : r_info) {
+        if (r_ref.idx == 0) {
+            continue;
+        }
+        r_ref.cur_num = 0;
+        r_ref.max_num = 100;
+        if (r_ref.flags1 & RF1_UNIQUE)
+            r_ref.max_num = 1;
+        else if (r_ref.flags7 & RF7_NAZGUL)
+            r_ref.max_num = MAX_NAZGUL_NUM;
 
-        r_ptr->r_pkills = 0;
-        r_ptr->r_akills = 0;
+        r_ref.r_pkills = 0;
+        r_ref.r_akills = 0;
     }
 
     player_ptr->food = PY_FOOD_FULL - 1;
@@ -127,18 +127,18 @@ void player_wipe_without_name(player_type *player_ptr)
     cheat_turn = false;
     cheat_immortal = false;
 
-    current_world_ptr->total_winner = false;
+    w_ptr->total_winner = false;
     player_ptr->timewalk = false;
     player_ptr->panic_save = 0;
 
-    current_world_ptr->noscore = 0;
-    current_world_ptr->wizard = false;
+    w_ptr->noscore = 0;
+    w_ptr->wizard = false;
     player_ptr->wait_report_score = false;
     player_ptr->pet_follow_distance = PET_FOLLOW_DIST;
     player_ptr->pet_extra_flags = (PF_TELEPORT | PF_ATTACK_SPELL | PF_SUMMON_SPELL);
 
-    for (int i = 0; i < current_world_ptr->max_d_idx; i++)
-        max_dlv[i] = 0;
+    for (const auto &d_ref : d_info)
+        max_dlv[d_ref.idx] = 0;
 
     player_ptr->visit = 1;
     player_ptr->wild_mode = false;
@@ -222,13 +222,13 @@ void init_dungeon_quests(player_type *player_ptr)
 void init_turn(player_type *player_ptr)
 {
     if (player_race_life(player_ptr) == PlayerRaceLife::UNDEAD) {
-        current_world_ptr->game_turn = (TURNS_PER_TICK * 3 * TOWN_DAWN) / 4 + 1;
-        current_world_ptr->game_turn_limit = TURNS_PER_TICK * TOWN_DAWN * MAX_DAYS + TURNS_PER_TICK * TOWN_DAWN * 3 / 4;
+        w_ptr->game_turn = (TURNS_PER_TICK * 3 * TOWN_DAWN) / 4 + 1;
+        w_ptr->game_turn_limit = TURNS_PER_TICK * TOWN_DAWN * MAX_DAYS + TURNS_PER_TICK * TOWN_DAWN * 3 / 4;
     } else {
-        current_world_ptr->game_turn = 1;
-        current_world_ptr->game_turn_limit = TURNS_PER_TICK * TOWN_DAWN * (MAX_DAYS - 1) + TURNS_PER_TICK * TOWN_DAWN * 3 / 4;
+        w_ptr->game_turn = 1;
+        w_ptr->game_turn_limit = TURNS_PER_TICK * TOWN_DAWN * (MAX_DAYS - 1) + TURNS_PER_TICK * TOWN_DAWN * 3 / 4;
     }
 
-    current_world_ptr->dungeon_turn = 1;
-    current_world_ptr->dungeon_turn_limit = TURNS_PER_TICK * TOWN_DAWN * (MAX_DAYS - 1) + TURNS_PER_TICK * TOWN_DAWN * 3 / 4;
+    w_ptr->dungeon_turn = 1;
+    w_ptr->dungeon_turn_limit = TURNS_PER_TICK * TOWN_DAWN * (MAX_DAYS - 1) + TURNS_PER_TICK * TOWN_DAWN * 3 / 4;
 }

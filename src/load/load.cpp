@@ -13,7 +13,6 @@
 #include "core/asking-player.h"
 #include "dungeon/quest.h"
 #include "game-option/birth-options.h"
-#include "game-option/runtime-arguments.h"
 #include "io/files-util.h"
 
 #include "io/uid-checker.h"
@@ -73,7 +72,7 @@ static errr load_town_quest(player_type *player_ptr)
  */
 static void rd_total_play_time()
 {
-    rd_u32b(&current_world_ptr->sf_play_time);
+    rd_u32b(&w_ptr->sf_play_time);
 }
 
 /*!
@@ -81,8 +80,8 @@ static void rd_total_play_time()
  */
 static void rd_winner_class()
 {
-    rd_FlagGroup(current_world_ptr->sf_winner, rd_byte);
-    rd_FlagGroup(current_world_ptr->sf_retired, rd_byte);
+    rd_FlagGroup(w_ptr->sf_winner, rd_byte);
+    rd_FlagGroup(w_ptr->sf_retired, rd_byte);
 }
 
 static void load_player_world(player_type *player_ptr)
@@ -100,8 +99,7 @@ static void load_player_world(player_type *player_ptr)
     if (player_ptr->energy_need < -999)
         player_ptr->timewalk = true;
 
-    if (arg_fiddle)
-        load_note(_("特別情報をロードしました", "Loaded extra information"));
+    load_note(_("特別情報をロードしました", "Loaded extra information"));
 }
 
 static errr load_hp(player_type *player_ptr)
@@ -180,9 +178,7 @@ static errr exe_reading_savefile(player_type *player_ptr)
     if (load_town_quest_result != 0)
         return load_town_quest_result;
 
-    if (arg_fiddle)
-        load_note(_("クエスト情報をロードしました", "Loaded Quests"));
-
+    load_note(_("クエスト情報をロードしました", "Loaded Quests"));
     errr load_artifact_result = load_artifact();
     if (load_artifact_result != 0)
         return load_artifact_result;
@@ -271,7 +267,7 @@ static bool can_takeover_savefile(const player_type *player_ptr)
 bool load_savedata(player_type *player_ptr, bool *new_game)
 {
     concptr what = "generic";
-    current_world_ptr->game_turn = 0;
+    w_ptr->game_turn = 0;
     player_ptr->is_dead = false;
     if (!savefile[0])
         return true;
@@ -307,7 +303,7 @@ bool load_savedata(player_type *player_ptr, bool *new_game)
         (void)fd_close(fd);
     }
 
-    current_world_ptr->sf_extra = h_ver[4];
+    w_ptr->sf_extra = h_ver[4];
 
     if (err) {
         msg_format("%s: %s", what, savefile);
@@ -324,7 +320,7 @@ bool load_savedata(player_type *player_ptr, bool *new_game)
     }
 
     if (!err) {
-        if (!current_world_ptr->game_turn)
+        if (!w_ptr->game_turn)
             err = true;
 
         if (err)
@@ -333,7 +329,7 @@ bool load_savedata(player_type *player_ptr, bool *new_game)
 
     if (err) {
         msg_format(_("エラー(%s)がバージョン%d.%d.%d.%d 用セーブファイル読み込み中に発生。", "Error (%s) reading %d.%d.%d.% savefile."), what,
-            current_world_ptr->h_ver_major, current_world_ptr->h_ver_minor, current_world_ptr->h_ver_patch, current_world_ptr->h_ver_extra);
+            w_ptr->h_ver_major, w_ptr->h_ver_minor, w_ptr->h_ver_patch, w_ptr->h_ver_extra);
 
         msg_print(nullptr);
         return false;
@@ -354,24 +350,19 @@ bool load_savedata(player_type *player_ptr, bool *new_game)
 
     if (player_ptr->is_dead) {
         *new_game = true;
-        if (arg_wizard) {
-            current_world_ptr->character_loaded = true;
-            return true;
-        }
-
         player_ptr->is_dead = false;
-        current_world_ptr->sf_lives++;
+        w_ptr->sf_lives++;
         return true;
     }
 
-    current_world_ptr->character_loaded = true;
+    w_ptr->character_loaded = true;
     uint32_t tmp = counts_read(player_ptr, 2);
     if (tmp > player_ptr->count)
         player_ptr->count = tmp;
 
-    if (counts_read(player_ptr, 0) > current_world_ptr->play_time || counts_read(player_ptr, 1) == current_world_ptr->play_time)
+    if (counts_read(player_ptr, 0) > w_ptr->play_time || counts_read(player_ptr, 1) == w_ptr->play_time)
         counts_write(player_ptr, 2, ++player_ptr->count);
 
-    counts_write(player_ptr, 1, current_world_ptr->play_time);
+    counts_write(player_ptr, 1, w_ptr->play_time);
     return true;
 }

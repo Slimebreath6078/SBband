@@ -53,13 +53,13 @@ static void give_one_ability_of_object(object_type *to_ptr, object_type *from_pt
         case TR_THROW:
         case TR_SHOW_MODS:
         case TR_HIDE_TYPE:
-        case TR_ES_ATTACK:
-        case TR_ES_AC:
+        case TR_XXX_93:
+        case TR_XXX_94:
         case TR_FULL_NAME:
         case TR_FIXED_FLAVOR:
             break;
         default:
-            auto tr_flag = static_cast<tr_type>(i);
+            auto tr_flag = i2enum<tr_type>(i);
             if (from_flgs.has(tr_flag) && to_flgs.has_not(tr_flag)) {
                 if (!(TR_PVAL_FLAG_MASK.has(tr_flag) && (from_ptr->pval < 1)))
                     cand[n++] = tr_flag;
@@ -147,18 +147,16 @@ static PRICE repair_broken_weapon_aux(player_type *player_ptr, PRICE bcost)
     if (o_ptr->sval == SV_BROKEN_DAGGER) {
         int n = 1;
         k_idx = 0;
-        for (KIND_OBJECT_IDX j = 1; j < max_k_idx; j++) {
-            object_kind *k_aux_ptr = &k_info[j];
-
-            if (k_aux_ptr->tval != TV_SWORD)
+        for (const auto &k_ref : k_info) {
+            if (k_ref.tval != TV_SWORD)
                 continue;
-            if ((k_aux_ptr->sval == SV_BROKEN_DAGGER) || (k_aux_ptr->sval == SV_BROKEN_SWORD) || (k_aux_ptr->sval == SV_POISON_NEEDLE))
+            if ((k_ref.sval == SV_BROKEN_DAGGER) || (k_ref.sval == SV_BROKEN_SWORD) || (k_ref.sval == SV_POISON_NEEDLE))
                 continue;
-            if (k_aux_ptr->weight > 99)
+            if (k_ref.weight > 99)
                 continue;
 
             if (one_in_(n)) {
-                k_idx = j;
+                k_idx = k_ref.idx;
                 n++;
             }
         }

@@ -137,24 +137,26 @@ KIND_OBJECT_IDX wiz_create_itemtype(void)
     if ((num < 0) || (num >= max_num))
         return 0;
 
-    tval_type tval = static_cast<tval_type>(tvals[num].tval);
+    tval_type tval = i2enum<tval_type>(tvals[num].tval);
     concptr tval_desc = tvals[num].desc;
     term_clear();
     num = 0;
     KIND_OBJECT_IDX choice[80];
     char buf[160];
-    for (KIND_OBJECT_IDX i = 1; (num < 80) && (i < max_k_idx); i++) {
-        object_kind *k_ptr = &k_info[i];
-        if (k_ptr->tval != tval)
+    for (const auto& k_ref : k_info) {
+        if (num >= 80) {
+            break;
+        }
+        if (k_ref.idx == 0 || k_ref.tval != tval)
             continue;
 
         row = 2 + (num % 20);
         col = 20 * (num / 20);
         ch = listsym[num];
         strcpy(buf, "                    ");
-        strip_name(buf, i);
+        strip_name(buf, k_ref.idx);
         prt(format("[%c] %s", ch, buf), row, col);
-        choice[num++] = i;
+        choice[num++] = k_ref.idx;
     }
 
     max_num = num;
@@ -191,11 +193,11 @@ void wiz_create_item(player_type *player_ptr)
         return;
 
     if (k_info[k_idx].gen_flags.has(TRG::INSTA_ART)) {
-        for (ARTIFACT_IDX i = 1; i < max_a_idx; i++) {
-            if ((a_info[i].tval != k_info[k_idx].tval) || (a_info[i].sval != k_info[k_idx].sval))
+        for (const auto &a_ref : a_info) {
+            if ((a_ref.idx == 0) || (a_ref.tval != k_info[k_idx].tval) || (a_ref.sval != k_info[k_idx].sval))
                 continue;
 
-            (void)create_named_art(player_ptr, i, player_ptr->y, player_ptr->x);
+            (void)create_named_art(player_ptr, a_ref.idx, player_ptr->y, player_ptr->x);
             msg_print("Allocated(INSTA_ART).");
             return;
         }
@@ -383,7 +385,7 @@ void wiz_create_feature(player_type *player_ptr)
 static bool select_debugging_floor(player_type *player_ptr, int dungeon_type)
 {
     auto max_depth = d_info[dungeon_type].maxdepth;
-    if ((max_depth == 0) || (dungeon_type > current_world_ptr->max_d_idx)) {
+    if ((max_depth == 0) || (dungeon_type > w_ptr->max_d_idx)) {
         dungeon_type = DUNGEON_ANGBAND;
     }
 
@@ -485,11 +487,10 @@ void wiz_learn_items_all(player_type *player_ptr)
 {
     object_type forge;
     object_type *q_ptr;
-    for (KIND_OBJECT_IDX i = 1; i < max_k_idx; i++) {
-        object_kind *k_ptr = &k_info[i];
-        if (k_ptr->level <= command_arg) {
+    for (const auto &k_ref : k_info) {
+        if (k_ref.idx > 0 && k_ref.level <= command_arg) {
             q_ptr = &forge;
-            q_ptr->prep(i);
+            q_ptr->prep(k_ref.idx);
             object_aware(player_ptr, q_ptr);
         }
     }
@@ -513,7 +514,7 @@ void wiz_reset_race(player_type *player_ptr)
     if (tmp_int < 0 || tmp_int >= MAX_RACES)
         return;
 
-    player_ptr->prace = static_cast<player_race_type>(tmp_int);
+    player_ptr->prace = i2enum<player_race_type>(tmp_int);
     rp_ptr = &race_info[enum2i(player_ptr->prace)];
 
     player_ptr->window_flags |= PW_PLAYER;
@@ -541,7 +542,7 @@ void wiz_reset_class(player_type *player_ptr)
     if (tmp_int < 0 || tmp_int >= MAX_CLASS)
         return;
 
-    player_ptr->pclass = static_cast<player_class_type>(tmp_int);
+    player_ptr->pclass = i2enum<player_class_type>(tmp_int);
     cp_ptr = &class_info[player_ptr->pclass];
     mp_ptr = &m_info[player_ptr->pclass];
     player_ptr->window_flags |= PW_PLAYER;
@@ -595,11 +596,7 @@ void wiz_dump_options(void)
         return;
     }
 
-    int **exist;
-    C_MAKE(exist, NUM_O_SET, int *);
-    C_MAKE(*exist, NUM_O_BIT * NUM_O_SET, int);
-    for (int i = 1; i < NUM_O_SET; i++)
-        exist[i] = *exist + i * NUM_O_BIT;
+    std::vector<std::vector<int>> exist(NUM_O_SET, std::vector<int>(NUM_O_BIT));
 
     for (int i = 0; option_info[i].o_desc; i++) {
         const option_type *ot_ptr = &option_info[i];
@@ -625,8 +622,6 @@ void wiz_dump_options(void)
         fputc('\n', fff);
     }
 
-    C_KILL(*exist, NUM_O_BIT * NUM_O_SET, int);
-    C_KILL(exist, NUM_O_SET, int *);
     angband_fclose(fff);
     msg_format(_("オプションbit使用状況をファイル %s に書き出しました。", "Option bits usage dump saved to file %s."), buf);
 }
@@ -639,18 +634,18 @@ void set_gametime(void)
 {
     int tmp_int = 0;
     char ppp[80], tmp_val[40];
-    sprintf(ppp, "Dungeon Turn (0-%ld): ", (long)current_world_ptr->dungeon_turn_limit);
-    sprintf(tmp_val, "%ld", (long)current_world_ptr->dungeon_turn);
+    sprintf(ppp, "Dungeon Turn (0-%ld): ", (long)w_ptr->dungeon_turn_limit);
+    sprintf(tmp_val, "%ld", (long)w_ptr->dungeon_turn);
     if (!get_string(ppp, tmp_val, 10))
         return;
 
     tmp_int = atoi(tmp_val);
-    if (tmp_int >= current_world_ptr->dungeon_turn_limit)
-        tmp_int = current_world_ptr->dungeon_turn_limit - 1;
+    if (tmp_int >= w_ptr->dungeon_turn_limit)
+        tmp_int = w_ptr->dungeon_turn_limit - 1;
     else if (tmp_int < 0)
         tmp_int = 0;
 
-    current_world_ptr->dungeon_turn = current_world_ptr->game_turn = tmp_int;
+    w_ptr->dungeon_turn = w_ptr->game_turn = tmp_int;
 }
 
 /*!
@@ -701,7 +696,7 @@ void cheat_death(player_type *player_ptr)
         player_ptr->sc = player_ptr->age = 0;
     player_ptr->age++;
 
-    current_world_ptr->noscore |= 0x0001;
+    w_ptr->noscore |= 0x0001;
     msg_print(_("ウィザードモードに念を送り、死を欺いた。", "You invoke wizard mode and cheat death."));
     msg_print(nullptr);
 

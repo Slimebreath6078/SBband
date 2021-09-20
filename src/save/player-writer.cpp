@@ -7,6 +7,8 @@
 #include "system/building-type-definition.h"
 #include "system/floor-type-definition.h"
 #include "system/player-type-definition.h"
+#include "timed-effect/player-stun.h"
+#include "timed-effect/timed-effects.h"
 #include "world/world.h"
 
 /*!
@@ -96,7 +98,7 @@ void wr_player(player_type *player_ptr)
 
     wr_s16b(player_ptr->mane_num);
     for (int i = 0; i < MAX_BOUNTY; i++)
-        wr_s16b(current_world_ptr->bounty_r_idx[i]);
+        wr_s16b(w_ptr->bounty_r_idx[i]);
 
     for (int i = 0; i < 4; i++) {
         wr_s16b(battle_mon[i]);
@@ -124,7 +126,7 @@ void wr_player(player_type *player_ptr)
     wr_u32b(player_ptr->csp_frac);
     wr_s16b(player_ptr->max_plv);
 
-    byte tmp8u = (byte)current_world_ptr->max_d_idx;
+    byte tmp8u = (byte)w_ptr->max_d_idx;
     wr_byte(tmp8u);
     for (int i = 0; i < tmp8u; i++)
         wr_s16b((int16_t)max_dlv[i]);
@@ -136,6 +138,7 @@ void wr_player(player_type *player_ptr)
     wr_s16b(player_ptr->sc);
     wr_s16b(player_ptr->concent);
 
+    auto effects = player_ptr->effects();
     wr_s16b(0); /* old "rest" */
     wr_s16b(player_ptr->blind);
     wr_s16b(player_ptr->paralyzed);
@@ -149,7 +152,7 @@ void wr_player(player_type *player_ptr)
     wr_s16b(player_ptr->slow);
     wr_s16b(player_ptr->afraid);
     wr_s16b(player_ptr->cut);
-    wr_s16b(player_ptr->stun);
+    wr_s16b(effects->stun()->current());
     wr_s16b(player_ptr->poisoned);
     wr_s16b(player_ptr->image);
     wr_s16b(player_ptr->protevil);
@@ -223,26 +226,26 @@ void wr_player(player_type *player_ptr)
     wr_u32b(0L);
     wr_u32b(0L);
 
-    wr_u32b(current_world_ptr->seed_flavor);
-    wr_u32b(current_world_ptr->seed_town);
+    wr_u32b(w_ptr->seed_flavor);
+    wr_u32b(w_ptr->seed_town);
     wr_u16b(player_ptr->panic_save);
-    wr_u16b(current_world_ptr->total_winner);
-    wr_u16b(current_world_ptr->noscore);
+    wr_u16b(w_ptr->total_winner);
+    wr_u16b(w_ptr->noscore);
     wr_byte(player_ptr->is_dead);
     wr_byte(player_ptr->feeling);
     wr_s32b(player_ptr->current_floor_ptr->generated_turn);
     wr_s32b(player_ptr->feeling_turn);
-    wr_s32b(current_world_ptr->game_turn);
-    wr_s32b(current_world_ptr->dungeon_turn);
-    wr_s32b(current_world_ptr->arena_start_turn);
-    wr_s16b(current_world_ptr->today_mon);
+    wr_s32b(w_ptr->game_turn);
+    wr_s32b(w_ptr->dungeon_turn);
+    wr_s32b(w_ptr->arena_start_turn);
+    wr_s16b(w_ptr->today_mon);
     wr_s16b(player_ptr->today_mon);
     wr_s16b(player_ptr->riding);
     wr_s16b(player_ptr->floor_id);
 
     /* Save temporary preserved pets (obsolated) */
     wr_s16b(0);
-    wr_u32b(current_world_ptr->play_time);
+    wr_u32b(w_ptr->play_time);
     wr_s32b(player_ptr->visit);
     wr_u32b(player_ptr->count);
 }
