@@ -142,6 +142,17 @@ bool mane_attack_spell::fire(){
     return true;
 }
 
+bool mane_bad_st::fire(){
+    DIRECTION dir;
+    if (!get_aim_dir(this->player_ptr, &dir))
+        return false;
+    else if(this->msg)
+        msg_print(this->msg);
+
+    func(this->player_ptr, dir, this->power);
+    return true;
+}
+
 /*!
  * @brief 受け取ったパラメータに応じてものまねの効果情報をまとめたフォーマットを返す
  * @param p 情報を返す文字列参照ポインタ
