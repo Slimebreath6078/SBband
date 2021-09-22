@@ -267,7 +267,7 @@ MonsterSpellResult spell_RF5_SCARE(MONSTER_IDX m_idx, player_type *player_ptr, M
             _("しかし恐怖に侵されなかった。", "You refuse to be frightened.")), resist, saving_throw);
 
         if (!resist && !saving_throw) {
-            (void)set_afraid(player_ptr, player_ptr->afraid + randint0(4) + 4);
+            (void)BadStatusSetter(player_ptr).afraidness(player_ptr->afraid + randint0(4) + 4);
         }
 
         update_smart_learn(player_ptr, m_idx, DRS_FEAR);
@@ -320,7 +320,7 @@ MonsterSpellResult spell_RF5_BLIND(MONSTER_IDX m_idx, player_type *player_ptr, M
             _("しかし効力を跳ね返した！", "You resist the effects!")), resist, saving_throw);
 
         if (!resist && !saving_throw) {
-            (void)set_blind(player_ptr, 12 + randint0(4));
+            (void)BadStatusSetter(player_ptr).blindness(12 + randint0(4));
         }
 
         update_smart_learn(player_ptr, m_idx, DRS_BLIND);
@@ -383,7 +383,7 @@ MonsterSpellResult spell_RF5_CONF(MONSTER_IDX m_idx, player_type *player_ptr, MO
             _("しかし幻覚にはだまされなかった。", "You disbelieve the feeble spell.")), resist, saving_throw);
 
         if (!resist && !saving_throw) {
-            (void)set_confused(player_ptr, player_ptr->confused + randint0(4) + 4);
+            (void)BadStatusSetter(player_ptr).confusion(player_ptr->confused + randint0(4) + 4);
         }
 
         update_smart_learn(player_ptr, m_idx, DRS_CONF);
@@ -436,7 +436,7 @@ MonsterSpellResult spell_RF5_HOLD(MONSTER_IDX m_idx, player_type *player_ptr, MO
             _("しかし効力を跳ね返した！", "You resist the effects!")), (bool)resist, saving_throw);
 
         if (!resist && !saving_throw) {
-            (void)set_paralyzed(player_ptr, player_ptr->paralyzed + randint0(4) + 4);
+            (void)BadStatusSetter(player_ptr).paralysis(player_ptr->paralyzed + randint0(4) + 4);
         }
 
         update_smart_learn(player_ptr, m_idx, DRS_FREE);
@@ -520,7 +520,7 @@ MonsterSpellResult spell_RF5_SLOW(MONSTER_IDX m_idx, player_type *player_ptr, MO
             _("しかし効力を跳ね返した！", "You resist the effects!")), resist, saving_throw);
 
         if (!resist && !saving_throw) {
-            (void)set_slow(player_ptr, player_ptr->slow + randint0(4) + 4, false);
+            (void)BadStatusSetter(player_ptr).slowness(player_ptr->slow + randint0(4) + 4, false);
         }
 
         update_smart_learn(player_ptr, m_idx, DRS_FREE);

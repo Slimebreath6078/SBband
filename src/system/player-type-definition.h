@@ -95,7 +95,7 @@ public:
     TIME_EFFECT paralyzed{}; /* Timed -- Paralysis */
     TIME_EFFECT confused{}; /* Timed -- Confusion */
     TIME_EFFECT afraid{}; /* Timed -- Fear */
-    TIME_EFFECT image{}; /* Timed -- Hallucination */
+    TIME_EFFECT hallucinated{}; /* Timed -- Hallucination */
     TIME_EFFECT poisoned{}; /* Timed -- Poisoned */
     TIME_EFFECT cut{}; /* Timed -- Cut */
     
@@ -242,7 +242,7 @@ public:
     byte feeling{}; /* Most recent dungeon feeling */
     int32_t feeling_turn{}; /* The turn of the last dungeon feeling */
 
-    object_type *inventory_list{}; /* The player's inventory */
+    std::shared_ptr<object_type[]> inventory_list{}; /* The player's inventory */
     int16_t inven_cnt{}; /* Number of items in inventory */
     int16_t equip_cnt{}; /* Number of items in equipment */
 
