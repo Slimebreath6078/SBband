@@ -2319,6 +2319,12 @@
     <ClCompile Include="..\..\src\blue-magic\blue-magic-bolt.cpp">
       <Filter>blue-magic</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\timed-effect\player-stun.cpp">
+      <Filter>timed-effect</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\timed-effect\timed-effects.cpp">
+      <Filter>timed-effect</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\combat\shoot.h">
@@ -4995,6 +5001,12 @@
     <ClInclude Include="..\..\src\blue-magic\blue-magic-bolt.h">
       <Filter>blue-magic</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\timed-effect\player-stun.h">
+      <Filter>timed-effect</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\timed-effect\timed-effects.h">
+      <Filter>timed-effect</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\wall.bmp" />
@@ -5213,6 +5225,9 @@
     </Filter>
     <Filter Include="player-base">
       <UniqueIdentifier>{3681ebed-58b6-4ed1-819d-d0ba389dfe42}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="timed-effect">
+      <UniqueIdentifier>{b8bc7698-db79-4c82-8008-3f6e3f1763e8}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
