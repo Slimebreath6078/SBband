@@ -14,72 +14,46 @@
 #include "target/target-getter.h"
 #include "view/display-messages.h"
 
-bool cast_blue_drain_mana(player_type *player_ptr, bmc_type *bmc_ptr)
-{
-    if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
+curse_caster::curse_caster(player_type *player_ptr, bmc_type *bmc_ptr, RF_ABILITY ms_type, EFFECT_ID typ)
+    : player_ptr(player_ptr)
+    , bmc_ptr(bmc_ptr)
+    , ms_type(ms_type)
+    , typ(typ)
+{}
+
+bool curse_caster::project(){
+    if (!get_aim_dir(this->player_ptr, &this->bmc_ptr->dir))
         return false;
 
-    bmc_ptr->damage = monspell_bluemage_damage(player_ptr, RF_ABILITY::DRAIN_MANA, bmc_ptr->plev, DAM_ROLL);
-    fire_ball_hide(player_ptr, GF_DRAIN_MANA, bmc_ptr->dir, bmc_ptr->damage, 0);
+    this->bmc_ptr->damage = monspell_bluemage_damage(this->player_ptr, this->ms_type, this->bmc_ptr->plev, DAM_ROLL);
+    fire_ball_hide(this->player_ptr, this->typ, this->bmc_ptr->dir, this->bmc_ptr->damage, 0);
     return true;
 }
 
-bool cast_blue_mind_blast(player_type *player_ptr, bmc_type *bmc_ptr)
-{
-    if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
-        return false;
+drain_mana_caster::drain_mana_caster(player_type *player_ptr, bmc_type *bmc_ptr)
+    : curse_caster(player_ptr, bmc_ptr, RF_ABILITY::DRAIN_MANA, GF_DRAIN_MANA)
+{}
 
-    bmc_ptr->damage = monspell_bluemage_damage(player_ptr, RF_ABILITY::MIND_BLAST, bmc_ptr->plev, DAM_ROLL);
-    fire_ball_hide(player_ptr, GF_MIND_BLAST, bmc_ptr->dir, bmc_ptr->damage, 0);
-    return true;
-}
+mind_blast_caster::mind_blast_caster(player_type *player_ptr, bmc_type *bmc_ptr)
+    : curse_caster(player_ptr, bmc_ptr, RF_ABILITY::MIND_BLAST, GF_MIND_BLAST)
+{}
 
-bool cast_blue_brain_smash(player_type *player_ptr, bmc_type *bmc_ptr)
-{
-    if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
-        return false;
+brain_smash_caster::brain_smash_caster(player_type *player_ptr, bmc_type *bmc_ptr)
+    : curse_caster(player_ptr, bmc_ptr, RF_ABILITY::BRAIN_SMASH, GF_BRAIN_SMASH)
+{}
 
-    bmc_ptr->damage = monspell_bluemage_damage(player_ptr, RF_ABILITY::BRAIN_SMASH, bmc_ptr->plev, DAM_ROLL);
-    fire_ball_hide(player_ptr, GF_BRAIN_SMASH, bmc_ptr->dir, bmc_ptr->damage, 0);
-    return true;
-}
+curse_1_caster::curse_1_caster(player_type *player_ptr, bmc_type *bmc_ptr)
+    : curse_caster(player_ptr, bmc_ptr, RF_ABILITY::CAUSE_1, GF_CAUSE_1)
+{}
 
-bool cast_blue_curse_1(player_type *player_ptr, bmc_type *bmc_ptr)
-{
-    if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
-        return false;
+curse_2_caster::curse_2_caster(player_type *player_ptr, bmc_type *bmc_ptr)
+    : curse_caster(player_ptr, bmc_ptr, RF_ABILITY::CAUSE_2, GF_CAUSE_2)
+{}
 
-    bmc_ptr->damage = monspell_bluemage_damage(player_ptr, RF_ABILITY::CAUSE_1, bmc_ptr->plev, DAM_ROLL);
-    fire_ball_hide(player_ptr, GF_CAUSE_1, bmc_ptr->dir, bmc_ptr->damage, 0);
-    return true;
-}
+curse_3_caster::curse_3_caster(player_type *player_ptr, bmc_type *bmc_ptr)
+    : curse_caster(player_ptr, bmc_ptr, RF_ABILITY::CAUSE_3, GF_CAUSE_3)
+{}
 
-bool cast_blue_curse_2(player_type *player_ptr, bmc_type *bmc_ptr)
-{
-    if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
-        return false;
-
-    bmc_ptr->damage = monspell_bluemage_damage(player_ptr, RF_ABILITY::CAUSE_2, bmc_ptr->plev, DAM_ROLL);
-    fire_ball_hide(player_ptr, GF_CAUSE_2, bmc_ptr->dir, bmc_ptr->damage, 0);
-    return true;
-}
-
-bool cast_blue_curse_3(player_type *player_ptr, bmc_type *bmc_ptr)
-{
-    if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
-        return false;
-
-    bmc_ptr->damage = monspell_bluemage_damage(player_ptr, RF_ABILITY::CAUSE_3, bmc_ptr->plev, DAM_ROLL);
-    fire_ball_hide(player_ptr, GF_CAUSE_3, bmc_ptr->dir, bmc_ptr->damage, 0);
-    return true;
-}
-
-bool cast_blue_curse_4(player_type *player_ptr, bmc_type *bmc_ptr)
-{
-    if (!get_aim_dir(player_ptr, &bmc_ptr->dir))
-        return false;
-
-    bmc_ptr->damage = monspell_bluemage_damage(player_ptr, RF_ABILITY::CAUSE_4, bmc_ptr->plev, DAM_ROLL);
-    fire_ball_hide(player_ptr, GF_CAUSE_4, bmc_ptr->dir, bmc_ptr->damage, 0);
-    return true;
-}
+curse_4_caster::curse_4_caster(player_type *player_ptr, bmc_type *bmc_ptr)
+    : curse_caster(player_ptr, bmc_ptr, RF_ABILITY::CAUSE_4, GF_CAUSE_4)
+{}

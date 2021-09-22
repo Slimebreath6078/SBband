@@ -251,7 +251,8 @@
     <ClCompile Include="..\..\src\birth\initial-equipments-table.cpp" />
     <ClCompile Include="..\..\src\birth\inventory-initializer.cpp" />
     <ClCompile Include="..\..\src\birth\quick-start.cpp" />
-    <ClCompile Include="..\..\src\blue-magic\blue-magic-ball-bolt.cpp" />
+    <ClCompile Include="..\..\src\blue-magic\blue-magic-ball.cpp" />
+    <ClCompile Include="..\..\src\blue-magic\blue-magic-bolt.cpp" />
     <ClCompile Include="..\..\src\blue-magic\blue-magic-breath.cpp" />
     <ClCompile Include="..\..\src\blue-magic\blue-magic-caster.cpp" />
     <ClCompile Include="..\..\src\blue-magic\blue-magic-spirit-curse.cpp" />
@@ -937,7 +938,8 @@
     <ClInclude Include="..\..\src\birth\initial-equipments-table.h" />
     <ClInclude Include="..\..\src\birth\inventory-initializer.h" />
     <ClInclude Include="..\..\src\birth\quick-start.h" />
-    <ClInclude Include="..\..\src\blue-magic\blue-magic-ball-bolt.h" />
+    <ClInclude Include="..\..\src\blue-magic\blue-magic-ball.h" />
+    <ClInclude Include="..\..\src\blue-magic\blue-magic-bolt.h" />
     <ClInclude Include="..\..\src\blue-magic\blue-magic-breath.h" />
     <ClInclude Include="..\..\src\blue-magic\blue-magic-caster.h" />
     <ClInclude Include="..\..\src\blue-magic\blue-magic-spirit-curse.h" />
