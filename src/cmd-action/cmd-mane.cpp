@@ -78,8 +78,29 @@ mane_attack_spell::mane_attack_spell(player_type *player_ptr, concptr msg, EFFEC
     , msg(msg)
     , typ(typ)
     , rad(rad)
+    , dam(damage)
     , func(func)
 {}
+
+mane_attack_spell::mane_attack_spell(player_type *player_ptr, concptr msg, EFFECT_ID typ, POSITION rad, HIT_POINT dam,
+    std::function<bool(player_type *, EFFECT_ID, DIRECTION, HIT_POINT, POSITION)> func)
+    : player_ptr(player_ptr)
+    , msg(msg)
+    , typ(typ)
+    , rad(rad)
+    , dam(dam)
+    , func(func)
+{}
+
+bool mane_attack_spell::fire(){
+    DIRECTION dir;
+    if (!get_aim_dir(this->player_ptr, &dir))
+            return false;
+    else if(this->msg)
+        msg_print(this->msg);
+    func(this->player_ptr, this->typ, dir, dam, this->rad);
+    return true;
+}
 
 /*!
  * @brief 受け取ったパラメータに応じてものまねの効果情報をまとめたフォーマットを返す

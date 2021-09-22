@@ -10,6 +10,8 @@ class mane_attack_spell{
     protected:
         mane_attack_spell(player_type *player_ptr, concptr msg, EFFECT_ID typ, POSITION rad,
             std::function<bool(player_type *, EFFECT_ID, DIRECTION, HIT_POINT, POSITION)> func);
+        mane_attack_spell(player_type *player_ptr, concptr msg, EFFECT_ID typ, POSITION rad, HIT_POINT dam,
+            std::function<bool(player_type *, EFFECT_ID, DIRECTION, HIT_POINT, POSITION)> func);
         mane_attack_spell() = delete;
     public:
         ~mane_attack_spell() = default;
@@ -19,6 +21,7 @@ class mane_attack_spell{
         concptr msg;
         EFFECT_ID typ;
         POSITION rad;
+        HIT_POINT dam;
         std::function<bool(player_type *, EFFECT_ID, DIRECTION, HIT_POINT, POSITION)> func;
 };
 bool do_cmd_mane(player_type *player_ptr, bool baigaesi);
