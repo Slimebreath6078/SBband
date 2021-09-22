@@ -12,6 +12,7 @@ enum mspell_lite_type {
     DO_SPELL_BR_LITE = 1,
     DO_SPELL_BR_DISI = 2,
     DO_SPELL_BA_LITE = 3,
+    DO_SPELL_BO_LITE = 4,
 };
 
 // Monster Spell Attack.

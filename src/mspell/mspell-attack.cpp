@@ -149,6 +149,9 @@ static bool switch_do_spell(player_type *player_ptr, msa_type *msa_ptr)
     case DO_SPELL_BA_LITE:
         msa_ptr->thrown_spell = RF_ABILITY::BA_LITE;
         return true;
+    case DO_SPELL_BO_LITE:
+        msa_ptr->thrown_spell = RF_ABILITY::BO_LITE;
+        return true;
     default:
         return false;
     }
