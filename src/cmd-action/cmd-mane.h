@@ -31,4 +31,11 @@ class mane_bolt : public mane_attack_spell{
         mane_bolt() = delete;
         ~mane_bolt() = default;
 };
+
+class mane_ball : public mane_attack_spell{
+    public:
+        mane_ball(player_type *player_ptr, concptr msg, EFFECT_ID typ, POSITION rad);
+        mane_ball() = delete;
+        ~mane_ball() = default;
+};
 bool do_cmd_mane(player_type *player_ptr, bool baigaesi);

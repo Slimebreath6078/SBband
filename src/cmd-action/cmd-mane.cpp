@@ -97,6 +97,10 @@ mane_bolt::mane_bolt(player_type *player_ptr, concptr msg, EFFECT_ID typ)
     [func = fire_bolt](player_type *player_ptr, EFFECT_ID typ, DIRECTION dir, HIT_POINT dam, POSITION){ return func(player_ptr, typ, dir, dam); })
 {}
 
+mane_ball::mane_ball(player_type *player_ptr, concptr msg, EFFECT_ID typ, POSITION rad)
+    : mane_attack_spell(player_ptr, msg, typ, rad, fire_ball)
+{}
+
 bool mane_attack_spell::fire(){
     DIRECTION dir;
     if (!get_aim_dir(this->player_ptr, &dir))
@@ -560,12 +564,8 @@ static bool use_mane(player_type *player_ptr, RF_ABILITY spell)
         break;
 
     case RF_ABILITY::BA_NUKE:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_ball(player_ptr, _("放射能球を放った。", "You cast a ball of radiation."), GF_NUKE, 2).fire())
             return false;
-        else
-            msg_print(_("放射能球を放った。", "You cast a ball of radiation."));
-
-        fire_ball(player_ptr, GF_NUKE, dir, damage, 2);
         break;
 
     case RF_ABILITY::BR_NUKE:
@@ -578,12 +578,8 @@ static bool use_mane(player_type *player_ptr, RF_ABILITY spell)
         break;
 
     case RF_ABILITY::BA_CHAO:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_ball(player_ptr, _("純ログルスを放った。", "You invoke a raw Logrus."), GF_CHAOS, 4).fire())
             return false;
-        else
-            msg_print(_("純ログルスを放った。", "You invoke a raw Logrus."));
-
-        fire_ball(player_ptr, GF_CHAOS, dir, damage, 4);
         break;
     case RF_ABILITY::BR_DISI:
         if (!get_aim_dir(player_ptr, &dir))
@@ -594,76 +590,40 @@ static bool use_mane(player_type *player_ptr, RF_ABILITY spell)
         fire_breath(player_ptr, GF_DISINTEGRATE, dir, damage, (plev > 35 ? 3 : 2));
         break;
     case RF_ABILITY::BA_ACID:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_ball(player_ptr, _("アシッド・ボールの呪文を唱えた。", "You cast an acid ball."), GF_ACID, 2).fire())
             return false;
-        else
-            msg_print(_("アシッド・ボールの呪文を唱えた。", "You cast an acid ball."));
-
-        fire_ball(player_ptr, GF_ACID, dir, damage, 2);
         break;
     case RF_ABILITY::BA_ELEC:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_ball(player_ptr, _("サンダー・ボールの呪文を唱えた。", "You cast a lightning ball."), GF_ELEC, 2).fire())
             return false;
-        else
-            msg_print(_("サンダー・ボールの呪文を唱えた。", "You cast a lightning ball."));
-
-        fire_ball(player_ptr, GF_ELEC, dir, damage, 2);
         break;
     case RF_ABILITY::BA_FIRE:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_ball(player_ptr, _("ファイア・ボールの呪文を唱えた。", "You cast a fire ball."), GF_FIRE, 2).fire())
             return false;
-        else
-            msg_print(_("ファイア・ボールの呪文を唱えた。", "You cast a fire ball."));
-
-        fire_ball(player_ptr, GF_FIRE, dir, damage, 2);
         break;
     case RF_ABILITY::BA_COLD:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_ball(player_ptr, _("アイス・ボールの呪文を唱えた。", "You cast a frost ball."), GF_COLD, 2).fire())
             return false;
-        else
-            msg_print(_("アイス・ボールの呪文を唱えた。", "You cast a frost ball."));
-
-        fire_ball(player_ptr, GF_COLD, dir, damage, 2);
         break;
     case RF_ABILITY::BA_POIS:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_ball(player_ptr, _("悪臭雲の呪文を唱えた。", "You cast a stinking cloud."), GF_POIS, 2).fire())
             return false;
-        else
-            msg_print(_("悪臭雲の呪文を唱えた。", "You cast a stinking cloud."));
-
-        fire_ball(player_ptr, GF_POIS, dir, damage, 2);
         break;
     case RF_ABILITY::BA_NETH:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_ball(player_ptr, _("地獄球の呪文を唱えた。", "You cast a nether ball."), GF_NETHER, 2).fire())
             return false;
-        else
-            msg_print(_("地獄球の呪文を唱えた。", "You cast a nether ball."));
-
-        fire_ball(player_ptr, GF_NETHER, dir, damage, 2);
         break;
     case RF_ABILITY::BA_WATE:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_ball(player_ptr, _("流れるような身振りをした。", "You gesture fluidly."), GF_WATER, 4).fire())
             return false;
-        else
-            msg_print(_("流れるような身振りをした。", "You gesture fluidly."));
-
-        fire_ball(player_ptr, GF_WATER, dir, damage, 4);
         break;
     case RF_ABILITY::BA_MANA:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_ball(player_ptr, _("魔力の嵐の呪文を念じた。", "You invoke a mana storm."), GF_MANA, 4).fire())
             return false;
-        else
-            msg_print(_("魔力の嵐の呪文を念じた。", "You invoke a mana storm."));
-
-        fire_ball(player_ptr, GF_MANA, dir, damage, 4);
         break;
     case RF_ABILITY::BA_DARK:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_ball(player_ptr, _("暗黒の嵐の呪文を念じた。", "You invoke a darkness storm."), GF_DARK, 4).fire())
             return false;
-        else
-            msg_print(_("暗黒の嵐の呪文を念じた。", "You invoke a darkness storm."));
-
-        fire_ball(player_ptr, GF_DARK, dir, damage, 4);
         break;
     case RF_ABILITY::DRAIN_MANA:
         if (!get_aim_dir(player_ptr, &dir))
@@ -717,12 +677,8 @@ static bool use_mane(player_type *player_ptr, RF_ABILITY spell)
             return false;
         break;
     case RF_ABILITY::BA_LITE:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_ball(player_ptr, _("スターバーストの呪文を念じた。", "You invoke a starburst."), GF_LITE, 4).fire())
             return false;
-        else
-            msg_print(_("スターバーストの呪文を念じた。", "You invoke a starburst."));
-
-        fire_ball(player_ptr, GF_LITE, dir, damage, 4);
         break;
     case RF_ABILITY::BO_NETH:
         if (!mane_bolt(player_ptr, _("地獄の矢の呪文を唱えた。", "You cast a nether bolt."), GF_NETHER).fire())
