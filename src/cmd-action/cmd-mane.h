@@ -54,4 +54,12 @@ class mane_breath : public mane_attack_spell{
         mane_breath() = delete;
         ~mane_breath() = default;
 };
+
+class mane_ball_hide : public mane_attack_spell{
+    public:
+        mane_ball_hide(player_type *player_ptr, concptr msg, EFFECT_ID typ, POSITION rad);
+        mane_ball_hide(player_type *player_ptr, concptr msg, EFFECT_ID typ, POSITION rad, HIT_POINT dam);
+        mane_ball_hide() = delete;
+        ~mane_ball_hide() = default;
+};
 bool do_cmd_mane(player_type *player_ptr, bool baigaesi);

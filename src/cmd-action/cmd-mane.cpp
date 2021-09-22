@@ -117,6 +117,14 @@ mane_breath::mane_breath(player_type *player_ptr, concptr msg, char* buffer, EFF
     sprintf(buffer, _("%sのブレスを吐いた。", "You breathe %s."), msg);
 }
 
+mane_ball_hide::mane_ball_hide(player_type *player_ptr, concptr msg, EFFECT_ID typ, POSITION rad)
+    : mane_attack_spell(player_ptr, msg, typ, rad, fire_ball_hide)
+{}
+
+mane_ball_hide::mane_ball_hide(player_type *player_ptr, concptr msg, EFFECT_ID typ, POSITION rad, HIT_POINT dam)
+    : mane_attack_spell(player_ptr, msg, typ, rad, dam, fire_ball_hide)
+{}
+
 bool mane_attack_spell::fire(){
     DIRECTION dir;
     if (!get_aim_dir(this->player_ptr, &dir))
@@ -573,39 +581,32 @@ static bool use_mane(player_type *player_ptr, RF_ABILITY spell)
             return false;
         break;
     case RF_ABILITY::DRAIN_MANA:
-        if (!get_aim_dir(player_ptr, &dir))
+        if(!mane_ball_hide(player_ptr, nullptr, GF_DRAIN_MANA, randint1(plev * 3) + plev, 0).fire())
             return false;
-        fire_ball_hide(player_ptr, GF_DRAIN_MANA, dir, randint1(plev * 3) + plev, 0);
         break;
     case RF_ABILITY::MIND_BLAST:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_ball_hide(player_ptr, nullptr, GF_MIND_BLAST, 0).fire())
             return false;
-        fire_ball_hide(player_ptr, GF_MIND_BLAST, dir, damage, 0);
         break;
     case RF_ABILITY::BRAIN_SMASH:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_ball_hide(player_ptr, nullptr, GF_BRAIN_SMASH, 0).fire())
             return false;
-        fire_ball_hide(player_ptr, GF_BRAIN_SMASH, dir, damage, 0);
         break;
     case RF_ABILITY::CAUSE_1:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_ball_hide(player_ptr, nullptr, GF_CAUSE_1, 0).fire())
             return false;
-        fire_ball_hide(player_ptr, GF_CAUSE_1, dir, damage, 0);
         break;
     case RF_ABILITY::CAUSE_2:
-        if (!get_aim_dir(player_ptr, &dir))
+        if(!mane_ball_hide(player_ptr, nullptr, GF_CAUSE_2, 0).fire())
             return false;
-        fire_ball_hide(player_ptr, GF_CAUSE_2, dir, damage, 0);
         break;
     case RF_ABILITY::CAUSE_3:
-        if (!get_aim_dir(player_ptr, &dir))
+        if(!mane_ball_hide(player_ptr, nullptr, GF_CAUSE_3, 0).fire())
             return false;
-        fire_ball_hide(player_ptr, GF_CAUSE_3, dir, damage, 0);
         break;
     case RF_ABILITY::CAUSE_4:
-        if (!get_aim_dir(player_ptr, &dir))
+        if(!mane_ball_hide(player_ptr, nullptr, GF_CAUSE_4, 0).fire())
             return false;
-        fire_ball_hide(player_ptr, GF_CAUSE_4, dir, damage, 0);
         break;
     case RF_ABILITY::BO_ACID:
         if(!mane_bolt(player_ptr, _("アシッド・ボルトの呪文を唱えた。", "You cast an acid bolt."), GF_ACID).fire())
@@ -686,12 +687,8 @@ static bool use_mane(player_type *player_ptr, RF_ABILITY spell)
         (void)set_fast(player_ptr, randint1(20 + plev) + plev, false);
         break;
     case RF_ABILITY::HAND_DOOM: {
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_ball_hide(player_ptr, _("<破滅の手>を放った！", "You invoke the Hand of Doom!"), GF_HAND_DOOM, 200, 0).fire())
             return false;
-        else
-            msg_print(_("<破滅の手>を放った！", "You invoke the Hand of Doom!"));
-
-        fire_ball_hide(player_ptr, GF_HAND_DOOM, dir, 200, 0);
         break;
     }
     case RF_ABILITY::HEAL: {
