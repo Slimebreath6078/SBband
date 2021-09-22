@@ -72,6 +72,15 @@
 
 static int damage;
 
+mane_attack_spell::mane_attack_spell(player_type *player_ptr, concptr msg, EFFECT_ID typ, POSITION rad,
+    std::function<bool(player_type *, EFFECT_ID, DIRECTION, HIT_POINT, POSITION)> func)
+    : player_ptr(player_ptr)
+    , msg(msg)
+    , typ(typ)
+    , rad(rad)
+    , func(func)
+{}
+
 /*!
  * @brief 受け取ったパラメータに応じてものまねの効果情報をまとめたフォーマットを返す
  * @param p 情報を返す文字列参照ポインタ
