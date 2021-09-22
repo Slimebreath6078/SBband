@@ -125,6 +125,13 @@ mane_ball_hide::mane_ball_hide(player_type *player_ptr, concptr msg, EFFECT_ID t
     : mane_attack_spell(player_ptr, msg, typ, rad, dam, fire_ball_hide)
 {}
 
+mane_bad_st::mane_bad_st(player_type *player_ptr, concptr msg, int power, std::function<bool(player_type *, DIRECTION, int)> func)
+    : player_ptr(player_ptr)
+    , msg(msg)
+    , power(power)
+    , func(func)
+{}
+
 bool mane_attack_spell::fire(){
     DIRECTION dir;
     if (!get_aim_dir(this->player_ptr, &dir))

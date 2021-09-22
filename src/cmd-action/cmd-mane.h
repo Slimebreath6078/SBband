@@ -62,4 +62,17 @@ class mane_ball_hide : public mane_attack_spell{
         mane_ball_hide() = delete;
         ~mane_ball_hide() = default;
 };
+
+class mane_bad_st{
+    public:
+        mane_bad_st(player_type *player_ptr, concptr msg, int power, std::function<bool(player_type *, DIRECTION, int)> func);
+        mane_bad_st() = delete;
+        ~mane_bad_st() = default;
+        bool fire();
+    private:
+        player_type *player_ptr;
+        concptr msg;
+        int power;
+        std::function<bool(player_type *, DIRECTION, int)> func;
+};
 bool do_cmd_mane(player_type *player_ptr, bool baigaesi);
