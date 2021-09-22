@@ -36,7 +36,7 @@
 #include "view/display-messages.h"
 #include "world/world.h"
 
-quest_type *quest; /*!< Quest info */
+std::vector<quest_type> quest; /*!< Quest info */
 QUEST_IDX max_q_idx; /*!< Maximum number of quests */
 char quest_text[10][80]; /*!< Quest text */
 int quest_text_line; /*!< Current line of the quest text */
@@ -110,7 +110,7 @@ void record_quest_final_status(quest_type *q_ptr, PLAYER_LEVEL lev, int16_t stat
     q_ptr->status = stat;
     q_ptr->complev = lev;
     update_playtime();
-    q_ptr->comptime = current_world_ptr->play_time;
+    q_ptr->comptime = w_ptr->play_time;
 }
 
 /*!
@@ -306,7 +306,7 @@ void leave_tower_check(player_type *player_ptr)
     quest[QUEST_TOWER1].status = QUEST_STATUS_FAILED;
     quest[QUEST_TOWER1].complev = player_ptr->lev;
     update_playtime();
-    quest[QUEST_TOWER1].comptime = current_world_ptr->play_time;
+    quest[QUEST_TOWER1].comptime = w_ptr->play_time;
 }
 
 /*! 

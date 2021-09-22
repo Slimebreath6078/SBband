@@ -57,7 +57,7 @@
 MONSTER_IDX m_pop(floor_type *floor_ptr)
 {
     /* Normal allocation */
-    if (floor_ptr->m_max < current_world_ptr->max_m_idx) {
+    if (floor_ptr->m_max < w_ptr->max_m_idx) {
         MONSTER_IDX i = floor_ptr->m_max;
         floor_ptr->m_max++;
         floor_ptr->m_cnt++;
@@ -74,7 +74,7 @@ MONSTER_IDX m_pop(floor_type *floor_ptr)
         return i;
     }
 
-    if (current_world_ptr->character_dungeon)
+    if (w_ptr->character_dungeon)
         msg_print(_("モンスターが多すぎる！", "Too many monsters!"));
     return 0;
 }
@@ -90,7 +90,6 @@ MONRACE_IDX get_mon_num(player_type *player_ptr, DEPTH min_level, DEPTH max_leve
 {
     int r_idx;
     monster_race *r_ptr;
-    alloc_entry *table = alloc_race_table;
 
     int pls_kakuritu, pls_max_level, over_days;
     int delay = mysqrt(max_level * 10000L) + (max_level * 5);
@@ -104,7 +103,7 @@ MONRACE_IDX get_mon_num(player_type *player_ptr, DEPTH min_level, DEPTH max_leve
 
     /* +1 per day after the base date */
     /* base dates : day5(1F), day18(10F,0F), day34(30F), day53(60F), day69(90F) */
-    over_days = MAX(0, current_world_ptr->dungeon_turn / (TURNS_PER_TICK * 10000L) - delay / 20);
+    over_days = MAX(0, w_ptr->dungeon_turn / (TURNS_PER_TICK * 10000L) - delay / 20);
 
     /* starts from 1/25, reaches 1/3 after 44days from a max_level dependent base date */
     pls_kakuritu = MAX(NASTY_MON_MAX, NASTY_MON_BASE - over_days / 2);
@@ -137,12 +136,13 @@ MONRACE_IDX get_mon_num(player_type *player_ptr, DEPTH min_level, DEPTH max_leve
     ProbabilityTable<int> prob_table;
 
     /* Process probabilities */
-    for (int i = 0; i < alloc_race_size; i++) {
-        if (table[i].level < min_level)
+    for (auto i = 0U; i < alloc_race_table.size(); i++) {
+        const auto &entry = alloc_race_table[i];
+        if (entry.level < min_level)
             continue;
-        if (max_level < table[i].level)
+        if (max_level < entry.level)
             break; // sorted by depth array,
-        r_idx = table[i].index;
+        r_idx = entry.index;
         r_ptr = &r_info[r_idx];
         if (!(option & GMN_ARENA) && !chameleon_change_m_idx) {
             if (((r_ptr->flags1 & (RF1_UNIQUE)) || (r_ptr->flags7 & (RF7_NAZGUL))) && (r_ptr->cur_num >= r_ptr->max_num)) {
@@ -161,7 +161,7 @@ MONRACE_IDX get_mon_num(player_type *player_ptr, DEPTH min_level, DEPTH max_leve
             }
         }
 
-        prob_table.entry_item(i, table[i].prob2);
+        prob_table.entry_item(i, entry.prob2);
     }
 
     if (cheat_hear) {
@@ -184,9 +184,9 @@ MONRACE_IDX get_mon_num(player_type *player_ptr, DEPTH min_level, DEPTH max_leve
     std::vector<int> result;
     ProbabilityTable<int>::lottery(std::back_inserter(result), prob_table, n);
 
-    auto it = std::max_element(result.begin(), result.end(), [table](int a, int b) { return table[a].level < table[b].level; });
+    auto it = std::max_element(result.begin(), result.end(), [](int a, int b) { return alloc_race_table[a].level < alloc_race_table[b].level; });
 
-    return (table[*it].index);
+    return alloc_race_table[*it].index;
 }
 
 /*!

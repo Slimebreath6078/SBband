@@ -64,6 +64,8 @@
 #include "target/target-setter.h"
 #include "target/target-types.h"
 #include "term/screen-processor.h"
+#include "timed-effect/player-stun.h"
+#include "timed-effect/timed-effects.h"
 #include "util/enum-converter.h"
 #include "util/int-char-converter.h"
 #include "view/display-messages.h"
@@ -212,15 +214,11 @@ static int get_mane_power(player_type *player_ptr, int *sn, bool baigaesi)
                     if (chance < minfail)
                         chance = minfail;
 
-                    /* Stunning makes spells harder */
-                    if (player_ptr->stun > 50)
-                        chance += 25;
-                    else if (player_ptr->stun)
-                        chance += 15;
-
-                    /* Always a 5 percent chance of working */
-                    if (chance > 95)
+                    auto player_stun = player_ptr->effects()->stun();
+                    chance += player_stun->get_chance_penalty();
+                    if (chance > 95) {
                         chance = 95;
+                    }
 
                     /* Get info */
                     mane_info(player_ptr, comment, player_ptr->mane_spell[i], (baigaesi ? player_ptr->mane_dam[i] * 2 : player_ptr->mane_dam[i]));
@@ -801,12 +799,14 @@ static bool use_mane(player_type *player_ptr, RF_ABILITY spell)
         fire_ball_hide(player_ptr, GF_HAND_DOOM, dir, 200, 0);
         break;
     }
-    case RF_ABILITY::HEAL:
+    case RF_ABILITY::HEAL: {
         msg_print(_("自分の傷に念を集中した。", "You concentrate on your wounds!"));
         (void)hp_player(player_ptr, plev * 6);
-        (void)set_stun(player_ptr, 0);
-        (void)set_cut(player_ptr, 0);
+        BadStatusSetter bss(player_ptr);
+        (void)bss.stun(0);
+        (void)bss.cut(0);
         break;
+    }
     case RF_ABILITY::INVULNER:
         msg_print(_("無傷の球の呪文を唱えた。", "You cast a Globe of Invulnerability."));
         (void)set_invuln(player_ptr, randint1(7) + 7, false);
@@ -1132,15 +1132,11 @@ bool do_cmd_mane(player_type *player_ptr, bool baigaesi)
     if (chance < minfail)
         chance = minfail;
 
-    /* Stunning makes spells harder */
-    if (player_ptr->stun > 50)
-        chance += 25;
-    else if (player_ptr->stun)
-        chance += 15;
-
-    /* Always a 5 percent chance of working */
-    if (chance > 95)
+    auto player_stun = player_ptr->effects()->stun();
+    chance += player_stun->get_chance_penalty();
+    if (chance > 95) {
         chance = 95;
+    }
 
     /* Failed spell */
     if (randint0(100) < chance) {

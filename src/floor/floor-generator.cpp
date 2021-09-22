@@ -331,14 +331,14 @@ void wipe_generate_random_floor_flags(floor_type *floor_ptr)
 void clear_cave(player_type *player_ptr)
 {
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
-    (void)C_WIPE(floor_ptr->o_list, floor_ptr->o_max, object_type);
+    std::fill_n(floor_ptr->o_list.begin(), floor_ptr->o_max, object_type{});
     floor_ptr->o_max = 1;
     floor_ptr->o_cnt = 0;
 
-    for (int i = 1; i < max_r_idx; i++)
-        r_info[i].cur_num = 0;
+    for (auto &r_ref : r_info)
+        r_ref.cur_num = 0;
 
-    (void)C_WIPE(floor_ptr->m_list, floor_ptr->m_max, monster_type);
+    std::fill_n(floor_ptr->m_list.begin(), floor_ptr->m_max, monster_type{});
     floor_ptr->m_max = 1;
     floor_ptr->m_cnt = 0;
     for (int i = 0; i < MAX_MTIMED; i++)
@@ -477,10 +477,10 @@ void generate_floor(player_type *player_ptr)
         else
             okay = level_gen(player_ptr, &why);
 
-        if (floor_ptr->o_max >= current_world_ptr->max_o_idx) {
+        if (floor_ptr->o_max >= w_ptr->max_o_idx) {
             why = _("アイテムが多すぎる", "too many objects");
             okay = false;
-        } else if (floor_ptr->m_max >= current_world_ptr->max_m_idx) {
+        } else if (floor_ptr->m_max >= w_ptr->max_m_idx) {
             why = _("モンスターが多すぎる", "too many monsters");
             okay = false;
         }

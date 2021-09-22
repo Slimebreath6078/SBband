@@ -92,7 +92,7 @@ bool switch_class_racial_execution(player_type *player_ptr, const int32_t comman
         return sword_dancing(player_ptr);
     case CLASS_HIGH_MAGE:
         if (player_ptr->realm1 == REALM_HEX) {
-            auto retval = RealmHex(player_ptr).stop_one_spell();
+            auto retval = SpellHex(player_ptr).stop_spells_with_selection();
             if (retval) {
                 PlayerEnergy(player_ptr).set_player_turn_energy(10);
             }
@@ -304,7 +304,7 @@ bool switch_race_racial_execution(player_type *player_ptr, const int32_t command
         return true;
     case player_race_type::HALF_ORC:
         msg_print(_("勇気を出した。", "You play tough."));
-        (void)set_afraid(player_ptr, 0);
+        (void)BadStatusSetter(player_ptr).afraidness(0);
         return true;
     case player_race_type::HALF_TROLL:
         msg_print(_("うがぁぁ！", "RAAAGH!"));

@@ -50,7 +50,7 @@
 concptr do_nature_spell(player_type *player_ptr, SPELL_IDX spell, spell_type mode)
 {
     bool name = (mode == SPELL_NAME) ? true : false;
-    bool desc = (mode == SPELL_DESC) ? true : false;
+    bool desc = (mode == SPELL_DESCRIPTION) ? true : false;
     bool info = (mode == SPELL_INFO) ? true : false;
     bool cast = (mode == SPELL_CAST) ? true : false;
 
@@ -223,9 +223,10 @@ concptr do_nature_spell(player_type *player_ptr, SPELL_IDX spell, spell_type mod
                 return info_heal(dice, sides, 0);
 
             if (cast) {
+                BadStatusSetter bss(player_ptr);
                 hp_player(player_ptr, damroll(dice, sides));
-                set_cut(player_ptr, 0);
-                set_poisoned(player_ptr, 0);
+                (void)bss.cut(0);
+                (void)bss.poison(0);
             }
         }
         break;

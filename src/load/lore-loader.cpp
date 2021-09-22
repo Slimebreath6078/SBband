@@ -89,8 +89,6 @@ errr load_lore(void)
         rd_lore(r_ptr);
     }
 
-    if (arg_fiddle)
-        load_note(_("モンスターの思い出をロードしました", "Loaded Monster Memory"));
-
+    load_note(_("モンスターの思い出をロードしました", "Loaded Monster Memory"));
     return 0;
 }

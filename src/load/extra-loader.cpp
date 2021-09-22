@@ -24,7 +24,7 @@ void rd_extra(player_type *player_ptr)
     rd_s16b(&player_ptr->floor_id);
 
     rd_dummy_monsters();
-    rd_u32b(&current_world_ptr->play_time);
+    rd_u32b(&w_ptr->play_time);
 
     rd_visited_towns(player_ptr);
     rd_u32b(&player_ptr->count);

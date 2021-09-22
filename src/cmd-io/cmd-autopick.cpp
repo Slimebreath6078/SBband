@@ -111,15 +111,15 @@ void do_cmd_edit_autopick(player_type *player_ptr)
 	tb->dirty_line = -1;
 	tb->filename_mode = PT_DEFAULT;
 
-	if (current_world_ptr->game_turn < old_autosave_turn)
+	if (w_ptr->game_turn < old_autosave_turn)
 	{
-		while (old_autosave_turn > current_world_ptr->game_turn) old_autosave_turn -= TURNS_PER_TICK * TOWN_DAWN;
+		while (old_autosave_turn > w_ptr->game_turn) old_autosave_turn -= TURNS_PER_TICK * TOWN_DAWN;
 	}
 
-	if (current_world_ptr->game_turn > old_autosave_turn + 100L)
+	if (w_ptr->game_turn > old_autosave_turn + 100L)
 	{
 		do_cmd_save_game(player_ptr, true);
-		old_autosave_turn = current_world_ptr->game_turn;
+		old_autosave_turn = w_ptr->game_turn;
 	}
 
 	update_playtime();
@@ -199,7 +199,7 @@ void do_cmd_edit_autopick(player_type *player_ptr)
 	strcpy(buf, pickpref_filename(player_ptr, tb->filename_mode));
 
 	if (quit == APE_QUIT_AND_SAVE)
-		write_text_lines(buf, tb->lines_list);
+		write_text_lines(buf, tb->lines_list.data());
 
 	free_text_lines(tb->lines_list);
 	string_free(tb->search_str);
@@ -207,7 +207,7 @@ void do_cmd_edit_autopick(player_type *player_ptr)
 	kill_yank_chain(tb);
 
 	process_autopick_file(player_ptr, buf);
-	current_world_ptr->start_time = (uint32_t)time(nullptr);
+	w_ptr->start_time = (uint32_t)time(nullptr);
 	cx_save = tb->cx;
 	cy_save = tb->cy;
 }

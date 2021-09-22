@@ -141,7 +141,7 @@ static void compare_weapon_aux(player_type *player_ptr, object_type *o_ptr, int 
     mindam = calc_expect_crit(player_ptr, o_ptr->weight, o_ptr->to_h, mindice, player_ptr->to_h[0], dokubari, impact);
     maxdam = calc_expect_crit(player_ptr, o_ptr->weight, o_ptr->to_h, maxdice, player_ptr->to_h[0], dokubari, impact);
     show_weapon_dmg(r++, col, mindam, maxdam, blow, dmg_bonus, _("会心:", "Critical:"), TERM_L_RED);
-    if ((flgs.has(TR_VORPAL) || RealmHex(player_ptr).is_spelling_specific(HEX_RUNESWORD))) {
+    if ((flgs.has(TR_VORPAL) || SpellHex(player_ptr).is_spelling_specific(HEX_RUNESWORD))) {
         if ((o_ptr->name1 == ART_VORPAL_BLADE) || (o_ptr->name1 == ART_CHAINSWORD)) {
             vorpal_mult = 5;
             vorpal_div = 3;
@@ -352,7 +352,7 @@ PRICE compare_weapons(player_type *player_ptr, PRICE bcost)
     object_type *i_ptr;
     TERM_LEN row = 2;
     TERM_LEN wid = 38, mgn = 2;
-    bool old_character_xtra = current_world_ptr->character_xtra;
+    bool old_character_xtra = w_ptr->character_xtra;
     char ch;
     PRICE total = 0;
     PRICE cost = 0; /* First time no price */
@@ -377,7 +377,7 @@ PRICE compare_weapons(player_type *player_ptr, PRICE bcost)
 
     while (true) {
         clear_bldg(0, 22);
-        current_world_ptr->character_xtra = true;
+        w_ptr->character_xtra = true;
         for (int i = 0; i < n; i++) {
             int col = (wid * i + mgn);
             if (o_ptr[i] != i_ptr)
@@ -394,7 +394,7 @@ PRICE compare_weapons(player_type *player_ptr, PRICE bcost)
         player_ptr->update |= PU_BONUS;
         handle_stuff(player_ptr);
 
-        current_world_ptr->character_xtra = old_character_xtra;
+        w_ptr->character_xtra = old_character_xtra;
 #ifdef JP
         put_str(format("[ 比較対象: 's'で変更 ($%d) ]", cost), 1, (wid + mgn));
         put_str("(一番高いダメージが適用されます。複数の倍打効果は足し算されません。)", row + 4, 0);

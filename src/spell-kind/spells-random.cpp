@@ -178,20 +178,19 @@ bool activate_ty_curse(player_type *player_ptr, bool stop_ty, int *count)
         case 15:
         case 19:
         case 20: {
-            bool is_statue = stop_ty;
+            auto is_statue = stop_ty;
             is_statue |= player_ptr->free_act && (randint1(125) < player_ptr->skill_sav);
             is_statue |= player_ptr->pclass == CLASS_BERSERKER;
             if (!is_statue) {
                 msg_print(_("彫像になった気分だ！", "You feel like a statue!"));
-                if (player_ptr->free_act)
-                    set_paralyzed(player_ptr, player_ptr->paralyzed + randint1(3));
-                else
-                    set_paralyzed(player_ptr, player_ptr->paralyzed + randint1(13));
+                auto turns = player_ptr->free_act ? randint1(3) : randint1(13);
+                (void)BadStatusSetter(player_ptr).paralysis(player_ptr->paralyzed + turns);
                 stop_ty = true;
             }
 
-            if (!one_in_(6))
+            if (!one_in_(6)) {
                 break;
+            }
         }
             /* Fall through */
         case 21:
@@ -315,7 +314,7 @@ void wild_magic(player_type *player_ptr, int spell)
     case 35:
         for (int counter = 0; counter < 8; counter++) {
             (void)summon_specific(
-                player_ptr, 0, player_ptr->y, player_ptr->x, (floor_ptr->dun_level * 3) / 2, static_cast<summon_type>(type), (PM_ALLOW_GROUP | PM_NO_PET));
+                player_ptr, 0, player_ptr->y, player_ptr->x, (floor_ptr->dun_level * 3) / 2, i2enum<summon_type>(type), (PM_ALLOW_GROUP | PM_NO_PET));
         }
 
         break;

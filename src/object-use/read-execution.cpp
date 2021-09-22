@@ -95,9 +95,9 @@ void exe_read(player_type *player_ptr, INVENTORY_IDX item, bool known)
     if (music_singing_any(player_ptr))
         stop_singing(player_ptr);
 
-    RealmHex realm_hex(player_ptr);
-    if (realm_hex.is_spelling_any() && ((player_ptr->lev < 35) || realm_hex.is_casting_full_capacity())) {
-        (void)RealmHex(player_ptr).stop_all_spells();
+    SpellHex spell_hex(player_ptr);
+    if (spell_hex.is_spelling_any() && ((player_ptr->lev < 35) || spell_hex.is_casting_full_capacity())) {
+        (void)SpellHex(player_ptr).stop_all_spells();
     }
 
     ident = false;
@@ -107,7 +107,7 @@ void exe_read(player_type *player_ptr, INVENTORY_IDX item, bool known)
         switch (o_ptr->sval) {
         case SV_SCROLL_DARKNESS: {
             if (!has_resist_blind(player_ptr) && !has_resist_dark(player_ptr))
-                (void)set_blind(player_ptr, player_ptr->blind + 3 + randint1(5));
+                (void)BadStatusSetter(player_ptr).blindness(player_ptr->blind + 3 + randint1(5));
 
             if (unlite_area(player_ptr, 10, 3))
                 ident = true;

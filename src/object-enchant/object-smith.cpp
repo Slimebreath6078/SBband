@@ -210,20 +210,15 @@ TrFlags Smith::get_effect_tr_flags(SmithEffect effect)
 }
 
 /*!
- * @brief 鍛冶効果により得られる発動IDを得る
+ * @brief アイテムに付与されている発動効果の発動IDを得る
  *
- * @param effect 鍛冶効果
- * @return 鍛冶効果により得られる発動ID(random_art_activation_type型)
- * 鍛冶効果により得られる発動効果が無い場合は std::nullopt
+ * @param o_ptr アイテム構造体へのポインタ
+ * @return アイテムに付与されている発動効果の発動ID(random_art_activation_type型)
+ * 付与されている発動効果が無い場合は std::nullopt
  */
-std::optional<random_art_activation_type> Smith::get_effect_activation(SmithEffect effect)
+std::optional<random_art_activation_type> Smith::object_activation(const object_type *o_ptr)
 {
-    auto info = find_smith_info(effect);
-    if (!info.has_value()) {
-        return std::nullopt;
-    }
-
-    return info.value()->activation_index();
+    return o_ptr->smith_act_idx;
 }
 
 /*!
@@ -235,12 +230,7 @@ std::optional<random_art_activation_type> Smith::get_effect_activation(SmithEffe
  */
 std::optional<SmithEffect> Smith::object_effect(const object_type *o_ptr)
 {
-    auto effect = static_cast<SmithEffect>(o_ptr->xtra3);
-    if (!o_ptr->is_weapon_armour_ammo() || effect == SmithEffect::NONE) {
-        return std::nullopt;
-    }
-
-    return effect;
+    return o_ptr->smith_effect;
 }
 
 /*!
@@ -266,17 +256,19 @@ std::vector<SmithEffect> Smith::get_effect_list(SmithCategory category)
  * @brief 指定した鍛冶効果のエッセンスを付与できる回数を取得する
  *
  * @param effect 鍛冶効果
- * @param item_number 同時に付与するスタックしたアイテム数。スタックしている場合アイテム数倍の数だけエッセンスが必要となる。
+ * @param o_ptr 鍛冶効果を付与するアイテムへのポインタ。nullptrの場合はデフォルトの消費量での回数が返される。
  * @return エッセンスを付与できる回数を返す
  */
-int Smith::get_addable_count(SmithEffect effect, int item_number) const
+int Smith::get_addable_count(SmithEffect effect, const object_type *o_ptr) const
 {
     auto info = find_smith_info(effect);
     if (!info.has_value()) {
         return 0;
     }
 
-    return addable_count(this->player_ptr, info.value()->need_essences, info.value()->consumption * item_number);
+    auto consumption = Smith::get_essence_consumption(effect, o_ptr);
+
+    return addable_count(this->player_ptr, info.value()->need_essences, consumption);
 }
 
 /*!
@@ -342,6 +334,8 @@ Smith::DrainEssenceResult Smith::drain_essence(object_type *o_ptr)
         }
     }
 
+    const auto is_artifact = o_ptr->is_artifact();
+
     // アイテムをエッセンス抽出後の状態にする
     const object_type old_o = *o_ptr;
     o_ptr->prep(o_ptr->k_idx);
@@ -350,6 +344,7 @@ Smith::DrainEssenceResult Smith::drain_essence(object_type *o_ptr)
     o_ptr->ix = old_o.ix;
     o_ptr->marked = old_o.marked;
     o_ptr->number = old_o.number;
+    o_ptr->discount = old_o.discount;
 
     if (o_ptr->tval == TV_DRAG_ARMOR)
         o_ptr->timeout = old_o.timeout;
@@ -373,6 +368,10 @@ Smith::DrainEssenceResult Smith::drain_essence(object_type *o_ptr)
                 drain_values[essence] += info.amount * std::max(pval, 1);
             }
         }
+    }
+
+    if (is_artifact) {
+        drain_values[SmithEssence::UNIQUE] += 10;
     }
 
     // ダイス/命中/ダメージ/ACからの抽出
@@ -445,6 +444,8 @@ bool Smith::add_essence(SmithEffect effect, object_type *o_ptr, int number)
  */
 void Smith::erase_essence(object_type *o_ptr) const
 {
+    o_ptr->smith_act_idx = std::nullopt;
+
     auto effect = Smith::object_effect(o_ptr);
     if (!effect.has_value()) {
         return;

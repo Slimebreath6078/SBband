@@ -132,6 +132,7 @@
 #include <cstdlib>
 #include <locale>
 #include <string>
+#include <vector>
 
 #include <commdlg.h>
 #include <direct.h>
@@ -1430,7 +1431,7 @@ static void setup_menus(void)
 {
     HMENU hm = GetMenu(data[0].w);
 
-    if (current_world_ptr->character_generated) {
+    if (w_ptr->character_generated) {
         EnableMenuItem(hm, IDM_FILE_NEW, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
         EnableMenuItem(hm, IDM_FILE_OPEN, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
         EnableMenuItem(hm, IDM_FILE_SAVE, MF_BYCOMMAND | MF_ENABLED);
@@ -1568,7 +1569,7 @@ static void process_menus(player_type *player_ptr, WORD wCmd)
         break;
     }
     case IDM_FILE_SAVE: {
-        if (game_in_progress && current_world_ptr->character_generated) {
+        if (game_in_progress && w_ptr->character_generated) {
             if (!can_save) {
                 plog(_("今はセーブすることは出来ません。", "You may not do that right now."));
                 break;
@@ -1583,7 +1584,7 @@ static void process_menus(player_type *player_ptr, WORD wCmd)
         break;
     }
     case IDM_FILE_EXIT: {
-        if (game_in_progress && current_world_ptr->character_generated) {
+        if (game_in_progress && w_ptr->character_generated) {
             if (!can_save) {
                 plog(_("今は終了できません。", "You may not do that right now."));
                 break;
@@ -2235,11 +2236,10 @@ LRESULT PASCAL AngbandWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
         for (int i = 0; i < dy; i++) {
 #ifdef JP
-            char *s;
             const auto &scr = data[0].t.scr->c;
 
-            C_MAKE(s, (dx + 1), char);
-            strncpy(s, &scr[oy + i][ox], dx);
+            std::vector<char> s(dx + 1);
+            strncpy(s.data(), &scr[oy + i][ox], dx);
 
             if (ox > 0) {
                 if (iskanji(scr[oy + i][ox - 1]))
@@ -2313,7 +2313,7 @@ LRESULT PASCAL AngbandWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
         return 0;
     }
     case WM_CLOSE: {
-        if (!game_in_progress || !current_world_ptr->character_generated) {
+        if (!game_in_progress || !w_ptr->character_generated) {
             quit(nullptr);
             return 0;
         }
@@ -2331,7 +2331,7 @@ LRESULT PASCAL AngbandWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
         return 0;
     }
     case WM_QUERYENDSESSION: {
-        if (!game_in_progress || !current_world_ptr->character_generated) {
+        if (!game_in_progress || !w_ptr->character_generated) {
             quit(nullptr);
             return 0;
         }

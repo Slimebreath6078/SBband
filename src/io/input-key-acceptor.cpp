@@ -157,7 +157,7 @@ static char inkey_aux(void)
         return (ch);
     }
 
-    concptr pat = macro__pat[k];
+    concptr pat = macro__pat[k].c_str();
     n = strlen(pat);
     while (p > n) {
         if (term_key_push(buf[--p]))
@@ -168,7 +168,7 @@ static char inkey_aux(void)
     if (term_key_push(30))
         return 0;
 
-    concptr act = macro__act[k];
+    concptr act = macro__act[k].c_str();
 
     n = strlen(act);
     while (n > 0) {
@@ -207,7 +207,7 @@ char inkey(bool do_all_term_refresh)
     (void)term_get_cursor(&v);
 
     /* Show the cursor if waiting, except sometimes in "command" mode */
-    if (!inkey_scan && (!inkey_flag || hilite_player || current_world_ptr->character_icky_depth > 0)) {
+    if (!inkey_scan && (!inkey_flag || hilite_player || w_ptr->character_icky_depth > 0)) {
         (void)term_set_cursor(1);
     }
 
@@ -226,7 +226,7 @@ char inkey(bool do_all_term_refresh)
                 all_term_fresh(x, y);
             else
                 term_fresh();
-            current_world_ptr->character_saved = false;
+            w_ptr->character_saved = false;
 
             signal_count = 0;
             done = true;

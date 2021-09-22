@@ -98,7 +98,7 @@ void print_map(player_type *player_ptr)
             SYMBOL_CODE tc;
             map_info(player_ptr, y, x, &a, &c, &ta, &tc);
             if (!use_graphics) {
-                if (current_world_ptr->timewalk_m_idx)
+                if (w_ptr->timewalk_m_idx)
                     a = TERM_DARK;
                 else if (is_invuln(player_ptr) || player_ptr->timewalk)
                     a = TERM_WHITE;
@@ -120,7 +120,7 @@ static void display_shortened_item_name(player_type *player_ptr, object_type *o_
     describe_flavor(player_ptr, buf, o_ptr, (OD_NO_FLAVOR | OD_OMIT_PREFIX | OD_NAME_ONLY));
     TERM_COLOR attr = tval_to_attr[o_ptr->tval % 128];
 
-    if (player_ptr->image) {
+    if (player_ptr->hallucinated) {
         attr = TERM_WHITE;
         strcpy(buf, _("何か奇妙な物", "something strange"));
     }
@@ -287,7 +287,7 @@ void display_map(player_type *player_ptr, int *cy, int *cx)
             ta = ma[y][x];
             tc = mc[y][x];
             if (!use_graphics) {
-                if (current_world_ptr->timewalk_m_idx)
+                if (w_ptr->timewalk_m_idx)
                     ta = TERM_DARK;
                 else if (is_invuln(player_ptr) || player_ptr->timewalk)
                     ta = TERM_WHITE;

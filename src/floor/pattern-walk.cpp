@@ -23,6 +23,8 @@
 #include "system/floor-type-definition.h"
 #include "system/grid-type-definition.h"
 #include "system/player-type-definition.h"
+#include "timed-effect/player-stun.h"
+#include "timed-effect/timed-effects.h"
 #include "util/bit-flags-calculator.h"
 #include "view/display-messages.h"
 #include "world/world-movement-processor.h"
@@ -112,7 +114,7 @@ bool pattern_effect(player_type *player_ptr)
     int pattern_type = f_info[floor_ptr->grid_array[player_ptr->y][player_ptr->x].feat].subtype;
     switch (pattern_type) {
     case PATTERN_TILE_END:
-        (void)set_image(player_ptr, 0);
+        (void)BadStatusSetter(player_ptr).hallucination(0);
         (void)restore_all_status(player_ptr);
         (void)restore_level(player_ptr);
         (void)cure_critical_wounds(player_ptr, 1000);
@@ -173,7 +175,9 @@ bool pattern_seq(player_type *player_ptr, POSITION c_y, POSITION c_x, POSITION n
     int pattern_type_cur = is_pattern_tile_cur ? cur_f_ptr->subtype : NOT_PATTERN_TILE;
     int pattern_type_new = is_pattern_tile_new ? new_f_ptr->subtype : NOT_PATTERN_TILE;
     if (pattern_type_new == PATTERN_TILE_START) {
-        if (!is_pattern_tile_cur && !player_ptr->confused && !player_ptr->stun && !player_ptr->image) {
+        auto effects = player_ptr->effects();
+        auto is_stunned = effects->stun()->is_stunned();
+        if (!is_pattern_tile_cur && !player_ptr->confused && !is_stunned && !player_ptr->hallucinated) {
             if (get_check(_("パターンの上を歩き始めると、全てを歩かなければなりません。いいですか？",
                     "If you start walking the Pattern, you must walk the whole way. Ok? ")))
                 return true;
@@ -234,7 +238,7 @@ bool pattern_seq(player_type *player_ptr, POSITION c_y, POSITION c_x, POSITION n
         ok_move = PATTERN_TILE_1;
         break;
     default:
-        if (current_world_ptr->wizard)
+        if (w_ptr->wizard)
             msg_format(_("おかしなパターン歩行、%d。", "Funny Pattern walking, %d."), pattern_type_cur);
         return true;
     }

@@ -58,7 +58,6 @@
 #include "game-option/disturbance-options.h"
 #include "game-option/game-play-options.h"
 #include "game-option/input-options.h"
-#include "game-option/runtime-arguments.h"
 #include "io-dump/random-art-info-dumper.h"
 #include "io/command-repeater.h"
 #include "io/files-util.h"
@@ -102,8 +101,8 @@
  */
 bool enter_wizard_mode(player_type *player_ptr)
 {
-    if (!current_world_ptr->noscore) {
-        if (!allow_debug_opts || arg_wizard) {
+    if (!w_ptr->noscore) {
+        if (!allow_debug_opts) {
             msg_print(_("ウィザードモードは許可されていません。 ", "Wizard mode is not permitted."));
             return false;
         }
@@ -117,7 +116,7 @@ bool enter_wizard_mode(player_type *player_ptr)
 
         exe_write_diary(
             player_ptr, DIARY_DESCRIPTION, 0, _("ウィザードモードに突入してスコアを残せなくなった。", "gave up recording score to enter wizard mode."));
-        current_world_ptr->noscore |= 0x0002;
+        w_ptr->noscore |= 0x0002;
     }
 
     return true;
@@ -131,7 +130,7 @@ bool enter_wizard_mode(player_type *player_ptr)
  */
 static bool enter_debug_mode(player_type *player_ptr)
 {
-    if (!current_world_ptr->noscore) {
+    if (!w_ptr->noscore) {
         if (!allow_debug_opts) {
             msg_print(_("デバッグコマンドは許可されていません。 ", "Use of debug command is not permitted."));
             return false;
@@ -146,7 +145,7 @@ static bool enter_debug_mode(player_type *player_ptr)
 
         exe_write_diary(
             player_ptr, DIARY_DESCRIPTION, 0, _("デバッグモードに突入してスコアを残せなくなった。", "gave up sending score to use debug commands."));
-        current_world_ptr->noscore |= 0x0008;
+        w_ptr->noscore |= 0x0008;
     }
 
     return true;
@@ -175,11 +174,11 @@ void process_command(player_type *player_ptr)
         break;
     }
     case KTRL('W'): {
-        if (current_world_ptr->wizard) {
-            current_world_ptr->wizard = false;
+        if (w_ptr->wizard) {
+            w_ptr->wizard = false;
             msg_print(_("ウィザードモード解除。", "Wizard mode off."));
         } else if (enter_wizard_mode(player_ptr)) {
-            current_world_ptr->wizard = true;
+            w_ptr->wizard = true;
             msg_print(_("ウィザードモード突入。", "Wizard mode on."));
         }
 

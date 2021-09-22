@@ -33,7 +33,7 @@
 concptr do_life_spell(player_type *player_ptr, SPELL_IDX spell, spell_type mode)
 {
     bool name = mode == SPELL_NAME;
-    bool desc = mode == SPELL_DESC;
+    bool desc = mode == SPELL_DESCRIPTION;
     bool info = mode == SPELL_INFO;
     bool cast = mode == SPELL_CAST;
 
@@ -148,15 +148,18 @@ concptr do_life_spell(player_type *player_ptr, SPELL_IDX spell, spell_type mode)
         break;
 
     case 6:
-        if (name)
+        if (name) {
             return _("解毒", "Cure Poison");
-        if (desc)
-            return _("体内の毒を取り除く。", "Cures yourself of any poisons.");
-        {
-            if (cast) {
-                set_poisoned(player_ptr, 0);
-            }
         }
+
+        if (desc) {
+            return _("体内の毒を取り除く。", "Cures yourself of any poisons.");
+        }
+
+        if (cast) {
+            (void)BadStatusSetter(player_ptr).poison(0);
+        }
+
         break;
 
     case 7:

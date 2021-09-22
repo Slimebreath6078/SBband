@@ -158,11 +158,11 @@ static COMMAND_CODE choose_essence(void)
     COMMAND_CODE menu_line = (use_menu ? 1 : 0);
 
 #ifdef JP
-    concptr menu_name[] = { "武器属性", "耐性", "能力", "数値", "スレイ", "ESP", "その他" };
+    concptr menu_name[] = { "武器属性", "耐性", "能力", "数値", "スレイ", "ESP", "その他", "発動" };
 #else
-    concptr menu_name[] = { "Brand weapon", "Resistance", "Ability", "Magic number", "Slay", "ESP", "Others" };
+    concptr menu_name[] = { "Brand weapon", "Resistance", "Ability", "Magic number", "Slay", "ESP", "Others", "Activation" };
 #endif
-    const COMMAND_CODE mode_max = 7;
+    const COMMAND_CODE mode_max = 8;
 
     if (repeat_pull(&mode) && 1 <= mode && mode <= mode_max)
         return mode;
@@ -285,7 +285,7 @@ static void display_smith_effect_list(const Smith &smith, const std::vector<Smit
             snprintf(str, sizeof(str), "%-49s  (\?\?)/%d", title.str().c_str(), consumption);
         }
 
-        auto col = (smith.get_addable_count(effect, 1) > 0) ? TERM_WHITE : TERM_RED;
+        auto col = (smith.get_addable_count(effect) > 0) ? TERM_WHITE : TERM_RED;
         c_prt(col, str, ctr + 2, x);
     }
 }
@@ -314,7 +314,7 @@ static void add_essence(player_type *player_ptr, SmithCategory mode)
     constexpr auto effect_num_per_page = 22;
     const int page_max = (smith_effect_list.size() - 1) / effect_num_per_page + 1;
 
-    COMMAND_CODE i;
+    COMMAND_CODE i = -1;
     COMMAND_CODE effect_idx;
 
     if (!repeat_pull(&effect_idx) || effect_idx < 0 || effect_idx >= smith_effect_list_max) {
@@ -332,10 +332,12 @@ static void add_essence(player_type *player_ptr, SmithCategory mode)
 
             display_smith_effect_list(smith, smith_effect_list, menu_line, page * effect_num_per_page, effect_num_per_page);
 
+            const auto page_effect_num = std::min<int>(effect_num_per_page, smith_effect_list.size() - (page * effect_num_per_page));
+
             if (!get_com(out_val, &choice, false))
                 break;
 
-            if (use_menu && choice != ' ') {
+            if (use_menu) {
                 switch (choice) {
                 case '0': {
                     screen_load();
@@ -345,7 +347,7 @@ static void add_essence(player_type *player_ptr, SmithCategory mode)
                 case '8':
                 case 'k':
                 case 'K': {
-                    menu_line += (smith_effect_list_max - 1);
+                    menu_line += (page_effect_num - 1);
                     break;
                 }
 
@@ -359,13 +361,16 @@ static void add_essence(player_type *player_ptr, SmithCategory mode)
                 case '4':
                 case 'h':
                 case 'H': {
+                    page += (page_max - 1);
                     menu_line = 1;
                     break;
                 }
                 case '6':
                 case 'l':
-                case 'L': {
-                    menu_line = smith_effect_list_max;
+                case 'L':
+                case ' ': {
+                    page++;
+                    menu_line = 1;
                     break;
                 }
 
@@ -379,13 +384,15 @@ static void add_essence(player_type *player_ptr, SmithCategory mode)
                 }
                 }
 
-                if (menu_line > smith_effect_list_max)
-                    menu_line -= smith_effect_list_max;
+                if (menu_line > page_effect_num)
+                    menu_line -= page_effect_num;
             }
 
             /* Request redraw */
-            if ((choice == ' ') || (choice == '*') || (choice == '?') || (use_menu && ask)) {
-                page++;
+            if ((choice == ' ') || (use_menu && ask)) {
+                if (!use_menu) {
+                    page++;
+                }
                 if (page >= page_max) {
                     page = 0;
                 }
@@ -408,7 +415,7 @@ static void add_essence(player_type *player_ptr, SmithCategory mode)
 
             effect_idx = page * effect_num_per_page + i;
             /* Totally Illegal */
-            if ((effect_idx < 0) || (effect_idx >= smith_effect_list_max) || smith.get_addable_count(smith_effect_list[effect_idx], 1) <= 0) {
+            if ((effect_idx < 0) || (effect_idx >= smith_effect_list_max) || smith.get_addable_count(smith_effect_list[effect_idx]) <= 0) {
                 bell();
                 continue;
             }
@@ -448,11 +455,6 @@ static void add_essence(player_type *player_ptr, SmithCategory mode)
     if (!o_ptr)
         return;
 
-    if ((mode != SmithCategory::ENCHANT) && (o_ptr->is_artifact() || o_ptr->is_smith())) {
-        msg_print(_("そのアイテムはこれ以上改良できない。", "This item can not be improved any further."));
-        return;
-    }
-
     describe_flavor(player_ptr, o_name, o_ptr, (OD_OMIT_PREFIX | OD_NAME_ONLY));
 
     const auto use_essence = Smith::get_essence_consumption(effect, o_ptr);
@@ -460,7 +462,7 @@ static void add_essence(player_type *player_ptr, SmithCategory mode)
         msg_format(_("%d個あるのでエッセンスは%d必要です。", "For %d items, it will take %d essences."), o_ptr->number, use_essence);
     }
 
-    if (smith.get_addable_count(effect, o_ptr->number) == 0) {
+    if (smith.get_addable_count(effect, o_ptr) == 0) {
         msg_print(_("エッセンスが足りない。", "You don't have enough essences."));
         return;
     }
@@ -471,15 +473,15 @@ static void add_essence(player_type *player_ptr, SmithCategory mode)
         if (o_ptr->pval < 0) {
             msg_print(_("このアイテムの能力修正を強化することはできない。", "You cannot increase magic number of this item."));
             return;
-        } else if (effect_flags.has(TR_BLOWS) && o_ptr->pval > 1) {
-            if (!get_check(_("修正値は1になります。よろしいですか？", "The magic number of this weapon will become 1. Are you sure? "))) {
+        } else if (effect_flags.has(TR_BLOWS)) {
+            if ((o_ptr->pval > 1) && !get_check(_("修正値は1になります。よろしいですか？", "The magic number of this weapon will become 1. Are you sure? "))) {
                 return;
             }
             o_ptr->pval = 1;
         } else if (o_ptr->pval == 0) {
             char tmp[80];
             char tmp_val[8];
-            auto limit = std::min(5, smith.get_addable_count(effect, o_ptr->number));
+            auto limit = std::min(5, smith.get_addable_count(effect, o_ptr));
 
             sprintf(tmp, _("いくつ付加しますか？ (1-%d): ", "Enchant how many? (1-%d): "), limit);
             strcpy(tmp_val, "1");
@@ -501,7 +503,7 @@ static void add_essence(player_type *player_ptr, SmithCategory mode)
 
     msg_format(_("エッセンスを%d個使用します。", "It will take %d essences."), use_essence * add_essence_count);
 
-    if (smith.get_addable_count(effect, o_ptr->number) < add_essence_count) {
+    if (smith.get_addable_count(effect, o_ptr) < add_essence_count) {
         msg_print(_("エッセンスが足りない。", "You don't have enough essences."));
         return;
     }
@@ -701,7 +703,7 @@ void do_cmd_kaji(player_type *player_ptr, bool only_browse)
         mode = choose_essence();
         if (mode == 0)
             break;
-        add_essence(player_ptr, static_cast<SmithCategory>(mode));
+        add_essence(player_ptr, i2enum<SmithCategory>(mode));
         break;
     case 5:
         add_essence(player_ptr, SmithCategory::ENCHANT);

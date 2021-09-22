@@ -49,6 +49,8 @@
 #include "system/object-type-definition.h"
 #include "system/player-type-definition.h"
 #include "term/screen-processor.h"
+#include "timed-effect/player-stun.h"
+#include "timed-effect/timed-effects.h"
 #include "view/display-messages.h"
 
 /*!
@@ -64,7 +66,8 @@ static bool booze(player_type *player_ptr)
     else if (!has_resist_conf(player_ptr))
         player_ptr->special_attack |= ATTACK_SUIKEN;
 
-    if (!has_resist_conf(player_ptr) && set_confused(player_ptr, randint0(20) + 15)) {
+    BadStatusSetter bss(player_ptr);
+    if (!has_resist_conf(player_ptr) && bss.confusion(randint0(20) + 15)) {
         ident = true;
     }
 
@@ -72,7 +75,7 @@ static bool booze(player_type *player_ptr)
         return ident;
     }
 
-    if (one_in_(2) && set_image(player_ptr, player_ptr->image + randint0(150) + 150)) {
+    if (one_in_(2) && bss.hallucination(player_ptr->hallucinated + randint0(150) + 150)) {
         ident = true;
     }
 
@@ -83,7 +86,7 @@ static bool booze(player_type *player_ptr)
         else
             wiz_dark(player_ptr);
 
-        (void)teleport_player_aux(player_ptr, 100, false, static_cast<teleport_flags>(TELEPORT_NONMAGICAL | TELEPORT_PASSIVE));
+        (void)teleport_player_aux(player_ptr, 100, false, i2enum<teleport_flags>(TELEPORT_NONMAGICAL | TELEPORT_PASSIVE));
         wiz_dark(player_ptr);
         msg_print(_("知らない場所で目が醒めた。頭痛がする。", "You wake up somewhere with a sore head..."));
         msg_print(_("何も思い出せない。どうやってここへ来たのかも分からない！", "You can't remember a thing or how you got here!"));
@@ -101,8 +104,9 @@ static bool detonation(player_type *player_ptr)
 {
     msg_print(_("体の中で激しい爆発が起きた！", "Massive explosions rupture your body!"));
     take_hit(player_ptr, DAMAGE_NOESCAPE, damroll(50, 20), _("爆発の薬", "a potion of Detonation"));
-    (void)set_stun(player_ptr, player_ptr->stun + 75);
-    (void)set_cut(player_ptr, player_ptr->cut + 5000);
+    BadStatusSetter bss(player_ptr);
+    (void)bss.stun(player_ptr->effects()->stun()->current() + 75);
+    (void)bss.cut(player_ptr->cut + 5000);
     return true;
 }
 
@@ -134,9 +138,9 @@ void exe_quaff_potion(player_type *player_ptr, INVENTORY_IDX item)
     if (music_singing_any(player_ptr))
         stop_singing(player_ptr);
 
-    RealmHex realm_hex(player_ptr);
-    if (realm_hex.is_spelling_any() && !realm_hex.is_spelling_specific(HEX_INHAIL)) {
-        (void)RealmHex(player_ptr).stop_all_spells();
+    SpellHex spell_hex(player_ptr);
+    if (spell_hex.is_spelling_any() && !spell_hex.is_spelling_specific(HEX_INHALE)) {
+        (void)SpellHex(player_ptr).stop_all_spells();
     }
 
     o_ptr = ref_item(player_ptr, item);
@@ -169,13 +173,12 @@ void exe_quaff_potion(player_type *player_ptr, INVENTORY_IDX item)
             break;
 
         case SV_POTION_SLOWNESS:
-            if (set_slow(player_ptr, randint1(25) + 15, false))
+            if (BadStatusSetter(player_ptr).slowness(randint1(25) + 15, false))
                 ident = true;
             break;
 
-        case SV_POTION_SALT_WATER:
+        case SV_POTION_SALT_WATER: {
             msg_print(_("うぇ！思わず吐いてしまった。", "The potion makes you vomit!"));
-
             switch (player_race_food(player_ptr)) {
             case PlayerRaceFood::RATION:
             case PlayerRaceFood::WATER:
@@ -186,14 +189,15 @@ void exe_quaff_potion(player_type *player_ptr, INVENTORY_IDX item)
                 break;
             }
 
-            (void)set_poisoned(player_ptr, 0);
-            (void)set_paralyzed(player_ptr, player_ptr->paralyzed + 4);
+            BadStatusSetter bss(player_ptr);
+            (void)bss.poison(0);
+            (void)bss.paralysis(player_ptr->paralyzed + 4);
             ident = true;
             break;
-
+        }
         case SV_POTION_POISON:
             if (!(has_resist_pois(player_ptr) || is_oppose_pois(player_ptr))) {
-                if (set_poisoned(player_ptr, player_ptr->poisoned + randint0(15) + 10)) {
+                if (BadStatusSetter(player_ptr).poison(player_ptr->poisoned + randint0(15) + 10)) {
                     ident = true;
                 }
             }
@@ -201,7 +205,7 @@ void exe_quaff_potion(player_type *player_ptr, INVENTORY_IDX item)
 
         case SV_POTION_BLINDNESS:
             if (!has_resist_blind(player_ptr)) {
-                if (set_blind(player_ptr, player_ptr->blind + randint0(100) + 100)) {
+                if (BadStatusSetter(player_ptr).blindness(player_ptr->blind + randint0(100) + 100)) {
                     ident = true;
                 }
             }
@@ -212,21 +216,21 @@ void exe_quaff_potion(player_type *player_ptr, INVENTORY_IDX item)
             break;
 
         case SV_POTION_SLEEP:
-            if (!player_ptr->free_act) {
-                msg_print(_("あなたは眠ってしまった。", "You fall asleep."));
-
-                if (ironman_nightmare) {
-                    msg_print(_("恐ろしい光景が頭に浮かんできた。", "A horrible vision enters your mind."));
-
-                    /* Have some nightmares */
-                    sanity_blast(player_ptr, nullptr, false);
-                }
-                if (set_paralyzed(player_ptr, player_ptr->paralyzed + randint0(4) + 4)) {
-                    ident = true;
-                }
+            if (player_ptr->free_act) {
+                break;
             }
-            break;
 
+            msg_print(_("あなたは眠ってしまった。", "You fall asleep."));
+            if (ironman_nightmare) {
+                msg_print(_("恐ろしい光景が頭に浮かんできた。", "A horrible vision enters your mind."));
+                sanity_blast(player_ptr, nullptr, false);
+            }
+
+            if (BadStatusSetter(player_ptr).paralysis(player_ptr->paralyzed + randint0(4) + 4)) {
+                ident = true;
+            }
+
+            break;
         case SV_POTION_LOSE_MEMORIES:
             if (!player_ptr->hold_exp && (player_ptr->exp > 0)) {
                 msg_print(_("過去の記憶が薄れていく気がする。", "You feel your memories fade."));
@@ -305,17 +309,17 @@ void exe_quaff_potion(player_type *player_ptr, INVENTORY_IDX item)
             break;
 
         case SV_POTION_SLOW_POISON:
-            if (set_poisoned(player_ptr, player_ptr->poisoned / 2))
+            if (BadStatusSetter(player_ptr).poison(player_ptr->poisoned / 2))
                 ident = true;
             break;
 
         case SV_POTION_CURE_POISON:
-            if (set_poisoned(player_ptr, 0))
+            if (BadStatusSetter(player_ptr).poison(0))
                 ident = true;
             break;
 
         case SV_POTION_BOLDNESS:
-            if (set_afraid(player_ptr, 0))
+            if (BadStatusSetter(player_ptr).afraidness(0))
                 ident = true;
             break;
 
@@ -537,7 +541,7 @@ void exe_quaff_potion(player_type *player_ptr, INVENTORY_IDX item)
             break;
 
         case SV_POTION_NEO_TSUYOSHI:
-            (void)set_image(player_ptr, 0);
+            (void)BadStatusSetter(player_ptr).hallucination(0);
             (void)set_tsuyoshi(player_ptr, player_ptr->tsuyoshi + randint1(100) + 100, false);
             ident = true;
             break;
@@ -548,7 +552,7 @@ void exe_quaff_potion(player_type *player_ptr, INVENTORY_IDX item)
             player_ptr->tsuyoshi = 1;
             (void)set_tsuyoshi(player_ptr, 0, true);
             if (!has_resist_chaos(player_ptr)) {
-                (void)set_image(player_ptr, 50 + randint1(50));
+                (void)BadStatusSetter(player_ptr).hallucination(50 + randint1(50));
             }
             ident = true;
             break;
