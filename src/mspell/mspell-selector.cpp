@@ -57,6 +57,10 @@ static bool spell_attack(RF_ABILITY spell)
     if (spell_in_between(spell, RF_ABILITY::CAUSE_1, RF_ABILITY::MISSILE))
         return true;
 
+    /* "Cause wounds" and "bolt" spells */
+    if (spell_in_between(spell, RF_ABILITY::BO_LITE, RF_ABILITY::BO_DARK))
+        return true;
+
     /* Hand of Doom */
     if (spell == RF_ABILITY::HAND_DOOM)
         return true;
