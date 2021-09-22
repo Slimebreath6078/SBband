@@ -103,6 +103,8 @@ const monster_power monster_powers[MAX_MONSPELLS] = {
     { 46, 90, 85, 0, 45, A_INT, _("古代ドラゴンの召喚", "summon Ancient Dragon") },
     { 48, 120, 90, 0, 50, A_INT, _("アンバーの王族の召喚", "summon Lords of Amber") },
     { 50, 150, 95, 0, 50, A_INT, _("ユニークモンスターの召喚", "summon Unique Monsters") },
+    { 20, 25, 75, 300, 65, A_INT, _("スターライトアロー", "starlight arrow") },
+    { 15, 15, 65, 300, 60, A_INT, _("暗黒の矢", "dark bolt") },
 };
 
 /*!
@@ -207,4 +209,6 @@ const concptr monster_powers_short[MAX_MONSPELLS] = {
     _("古代ドラゴン", "Ancient Dragon"),
     _("アンバーの王族", "Lords of Amber"),
     _("ユニーク", "Unique monsters"),
+    _("スターライトアロー", "Starlight arrow"),
+    _("暗黒", "Dark"),
 };

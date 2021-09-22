@@ -99,7 +99,7 @@ enum class RF_ABILITY {
     S_HI_DRAGON = 93, /* Summon Ancient Dragon */
     S_AMBERITES = 94, /* Summon Amberites */
     S_UNIQUE = 95, /* Summon Unique Monster */
-    BO_LITE = 97, /*!< モンスター能力: スターライトアロー / Starlight Arrow */
-    BO_DARK = 98, /*!< モンスター能力: 暗黒の矢 / Dark Bolt */
+    BO_LITE = 96, /*!< モンスター能力: スターライトアロー / Starlight Arrow */
+    BO_DARK = 97, /*!< モンスター能力: 暗黒の矢 / Dark Bolt */
     MAX,
 };
