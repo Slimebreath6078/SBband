@@ -3,6 +3,7 @@
 #include <functional>
 #include "system/h-type.h"
 #include "system/monster-race-definition.h"
+#include "spell/spell-types.h"
 
 struct player_type;
 
@@ -37,5 +38,12 @@ class mane_ball : public mane_attack_spell{
         mane_ball(player_type *player_ptr, concptr msg, EFFECT_ID typ, POSITION rad);
         mane_ball() = delete;
         ~mane_ball() = default;
+};
+
+class mane_breath : public mane_attack_spell{
+    public:
+        mane_breath(player_type *player_ptr, concptr msg, char* buffer, EFFECT_ID typ, POSITION rad);
+        mane_breath() = delete;
+        ~mane_breath() = default;
 };
 bool do_cmd_mane(player_type *player_ptr, bool baigaesi);

@@ -94,12 +94,18 @@ mane_attack_spell::mane_attack_spell(player_type *player_ptr, concptr msg, EFFEC
 
 mane_bolt::mane_bolt(player_type *player_ptr, concptr msg, EFFECT_ID typ)
     : mane_attack_spell(player_ptr, msg, typ, 0, 
-    [func = fire_bolt](player_type *player_ptr, EFFECT_ID typ, DIRECTION dir, HIT_POINT dam, POSITION){ return func(player_ptr, typ, dir, dam); })
+    [func = fire_bolt](player_type *pl_ptr, EFFECT_ID type, DIRECTION direct, HIT_POINT damag, POSITION) { return func(pl_ptr, type, direct, damag); })
 {}
 
 mane_ball::mane_ball(player_type *player_ptr, concptr msg, EFFECT_ID typ, POSITION rad)
     : mane_attack_spell(player_ptr, msg, typ, rad, fire_ball)
 {}
+
+mane_breath::mane_breath(player_type *player_ptr, concptr msg, char* buffer, EFFECT_ID typ, POSITION rad)
+    : mane_attack_spell(player_ptr, buffer, typ, rad, fire_breath)
+{
+    sprintf(buffer, _("%sのブレスを吐いた。", "You breathe %s."), msg);
+}
 
 bool mane_attack_spell::fire(){
     DIRECTION dir;
@@ -348,6 +354,7 @@ static bool use_mane(player_type *player_ptr, RF_ABILITY spell)
     PLAYER_LEVEL plev = player_ptr->lev;
     BIT_FLAGS mode = (PM_ALLOW_GROUP | PM_FORCE_PET);
     BIT_FLAGS u_mode = 0L;
+    char p[80];
 
     if (randint1(50 + plev) < plev / 10)
         u_mode = PM_ALLOW_UNIQUE;
@@ -401,166 +408,103 @@ static bool use_mane(player_type *player_ptr, RF_ABILITY spell)
         break;
 
     case RF_ABILITY::BR_ACID:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_breath(player_ptr, _("酸", "acid"), p, GF_ACID, (plev > 35 ? 3 : 2)).fire())
             return false;
-        else
-            msg_print(_("酸のブレスを吐いた。", "You breathe acid."));
-        fire_breath(player_ptr, GF_ACID, dir, damage, (plev > 35 ? 3 : 2));
         break;
 
     case RF_ABILITY::BR_ELEC:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_breath(player_ptr, _("稲妻", "lightning"), p, GF_ELEC, (plev > 35 ? 3 : 2)).fire())
             return false;
-        else
-            msg_print(_("稲妻のブレスを吐いた。", "You breathe lightning."));
-        fire_breath(player_ptr, GF_ELEC, dir, damage, (plev > 35 ? 3 : 2));
         break;
 
     case RF_ABILITY::BR_FIRE:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_breath(player_ptr, _("火炎", "fire"), p, GF_FIRE, (plev > 35 ? 3 : 2)).fire())
             return false;
-        else
-            msg_print(_("火炎のブレスを吐いた。", "You breathe fire."));
-        fire_breath(player_ptr, GF_FIRE, dir, damage, (plev > 35 ? 3 : 2));
         break;
-
+        
     case RF_ABILITY::BR_COLD:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_breath(player_ptr, _("冷気", "frost"), p, GF_COLD, (plev > 35 ? 3 : 2)).fire())
             return false;
-        else
-            msg_print(_("冷気のブレスを吐いた。", "You breathe frost."));
-        fire_breath(player_ptr, GF_COLD, dir, damage, (plev > 35 ? 3 : 2));
         break;
 
     case RF_ABILITY::BR_POIS:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_breath(player_ptr, _("ガス", "gas"), p, GF_POIS, (plev > 35 ? 3 : 2)).fire())
             return false;
-        else
-            msg_print(_("ガスのブレスを吐いた。", "You breathe gas."));
-        fire_breath(player_ptr, GF_POIS, dir, damage, (plev > 35 ? 3 : 2));
         break;
 
     case RF_ABILITY::BR_NETH:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_breath(player_ptr, _("地獄", "nether"), p, GF_NETHER, (plev > 35 ? 3 : 2)).fire())
             return false;
-        else
-            msg_print(_("地獄のブレスを吐いた。", "You breathe nether."));
-        fire_breath(player_ptr, GF_NETHER, dir, damage, (plev > 35 ? 3 : 2));
         break;
 
     case RF_ABILITY::BR_LITE:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_breath(player_ptr, _("閃光", "light"), p, GF_LITE, (plev > 35 ? 3 : 2)).fire())
             return false;
-        else
-            msg_print(_("閃光のブレスを吐いた。", "You breathe light."));
-        fire_breath(player_ptr, GF_LITE, dir, damage, (plev > 35 ? 3 : 2));
         break;
 
     case RF_ABILITY::BR_DARK:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_breath(player_ptr, _("暗黒","darkness"), p, GF_DARK, (plev > 35 ? 3 : 2)).fire())
             return false;
-        else
-            msg_print(_("暗黒のブレスを吐いた。", "You breathe darkness."));
-        fire_breath(player_ptr, GF_DARK, dir, damage, (plev > 35 ? 3 : 2));
         break;
 
     case RF_ABILITY::BR_CONF:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_breath(player_ptr, _("混乱", "confusion"), p, GF_CONFUSION, (plev > 35 ? 3 : 2)).fire())
             return false;
-        else
-            msg_print(_("混乱のブレスを吐いた。", "You breathe confusion."));
-        fire_breath(player_ptr, GF_CONFUSION, dir, damage, (plev > 35 ? 3 : 2));
         break;
 
     case RF_ABILITY::BR_SOUN:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_breath(player_ptr, _("轟音", "sound"), p, GF_SOUND, (plev > 35 ? 3 : 2)).fire())
             return false;
-        else
-            msg_print(_("轟音のブレスを吐いた。", "You breathe sound."));
-        fire_breath(player_ptr, GF_SOUND, dir, damage, (plev > 35 ? 3 : 2));
         break;
 
     case RF_ABILITY::BR_CHAO:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_breath(player_ptr, _("カオス", "chaos"), p, GF_CHAOS, (plev > 35 ? 3 : 2)).fire())
             return false;
-        else
-            msg_print(_("カオスのブレスを吐いた。", "You breathe chaos."));
-        fire_breath(player_ptr, GF_CHAOS, dir, damage, (plev > 35 ? 3 : 2));
         break;
 
     case RF_ABILITY::BR_DISE:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_breath(player_ptr, _("劣化", "disenchantment"), p, GF_DISENCHANT, (plev > 35 ? 3 : 2)).fire())
             return false;
-        else
-            msg_print(_("劣化のブレスを吐いた。", "You breathe disenchantment."));
-        fire_breath(player_ptr, GF_DISENCHANT, dir, damage, (plev > 35 ? 3 : 2));
         break;
 
     case RF_ABILITY::BR_NEXU:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_breath(player_ptr, _("因果混乱", "nexus"), p, GF_NEXUS, (plev > 35 ? 3 : 2)).fire())
             return false;
-        else
-            msg_print(_("因果混乱のブレスを吐いた。", "You breathe nexus."));
-        fire_breath(player_ptr, GF_NEXUS, dir, damage, (plev > 35 ? 3 : 2));
         break;
 
     case RF_ABILITY::BR_TIME:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_breath(player_ptr, _("時間逆転", "time"), p, GF_TIME, (plev > 35 ? 3 : 2)).fire())
             return false;
-        else
-            msg_print(_("時間逆転のブレスを吐いた。", "You breathe time."));
-        fire_breath(player_ptr, GF_TIME, dir, damage, (plev > 35 ? 3 : 2));
         break;
 
     case RF_ABILITY::BR_INER:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_breath(player_ptr, _("遅鈍", "inertia"), p, GF_INERTIAL, (plev > 35 ? 3 : 2)).fire())
             return false;
-        else
-            msg_print(_("遅鈍のブレスを吐いた。", "You breathe inertia."));
-        fire_breath(player_ptr, GF_INERTIAL, dir, damage, (plev > 35 ? 3 : 2));
         break;
 
     case RF_ABILITY::BR_GRAV:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_breath(player_ptr, _("重力", "gravity"), p, GF_GRAVITY, (plev > 35 ? 3 : 2)).fire())
             return false;
-        else
-            msg_print(_("重力のブレスを吐いた。", "You breathe gravity."));
-        fire_breath(player_ptr, GF_GRAVITY, dir, damage, (plev > 35 ? 3 : 2));
         break;
 
     case RF_ABILITY::BR_SHAR:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_breath(player_ptr, _("破片", "shards"), p, GF_SHARDS, (plev > 35 ? 3 : 2)).fire())
             return false;
-        else
-            msg_print(_("破片のブレスを吐いた。", "You breathe shards."));
-        fire_breath(player_ptr, GF_SHARDS, dir, damage, (plev > 35 ? 3 : 2));
         break;
 
     case RF_ABILITY::BR_PLAS:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_breath(player_ptr, _("プラズマ", "plasma"), p, GF_PLASMA, (plev > 35 ? 3 : 2)).fire())
             return false;
-        else
-            msg_print(_("プラズマのブレスを吐いた。", "You breathe plasma."));
-
-        fire_breath(player_ptr, GF_PLASMA, dir, damage, (plev > 35 ? 3 : 2));
         break;
-
+        
     case RF_ABILITY::BR_FORC:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_breath(player_ptr, _("フォース", "force"), p, GF_FORCE, (plev > 35 ? 3 : 2)).fire())
             return false;
-        else
-            msg_print(_("フォースのブレスを吐いた。", "You breathe force."));
-
-        fire_breath(player_ptr, GF_FORCE, dir, damage, (plev > 35 ? 3 : 2));
         break;
 
     case RF_ABILITY::BR_MANA:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_breath(player_ptr, _("魔力", "mana"), p, GF_MANA, (plev > 35 ? 3 : 2)).fire())
             return false;
-        else
-            msg_print(_("魔力のブレスを吐いた。", "You breathe mana."));
-
-        fire_breath(player_ptr, GF_MANA, dir, damage, (plev > 35 ? 3 : 2));
         break;
 
     case RF_ABILITY::BA_NUKE:
@@ -569,12 +513,8 @@ static bool use_mane(player_type *player_ptr, RF_ABILITY spell)
         break;
 
     case RF_ABILITY::BR_NUKE:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_breath(player_ptr, _("放射性廃棄物", "toxic waste"), p, GF_NUKE, (plev > 35 ? 3 : 2)).fire())
             return false;
-        else
-            msg_print(_("放射性廃棄物のブレスを吐いた。", "You breathe toxic waste."));
-
-        fire_breath(player_ptr, GF_NUKE, dir, damage, (plev > 35 ? 3 : 2));
         break;
 
     case RF_ABILITY::BA_CHAO:
@@ -582,13 +522,10 @@ static bool use_mane(player_type *player_ptr, RF_ABILITY spell)
             return false;
         break;
     case RF_ABILITY::BR_DISI:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_breath(player_ptr, _("分解", "disintegration"), p, GF_DISINTEGRATE, (plev > 35 ? 3 : 2)).fire())
             return false;
-        else
-            msg_print(_("分解のブレスを吐いた。", "You breathe disintegration."));
-
-        fire_breath(player_ptr, GF_DISINTEGRATE, dir, damage, (plev > 35 ? 3 : 2));
         break;
+        
     case RF_ABILITY::BA_ACID:
         if (!mane_ball(player_ptr, _("アシッド・ボールの呪文を唱えた。", "You cast an acid ball."), GF_ACID, 2).fire())
             return false;
