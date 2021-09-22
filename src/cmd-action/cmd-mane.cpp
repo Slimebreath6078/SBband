@@ -92,6 +92,11 @@ mane_attack_spell::mane_attack_spell(player_type *player_ptr, concptr msg, EFFEC
     , func(func)
 {}
 
+mane_bolt::mane_bolt(player_type *player_ptr, concptr msg, EFFECT_ID typ)
+    : mane_attack_spell(player_ptr, msg, typ, 0, 
+    [func = fire_bolt](player_type *player_ptr, EFFECT_ID typ, DIRECTION dir, HIT_POINT dam, POSITION){ return func(player_ptr, typ, dir, dam); })
+{}
+
 bool mane_attack_spell::fire(){
     DIRECTION dir;
     if (!get_aim_dir(this->player_ptr, &dir))
@@ -378,11 +383,8 @@ static bool use_mane(player_type *player_ptr, RF_ABILITY spell)
         break;
 
     case RF_ABILITY::SHOOT:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_bolt(player_ptr, _("矢を放った。", "You fire an arrow."), GF_ARROW).fire())
             return false;
-        else
-            msg_print(_("矢を放った。", "You fire an arrow."));
-        fire_bolt(player_ptr, GF_ARROW, dir, damage);
         break;
 
     case RF_ABILITY::XXX2:
@@ -699,36 +701,20 @@ static bool use_mane(player_type *player_ptr, RF_ABILITY spell)
         fire_ball_hide(player_ptr, GF_CAUSE_4, dir, damage, 0);
         break;
     case RF_ABILITY::BO_ACID:
-        if (!get_aim_dir(player_ptr, &dir))
+        if(!mane_bolt(player_ptr, _("アシッド・ボルトの呪文を唱えた。", "You cast an acid bolt."), GF_ACID).fire())
             return false;
-        else
-            msg_print(_("アシッド・ボルトの呪文を唱えた。", "You cast an acid bolt."));
-
-        fire_bolt(player_ptr, GF_ACID, dir, damage);
         break;
     case RF_ABILITY::BO_ELEC:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_bolt(player_ptr, _("サンダー・ボルトの呪文を唱えた。", "You cast a lightning bolt."), GF_ELEC).fire())
             return false;
-        else
-            msg_print(_("サンダー・ボルトの呪文を唱えた。", "You cast a lightning bolt."));
-
-        fire_bolt(player_ptr, GF_ELEC, dir, damage);
         break;
     case RF_ABILITY::BO_FIRE:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_bolt(player_ptr, _("ファイア・ボルトの呪文を唱えた。", "You cast a fire bolt."), GF_FIRE).fire())
             return false;
-        else
-            msg_print(_("ファイア・ボルトの呪文を唱えた。", "You cast a fire bolt."));
-
-        fire_bolt(player_ptr, GF_FIRE, dir, damage);
         break;
     case RF_ABILITY::BO_COLD:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_bolt(player_ptr, _("アイス・ボルトの呪文を唱えた。", "You cast a frost bolt."), GF_COLD).fire())
             return false;
-        else
-            msg_print(_("アイス・ボルトの呪文を唱えた。", "You cast a frost bolt."));
-
-        fire_bolt(player_ptr, GF_COLD, dir, damage);
         break;
     case RF_ABILITY::BA_LITE:
         if (!get_aim_dir(player_ptr, &dir))
@@ -739,52 +725,28 @@ static bool use_mane(player_type *player_ptr, RF_ABILITY spell)
         fire_ball(player_ptr, GF_LITE, dir, damage, 4);
         break;
     case RF_ABILITY::BO_NETH:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_bolt(player_ptr, _("地獄の矢の呪文を唱えた。", "You cast a nether bolt."), GF_NETHER).fire())
             return false;
-        else
-            msg_print(_("地獄の矢の呪文を唱えた。", "You cast a nether bolt."));
-
-        fire_bolt(player_ptr, GF_NETHER, dir, damage);
         break;
     case RF_ABILITY::BO_WATE:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_bolt(player_ptr, _("ウォーター・ボルトの呪文を唱えた。", "You cast a water bolt."), GF_WATER).fire())
             return false;
-        else
-            msg_print(_("ウォーター・ボルトの呪文を唱えた。", "You cast a water bolt."));
-
-        fire_bolt(player_ptr, GF_WATER, dir, damage);
         break;
     case RF_ABILITY::BO_MANA:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_bolt(player_ptr, _("魔力の矢の呪文を唱えた。", "You cast a mana bolt."), GF_MANA).fire())
             return false;
-        else
-            msg_print(_("魔力の矢の呪文を唱えた。", "You cast a mana bolt."));
-
-        fire_bolt(player_ptr, GF_MANA, dir, damage);
         break;
     case RF_ABILITY::BO_PLAS:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_bolt(player_ptr, _("プラズマ・ボルトの呪文を唱えた。", "You cast a plasma bolt."), GF_PLASMA).fire())
             return false;
-        else
-            msg_print(_("プラズマ・ボルトの呪文を唱えた。", "You cast a plasma bolt."));
-
-        fire_bolt(player_ptr, GF_PLASMA, dir, damage);
         break;
     case RF_ABILITY::BO_ICEE:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_bolt(player_ptr, _("極寒の矢の呪文を唱えた。", "You cast a ice bolt."), GF_ICE).fire())
             return false;
-        else
-            msg_print(_("極寒の矢の呪文を唱えた。", "You cast a ice bolt."));
-
-        fire_bolt(player_ptr, GF_ICE, dir, damage);
         break;
     case RF_ABILITY::MISSILE:
-        if (!get_aim_dir(player_ptr, &dir))
+        if(!mane_bolt(player_ptr, _("マジック・ミサイルの呪文を唱えた。", "You cast a magic missile."), GF_MISSILE).fire())
             return false;
-        else
-            msg_print(_("マジック・ミサイルの呪文を唱えた。", "You cast a magic missile."));
-
-        fire_bolt(player_ptr, GF_MISSILE, dir, damage);
         break;
     case RF_ABILITY::SCARE:
         if (!get_aim_dir(player_ptr, &dir))
@@ -1079,20 +1041,12 @@ static bool use_mane(player_type *player_ptr, RF_ABILITY spell)
         break;
     }
     case RF_ABILITY::BO_LITE:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_bolt(player_ptr, _("スターライトアローを放った。", "You fire a starlight arrow."), GF_LITE).fire())
             return false;
-        else
-            msg_print(_("スターライトアローを放った。", "You fire a starlight arrow."));
-
-        fire_bolt(player_ptr, GF_LITE, dir, damage);
         break;
     case RF_ABILITY::BO_DARK:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_bolt(player_ptr, _("暗黒の矢の呪文を唱えた。", "You cast a dark bolt."), GF_DARK).fire())
             return false;
-        else
-            msg_print(_("暗黒の矢の呪文を唱えた。", "You cast a dark bolt."));
-
-        fire_bolt(player_ptr, GF_DARK, dir, damage);
         break;
     default:
         msg_print("hoge?");

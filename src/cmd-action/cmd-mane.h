@@ -24,4 +24,11 @@ class mane_attack_spell{
         HIT_POINT dam;
         std::function<bool(player_type *, EFFECT_ID, DIRECTION, HIT_POINT, POSITION)> func;
 };
+
+class mane_bolt : public mane_attack_spell{
+    public:
+        mane_bolt(player_type *player_ptr, concptr msg, EFFECT_ID typ);
+        mane_bolt() = delete;
+        ~mane_bolt() = default;
+};
 bool do_cmd_mane(player_type *player_ptr, bool baigaesi);
