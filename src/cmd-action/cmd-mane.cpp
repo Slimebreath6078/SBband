@@ -831,155 +831,103 @@ static bool use_mane(player_type *player_ptr, RF_ABILITY spell)
         (void)animate_dead(player_ptr, 0, player_ptr->y, player_ptr->x);
         break;
     case RF_ABILITY::S_KIN: {
-        int k;
-        if (!target_set(player_ptr, TARGET_KILL))
+        if(!mane_summon(player_ptr, _("援軍を召喚した。", "You summon minions."), target_row, target_col, plev, 4,
+            {summon_data(SUMMON_NONE, (PM_FORCE_PET | PM_ALLOW_GROUP), summon_kin_player)}).fire())
             return false;
-
-        msg_print(_("援軍を召喚した。", "You summon minions."));
-        for (k = 0; k < 4; k++) {
-            (void)summon_kin_player(player_ptr, plev, target_row, target_col, (PM_FORCE_PET | PM_ALLOW_GROUP));
-        }
         break;
     }
     case RF_ABILITY::S_CYBER: {
-        int k;
         int max_cyber = (player_ptr->current_floor_ptr->dun_level / 50) + randint1(3);
-        if (!target_set(player_ptr, TARGET_KILL))
-            return false;
-        msg_print(_("サイバーデーモンを召喚した！", "You summon Cyberdemons!"));
         if (max_cyber > 4)
             max_cyber = 4;
-        for (k = 0; k < max_cyber; k++)
-            summon_specific(player_ptr, -1, target_row, target_col, plev, SUMMON_CYBER, mode);
+        if(!mane_summon(player_ptr, _("サイバーデーモンを召喚した！", "You summon Cyberdemons!"), target_row, target_col, plev, max_cyber,
+            {summon_data(SUMMON_CYBER, mode, summon_specific)}).fire())
+            return false;
         break;
     }
     case RF_ABILITY::S_MONSTER: {
-        int k;
-        if (!target_set(player_ptr, TARGET_KILL))
+        if (!mane_summon(player_ptr, _("仲間を召喚した。", "You summon help."), target_row, target_col, plev, 1,
+            {summon_data(SUMMON_NONE, (mode | u_mode), summon_specific)}).fire())
             return false;
-        msg_print(_("仲間を召喚した。", "You summon help."));
-        for (k = 0; k < 1; k++)
-            summon_specific(player_ptr, -1, target_row, target_col, plev, SUMMON_NONE, (mode | u_mode));
         break;
     }
     case RF_ABILITY::S_MONSTERS: {
-        int k;
-        if (!target_set(player_ptr, TARGET_KILL))
+        if (!mane_summon(player_ptr, _("モンスターを召喚した！", "You summon monsters!"), target_row, target_col, plev, 6,
+            {summon_data(SUMMON_NONE, (mode | u_mode), summon_specific)}).fire())
             return false;
-        msg_print(_("モンスターを召喚した！", "You summon monsters!"));
-        for (k = 0; k < 6; k++)
-            summon_specific(player_ptr, -1, target_row, target_col, plev, SUMMON_NONE, (mode | u_mode));
         break;
     }
     case RF_ABILITY::S_ANT: {
-        int k;
-        if (!target_set(player_ptr, TARGET_KILL))
+        if (!mane_summon(player_ptr, _("アリを召喚した。", "You summon ants."), target_row, target_col, plev, 6,
+            {summon_data(SUMMON_ANT, mode, summon_specific)}).fire())
             return false;
-        msg_print(_("アリを召喚した。", "You summon ants."));
-        for (k = 0; k < 6; k++)
-            summon_specific(player_ptr, -1, target_row, target_col, plev, SUMMON_ANT, mode);
         break;
     }
     case RF_ABILITY::S_SPIDER: {
-        int k;
-        if (!target_set(player_ptr, TARGET_KILL))
+        if (!mane_summon(player_ptr, _("蜘蛛を召喚した。", "You summon spiders."), target_row, target_col, plev, 6,
+            {summon_data(SUMMON_SPIDER, mode, summon_specific)}).fire())
             return false;
-        msg_print(_("蜘蛛を召喚した。", "You summon spiders."));
-        for (k = 0; k < 6; k++)
-            summon_specific(player_ptr, -1, target_row, target_col, plev, SUMMON_SPIDER, mode);
         break;
     }
     case RF_ABILITY::S_HOUND: {
-        int k;
-        if (!target_set(player_ptr, TARGET_KILL))
+        if (!mane_summon(player_ptr, _("ハウンドを召喚した。", "You summon hounds."), target_row, target_col, plev, 4,
+            {summon_data(SUMMON_HOUND, mode, summon_specific)}).fire())
             return false;
-        msg_print(_("ハウンドを召喚した。", "You summon hounds."));
-        for (k = 0; k < 4; k++)
-            summon_specific(player_ptr, -1, target_row, target_col, plev, SUMMON_HOUND, mode);
         break;
     }
     case RF_ABILITY::S_HYDRA: {
-        int k;
-        if (!target_set(player_ptr, TARGET_KILL))
+        if (!mane_summon(player_ptr, _("ヒドラを召喚した。", "You summon hydras."), target_row, target_col, plev, 4,
+            {summon_data(SUMMON_HYDRA, mode, summon_specific)}).fire())
             return false;
-        msg_print(_("ヒドラを召喚した。", "You summon hydras."));
-        for (k = 0; k < 4; k++)
-            summon_specific(player_ptr, -1, target_row, target_col, plev, SUMMON_HYDRA, mode);
         break;
     }
     case RF_ABILITY::S_ANGEL: {
-        int k;
-        if (!target_set(player_ptr, TARGET_KILL))
+        if (!mane_summon(player_ptr, _("天使を召喚した！", "You summon an angel!"), target_row, target_col, plev, 1,
+            {summon_data(SUMMON_ANGEL, mode, summon_specific)}).fire())
             return false;
-        msg_print(_("天使を召喚した！", "You summon an angel!"));
-        for (k = 0; k < 1; k++)
-            summon_specific(player_ptr, -1, target_row, target_col, plev, SUMMON_ANGEL, mode);
         break;
     }
     case RF_ABILITY::S_DEMON: {
-        int k;
-        if (!target_set(player_ptr, TARGET_KILL))
+        if (!mane_summon(player_ptr, _("混沌の宮廷から悪魔を召喚した！", "You summon a demon from the Courts of Chaos!"), target_row, target_col, plev, 1,
+            {summon_data(SUMMON_DEMON, (mode | u_mode), summon_specific)}).fire())
             return false;
-        msg_print(_("混沌の宮廷から悪魔を召喚した！", "You summon a demon from the Courts of Chaos!"));
-        for (k = 0; k < 1; k++)
-            summon_specific(player_ptr, -1, target_row, target_col, plev, SUMMON_DEMON, (mode | u_mode));
         break;
     }
     case RF_ABILITY::S_UNDEAD: {
-        int k;
-        if (!target_set(player_ptr, TARGET_KILL))
+        if (!mane_summon(player_ptr, _("アンデッドの強敵を召喚した！", "You summon an undead adversary!"), target_row, target_col, plev, 1,
+            {summon_data(SUMMON_UNDEAD, (mode | u_mode), summon_specific)}).fire())
             return false;
-        msg_print(_("アンデッドの強敵を召喚した！", "You summon an undead adversary!"));
-        for (k = 0; k < 1; k++)
-            summon_specific(player_ptr, -1, target_row, target_col, plev, SUMMON_UNDEAD, (mode | u_mode));
         break;
     }
     case RF_ABILITY::S_DRAGON: {
-        int k;
-        if (!target_set(player_ptr, TARGET_KILL))
+        if (!mane_summon(player_ptr, _("ドラゴンを召喚した！", "You summon a dragon!"), target_row, target_col, plev, 1,
+            {summon_data(SUMMON_DRAGON, (mode | u_mode), summon_specific)}).fire())
             return false;
-        msg_print(_("ドラゴンを召喚した！", "You summon a dragon!"));
-        for (k = 0; k < 1; k++)
-            summon_specific(player_ptr, -1, target_row, target_col, plev, SUMMON_DRAGON, (mode | u_mode));
         break;
     }
     case RF_ABILITY::S_HI_UNDEAD: {
-        int k;
-        if (!target_set(player_ptr, TARGET_KILL))
+        if (!mane_summon(player_ptr, _("強力なアンデッドを召喚した！", "You summon greater undead!"), target_row, target_col, plev, 6,
+            {summon_data(SUMMON_HI_UNDEAD, (mode | u_mode), summon_specific)}).fire())
             return false;
-        msg_print(_("強力なアンデッドを召喚した！", "You summon greater undead!"));
-        for (k = 0; k < 6; k++)
-            summon_specific(player_ptr, -1, target_row, target_col, plev, SUMMON_HI_UNDEAD, (mode | u_mode));
         break;
     }
     case RF_ABILITY::S_HI_DRAGON: {
-        int k;
-        if (!target_set(player_ptr, TARGET_KILL))
+        if (!mane_summon(player_ptr, _("古代ドラゴンを召喚した！", "You summon ancient dragons!"), target_row, target_col, plev, 4,
+            {summon_data(SUMMON_HI_DRAGON, (mode | u_mode), summon_specific)}).fire())
             return false;
-        msg_print(_("古代ドラゴンを召喚した！", "You summon ancient dragons!"));
-        for (k = 0; k < 4; k++)
-            summon_specific(player_ptr, -1, target_row, target_col, plev, SUMMON_HI_DRAGON, (mode | u_mode));
         break;
     }
     case RF_ABILITY::S_AMBERITES: {
-        int k;
-        if (!target_set(player_ptr, TARGET_KILL))
+        if (!mane_summon(player_ptr, _("アンバーの王族を召喚した！", "You summon Lords of Amber!"), target_row, target_col, plev, 4,
+            {summon_data(SUMMON_AMBERITES, (mode | PM_ALLOW_UNIQUE), summon_specific)}).fire())
             return false;
-        msg_print(_("アンバーの王族を召喚した！", "You summon Lords of Amber!"));
-        for (k = 0; k < 4; k++)
-            summon_specific(player_ptr, -1, target_row, target_col, plev, SUMMON_AMBERITES, (mode | PM_ALLOW_UNIQUE));
         break;
     }
     case RF_ABILITY::S_UNIQUE: {
-        int k, count = 0;
-        if (!target_set(player_ptr, TARGET_KILL))
+        if (!mane_summon(player_ptr, _("特別な強敵を召喚した！", "You summon special opponents!"), target_row, target_col, plev, 4,
+            {summon_data(SUMMON_UNIQUE, (mode | PM_ALLOW_UNIQUE), summon_specific),
+             summon_data(SUMMON_HI_UNDEAD, (mode | u_mode), summon_specific)}).fire())
             return false;
-        msg_print(_("特別な強敵を召喚した！", "You summon special opponents!"));
-        for (k = 0; k < 4; k++)
-            if (summon_specific(player_ptr, -1, target_row, target_col, plev, SUMMON_UNIQUE, (mode | PM_ALLOW_UNIQUE)))
-                count++;
-        for (k = count; k < 4; k++)
-            summon_specific(player_ptr, -1, target_row, target_col, plev, SUMMON_HI_UNDEAD, (mode | u_mode));
         break;
     }
     case RF_ABILITY::BO_LITE:
