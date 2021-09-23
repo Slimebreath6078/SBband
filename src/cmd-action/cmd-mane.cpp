@@ -101,6 +101,16 @@ mane_ball::mane_ball(player_type *player_ptr, concptr msg, EFFECT_ID typ, POSITI
     : mane_attack_spell(player_ptr, msg, typ, rad, fire_ball)
 {}
 
+mane_beam::mane_beam(player_type *player_ptr, concptr msg, EFFECT_ID typ)
+    : mane_attack_spell(player_ptr, msg, typ, 0,
+    [func = fire_beam](player_type *player_ptr, EFFECT_ID typ, DIRECTION dir, HIT_POINT dam, POSITION){ return func(player_ptr, typ, dir, dam); })
+{}
+
+mane_beam::mane_beam(player_type *player_ptr, concptr msg, EFFECT_ID typ, HIT_POINT dam)
+    : mane_attack_spell(player_ptr, msg, typ, 0, dam,
+    [func = fire_beam](player_type *player_ptr, EFFECT_ID typ, DIRECTION dir, HIT_POINT dam, POSITION){ return func(player_ptr, typ, dir, dam); })
+{}
+
 mane_breath::mane_breath(player_type *player_ptr, concptr msg, char* buffer, EFFECT_ID typ, POSITION rad)
     : mane_attack_spell(player_ptr, buffer, typ, rad, fire_breath)
 {
@@ -745,10 +755,8 @@ static bool use_mane(player_type *player_ptr, RF_ABILITY spell)
         break;
     }
     case RF_ABILITY::TELE_AWAY:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_beam(player_ptr, nullptr, GF_AWAY_ALL, plev).fire())
             return false;
-
-        (void)fire_beam(player_ptr, GF_AWAY_ALL, dir, plev);
         break;
 
     case RF_ABILITY::TELE_LEVEL:
@@ -756,11 +764,8 @@ static bool use_mane(player_type *player_ptr, RF_ABILITY spell)
         break;
 
     case RF_ABILITY::PSY_SPEAR:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_beam(player_ptr, _("光の剣を放った。", "You throw a psycho-spear."), GF_PSY_SPEAR).fire())
             return false;
-        else
-            msg_print(_("光の剣を放った。", "You throw a psycho-spear."));
-        (void)fire_beam(player_ptr, GF_PSY_SPEAR, dir, damage);
         break;
 
     case RF_ABILITY::DARKNESS:

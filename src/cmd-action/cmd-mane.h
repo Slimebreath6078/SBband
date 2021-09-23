@@ -33,6 +33,14 @@ class mane_bolt : public mane_attack_spell{
         ~mane_bolt() = default;
 };
 
+class mane_beam : public mane_attack_spell{
+    public:
+        mane_beam(player_type *player_ptr, concptr msg, EFFECT_ID typ);
+        mane_beam(player_type *player_ptr, concptr msg, EFFECT_ID typ, HIT_POINT dam);
+        mane_beam() = delete;
+        ~mane_beam() = default;
+};
+
 class mane_ball : public mane_attack_spell{
     public:
         mane_ball(player_type *player_ptr, concptr msg, EFFECT_ID typ, POSITION rad);
