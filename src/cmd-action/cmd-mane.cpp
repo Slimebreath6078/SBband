@@ -179,6 +179,20 @@ bool mane_bad_st::fire(){
     return true;
 }
 
+bool mane_summon::fire(){
+    int count = 0;
+    if (!target_set(this->player_ptr, TARGET_KILL))
+        return false;
+    msg_print(this->msg);
+    for (const auto &job : summon_list){
+        for (int k = count; k < this->num; k++){
+            if (job.summon(this->player_ptr, -1, this->target_y, this->target_x, this->plev, job.type, job.mode))
+                count++;
+        }
+    }
+    return true;
+}
+
 /*!
  * @brief 受け取ったパラメータに応じてものまねの効果情報をまとめたフォーマットを返す
  * @param p 情報を返す文字列参照ポインタ
