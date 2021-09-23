@@ -671,35 +671,24 @@ static bool use_mane(player_type *player_ptr, RF_ABILITY spell)
             return false;
         break;
     case RF_ABILITY::SCARE:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_bad_st(player_ptr, _("恐ろしげな幻覚を作り出した。", "You cast a fearful illusion."), plev + 10, fear_monster).fire())
             return false;
-        else
-            msg_print(_("恐ろしげな幻覚を作り出した。", "You cast a fearful illusion."));
-
-        fear_monster(player_ptr, dir, plev + 10);
         break;
     case RF_ABILITY::BLIND:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_bad_st(player_ptr, nullptr, plev * 2, confuse_monster).fire())
             return false;
-        confuse_monster(player_ptr, dir, plev * 2);
         break;
     case RF_ABILITY::CONF:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_bad_st(player_ptr, _("誘惑的な幻覚をつくり出した。", "You cast a mesmerizing illusion."), plev * 2, confuse_monster).fire())
             return false;
-        else
-            msg_print(_("誘惑的な幻覚をつくり出した。", "You cast a mesmerizing illusion."));
-
-        confuse_monster(player_ptr, dir, plev * 2);
         break;
     case RF_ABILITY::SLOW:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_bad_st(player_ptr, nullptr, plev, slow_monster).fire())
             return false;
-        slow_monster(player_ptr, dir, plev);
         break;
     case RF_ABILITY::HOLD:
-        if (!get_aim_dir(player_ptr, &dir))
+        if (!mane_bad_st(player_ptr, nullptr, plev, sleep_monster).fire())
             return false;
-        sleep_monster(player_ptr, dir, plev);
         break;
     case RF_ABILITY::HASTE:
         (void)set_fast(player_ptr, randint1(20 + plev) + plev, false);
