@@ -13,7 +13,7 @@ typedef struct monster_power {
     concptr name;
 } monster_power;
 
-#define MAX_MONSPELLS 96
+#define MAX_MONSPELLS 98
 
 extern const monster_power monster_powers[MAX_MONSPELLS];
 extern const concptr monster_powers_short[MAX_MONSPELLS];
