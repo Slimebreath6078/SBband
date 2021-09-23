@@ -1,12 +1,22 @@
 ﻿#pragma once
 
 #include <functional>
+#include <vector>
+#include "spell/summon-types.h"
 #include "system/h-type.h"
 #include "system/monster-race-definition.h"
 #include "spell/spell-types.h"
 
 struct player_type;
 
+struct summon_data{
+    summon_data(summon_type type, BIT_FLAGS mode, std::function<bool(player_type *, MONSTER_IDX, POSITION, POSITION, DEPTH, summon_type, BIT_FLAGS)> summon);
+    summon_data(summon_type type, BIT_FLAGS mode, std::function<bool(player_type *, DEPTH, POSITION, POSITION, BIT_FLAGS)> summon);
+    summon_data operator =(summon_data) = delete;
+    const summon_type type;
+    const BIT_FLAGS mode;
+    const std::function<bool(player_type *, MONSTER_IDX, POSITION, POSITION, DEPTH, summon_type, BIT_FLAGS)> summon;
+};
 class mane_attack_spell{
     protected:
         mane_attack_spell(player_type *player_ptr, concptr msg, EFFECT_ID typ, POSITION rad,
@@ -74,5 +84,21 @@ class mane_bad_st{
         concptr msg;
         int power;
         std::function<bool(player_type *, DIRECTION, int)> func;
+};
+
+class mane_summon{
+    public:
+        mane_summon(player_type *player_ptr, concptr msg, POSITION target_y, POSITION target_x, DEPTH plev, int num, std::vector<summon_data> summon_list);
+        mane_summon() = delete;
+        ~mane_summon() = default;
+        bool fire();
+    private:
+        player_type *player_ptr;
+        concptr msg;
+        POSITION target_y;
+        POSITION target_x;
+        DEPTH plev;
+        int num;
+        std::vector<summon_data> summon_list;
 };
 bool do_cmd_mane(player_type *player_ptr, bool baigaesi);

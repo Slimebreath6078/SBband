@@ -72,6 +72,22 @@
 
 static int damage;
 
+summon_data::summon_data(summon_type type, BIT_FLAGS mode, 
+    std::function<bool(player_type *, MONSTER_IDX, POSITION, POSITION, DEPTH, summon_type, BIT_FLAGS)> summon)
+    : type(type)
+    , mode(mode)
+    , summon(std::move(summon))
+{}
+
+summon_data::summon_data(summon_type type, BIT_FLAGS mode, 
+    std::function<bool(player_type *, DEPTH, POSITION, POSITION, BIT_FLAGS)> summon)
+    : type(type)
+    , mode(mode)
+    , summon([func = std::move(summon)]
+        (player_type *player_ptr, MONSTER_IDX, POSITION y, POSITION x, DEPTH lev, summon_type, BIT_FLAGS mode)
+        {return func(player_ptr, lev, y, x, mode);})
+{}
+
 mane_attack_spell::mane_attack_spell(player_type *player_ptr, concptr msg, EFFECT_ID typ, POSITION rad,
     std::function<bool(player_type *, EFFECT_ID, DIRECTION, HIT_POINT, POSITION)> func)
     : player_ptr(player_ptr)
@@ -130,6 +146,16 @@ mane_bad_st::mane_bad_st(player_type *player_ptr, concptr msg, int power, std::f
     , msg(msg)
     , power(power)
     , func(func)
+{}
+
+mane_summon::mane_summon(player_type *player_ptr, concptr msg, POSITION target_y, POSITION target_x, DEPTH plev, int num, std::vector<summon_data> summon_list)
+    : player_ptr(player_ptr)
+    , msg(msg)
+    , target_y(target_y)
+    , target_x(target_x)
+    , plev(plev)
+    , num(num)
+    , summon_list(summon_list)
 {}
 
 bool mane_attack_spell::fire(){
