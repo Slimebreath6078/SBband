@@ -89,6 +89,10 @@ acid_dam::acid_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str)
     : element_dam(player_ptr, kb_str, dam, false, A_CHR, BreakerAcid(), damage_function(calc_acid_damage_rate, has_resist_acid, is_oppose_acid))
 {}
 
+elec_dam::elec_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura)
+    : element_dam(player_ptr, kb_str, dam, aura, A_DEX, BreakerElec(), damage_function(calc_elec_damage_rate, has_resist_elec, is_oppose_elec))
+{}
+
 HIT_POINT element_dam::process(){
     HIT_POINT dam;
     int inv = (this->dam < 30) ? 1 : (this->dam < 60) ? 2 : 3;
@@ -124,6 +128,10 @@ void acid_dam::effect(bool double_resist){
 
     if (this->minus_ac())
         this->dam = (this->dam + 1) / 2;
+}
+
+void elec_dam::effect(bool double_resist){
+    element_dam::effect(double_resist);
 }
 
 /*!
@@ -184,38 +192,6 @@ bool acid_dam::minus_ac()
     this->player_ptr->window_flags |= PW_EQUIP | PW_PLAYER;
     calc_android_exp(this->player_ptr);
     return true;
-}
-
-/*!
- * @brief 電撃属性によるプレイヤー損害処理 /
- * Hurt the player with electricity
- * @param player_ptr 電撃を浴びたキャラクタへの参照ポインタ
- * @param dam 基本ダメージ量
- * @param kb_str ダメージ原因記述
- * @param monspell 原因となったモンスター特殊攻撃ID
- * @param aura オーラよるダメージが原因ならばTRUE
- * @return 修正HPダメージ量
- */
-HIT_POINT elec_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura)
-{
-    int inv = (dam < 30) ? 1 : (dam < 60) ? 2 : 3;
-    bool double_resist = is_oppose_elec(player_ptr);
-
-    dam = dam * calc_elec_damage_rate(player_ptr) / 100;
-
-    if (dam <= 0)
-        return 0;
-
-    if (aura || !check_multishadow(player_ptr)) {
-        if ((!(double_resist || has_resist_elec(player_ptr))) && one_in_(HURT_CHANCE))
-            (void)do_dec_stat(player_ptr, A_DEX);
-    }
-
-    HIT_POINT get_damage = take_hit(player_ptr, aura ? DAMAGE_NOESCAPE : DAMAGE_ATTACK, dam, kb_str);
-    if (!aura && !(double_resist && has_resist_elec(player_ptr)))
-        inventory_damage(player_ptr, BreakerElec(), inv);
-
-    return get_damage;
 }
 
 /*!

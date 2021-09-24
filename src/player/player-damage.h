@@ -53,8 +53,17 @@ class acid_dam : public element_dam{
         virtual bool minus_ac();
         acid_dam operator =(acid_dam) = delete;
 };
+
+class elec_dam : public element_dam{
+    public:
+        elec_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura);
+        elec_dam() = delete;
+        virtual ~elec_dam() = default;
+    private:
+        void effect(bool double_resist);
+        elec_dam operator =(elec_dam) = delete;
+};
 int take_hit(player_type *player_ptr, int damage_type, HIT_POINT damage, concptr kb_str);
-HIT_POINT elec_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura);
 HIT_POINT fire_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura);
 HIT_POINT cold_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura);
 void touch_zap_player(monster_type *m_ptr, player_type *player_ptr);
