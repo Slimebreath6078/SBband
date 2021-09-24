@@ -93,6 +93,10 @@ elec_dam::elec_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool 
     : element_dam(player_ptr, kb_str, dam, aura, A_DEX, BreakerElec(), damage_function(calc_elec_damage_rate, has_resist_elec, is_oppose_elec))
 {}
 
+fire_dam::fire_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura)
+    : element_dam(player_ptr, kb_str, dam, aura, A_STR, BreakerFire(), damage_function(calc_fire_damage_rate, has_resist_fire, is_oppose_fire))
+{}
+
 HIT_POINT element_dam::process(){
     HIT_POINT dam;
     int inv = (this->dam < 30) ? 1 : (this->dam < 60) ? 2 : 3;
@@ -131,6 +135,10 @@ void acid_dam::effect(bool double_resist){
 }
 
 void elec_dam::effect(bool double_resist){
+    element_dam::effect(double_resist);
+}
+
+void fire_dam::effect(bool double_resist){
     element_dam::effect(double_resist);
 }
 
@@ -192,38 +200,6 @@ bool acid_dam::minus_ac()
     this->player_ptr->window_flags |= PW_EQUIP | PW_PLAYER;
     calc_android_exp(this->player_ptr);
     return true;
-}
-
-/*!
- * @brief 火炎属性によるプレイヤー損害処理 /
- * Hurt the player with Fire
- * @param player_ptr 火炎を浴びたキャラクタへの参照ポインタ
- * @param dam 基本ダメージ量
- * @param kb_str ダメージ原因記述
- * @param monspell 原因となったモンスター特殊攻撃ID
- * @param aura オーラよるダメージが原因ならばTRUE
- * @return 修正HPダメージ量
- */
-HIT_POINT fire_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura)
-{
-    int inv = (dam < 30) ? 1 : (dam < 60) ? 2 : 3;
-    bool double_resist = is_oppose_fire(player_ptr);
-
-    /* Totally immune */
-    if (has_immune_fire(player_ptr) || (dam <= 0))
-        return 0;
-
-    dam = dam * calc_fire_damage_rate(player_ptr) / 100;
-    if (aura || !check_multishadow(player_ptr)) {
-        if ((!(double_resist || has_resist_fire(player_ptr))) && one_in_(HURT_CHANCE))
-            (void)do_dec_stat(player_ptr, A_STR);
-    }
-
-    HIT_POINT get_damage = take_hit(player_ptr, aura ? DAMAGE_NOESCAPE : DAMAGE_ATTACK, dam, kb_str);
-    if (!aura && !(double_resist && has_resist_fire(player_ptr)))
-        inventory_damage(player_ptr, BreakerFire(), inv);
-
-    return get_damage;
 }
 
 /*!
@@ -576,7 +552,8 @@ static void process_aura_damage(monster_type *m_ptr, player_type *player_ptr, bo
 void touch_zap_player(monster_type *m_ptr, player_type *player_ptr)
 {
     process_aura_damage(m_ptr, player_ptr, (bool)has_immune_fire(player_ptr), offsetof(monster_race, flags2), offsetof(monster_race, r_flags2), RF2_AURA_FIRE,
-        fire_dam, _("突然とても熱くなった！", "You are suddenly very hot!"));
+        fire_dam, 
+        _("突然とても熱くなった！", "You are suddenly very hot!"));
     process_aura_damage(m_ptr, player_ptr, (bool)has_immune_cold(player_ptr), offsetof(monster_race, flags3), offsetof(monster_race, r_flags3), RF3_AURA_COLD,
         cold_dam, _("突然とても寒くなった！", "You are suddenly very cold!"));
     process_aura_damage(m_ptr, player_ptr, (bool)has_immune_elec(player_ptr), offsetof(monster_race, flags2), offsetof(monster_race, r_flags2), RF2_AURA_ELEC,
