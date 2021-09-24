@@ -33,6 +33,7 @@ const std::unordered_map<std::string_view, rbm_type> r_info_blow_method = {
 	{ "MOAN", RBM_MOAN },
 	{ "SHOW", RBM_SHOW },
 	{ "SHOOT", RBM_SHOOT },
+	{ "CRUSH", RBM_CRUSH },
 };
 
 /*!
