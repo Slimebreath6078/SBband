@@ -37,12 +37,12 @@
 
 // 毒を除く4元素.
 void effect_player_elements(
-    player_type *player_ptr, effect_player_type *ep_ptr, concptr attack_message, HIT_POINT (*damage_func)(player_type *, HIT_POINT, concptr, bool))
+    player_type *player_ptr, effect_player_type *ep_ptr, concptr attack_message, element_dam &&damage_func)
 {
     if (player_ptr->blind)
         msg_print(attack_message);
 
-    ep_ptr->get_damage = (*damage_func)(player_ptr, ep_ptr->dam, ep_ptr->killer, false);
+    ep_ptr->get_damage = damage_func.process();
 }
 
 void effect_player_poison(player_type *player_ptr, effect_player_type *ep_ptr)

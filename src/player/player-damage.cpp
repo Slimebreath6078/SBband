@@ -503,23 +503,23 @@ int take_hit(player_type *player_ptr, int damage_type, HIT_POINT damage, concptr
  * @param message オーラダメージを受けた際のメッセージ
  */
 static void process_aura_damage(monster_type *m_ptr, player_type *player_ptr, bool immune, int flags_offset, int r_flags_offset, uint32_t aura_flag,
-    HIT_POINT (*dam_func)(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura), concptr message)
+    element_dam &&dam_func, concptr message)
 {
     monster_race *r_ptr = &r_info[m_ptr->r_idx];
     if (!(atoffset(BIT_FLAGS, r_ptr, flags_offset) & aura_flag) || immune)
         return;
 
-    GAME_TEXT mon_name[MAX_NLEN];
-    int aura_damage = damroll(1 + (r_ptr->level / 26), 1 + (r_ptr->level / 17));
-
-    monster_desc(player_ptr, mon_name, m_ptr, MD_WRONGDOER_NAME);
     msg_print(message);
-    dam_func(player_ptr, aura_damage, mon_name, true);
+    dam_func.process();
 
     if (is_original_ap_and_seen(player_ptr, m_ptr))
         atoffset(BIT_FLAGS, r_ptr, r_flags_offset) |= aura_flag;
 
     handle_stuff(player_ptr);
+}
+
+static HIT_POINT calc_aura_damage(DEPTH level){
+    return damroll(1 + (level / 26), 1 + (level / 17));
 }
 
 /*!
@@ -529,11 +529,16 @@ static void process_aura_damage(monster_type *m_ptr, player_type *player_ptr, bo
  */
 void touch_zap_player(monster_type *m_ptr, player_type *player_ptr)
 {
+    monster_race *r_ptr = &r_info[m_ptr->r_idx];
+    GAME_TEXT mon_name[MAX_NLEN];
+
+    monster_desc(player_ptr, mon_name, m_ptr, MD_WRONGDOER_NAME);
+
     process_aura_damage(m_ptr, player_ptr, (bool)has_immune_fire(player_ptr), offsetof(monster_race, flags2), offsetof(monster_race, r_flags2), RF2_AURA_FIRE,
-        fire_dam, 
+        fire_dam(player_ptr, calc_aura_damage(r_ptr->level), mon_name, true), 
         _("突然とても熱くなった！", "You are suddenly very hot!"));
     process_aura_damage(m_ptr, player_ptr, (bool)has_immune_cold(player_ptr), offsetof(monster_race, flags3), offsetof(monster_race, r_flags3), RF3_AURA_COLD,
-        cold_dam, _("突然とても寒くなった！", "You are suddenly very cold!"));
+        cold_dam(player_ptr, calc_aura_damage(r_ptr->level), mon_name, true), _("突然とても寒くなった！", "You are suddenly very cold!"));
     process_aura_damage(m_ptr, player_ptr, (bool)has_immune_elec(player_ptr), offsetof(monster_race, flags2), offsetof(monster_race, r_flags2), RF2_AURA_ELEC,
-        elec_dam, _("電撃をくらった！", "You get zapped!"));
+        elec_dam(player_ptr, calc_aura_damage(r_ptr->level), mon_name, true), _("電撃をくらった！", "You get zapped!"));
 }
