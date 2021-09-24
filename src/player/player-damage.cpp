@@ -68,6 +68,23 @@
 #include "view/display-messages.h"
 #include "world/world.h"
 
+damage_function::damage_function(std::function<PERCENTAGE(player_type *player_ptr)> calc_damage_rate, std::function<BIT_FLAGS(player_type *player_ptr)> has_resist,
+            std::function<bool(player_type *player_ptr)> is_oppose)
+            : calc_damage_rate(calc_damage_rate)
+            , has_resist(has_resist)
+            , is_oppose(is_oppose)
+{}
+
+element_dam::element_dam(player_type *player_ptr, concptr kb_str, HIT_POINT dam, bool aura, int stat, const ObjectBreaker &breaker, damage_function function)
+    : player_ptr(player_ptr)
+    , kb_str(kb_str)
+    , dam(dam)
+    , aura(aura)
+    , stat(stat)
+    , breaker(breaker)
+    , function(function)
+{}
+
 /*!
  * @brief 酸攻撃による装備のAC劣化処理 /
  * Acid has hit the player, attempt to affect some armor.
