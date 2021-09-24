@@ -105,6 +105,11 @@ void set_monster_blow_method(lore_type *lore_ptr, int m)
     case RBM_SHOOT:
     case NB_RBM_TYPE:
         break;
+
+    case RBM_CRUSH:
+        lore_ptr->p = _("握りつぶす。", "crush");
+        lore_ptr->pc = TERM_L_WHITE;
+        break;
     }
 }
 
