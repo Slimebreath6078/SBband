@@ -372,7 +372,7 @@ void switch_monster_blow_to_player(player_type *player_ptr, monap_type *monap_pt
 
         monap_ptr->obvious = true;
         msg_print(_("酸を浴びせられた！", "You are covered in acid!"));
-        monap_ptr->get_damage += acid_dam(player_ptr, monap_ptr->damage, monap_ptr->ddesc, false);
+        monap_ptr->get_damage += acid_dam(player_ptr, monap_ptr->damage, monap_ptr->ddesc).process();
         update_creature(player_ptr);
         update_smart_learn(player_ptr, monap_ptr->m_idx, DRS_ACID);
         break;

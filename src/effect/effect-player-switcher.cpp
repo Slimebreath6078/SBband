@@ -18,7 +18,7 @@ void switch_effects_player(player_type *player_ptr, effect_player_type *ep_ptr)
 {
     switch (ep_ptr->effect_type) {
     case GF_ACID:
-        effect_player_elements(player_ptr, ep_ptr, _("酸で攻撃された！", "You are hit by acid!"), acid_dam);
+        effect_player_elements(player_ptr, ep_ptr, _("酸で攻撃された！", "You are hit by acid!"), acid_dam(player_ptr, ep_ptr->dam, ep_ptr->killer));
         return;
     case GF_FIRE:
         effect_player_elements(player_ptr, ep_ptr, _("火炎で攻撃された！", "You are hit by fire!"), fire_dam);

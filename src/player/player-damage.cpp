@@ -85,6 +85,10 @@ element_dam::element_dam(player_type *player_ptr, concptr kb_str, HIT_POINT dam,
     , function(function)
 {}
 
+acid_dam::acid_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str)
+    : element_dam(player_ptr, kb_str, dam, false, A_CHR, BreakerAcid(), damage_function(calc_acid_damage_rate, has_resist_acid, is_oppose_acid))
+{}
+
 HIT_POINT element_dam::process(){
     HIT_POINT dam;
     int inv = (this->dam < 30) ? 1 : (this->dam < 60) ? 2 : 3;
@@ -109,40 +113,52 @@ HIT_POINT element_dam::process(){
     return get_damage;
 }
 
+void element_dam::effect(bool double_resist){
+    if ((!(double_resist || this->function.has_resist(this->player_ptr))) && one_in_(HURT_CHANCE))
+            (void)do_dec_stat(player_ptr, this->stat);
+}
+
+void acid_dam::effect(bool double_resist){
+
+    element_dam::effect(double_resist);
+
+    if (this->minus_ac())
+        this->dam = (this->dam + 1) / 2;
+}
+
 /*!
  * @brief 酸攻撃による装備のAC劣化処理 /
  * Acid has hit the player, attempt to affect some armor.
- * @param 酸を浴びたキャラクタへの参照ポインタ
  * @return 装備による軽減があったならTRUEを返す
  * @details
  * 免疫があったらそもそもこの関数は実行されない (確実に錆びない).
  * Note that the "base armor" of an object never changes.
  * If any armor is damaged (or resists), the player takes less damage.
  */
-static bool acid_minus_ac(player_type *player_ptr)
+bool acid_dam::minus_ac()
 {
     object_type *o_ptr = nullptr;
     switch (randint1(7)) {
     case 1:
-        o_ptr = &player_ptr->inventory_list[INVEN_MAIN_HAND];
+        o_ptr = &this->player_ptr->inventory_list[INVEN_MAIN_HAND];
         break;
     case 2:
-        o_ptr = &player_ptr->inventory_list[INVEN_SUB_HAND];
+        o_ptr = &this->player_ptr->inventory_list[INVEN_SUB_HAND];
         break;
     case 3:
-        o_ptr = &player_ptr->inventory_list[INVEN_BODY];
+        o_ptr = &this->player_ptr->inventory_list[INVEN_BODY];
         break;
     case 4:
-        o_ptr = &player_ptr->inventory_list[INVEN_OUTER];
+        o_ptr = &this->player_ptr->inventory_list[INVEN_OUTER];
         break;
     case 5:
-        o_ptr = &player_ptr->inventory_list[INVEN_ARMS];
+        o_ptr = &this->player_ptr->inventory_list[INVEN_ARMS];
         break;
     case 6:
-        o_ptr = &player_ptr->inventory_list[INVEN_HEAD];
+        o_ptr = &this->player_ptr->inventory_list[INVEN_HEAD];
         break;
     case 7:
-        o_ptr = &player_ptr->inventory_list[INVEN_FEET];
+        o_ptr = &this->player_ptr->inventory_list[INVEN_FEET];
         break;
     }
 
@@ -150,7 +166,7 @@ static bool acid_minus_ac(player_type *player_ptr)
         return false;
 
     GAME_TEXT o_name[MAX_NLEN];
-    describe_flavor(player_ptr, o_name, o_ptr, OD_OMIT_PREFIX | OD_NAME_ONLY);
+    describe_flavor(this->player_ptr, o_name, o_ptr, OD_OMIT_PREFIX | OD_NAME_ONLY);
     auto flgs = object_flags(o_ptr);
     if (o_ptr->ac + o_ptr->to_a <= 0) {
         msg_format(_("%sは既にボロボロだ！", "Your %s is already fully corroded!"), o_name);
@@ -164,44 +180,10 @@ static bool acid_minus_ac(player_type *player_ptr)
 
     msg_format(_("%sが酸で腐食した！", "Your %s is corroded!"), o_name);
     o_ptr->to_a--;
-    player_ptr->update |= PU_BONUS;
-    player_ptr->window_flags |= PW_EQUIP | PW_PLAYER;
-    calc_android_exp(player_ptr);
+    this->player_ptr->update |= PU_BONUS;
+    this->player_ptr->window_flags |= PW_EQUIP | PW_PLAYER;
+    calc_android_exp(this->player_ptr);
     return true;
-}
-
-/*!
- * @brief 酸属性によるプレイヤー損害処理 /
- * Hurt the player with Acid
- * @param player_ptr 酸を浴びたキャラクタへの参照ポインタ
- * @param dam 基本ダメージ量
- * @param kb_str ダメージ原因記述
- * @param monspell 原因となったモンスター特殊攻撃ID
- * @param aura オーラよるダメージが原因ならばTRUE
- * @return 修正HPダメージ量
- * @details 酸オーラは存在しないが関数ポインタのために引数だけは用意している
- */
-HIT_POINT acid_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura)
-{
-    int inv = (dam < 30) ? 1 : (dam < 60) ? 2 : 3;
-    bool double_resist = is_oppose_acid(player_ptr);
-    dam = dam * calc_acid_damage_rate(player_ptr) / 100;
-    if (dam <= 0)
-        return 0;
-
-    if (aura || !check_multishadow(player_ptr)) {
-        if ((!(double_resist || has_resist_acid(player_ptr))) && one_in_(HURT_CHANCE))
-            (void)do_dec_stat(player_ptr, A_CHR);
-
-        if (acid_minus_ac(player_ptr))
-            dam = (dam + 1) / 2;
-    }
-
-    HIT_POINT get_damage = take_hit(player_ptr, aura ? DAMAGE_NOESCAPE : DAMAGE_ATTACK, dam, kb_str);
-    if (!aura && !(double_resist && has_resist_acid(player_ptr)))
-        inventory_damage(player_ptr, BreakerAcid(), inv);
-
-    return get_damage;
 }
 
 /*!

@@ -42,8 +42,18 @@ class element_dam{
         HIT_POINT process();
         element_dam operator =(element_dam) = delete;
 };
+
+class acid_dam : public element_dam{
+    public:
+        acid_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str);
+        acid_dam() = delete;
+        virtual ~acid_dam() = default;
+    private:
+        void effect(bool double_resist);
+        virtual bool minus_ac();
+        acid_dam operator =(acid_dam) = delete;
+};
 int take_hit(player_type *player_ptr, int damage_type, HIT_POINT damage, concptr kb_str);
-HIT_POINT acid_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura);
 HIT_POINT elec_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura);
 HIT_POINT fire_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura);
 HIT_POINT cold_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura);
