@@ -85,6 +85,30 @@ element_dam::element_dam(player_type *player_ptr, concptr kb_str, HIT_POINT dam,
     , function(function)
 {}
 
+HIT_POINT element_dam::process(){
+    HIT_POINT dam;
+    int inv = (this->dam < 30) ? 1 : (this->dam < 60) ? 2 : 3;
+    bool double_resist = this->function.is_oppose(this->player_ptr);
+    
+    dam = this->dam;
+    this->dam = this->dam * this->function.calc_damage_rate(this->player_ptr) / 100;
+
+    if (this->dam <= 0)
+        return 0;
+
+    if (!this->aura || !check_multishadow(this->player_ptr)) {
+        this->effect(double_resist);
+    }
+
+    HIT_POINT get_damage = take_hit(this->player_ptr, this->aura ? DAMAGE_NOESCAPE : DAMAGE_ATTACK, this->dam, kb_str);
+    this->dam = dam;
+    
+    if (!this->aura && !(double_resist && this->function.has_resist(this->player_ptr) != FLAG_CAUSE_NONE))
+        inventory_damage(this->player_ptr, this->breaker, inv);
+
+    return get_damage;
+}
+
 /*!
  * @brief 酸攻撃による装備のAC劣化処理 /
  * Acid has hit the player, attempt to affect some armor.
