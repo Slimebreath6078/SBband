@@ -145,8 +145,8 @@ void describe_monster_attack_method(monap_type *monap_ptr)
         sound(SOUND_HIT);
         break;
     }
-    case RBM_CRUSH: {
-        monap_ptr->act = _("体当たりされた。", "crushes you.");
+    case RBM_CRASH: {
+        monap_ptr->act = _("体当たりされた。", "crashes into you.");
         monap_ptr->do_stun = 1;
         monap_ptr->touched = true;
         sound(SOUND_CRUSH);
@@ -247,5 +247,13 @@ void describe_monster_attack_method(monap_type *monap_ptr)
     case RBM_SHOOT:
     case NB_RBM_TYPE:
         break;
+
+    case RBM_CRUSH:{
+        monap_ptr->act = _("握りつぶされた。", "crushes you.");
+        monap_ptr->do_stun = 1;
+        monap_ptr->touched = true;
+        sound(SOUND_CRUSH);
+        break;
+    }
     }
 }

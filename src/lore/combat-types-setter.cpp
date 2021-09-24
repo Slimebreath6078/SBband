@@ -45,8 +45,8 @@ void set_monster_blow_method(lore_type *lore_ptr, int m)
         lore_ptr->p = _("角で突く", "butt");
         lore_ptr->pc = TERM_L_WHITE;
         break;
-    case RBM_CRUSH:
-        lore_ptr->p = _("体当たりする", "crush");
+    case RBM_CRASH:
+        lore_ptr->p = _("体当たりする", "crash");
         lore_ptr->pc = TERM_L_WHITE;
         break;
     case RBM_ENGULF:
@@ -104,6 +104,11 @@ void set_monster_blow_method(lore_type *lore_ptr, int m)
     case RBM_NONE:
     case RBM_SHOOT:
     case NB_RBM_TYPE:
+        break;
+
+    case RBM_CRUSH:
+        lore_ptr->p = _("握りつぶす。", "crush");
+        lore_ptr->pc = TERM_L_WHITE;
         break;
     }
 }

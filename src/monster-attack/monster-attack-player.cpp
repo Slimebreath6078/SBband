@@ -355,9 +355,10 @@ static void process_monster_attack_evasion(player_type *player_ptr, monap_type *
     case RBM_STING:
     case RBM_SLASH:
     case RBM_BUTT:
-    case RBM_CRUSH:
+    case RBM_CRASH:
     case RBM_ENGULF:
     case RBM_CHARGE:
+    case RBM_CRUSH:
         describe_attack_evasion(player_ptr, monap_ptr);
         gain_armor_exp(player_ptr, monap_ptr);
         monap_ptr->damage = 0;

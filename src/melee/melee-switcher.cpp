@@ -61,8 +61,8 @@ void describe_melee_method(player_type *player_ptr, mam_type *mam_ptr)
         mam_ptr->touched = true;
         break;
     }
-    case RBM_CRUSH: {
-        mam_ptr->act = _("%sに体当りした。", "crushes %s.");
+    case RBM_CRASH: {
+        mam_ptr->act = _("%sに体当りした。", "crashes into %s.");
         mam_ptr->touched = true;
         break;
     }
@@ -145,6 +145,12 @@ void describe_melee_method(player_type *player_ptr, mam_type *mam_ptr)
     case RBM_SHOOT:
     case NB_RBM_TYPE:
         break;
+
+    case RBM_CRUSH:{
+        mam_ptr->act = _("%sを握りつぶした。", "crushes %s.");
+        mam_ptr->touched = true;
+        break;
+    }
     }
 }
 
@@ -263,9 +269,10 @@ void describe_monster_missed_monster(player_type *player_ptr, mam_type *mam_ptr)
     case RBM_STING:
     case RBM_SLASH:
     case RBM_BUTT:
-    case RBM_CRUSH:
+    case RBM_CRASH:
     case RBM_ENGULF:
-    case RBM_CHARGE: {
+    case RBM_CHARGE:
+    case RBM_CRUSH: {
         (void)set_monster_csleep(player_ptr, mam_ptr->t_idx, 0);
         if (mam_ptr->see_m) {
 #ifdef JP
