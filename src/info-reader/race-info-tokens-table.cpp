@@ -17,7 +17,7 @@ const std::unordered_map<std::string_view, rbm_type> r_info_blow_method = {
 	{ "STING", RBM_STING },
 	{ "SLASH", RBM_SLASH },
 	{ "BUTT", RBM_BUTT },
-	{ "CRUSH", RBM_CRUSH },
+	{ "CRASH", RBM_CRASH },
 	{ "ENGULF", RBM_ENGULF },
 	{ "CHARGE", RBM_CHARGE },
 	{ "CRAWL", RBM_CRAWL },
