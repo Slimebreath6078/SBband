@@ -607,7 +607,7 @@ void effect_player_icee(player_type *player_ptr, effect_player_type *ep_ptr)
         msg_print(_("何か鋭く冷たいもので攻撃された！", "You are hit by something sharp and cold!"));
     }
 
-    ep_ptr->get_damage = cold_dam(player_ptr, ep_ptr->dam, ep_ptr->killer, false);
+    ep_ptr->get_damage = cold_dam(player_ptr, ep_ptr->dam, ep_ptr->killer, false).process();
     if (check_multishadow(player_ptr)) {
         return;
     }

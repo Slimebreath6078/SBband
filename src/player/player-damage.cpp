@@ -97,6 +97,10 @@ fire_dam::fire_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool 
     : element_dam(player_ptr, kb_str, dam, aura, A_STR, BreakerFire(), damage_function(calc_fire_damage_rate, has_resist_fire, is_oppose_fire))
 {}
 
+cold_dam::cold_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura)
+    : element_dam(player_ptr, kb_str, dam, aura, A_STR, BreakerCold(), damage_function(calc_cold_damage_rate, has_resist_cold, is_oppose_cold))
+{}
+
 HIT_POINT element_dam::process(){
     HIT_POINT dam;
     int inv = (this->dam < 30) ? 1 : (this->dam < 60) ? 2 : 3;
@@ -139,6 +143,10 @@ void elec_dam::effect(bool double_resist){
 }
 
 void fire_dam::effect(bool double_resist){
+    element_dam::effect(double_resist);
+}
+
+void cold_dam::effect(bool double_resist){
     element_dam::effect(double_resist);
 }
 
@@ -200,36 +208,6 @@ bool acid_dam::minus_ac()
     this->player_ptr->window_flags |= PW_EQUIP | PW_PLAYER;
     calc_android_exp(this->player_ptr);
     return true;
-}
-
-/*!
- * @brief 冷気属性によるプレイヤー損害処理 /
- * Hurt the player with Cold
- * @param player_ptr 冷気を浴びたキャラクタへの参照ポインタ
- * @param dam 基本ダメージ量
- * @param kb_str ダメージ原因記述
- * @param monspell 原因となったモンスター特殊攻撃ID
- * @param aura オーラよるダメージが原因ならばTRUE
- * @return 修正HPダメージ量
- */
-HIT_POINT cold_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura)
-{
-    int inv = (dam < 30) ? 1 : (dam < 60) ? 2 : 3;
-    bool double_resist = is_oppose_cold(player_ptr);
-    if (has_immune_cold(player_ptr) || (dam <= 0))
-        return 0;
-
-    dam = dam * calc_cold_damage_rate(player_ptr) / 100;
-    if (aura || !check_multishadow(player_ptr)) {
-        if ((!(double_resist || has_resist_cold(player_ptr))) && one_in_(HURT_CHANCE))
-            (void)do_dec_stat(player_ptr, A_STR);
-    }
-
-    HIT_POINT get_damage = take_hit(player_ptr, aura ? DAMAGE_NOESCAPE : DAMAGE_ATTACK, dam, kb_str);
-    if (!aura && !(double_resist && has_resist_cold(player_ptr)))
-        inventory_damage(player_ptr, BreakerCold(), inv);
-
-    return get_damage;
 }
 
 /*

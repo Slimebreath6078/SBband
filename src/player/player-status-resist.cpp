@@ -127,7 +127,7 @@ PERCENTAGE calc_fire_damage_rate(player_type *player_ptr)
     if (has_immune_fire(player_ptr)){
         return 0;
     }
-    
+
     BIT_FLAGS flgs = has_vuln_fire(player_ptr);
     for (BIT_FLAGS check_flag = 0x01U; check_flag < FLAG_CAUSE_MAX; check_flag <<= 1) {
         if (any_bits(flgs, check_flag)) {
@@ -154,6 +154,11 @@ PERCENTAGE calc_fire_damage_rate(player_type *player_ptr)
 PERCENTAGE calc_cold_damage_rate(player_type *player_ptr)
 {
     PERCENTAGE per = 100;
+
+    if(has_immune_cold(player_ptr)){
+        return 0;
+    }
+
     BIT_FLAGS flgs = has_vuln_cold(player_ptr);
     for (BIT_FLAGS check_flag = 0x01U; check_flag < FLAG_CAUSE_MAX; check_flag <<= 1) {
         if (any_bits(flgs, check_flag)) {
