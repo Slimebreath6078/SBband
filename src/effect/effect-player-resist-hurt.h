@@ -1,11 +1,12 @@
 ﻿#pragma once
 
 #include "system/angband.h"
+#include "player/player-damage.h"
 
 struct effect_player_type;
 struct player_type;
 void effect_player_elements(
-    player_type *player_ptr, effect_player_type *ep_ptr, concptr attack_message, HIT_POINT (*damage_func)(player_type *, HIT_POINT, concptr, bool));
+    player_type *player_ptr, effect_player_type *ep_ptr, concptr attack_message, element_dam &&damage_func);
 void effect_player_poison(player_type *player_ptr, effect_player_type *ep_ptr);
 void effect_player_nuke(player_type *player_ptr, effect_player_type *ep_ptr);
 void effect_player_missile(player_type *player_ptr, effect_player_type *ep_ptr);

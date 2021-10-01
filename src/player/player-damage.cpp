@@ -68,40 +68,121 @@
 #include "view/display-messages.h"
 #include "world/world.h"
 
+damage_function::damage_function(std::function<PERCENTAGE(player_type *player_ptr)> calc_damage_rate, std::function<BIT_FLAGS(player_type *player_ptr)> has_resist,
+            std::function<bool(player_type *player_ptr)> is_oppose)
+            : calc_damage_rate(calc_damage_rate)
+            , has_resist(has_resist)
+            , is_oppose(is_oppose)
+{}
+
+element_dam::element_dam(player_type *player_ptr, concptr kb_str, HIT_POINT dam, bool aura, int stat, const ObjectBreaker &breaker, damage_function function)
+    : player_ptr(player_ptr)
+    , kb_str(kb_str)
+    , dam(dam)
+    , aura(aura)
+    , stat(stat)
+    , breaker(breaker)
+    , function(function)
+{}
+
+acid_dam::acid_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str)
+    : element_dam(player_ptr, kb_str, dam, false, A_CHR, BreakerAcid(), damage_function(calc_acid_damage_rate, has_resist_acid, is_oppose_acid))
+{}
+
+elec_dam::elec_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura)
+    : element_dam(player_ptr, kb_str, dam, aura, A_DEX, BreakerElec(), damage_function(calc_elec_damage_rate, has_resist_elec, is_oppose_elec))
+{}
+
+fire_dam::fire_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura)
+    : element_dam(player_ptr, kb_str, dam, aura, A_STR, BreakerFire(), damage_function(calc_fire_damage_rate, has_resist_fire, is_oppose_fire))
+{}
+
+cold_dam::cold_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura)
+    : element_dam(player_ptr, kb_str, dam, aura, A_STR, BreakerCold(), damage_function(calc_cold_damage_rate, has_resist_cold, is_oppose_cold))
+{}
+
+HIT_POINT element_dam::process(){
+    HIT_POINT dam;
+    int inv = (this->dam < 30) ? 1 : (this->dam < 60) ? 2 : 3;
+    bool double_resist = this->function.is_oppose(this->player_ptr);
+    
+    dam = this->dam;
+    this->dam = this->dam * this->function.calc_damage_rate(this->player_ptr) / 100;
+
+    if (this->dam <= 0)
+        return 0;
+
+    if (!this->aura || !check_multishadow(this->player_ptr)) {
+        this->effect(double_resist);
+    }
+
+    HIT_POINT get_damage = take_hit(this->player_ptr, this->aura ? DAMAGE_NOESCAPE : DAMAGE_ATTACK, this->dam, kb_str);
+    this->dam = dam;
+    
+    if (!this->aura && !(double_resist && this->function.has_resist(this->player_ptr) != FLAG_CAUSE_NONE))
+        inventory_damage(this->player_ptr, this->breaker, inv);
+
+    return get_damage;
+}
+
+void element_dam::effect(bool double_resist){
+    if ((!(double_resist || this->function.has_resist(this->player_ptr))) && one_in_(HURT_CHANCE))
+            (void)do_dec_stat(player_ptr, this->stat);
+}
+
+void acid_dam::effect(bool double_resist){
+
+    element_dam::effect(double_resist);
+
+    if (this->minus_ac())
+        this->dam = (this->dam + 1) / 2;
+}
+
+void elec_dam::effect(bool double_resist){
+    element_dam::effect(double_resist);
+}
+
+void fire_dam::effect(bool double_resist){
+    element_dam::effect(double_resist);
+}
+
+void cold_dam::effect(bool double_resist){
+    element_dam::effect(double_resist);
+}
+
 /*!
  * @brief 酸攻撃による装備のAC劣化処理 /
  * Acid has hit the player, attempt to affect some armor.
- * @param 酸を浴びたキャラクタへの参照ポインタ
  * @return 装備による軽減があったならTRUEを返す
  * @details
  * 免疫があったらそもそもこの関数は実行されない (確実に錆びない).
  * Note that the "base armor" of an object never changes.
  * If any armor is damaged (or resists), the player takes less damage.
  */
-static bool acid_minus_ac(player_type *player_ptr)
+bool acid_dam::minus_ac()
 {
     object_type *o_ptr = nullptr;
     switch (randint1(7)) {
     case 1:
-        o_ptr = &player_ptr->inventory_list[INVEN_MAIN_HAND];
+        o_ptr = &this->player_ptr->inventory_list[INVEN_MAIN_HAND];
         break;
     case 2:
-        o_ptr = &player_ptr->inventory_list[INVEN_SUB_HAND];
+        o_ptr = &this->player_ptr->inventory_list[INVEN_SUB_HAND];
         break;
     case 3:
-        o_ptr = &player_ptr->inventory_list[INVEN_BODY];
+        o_ptr = &this->player_ptr->inventory_list[INVEN_BODY];
         break;
     case 4:
-        o_ptr = &player_ptr->inventory_list[INVEN_OUTER];
+        o_ptr = &this->player_ptr->inventory_list[INVEN_OUTER];
         break;
     case 5:
-        o_ptr = &player_ptr->inventory_list[INVEN_ARMS];
+        o_ptr = &this->player_ptr->inventory_list[INVEN_ARMS];
         break;
     case 6:
-        o_ptr = &player_ptr->inventory_list[INVEN_HEAD];
+        o_ptr = &this->player_ptr->inventory_list[INVEN_HEAD];
         break;
     case 7:
-        o_ptr = &player_ptr->inventory_list[INVEN_FEET];
+        o_ptr = &this->player_ptr->inventory_list[INVEN_FEET];
         break;
     }
 
@@ -109,7 +190,7 @@ static bool acid_minus_ac(player_type *player_ptr)
         return false;
 
     GAME_TEXT o_name[MAX_NLEN];
-    describe_flavor(player_ptr, o_name, o_ptr, OD_OMIT_PREFIX | OD_NAME_ONLY);
+    describe_flavor(this->player_ptr, o_name, o_ptr, OD_OMIT_PREFIX | OD_NAME_ONLY);
     auto flgs = object_flags(o_ptr);
     if (o_ptr->ac + o_ptr->to_a <= 0) {
         msg_format(_("%sは既にボロボロだ！", "Your %s is already fully corroded!"), o_name);
@@ -123,138 +204,10 @@ static bool acid_minus_ac(player_type *player_ptr)
 
     msg_format(_("%sが酸で腐食した！", "Your %s is corroded!"), o_name);
     o_ptr->to_a--;
-    player_ptr->update |= PU_BONUS;
-    player_ptr->window_flags |= PW_EQUIP | PW_PLAYER;
-    calc_android_exp(player_ptr);
+    this->player_ptr->update |= PU_BONUS;
+    this->player_ptr->window_flags |= PW_EQUIP | PW_PLAYER;
+    calc_android_exp(this->player_ptr);
     return true;
-}
-
-/*!
- * @brief 酸属性によるプレイヤー損害処理 /
- * Hurt the player with Acid
- * @param player_ptr 酸を浴びたキャラクタへの参照ポインタ
- * @param dam 基本ダメージ量
- * @param kb_str ダメージ原因記述
- * @param monspell 原因となったモンスター特殊攻撃ID
- * @param aura オーラよるダメージが原因ならばTRUE
- * @return 修正HPダメージ量
- * @details 酸オーラは存在しないが関数ポインタのために引数だけは用意している
- */
-HIT_POINT acid_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura)
-{
-    int inv = (dam < 30) ? 1 : (dam < 60) ? 2 : 3;
-    bool double_resist = is_oppose_acid(player_ptr);
-    dam = dam * calc_acid_damage_rate(player_ptr) / 100;
-    if (dam <= 0)
-        return 0;
-
-    if (aura || !check_multishadow(player_ptr)) {
-        if ((!(double_resist || has_resist_acid(player_ptr))) && one_in_(HURT_CHANCE))
-            (void)do_dec_stat(player_ptr, A_CHR);
-
-        if (acid_minus_ac(player_ptr))
-            dam = (dam + 1) / 2;
-    }
-
-    HIT_POINT get_damage = take_hit(player_ptr, aura ? DAMAGE_NOESCAPE : DAMAGE_ATTACK, dam, kb_str);
-    if (!aura && !(double_resist && has_resist_acid(player_ptr)))
-        inventory_damage(player_ptr, BreakerAcid(), inv);
-
-    return get_damage;
-}
-
-/*!
- * @brief 電撃属性によるプレイヤー損害処理 /
- * Hurt the player with electricity
- * @param player_ptr 電撃を浴びたキャラクタへの参照ポインタ
- * @param dam 基本ダメージ量
- * @param kb_str ダメージ原因記述
- * @param monspell 原因となったモンスター特殊攻撃ID
- * @param aura オーラよるダメージが原因ならばTRUE
- * @return 修正HPダメージ量
- */
-HIT_POINT elec_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura)
-{
-    int inv = (dam < 30) ? 1 : (dam < 60) ? 2 : 3;
-    bool double_resist = is_oppose_elec(player_ptr);
-
-    dam = dam * calc_elec_damage_rate(player_ptr) / 100;
-
-    if (dam <= 0)
-        return 0;
-
-    if (aura || !check_multishadow(player_ptr)) {
-        if ((!(double_resist || has_resist_elec(player_ptr))) && one_in_(HURT_CHANCE))
-            (void)do_dec_stat(player_ptr, A_DEX);
-    }
-
-    HIT_POINT get_damage = take_hit(player_ptr, aura ? DAMAGE_NOESCAPE : DAMAGE_ATTACK, dam, kb_str);
-    if (!aura && !(double_resist && has_resist_elec(player_ptr)))
-        inventory_damage(player_ptr, BreakerElec(), inv);
-
-    return get_damage;
-}
-
-/*!
- * @brief 火炎属性によるプレイヤー損害処理 /
- * Hurt the player with Fire
- * @param player_ptr 火炎を浴びたキャラクタへの参照ポインタ
- * @param dam 基本ダメージ量
- * @param kb_str ダメージ原因記述
- * @param monspell 原因となったモンスター特殊攻撃ID
- * @param aura オーラよるダメージが原因ならばTRUE
- * @return 修正HPダメージ量
- */
-HIT_POINT fire_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura)
-{
-    int inv = (dam < 30) ? 1 : (dam < 60) ? 2 : 3;
-    bool double_resist = is_oppose_fire(player_ptr);
-
-    /* Totally immune */
-    if (has_immune_fire(player_ptr) || (dam <= 0))
-        return 0;
-
-    dam = dam * calc_fire_damage_rate(player_ptr) / 100;
-    if (aura || !check_multishadow(player_ptr)) {
-        if ((!(double_resist || has_resist_fire(player_ptr))) && one_in_(HURT_CHANCE))
-            (void)do_dec_stat(player_ptr, A_STR);
-    }
-
-    HIT_POINT get_damage = take_hit(player_ptr, aura ? DAMAGE_NOESCAPE : DAMAGE_ATTACK, dam, kb_str);
-    if (!aura && !(double_resist && has_resist_fire(player_ptr)))
-        inventory_damage(player_ptr, BreakerFire(), inv);
-
-    return get_damage;
-}
-
-/*!
- * @brief 冷気属性によるプレイヤー損害処理 /
- * Hurt the player with Cold
- * @param player_ptr 冷気を浴びたキャラクタへの参照ポインタ
- * @param dam 基本ダメージ量
- * @param kb_str ダメージ原因記述
- * @param monspell 原因となったモンスター特殊攻撃ID
- * @param aura オーラよるダメージが原因ならばTRUE
- * @return 修正HPダメージ量
- */
-HIT_POINT cold_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura)
-{
-    int inv = (dam < 30) ? 1 : (dam < 60) ? 2 : 3;
-    bool double_resist = is_oppose_cold(player_ptr);
-    if (has_immune_cold(player_ptr) || (dam <= 0))
-        return 0;
-
-    dam = dam * calc_cold_damage_rate(player_ptr) / 100;
-    if (aura || !check_multishadow(player_ptr)) {
-        if ((!(double_resist || has_resist_cold(player_ptr))) && one_in_(HURT_CHANCE))
-            (void)do_dec_stat(player_ptr, A_STR);
-    }
-
-    HIT_POINT get_damage = take_hit(player_ptr, aura ? DAMAGE_NOESCAPE : DAMAGE_ATTACK, dam, kb_str);
-    if (!aura && !(double_resist && has_resist_cold(player_ptr)))
-        inventory_damage(player_ptr, BreakerCold(), inv);
-
-    return get_damage;
 }
 
 /*
@@ -550,23 +503,23 @@ int take_hit(player_type *player_ptr, int damage_type, HIT_POINT damage, concptr
  * @param message オーラダメージを受けた際のメッセージ
  */
 static void process_aura_damage(monster_type *m_ptr, player_type *player_ptr, bool immune, int flags_offset, int r_flags_offset, uint32_t aura_flag,
-    HIT_POINT (*dam_func)(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura), concptr message)
+    element_dam &&dam_func, concptr message)
 {
     monster_race *r_ptr = &r_info[m_ptr->r_idx];
     if (!(atoffset(BIT_FLAGS, r_ptr, flags_offset) & aura_flag) || immune)
         return;
 
-    GAME_TEXT mon_name[MAX_NLEN];
-    int aura_damage = damroll(1 + (r_ptr->level / 26), 1 + (r_ptr->level / 17));
-
-    monster_desc(player_ptr, mon_name, m_ptr, MD_WRONGDOER_NAME);
     msg_print(message);
-    dam_func(player_ptr, aura_damage, mon_name, true);
+    dam_func.process();
 
     if (is_original_ap_and_seen(player_ptr, m_ptr))
         atoffset(BIT_FLAGS, r_ptr, r_flags_offset) |= aura_flag;
 
     handle_stuff(player_ptr);
+}
+
+static HIT_POINT calc_aura_damage(DEPTH level){
+    return damroll(1 + (level / 26), 1 + (level / 17));
 }
 
 /*!
@@ -576,10 +529,16 @@ static void process_aura_damage(monster_type *m_ptr, player_type *player_ptr, bo
  */
 void touch_zap_player(monster_type *m_ptr, player_type *player_ptr)
 {
+    monster_race *r_ptr = &r_info[m_ptr->r_idx];
+    GAME_TEXT mon_name[MAX_NLEN];
+
+    monster_desc(player_ptr, mon_name, m_ptr, MD_WRONGDOER_NAME);
+
     process_aura_damage(m_ptr, player_ptr, (bool)has_immune_fire(player_ptr), offsetof(monster_race, flags2), offsetof(monster_race, r_flags2), RF2_AURA_FIRE,
-        fire_dam, _("突然とても熱くなった！", "You are suddenly very hot!"));
+        fire_dam(player_ptr, calc_aura_damage(r_ptr->level), mon_name, true), 
+        _("突然とても熱くなった！", "You are suddenly very hot!"));
     process_aura_damage(m_ptr, player_ptr, (bool)has_immune_cold(player_ptr), offsetof(monster_race, flags3), offsetof(monster_race, r_flags3), RF3_AURA_COLD,
-        cold_dam, _("突然とても寒くなった！", "You are suddenly very cold!"));
+        cold_dam(player_ptr, calc_aura_damage(r_ptr->level), mon_name, true), _("突然とても寒くなった！", "You are suddenly very cold!"));
     process_aura_damage(m_ptr, player_ptr, (bool)has_immune_elec(player_ptr), offsetof(monster_race, flags2), offsetof(monster_race, r_flags2), RF2_AURA_ELEC,
-        elec_dam, _("電撃をくらった！", "You get zapped!"));
+        elec_dam(player_ptr, calc_aura_damage(r_ptr->level), mon_name, true), _("電撃をくらった！", "You get zapped!"));
 }
