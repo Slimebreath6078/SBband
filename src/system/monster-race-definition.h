@@ -3,8 +3,9 @@
 #include "monster-attack/monster-attack-effect.h"
 #include "monster-attack/monster-attack-types.h"
 #include "monster-race/race-ability-flags.h"
-#include "util/flag-group.h"
+#include "monster-race/race-flags-resistance.h"
 #include "system/angband.h"
+#include "util/flag-group.h"
 #include <string>
 
 /*! モンスターが1ターンに攻撃する最大回数 (射撃を含む) / The maximum number of times a monster can attack in a turn (including SHOOT) */
@@ -68,7 +69,7 @@ struct monster_race {
     BIT_FLAGS flags7{}; //!< Flags 7 (movement related abilities)
     BIT_FLAGS flags8{}; //!< Flags 8 (wilderness info)
     BIT_FLAGS flags9{}; //!< Flags 9 (drops info)
-    BIT_FLAGS flagsr{}; //!< 耐性フラグ / Flags R (resistances info)
+    EnumClassFlagGroup<MonsterResistanceType> resistance_flags; //!< 耐性フラグ / Flags R (resistances info)
     EnumClassFlagGroup<RF_ABILITY> ability_flags; //!< 能力フラグ(魔法/ブレス) / Ability Flags
     monster_blow blow[MAX_NUM_BLOWS]{}; //!< 打撃能力定義 / Up to four blows per round
     MONRACE_IDX reinforce_id[6]{}; //!< 指定護衛モンスター種族ID(6種まで)
@@ -105,7 +106,7 @@ struct monster_race {
     uint32_t r_flags1{}; //!< Observed racial flags
     uint32_t r_flags2{}; //!< Observed racial flags
     uint32_t r_flags3{}; //!< Observed racial flags
-    uint32_t r_flagsr{}; //!< 見た耐性フラグ / Observed racial resistance flags
+    EnumClassFlagGroup<MonsterResistanceType> r_resistance_flags; //!< 見た耐性フラグ / Observed racial resistances flags
     EnumClassFlagGroup<RF_ABILITY> r_ability_flags; //!< 見た能力フラグ(魔法/ブレス) / Observed racial ability flags
     PLAYER_LEVEL defeat_level{}; //!< 倒したレベル(ユニーク用) / player level at which defeated this race
     REAL_TIME defeat_time{}; //!< 倒した時間(ユニーク用) / time at which defeated this race
