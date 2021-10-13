@@ -50,12 +50,3 @@ enum class MonsterResistanceType {
     RESIST_ROCK = 46, /* Resist rock remover */
     MAX, /* Max of Resistances */
 };
-
-#define RFR_EFF_IM_ACID_MASK (RFR_IM_ACID | RFR_RES_ALL)
-#define RFR_EFF_IM_ELEC_MASK (RFR_IM_ELEC | RFR_RES_ALL)
-#define RFR_EFF_IM_FIRE_MASK (RFR_IM_FIRE | RFR_RES_ALL)
-#define RFR_EFF_IM_COLD_MASK (RFR_IM_COLD | RFR_RES_ALL)
-#define RFR_EFF_IM_POIS_MASK (RFR_IM_POIS | RFR_RES_ALL)
-#define RFR_EFF_RES_SHAR_MASK (RFR_RES_SHAR | RFR_RES_ALL)
-#define RFR_EFF_RES_CHAO_MASK (RFR_RES_CHAO | RFR_RES_ALL)
-#define RFR_EFF_RES_NEXU_MASK (RFR_RES_NEXU | RFR_RES_ALL)
