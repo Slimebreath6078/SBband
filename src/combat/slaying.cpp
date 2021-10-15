@@ -94,11 +94,11 @@ MULTIPLY mult_brand(player_type *player_ptr, MULTIPLY mult, const TrFlags &flgs,
         EnumClassFlagGroup<MonsterResistanceType> resist_mask;
         MonsterResistanceType hurt_flag;
     } brand_table[] = {
-        { TR_BRAND_ACID, RFR_EFF_IM_ACID_MASK, MonsterResistanceType::MAX },
-        { TR_BRAND_ELEC, RFR_EFF_IM_ELEC_MASK, MonsterResistanceType::MAX },
-        { TR_BRAND_FIRE, RFR_EFF_IM_FIRE_MASK, MonsterResistanceType::HURT_FIRE },
-        { TR_BRAND_COLD, RFR_EFF_IM_COLD_MASK, MonsterResistanceType::HURT_COLD },
-        { TR_BRAND_POIS, RFR_EFF_IM_POISON_MASK, MonsterResistanceType::MAX },
+        { TR_BRAND_ACID, RFR_EFF_RESIST_ACID_MASK, MonsterResistanceType::MAX },
+        { TR_BRAND_ELEC, RFR_EFF_RESIST_ELEC_MASK, MonsterResistanceType::MAX },
+        { TR_BRAND_FIRE, RFR_EFF_RESIST_FIRE_MASK, MonsterResistanceType::HURT_FIRE },
+        { TR_BRAND_COLD, RFR_EFF_RESIST_COLD_MASK, MonsterResistanceType::HURT_COLD },
+        { TR_BRAND_POIS, RFR_EFF_RESIST_POISON_MASK, MonsterResistanceType::MAX },
     };
 
     monster_race *r_ptr = &r_info[m_ptr->r_idx];
@@ -108,7 +108,7 @@ MULTIPLY mult_brand(player_type *player_ptr, MULTIPLY mult, const TrFlags &flgs,
         if (flgs.has_not(p->brand_flag))
             continue;
 
-        /* Notice immunity */
+        /* Notice resistance */
         if (r_ptr->resistance_flags.has_all_of(p->resist_mask)) {
             if (is_original_ap_and_seen(player_ptr, m_ptr)) {
                 r_ptr->resistance_flags.set(r_ptr->resistance_flags & p->resist_mask);

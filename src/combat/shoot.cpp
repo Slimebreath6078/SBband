@@ -259,10 +259,10 @@ static MULTIPLY calc_shot_damage_with_slay(
         }
 
         if (flags.has(TR_BRAND_ACID)) {
-            /* Notice immunity */
-            if (race_ptr->resistance_flags.has_any_of(RFR_EFF_IM_ACID_MASK)) {
+            /* Notice resistance */
+            if (race_ptr->resistance_flags.has_any_of(RFR_EFF_RESIST_ACID_MASK)) {
                 if (is_original_ap_and_seen(player_ptr, monster_ptr)) {
-                    race_ptr->r_resistance_flags.set(race_ptr->resistance_flags & RFR_EFF_IM_ACID_MASK);
+                    race_ptr->r_resistance_flags.set(race_ptr->resistance_flags & RFR_EFF_RESIST_ACID_MASK);
                 }
             } else {
                 if (mult < 17)
@@ -271,10 +271,10 @@ static MULTIPLY calc_shot_damage_with_slay(
         }
 
         if (flags.has(TR_BRAND_ELEC)) {
-            /* Notice immunity */
-            if (race_ptr->resistance_flags.has_any_of(RFR_EFF_IM_ELEC_MASK)) {
+            /* Notice resistance */
+            if (race_ptr->resistance_flags.has_any_of(RFR_EFF_RESIST_ELEC_MASK)) {
                 if (is_original_ap_and_seen(player_ptr, monster_ptr)) {
-                    race_ptr->r_resistance_flags.set(race_ptr->resistance_flags & RFR_EFF_IM_ELEC_MASK);
+                    race_ptr->r_resistance_flags.set(race_ptr->resistance_flags & RFR_EFF_RESIST_ELEC_MASK);
                 }
             } else {
                 if (mult < 17)
@@ -283,10 +283,10 @@ static MULTIPLY calc_shot_damage_with_slay(
         }
 
         if (flags.has(TR_BRAND_FIRE)) {
-            /* Notice immunity */
-            if (race_ptr->resistance_flags.has_any_of(RFR_EFF_IM_FIRE_MASK)) {
+            /* Notice resistance */
+            if (race_ptr->resistance_flags.has_any_of(RFR_EFF_RESIST_FIRE_MASK)) {
                 if (is_original_ap_and_seen(player_ptr, monster_ptr)) {
-                    race_ptr->r_resistance_flags.set(race_ptr->resistance_flags & RFR_EFF_IM_FIRE_MASK);
+                    race_ptr->r_resistance_flags.set(race_ptr->resistance_flags & RFR_EFF_RESIST_FIRE_MASK);
                 }
             }
             /* Otherwise, take the damage */
@@ -303,10 +303,10 @@ static MULTIPLY calc_shot_damage_with_slay(
         }
 
         if (flags.has(TR_BRAND_COLD)) {
-            /* Notice immunity */
-            if (race_ptr->resistance_flags.has_any_of(RFR_EFF_IM_COLD_MASK)) {
+            /* Notice resistance */
+            if (race_ptr->resistance_flags.has_any_of(RFR_EFF_RESIST_COLD_MASK)) {
                 if (is_original_ap_and_seen(player_ptr, monster_ptr)) {
-                    race_ptr->r_resistance_flags.set(race_ptr->resistance_flags & RFR_EFF_IM_COLD_MASK);
+                    race_ptr->r_resistance_flags.set(race_ptr->resistance_flags & RFR_EFF_RESIST_COLD_MASK);
                 }
             }
             /* Otherwise, take the damage */
@@ -323,10 +323,10 @@ static MULTIPLY calc_shot_damage_with_slay(
         }
 
         if (flags.has(TR_BRAND_POIS)) {
-            /* Notice immunity */
-            if (race_ptr->resistance_flags.has_any_of(RFR_EFF_IM_POISON_MASK)) {
+            /* Notice resistance */
+            if (race_ptr->resistance_flags.has_any_of(RFR_EFF_RESIST_POISON_MASK)) {
                 if (is_original_ap_and_seen(player_ptr, monster_ptr)) {
-                    race_ptr->r_resistance_flags.set(race_ptr->resistance_flags & RFR_EFF_IM_POISON_MASK);
+                    race_ptr->r_resistance_flags.set(race_ptr->resistance_flags & RFR_EFF_RESIST_POISON_MASK);
                 }
             }
             /* Otherwise, take the damage */
