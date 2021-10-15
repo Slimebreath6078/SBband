@@ -25,6 +25,7 @@
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags-resistance.h"
 #include "monster-race/race-flags3.h"
+#include "monster-race/race-kind-flags.h"
 #include "player-status/player-energy.h"
 #include "system/monster-race-definition.h"
 #include "system/monster-type-definition.h"
@@ -457,28 +458,28 @@ MULTIPLY calc_snipe_damage_with_slay(player_type *player_ptr, MULTIPLY mult, mon
                 r_ptr->resistance_flags.set(MonsterResistanceType::HURT_ROCK);
             if (mult < n)
                 mult = n;
-        } else if (any_bits(r_ptr->flags3, RF3_NONLIVING)) {
+        } else if (r_ptr->race_kind_flags.has(MonraceKindType::NONLIVING)) {
             MULTIPLY n = 15 + (player_ptr->concent * 2);
             if (seen)
-                set_bits(r_ptr->r_flags3, RF3_NONLIVING);
+                r_ptr->r_race_kind_flags.set(MonraceKindType::NONLIVING);
             if (mult < n)
                 mult = n;
         }
         break;
     case SP_EVILNESS:
-        if (any_bits(r_ptr->flags3, RF3_GOOD)) {
+        if (r_ptr->race_kind_flags.has(MonraceKindType::GOOD)) {
             MULTIPLY n = 15 + (player_ptr->concent * 4);
             if (seen)
-                set_bits(r_ptr->r_flags3, RF3_GOOD);
+                r_ptr->r_race_kind_flags.set(MonraceKindType::GOOD);
             if (mult < n)
                 mult = n;
         }
         break;
     case SP_HOLYNESS:
-        if (any_bits(r_ptr->flags3, RF3_EVIL)) {
+        if (r_ptr->race_kind_flags.has(MonraceKindType::EVIL)) {
             MULTIPLY n = 12 + (player_ptr->concent * 3);
             if (seen)
-                set_bits(r_ptr->r_flags3, RF3_EVIL);
+                r_ptr->r_race_kind_flags.set(MonraceKindType::EVIL);
             if (r_ptr->resistance_flags.has(MonsterResistanceType::HURT_LITE)) {
                 n += (player_ptr->concent * 3);
                 if (seen)

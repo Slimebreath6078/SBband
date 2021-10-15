@@ -9,6 +9,7 @@
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-flags7.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-describer.h"
 #include "monster/monster-info.h"
 #include "monster/monster-status-setter.h"
@@ -51,7 +52,7 @@ bool rodeo(player_type *player_ptr)
 
     rlev = r_ptr->level;
 
-    if (r_ptr->flags1 & RF1_UNIQUE)
+    if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE))
         rlev = rlev * 3 / 2;
     if (rlev > 60)
         rlev = 60 + (rlev - 60) / 2;

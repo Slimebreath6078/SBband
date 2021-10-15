@@ -8,6 +8,7 @@
 #include "main/music-definitions-table.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
+#include "monster-race/race-kind-flags.h"
 #include "system/floor-type-definition.h"
 #include "system/monster-race-definition.h"
 #include "system/monster-type-definition.h"
@@ -31,7 +32,7 @@ inline static bool has_shadower_flag(monster_type *m_ptr)
 
 inline static bool is_unique(monster_race *ap_r_ptr)
 {
-    return any_bits(ap_r_ptr->flags1, RF1_UNIQUE);
+    return ap_r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE);
 }
 
 inline static bool is_unknown_monster(monster_race *ap_r_ptr)
@@ -92,8 +93,8 @@ static bool is_high_rate(player_type *player_ptr, MONSTER_IDX m_idx1, MONSTER_ID
     auto ap_r_ptr2 = &r_info[m_ptr2->ap_r_idx];
 
     /* Unique monsters first */
-    if (any_bits(ap_r_ptr1->flags1, RF1_UNIQUE) != any_bits(ap_r_ptr2->flags1, RF1_UNIQUE))
-        return any_bits(ap_r_ptr1->flags1, RF1_UNIQUE);
+    if (ap_r_ptr1->race_kind_flags.has(MonraceKindType::UNIQUE) != ap_r_ptr2->race_kind_flags.has(MonraceKindType::UNIQUE))
+        return ap_r_ptr1->race_kind_flags.has(MonraceKindType::UNIQUE);
 
     /* Shadowers first (あやしい影) */
     if (m_ptr1->mflag2.has(MFLAG2::KAGE) != m_ptr2->mflag2.has(MFLAG2::KAGE))

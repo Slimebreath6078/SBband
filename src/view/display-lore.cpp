@@ -18,6 +18,7 @@
 #include "monster-race/race-flags3.h"
 #include "monster-race/race-flags7.h"
 #include "monster-race/race-indice-types.h"
+#include "monster-race/race-kind-flags.h"
 #include "system/monster-race-definition.h"
 #include "system/player-type-definition.h"
 #include "term/screen-processor.h"
@@ -55,7 +56,7 @@ void roff_top(MONRACE_IDX r_idx)
 
 #ifdef JP
 #else
-    if (!(r_ptr->flags1 & RF1_UNIQUE)) {
+    if (r_ptr->race_kind_flags.has_not(MonraceKindType::UNIQUE)) {
         term_addstr(-1, TERM_WHITE, "The ");
     }
 #endif
@@ -129,7 +130,7 @@ void output_monster_spoiler(MONRACE_IDX r_idx, void (*roff_func)(TERM_COLOR attr
 
 static bool display_kill_unique(lore_type *lore_ptr)
 {
-    if ((lore_ptr->flags1 & RF1_UNIQUE) == 0)
+    if (lore_ptr->race_kind_flags.has_not(MonraceKindType::UNIQUE))
         return false;
 
     bool dead = (lore_ptr->r_ptr->max_num == 0);
@@ -347,37 +348,36 @@ void display_monster_never_move(lore_type *lore_ptr)
 
 void display_monster_kind(lore_type *lore_ptr)
 {
-    if (((lore_ptr->flags3 & (RF3_DRAGON | RF3_DEMON | RF3_GIANT | RF3_TROLL | RF3_ORC | RF3_ANGEL | RF3_KAN_SEN)) == 0)
-        && ((lore_ptr->flags2 & (RF2_QUANTUM | RF2_HUMAN)) == 0)) {
+    if (lore_ptr->race_kind_flags.has_none_of({ MonraceKindType::DRAGON, MonraceKindType::DEMON, MonraceKindType::GIANT, MonraceKindType::TROLL, MonraceKindType::ORC, MonraceKindType::ANGEL, MonraceKindType::KAN_SEN, MonraceKindType::QUANTUM, MonraceKindType::HUMAN })) {
         hooked_roff(_("モンスター", " creature"));
         return;
     }
 
-    if (lore_ptr->flags3 & RF3_DRAGON)
+    if (lore_ptr->race_kind_flags.has(MonraceKindType::DRAGON))
         hook_c_roff(TERM_ORANGE, _("ドラゴン", " dragon"));
 
-    if (lore_ptr->flags3 & RF3_DEMON)
+    if (lore_ptr->race_kind_flags.has(MonraceKindType::DEMON))
         hook_c_roff(TERM_VIOLET, _("デーモン", " demon"));
 
-    if (lore_ptr->flags3 & RF3_GIANT)
+    if (lore_ptr->race_kind_flags.has(MonraceKindType::GIANT))
         hook_c_roff(TERM_L_UMBER, _("巨人", " giant"));
 
-    if (lore_ptr->flags3 & RF3_TROLL)
+    if (lore_ptr->race_kind_flags.has(MonraceKindType::TROLL))
         hook_c_roff(TERM_BLUE, _("トロル", " troll"));
 
-    if (lore_ptr->flags3 & RF3_ORC)
+    if (lore_ptr->race_kind_flags.has(MonraceKindType::ORC))
         hook_c_roff(TERM_UMBER, _("オーク", " orc"));
 
-    if (lore_ptr->flags2 & RF2_HUMAN)
+    if (lore_ptr->race_kind_flags.has(MonraceKindType::HUMAN))
         hook_c_roff(TERM_L_WHITE, _("人間", " human"));
 
-    if (lore_ptr->flags2 & RF2_QUANTUM)
+    if (lore_ptr->race_kind_flags.has(MonraceKindType::QUANTUM))
         hook_c_roff(TERM_VIOLET, _("量子生物", " quantum creature"));
 
-    if (lore_ptr->flags3 & RF3_ANGEL)
+    if (lore_ptr->race_kind_flags.has(MonraceKindType::ANGEL))
         hook_c_roff(TERM_YELLOW, _("天使", " angel"));
 
-    if (lore_ptr->flags3 & RF3_KAN_SEN)
+    if (lore_ptr->race_kind_flags.has(MonraceKindType::KAN_SEN))
         hook_c_roff(TERM_L_WHITE, _("艦船", " KAN-SEN"));
 }
 
@@ -386,22 +386,22 @@ void display_monster_alignment(lore_type *lore_ptr)
     if (lore_ptr->flags2 & RF2_ELDRITCH_HORROR)
         hook_c_roff(TERM_VIOLET, _("狂気を誘う", " sanity-blasting"));
 
-    if (lore_ptr->flags3 & RF3_ANIMAL)
+    if (lore_ptr->race_kind_flags.has(MonraceKindType::ANIMAL))
         hook_c_roff(TERM_L_GREEN, _("自然界の", " natural"));
 
-    if (lore_ptr->flags3 & RF3_MINERAL)
+    if (lore_ptr->race_kind_flags.has(MonraceKindType::MINERAL))
         hook_c_roff(TERM_L_WHITE, _("鉱物の", " mineral"));
 
-    if (lore_ptr->flags3 & RF3_EVIL)
+    if (lore_ptr->race_kind_flags.has(MonraceKindType::EVIL))
         hook_c_roff(TERM_L_DARK, _("邪悪なる", " evil"));
 
-    if (lore_ptr->flags3 & RF3_GOOD)
+    if (lore_ptr->race_kind_flags.has(MonraceKindType::GOOD))
         hook_c_roff(TERM_YELLOW, _("善良な", " good"));
 
-    if (lore_ptr->flags3 & RF3_UNDEAD)
+    if (lore_ptr->race_kind_flags.has(MonraceKindType::UNDEAD))
         hook_c_roff(TERM_VIOLET, _("アンデッドの", " undead"));
 
-    if (lore_ptr->flags3 & RF3_AMBERITE)
+    if (lore_ptr->race_kind_flags.has(MonraceKindType::AMBERITE))
         hook_c_roff(TERM_VIOLET, _("アンバーの王族の", " Amberite"));
 }
 
@@ -486,7 +486,7 @@ void display_lore_this(player_type *player_ptr, lore_type *lore_ptr)
 #ifdef JP
     hooked_roff("この");
 #else
-    if (lore_ptr->flags1 & RF1_UNIQUE) {
+    if (lore_ptr->race_kind_flags.has(MonraceKindType::UNIQUE)) {
         hooked_roff("Killing this");
     } else {
         hooked_roff("A kill of this");
@@ -521,7 +521,7 @@ static void display_monster_escort_contents(lore_type *lore_ptr)
             continue;
 
         monster_race *rf_ptr = &r_info[lore_ptr->r_ptr->reinforce_id[n]];
-        if (rf_ptr->flags1 & RF1_UNIQUE) {
+        if (rf_ptr->race_kind_flags.has(MonraceKindType::UNIQUE)) {
             hooked_roff(format(_("、%s", ", %s"), rf_ptr->name.c_str()));
             continue;
         }

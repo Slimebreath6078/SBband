@@ -7,6 +7,7 @@
 #include "monster-race/race-flags3.h"
 #include "monster-race/race-flags7.h"
 #include "monster-race/race-indice-types.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-info.h"
 #include "monster/monster-status-setter.h"
 #include "monster/monster-status.h"
@@ -153,13 +154,13 @@ process_result effect_monster_hell_fire(player_type *player_ptr, effect_monster_
     if (em_ptr->seen)
         em_ptr->obvious = true;
 
-    if ((em_ptr->r_ptr->flags3 & RF3_GOOD) == 0)
+    if (em_ptr->r_ptr->race_kind_flags.has_not(MonraceKindType::GOOD))
         return PROCESS_CONTINUE;
 
     em_ptr->note = _("はひどい痛手をうけた。", " is hit hard.");
     em_ptr->dam *= 2;
     if (is_original_ap_and_seen(player_ptr, em_ptr->m_ptr))
-        em_ptr->r_ptr->r_flags3 |= RF3_GOOD;
+        em_ptr->r_ptr->r_race_kind_flags.set(MonraceKindType::GOOD);
 
     return PROCESS_CONTINUE;
 }
@@ -169,19 +170,19 @@ process_result effect_monster_holy_fire(player_type *player_ptr, effect_monster_
     if (em_ptr->seen)
         em_ptr->obvious = true;
 
-    if (any_bits(em_ptr->r_ptr->flags3, RF3_GOOD)) {
+    if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::GOOD)) {
         em_ptr->note = _("には完全な耐性がある！", " is immune.");
         em_ptr->dam = 0;
         if (is_original_ap_and_seen(player_ptr, em_ptr->m_ptr))
-            set_bits(em_ptr->r_ptr->r_flags3, RF3_GOOD);
+            em_ptr->r_ptr->r_race_kind_flags.set(MonraceKindType::GOOD);
         return PROCESS_CONTINUE;
     }
 
-    if (any_bits(em_ptr->r_ptr->flags3, RF3_EVIL)) {
+    if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::EVIL)) {
         em_ptr->dam *= 2;
         em_ptr->note = _("はひどい痛手をうけた。", " is hit hard.");
         if (is_original_ap_and_seen(player_ptr, em_ptr->m_ptr))
-            set_bits(em_ptr->r_ptr->r_flags3, RF3_EVIL);
+            em_ptr->r_ptr->r_race_kind_flags.set(MonraceKindType::EVIL);
         return PROCESS_CONTINUE;
     }
 
@@ -214,11 +215,11 @@ static bool effect_monster_nether_resist(player_type *player_ptr, effect_monster
     if (em_ptr->r_ptr->resistance_flags.has_not(MonsterResistanceType::RESIST_NETHER))
         return false;
 
-    if (em_ptr->r_ptr->flags3 & RF3_UNDEAD) {
+    if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNDEAD)) {
         em_ptr->note = _("には完全な耐性がある！", " is immune.");
         em_ptr->dam = 0;
         if (is_original_ap_and_seen(player_ptr, em_ptr->m_ptr))
-            em_ptr->r_ptr->r_flags3 |= (RF3_UNDEAD);
+            em_ptr->r_ptr->r_race_kind_flags.set(MonraceKindType::UNDEAD);
     } else {
         em_ptr->note = _("には耐性がある。", " resists.");
         em_ptr->dam *= 3;
@@ -236,13 +237,13 @@ process_result effect_monster_nether(player_type *player_ptr, effect_monster_typ
     if (em_ptr->seen)
         em_ptr->obvious = true;
 
-    if (effect_monster_nether_resist(player_ptr, em_ptr) || ((em_ptr->r_ptr->flags3 & RF3_EVIL) == 0))
+    if (effect_monster_nether_resist(player_ptr, em_ptr) || em_ptr->r_ptr->race_kind_flags.has_not(MonraceKindType::EVIL))
         return PROCESS_CONTINUE;
 
     em_ptr->note = _("はいくらか耐性を示した。", " resists somewhat.");
     em_ptr->dam /= 2;
     if (is_original_ap_and_seen(player_ptr, em_ptr->m_ptr))
-        em_ptr->r_ptr->r_flags3 |= (RF3_EVIL);
+        em_ptr->r_ptr->r_race_kind_flags.set(MonraceKindType::EVIL);
 
     return PROCESS_CONTINUE;
 }
@@ -281,12 +282,12 @@ process_result effect_monster_chaos(player_type *player_ptr, effect_monster_type
         em_ptr->dam /= randint1(6) + 6;
         if (is_original_ap_and_seen(player_ptr, em_ptr->m_ptr))
             em_ptr->r_ptr->r_resistance_flags.set((MonsterResistanceType::RESIST_CHAOS));
-    } else if ((em_ptr->r_ptr->flags3 & RF3_DEMON) && one_in_(3)) {
+    } else if ((em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::DEMON)) && one_in_(3)) {
         em_ptr->note = _("はいくらか耐性を示した。", " resists somewhat.");
         em_ptr->dam *= 3;
         em_ptr->dam /= randint1(6) + 6;
         if (is_original_ap_and_seen(player_ptr, em_ptr->m_ptr))
-            em_ptr->r_ptr->r_flags3 |= (RF3_DEMON);
+            em_ptr->r_ptr->r_race_kind_flags.set(MonraceKindType::DEMON);
     } else {
         em_ptr->do_polymorph = true;
         em_ptr->do_conf = (5 + randint1(11) + em_ptr->r) / (em_ptr->r + 1);
@@ -435,7 +436,7 @@ process_result effect_monster_inertial(player_type *player_ptr, effect_monster_t
         return PROCESS_CONTINUE;
     }
 
-    if ((em_ptr->r_ptr->flags1 & (RF1_UNIQUE)) || (em_ptr->r_ptr->level > randint1((em_ptr->dam - 10) < 1 ? 1 : (em_ptr->dam - 10)) + 10)) {
+    if ((em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE)) || (em_ptr->r_ptr->level > randint1((em_ptr->dam - 10) < 1 ? 1 : (em_ptr->dam - 10)) + 10)) {
         em_ptr->obvious = false;
         return PROCESS_CONTINUE;
     }
@@ -473,7 +474,7 @@ static bool effect_monster_gravity_resist_teleport(player_type *player_ptr, effe
     if (em_ptr->r_ptr->resistance_flags.has_not(MonsterResistanceType::RESIST_TELEPORT))
         return false;
 
-    if (em_ptr->r_ptr->flags1 & (RF1_UNIQUE)) {
+    if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE)) {
         if (is_original_ap_and_seen(player_ptr, em_ptr->m_ptr))
             em_ptr->r_ptr->r_resistance_flags.set(MonsterResistanceType::RESIST_TELEPORT);
 
@@ -493,7 +494,7 @@ static bool effect_monster_gravity_resist_teleport(player_type *player_ptr, effe
 
 static void effect_monster_gravity_slow(player_type *player_ptr, effect_monster_type *em_ptr)
 {
-    if ((em_ptr->r_ptr->flags1 & (RF1_UNIQUE)) || (em_ptr->r_ptr->level > randint1((em_ptr->dam - 10) < 1 ? 1 : (em_ptr->dam - 10)) + 10))
+    if ((em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE)) || (em_ptr->r_ptr->level > randint1((em_ptr->dam - 10) < 1 ? 1 : (em_ptr->dam - 10)) + 10))
         em_ptr->obvious = false;
 
     if (set_monster_slow(player_ptr, em_ptr->g_ptr->m_idx, monster_slow_remaining(em_ptr->m_ptr) + 50))
@@ -503,7 +504,7 @@ static void effect_monster_gravity_slow(player_type *player_ptr, effect_monster_
 static void effect_monster_gravity_stun(effect_monster_type *em_ptr)
 {
     em_ptr->do_stun = damroll((em_ptr->caster_lev / 20) + 3, (em_ptr->dam)) + 1;
-    if ((em_ptr->r_ptr->flags1 & (RF1_UNIQUE)) || (em_ptr->r_ptr->level > randint1((em_ptr->dam - 10) < 1 ? 1 : (em_ptr->dam - 10)) + 10)) {
+    if ((em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE)) || (em_ptr->r_ptr->level > randint1((em_ptr->dam - 10) < 1 ? 1 : (em_ptr->dam - 10)) + 10)) {
         em_ptr->do_stun = 0;
         em_ptr->note = _("には効果がなかった。", " is unaffected!");
         em_ptr->obvious = false;
@@ -587,12 +588,12 @@ process_result effect_monster_void(player_type *player_ptr, effect_monster_type 
     if (em_ptr->seen)
         em_ptr->obvious = true;
 
-    if (any_bits(em_ptr->r_ptr->flags2, RF2_QUANTUM)) {
+    if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::QUANTUM)) {
         em_ptr->note = _("の存在確率が減少した。", "'s wave function is reduced.");
         em_ptr->note_dies = _("は観測されなくなった。", "'s wave function is collapsed.");
         em_ptr->dam *= 2;
         if (is_original_ap_and_seen(player_ptr, em_ptr->m_ptr))
-            set_bits(em_ptr->r_ptr->r_flags2, RF2_QUANTUM);
+            em_ptr->r_ptr->r_race_kind_flags.set(MonraceKindType::QUANTUM);
     } else if (any_bits(em_ptr->r_ptr->flags2, RF2_PASS_WALL)) {
         em_ptr->note = _("の存在が薄れていく。", "is fading out.");
         em_ptr->note_dies = _("は消えてしまった。", "has disappeared.");

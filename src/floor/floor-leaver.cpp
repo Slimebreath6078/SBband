@@ -22,14 +22,15 @@
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-flags7.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-describer.h"
 #include "monster/monster-description-types.h"
 #include "monster/monster-info.h"
 #include "monster/monster-status.h"
 #include "pet/pet-util.h"
+#include "player-status/player-energy.h"
 #include "player/player-status.h"
 #include "player/special-defense-types.h"
-#include "player-status/player-energy.h"
 #include "save/floor-writer.h"
 #include "system/artifact-type-definition.h"
 #include "system/floor-type-definition.h"
@@ -155,7 +156,7 @@ static void locate_connected_stairs(player_type *player_ptr, floor_type *floor_p
             feature_type *f_ptr = &f_info[g_ptr->feat];
             bool ok = false;
             if (floor_mode & CFM_UP) {
-                if (f_ptr->flags.has_all_of({FF::LESS, FF::STAIRS}) && f_ptr->flags.has_not(FF::SPECIAL)) {
+                if (f_ptr->flags.has_all_of({ FF::LESS, FF::STAIRS }) && f_ptr->flags.has_not(FF::SPECIAL)) {
                     ok = true;
                     if (g_ptr->special && g_ptr->special == sf_ptr->upper_floor_id) {
                         sx = x;
@@ -163,7 +164,7 @@ static void locate_connected_stairs(player_type *player_ptr, floor_type *floor_p
                     }
                 }
             } else if (floor_mode & CFM_DOWN) {
-                if (f_ptr->flags.has_all_of({FF::MORE, FF::STAIRS}) && f_ptr->flags.has_not(FF::SPECIAL)) {
+                if (f_ptr->flags.has_all_of({ FF::MORE, FF::STAIRS }) && f_ptr->flags.has_not(FF::SPECIAL)) {
                     ok = true;
                     if (g_ptr->special && g_ptr->special == sf_ptr->lower_floor_id) {
                         sx = x;
@@ -263,7 +264,7 @@ static void preserve_info(player_type *player_ptr)
             continue;
 
         r_ptr = real_r_ptr(m_ptr);
-        if ((r_ptr->flags1 & RF1_UNIQUE) || (r_ptr->flags7 & RF7_NAZGUL))
+        if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || (r_ptr->flags7 & RF7_NAZGUL))
             continue;
 
         delete_monster_idx(player_ptr, i);
@@ -285,11 +286,11 @@ static void set_grid_by_leaving_floor(player_type *player_ptr, grid_type **g_ptr
         return;
 
     *g_ptr = &player_ptr->current_floor_ptr->grid_array[player_ptr->y][player_ptr->x];
-    feature_type *f_ptr =  &f_info[(*g_ptr)->feat];
+    feature_type *f_ptr = &f_info[(*g_ptr)->feat];
     if ((*g_ptr)->special && f_ptr->flags.has_not(FF::SPECIAL) && get_sf_ptr((*g_ptr)->special))
         new_floor_id = (*g_ptr)->special;
 
-    if (f_ptr->flags.has_all_of({FF::STAIRS, FF::SHAFT}))
+    if (f_ptr->flags.has_all_of({ FF::STAIRS, FF::SHAFT }))
         prepare_change_floor_mode(player_ptr, CFM_SHAFT);
 }
 
@@ -349,7 +350,7 @@ static void kill_saved_floors(player_type *player_ptr, saved_floor_type *sf_ptr)
         latest_visit_mark = 1;
         return;
     }
-    
+
     if (player_ptr->change_floor_mode & CFM_NO_RETURN)
         kill_saved_floor(player_ptr, sf_ptr);
 }

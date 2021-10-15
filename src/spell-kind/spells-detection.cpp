@@ -3,15 +3,16 @@
 #include "dungeon/dungeon-flag-types.h"
 #include "dungeon/dungeon.h"
 #include "floor/cave.h"
-#include "floor/geometry.h"
 #include "floor/floor-save-util.h"
+#include "floor/geometry.h"
 #include "grid/feature.h"
 #include "grid/grid.h"
 #include "grid/trap.h"
+#include "monster-race/monster-race-hook.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags2.h"
 #include "monster-race/race-flags3.h"
-#include "monster-race/monster-race-hook.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-flag-types.h"
 #include "monster/monster-info.h"
 #include "monster/monster-status.h"
@@ -330,7 +331,7 @@ bool detect_monsters_normal(player_type *player_ptr, POSITION range)
             continue;
 
         if (!(r_ptr->flags2 & RF2_INVISIBLE) || player_ptr->see_inv) {
-            m_ptr->mflag2.set({MFLAG2::MARK, MFLAG2::SHOW});
+            m_ptr->mflag2.set({ MFLAG2::MARK, MFLAG2::SHOW });
             update_monster(player_ptr, i, false);
             flag = true;
         }
@@ -375,7 +376,7 @@ bool detect_monsters_invis(player_type *player_ptr, POSITION range)
                 player_ptr->window_flags |= (PW_MONSTER);
             }
 
-            m_ptr->mflag2.set({MFLAG2::MARK, MFLAG2::SHOW});
+            m_ptr->mflag2.set({ MFLAG2::MARK, MFLAG2::SHOW });
             update_monster(player_ptr, i, false);
             flag = true;
         }
@@ -414,15 +415,15 @@ bool detect_monsters_evil(player_type *player_ptr, POSITION range)
         if (distance(player_ptr->y, player_ptr->x, y, x) > range)
             continue;
 
-        if (r_ptr->flags3 & RF3_EVIL) {
+        if (r_ptr->race_kind_flags.has(MonraceKindType::EVIL)) {
             if (is_original_ap(m_ptr)) {
-                r_ptr->r_flags3 |= (RF3_EVIL);
+                r_ptr->r_race_kind_flags.set(MonraceKindType::EVIL);
                 if (player_ptr->monster_race_idx == m_ptr->r_idx) {
                     player_ptr->window_flags |= (PW_MONSTER);
                 }
             }
 
-            m_ptr->mflag2.set({MFLAG2::MARK, MFLAG2::SHOW});
+            m_ptr->mflag2.set({ MFLAG2::MARK, MFLAG2::SHOW });
             update_monster(player_ptr, i, false);
             flag = true;
         }
@@ -462,7 +463,7 @@ bool detect_monsters_nonliving(player_type *player_ptr, POSITION range)
                 player_ptr->window_flags |= (PW_MONSTER);
             }
 
-            m_ptr->mflag2.set({MFLAG2::MARK, MFLAG2::SHOW});
+            m_ptr->mflag2.set({ MFLAG2::MARK, MFLAG2::SHOW });
             update_monster(player_ptr, i, false);
             flag = true;
         }
@@ -504,7 +505,7 @@ bool detect_monsters_mind(player_type *player_ptr, POSITION range)
                 player_ptr->window_flags |= (PW_MONSTER);
             }
 
-            m_ptr->mflag2.set({MFLAG2::MARK, MFLAG2::SHOW});
+            m_ptr->mflag2.set({ MFLAG2::MARK, MFLAG2::SHOW });
             update_monster(player_ptr, i, false);
             flag = true;
         }
@@ -547,7 +548,7 @@ bool detect_monsters_string(player_type *player_ptr, POSITION range, concptr Mat
                 player_ptr->window_flags |= (PW_MONSTER);
             }
 
-            m_ptr->mflag2.set({MFLAG2::MARK, MFLAG2::SHOW});
+            m_ptr->mflag2.set({ MFLAG2::MARK, MFLAG2::SHOW });
             update_monster(player_ptr, i, false);
             flag = true;
         }
@@ -595,7 +596,7 @@ bool detect_monsters_xxx(player_type *player_ptr, POSITION range, uint32_t match
                 }
             }
 
-            m_ptr->mflag2.set({MFLAG2::MARK, MFLAG2::SHOW});
+            m_ptr->mflag2.set({ MFLAG2::MARK, MFLAG2::SHOW });
             update_monster(player_ptr, i, false);
             flag = true;
         }
@@ -604,10 +605,10 @@ bool detect_monsters_xxx(player_type *player_ptr, POSITION range, uint32_t match
     concptr desc_monsters = _("変なモンスター", "weird monsters");
     if (flag) {
         switch (match_flag) {
-        case RF3_DEMON:
+        case MonraceKindType::DEMON:
             desc_monsters = _("デーモン", "demons");
             break;
-        case RF3_UNDEAD:
+        case MonraceKindType::UNDEAD:
             desc_monsters = _("アンデッド", "the undead");
             break;
         }

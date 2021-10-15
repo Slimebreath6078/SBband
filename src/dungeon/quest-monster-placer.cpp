@@ -7,6 +7,7 @@
 #include "monster-floor/place-monster-types.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-info.h"
 #include "system/floor-type-definition.h"
 #include "system/grid-type-definition.h"
@@ -31,7 +32,7 @@ bool place_quest_monsters(player_type *player_ptr)
         }
 
         r_ptr = &r_info[quest[i].r_idx];
-        if ((r_ptr->flags1 & RF1_UNIQUE) && (r_ptr->cur_num >= r_ptr->max_num))
+        if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) && (r_ptr->cur_num >= r_ptr->max_num))
             continue;
 
         mode = PM_NO_KAGE | PM_NO_PET;
@@ -51,7 +52,7 @@ bool place_quest_monsters(player_type *player_ptr)
                     x = randint0(floor_ptr->width);
                     g_ptr = &floor_ptr->grid_array[y][x];
                     f_ptr = &f_info[g_ptr->feat];
-                    if (f_ptr->flags.has_none_of({FF::MOVE, FF::CAN_FLY}))
+                    if (f_ptr->flags.has_none_of({ FF::MOVE, FF::CAN_FLY }))
                         continue;
 
                     if (!monster_can_enter(player_ptr, y, x, r_ptr, 0))

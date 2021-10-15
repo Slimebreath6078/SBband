@@ -2,6 +2,7 @@
 #include "io/files-util.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-description-types.h"
 #include "monster/monster-flag-types.h"
 #include "monster/monster-info.h"
@@ -41,7 +42,7 @@ void monster_desc(player_type *player_ptr, char *desc, monster_type *m_ptr, BIT_
 
             do {
                 hallu_race = &r_info[randint1(max_r_idx - 1)];
-            } while (hallu_race->name.empty() || (hallu_race->flags1 & RF1_UNIQUE));
+            } while (hallu_race->name.empty() || hallu_race->race_kind_flags.has(MonraceKindType::UNIQUE));
 
             strcpy(silly_name, (hallu_race->name.c_str()));
         }
@@ -175,7 +176,7 @@ void monster_desc(player_type *player_ptr, char *desc, monster_type *m_ptr, BIT_
         (void)sprintf(desc, "%s?", name);
 #endif
     } else {
-        if ((r_ptr->flags1 & RF1_UNIQUE) && !(player_ptr->hallucinated && !(mode & MD_IGNORE_HALLU))) {
+        if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) && !(player_ptr->hallucinated && !(mode & MD_IGNORE_HALLU))) {
             if (m_ptr->mflag2.has(MFLAG2::CHAMELEON) && !(mode & MD_TRUE_NAME)) {
 #ifdef JP
                 char *t;
@@ -225,7 +226,7 @@ void monster_desc(player_type *player_ptr, char *desc, monster_type *m_ptr, BIT_
     }
 
     if ((mode & MD_IGNORE_HALLU) && m_ptr->mflag2.has(MFLAG2::CHAMELEON)) {
-        if (r_ptr->flags1 & RF1_UNIQUE) {
+        if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE)) {
             strcat(desc, _("(カメレオンの王)", "(Chameleon Lord)"));
         } else {
             strcat(desc, _("(カメレオン)", "(Chameleon)"));
@@ -256,7 +257,6 @@ void message_pain(player_type *player_ptr, MONSTER_IDX m_idx, HIT_POINT dam)
     monster_race *r_ptr = &r_info[m_ptr->r_idx];
 
     GAME_TEXT m_name[MAX_NLEN];
-
 
     monster_desc(player_ptr, m_name, m_ptr, 0);
 

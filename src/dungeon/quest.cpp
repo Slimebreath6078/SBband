@@ -18,6 +18,7 @@
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-flags7.h"
 #include "monster-race/race-flags8.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-info.h"
 #include "monster/monster-list.h"
 #include "monster/monster-util.h"
@@ -71,7 +72,7 @@ void determine_random_questor(player_type *player_ptr, quest_type *q_ptr)
         monster_race *r_ptr;
         r_ptr = &r_info[r_idx];
 
-        if (!(r_ptr->flags1 & RF1_UNIQUE))
+        if (r_ptr->race_kind_flags.has_not(MonraceKindType::UNIQUE))
             continue;
         if (r_ptr->flags8 & RF8_NO_QUEST)
             continue;
@@ -187,7 +188,7 @@ void quest_discovery(QUEST_IDX q_idx)
         return;
     }
 
-    bool is_random_quest_skipped = (r_ptr->flags1 & RF1_UNIQUE) != 0;
+    bool is_random_quest_skipped = r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE);
     is_random_quest_skipped &= r_ptr->max_num == 0;
     if (!is_random_quest_skipped) {
         msg_format(_("注意せよ！この階は%sによって守られている！", "Beware, this level is protected by %s!"), name);

@@ -5,6 +5,7 @@
 #include "grid/grid.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-flag-types.h"
 #include "monster/monster-info.h"
 #include "monster/monster-status.h"
@@ -189,8 +190,8 @@ void target_sensing_monsters_prepare(player_type *player_ptr, std::vector<MONSTE
         auto ap_r_ptr2 = &r_info[m_ptr2->ap_r_idx];
 
         /* Unique monsters first */
-        if (any_bits(ap_r_ptr1->flags1, RF1_UNIQUE) != any_bits(ap_r_ptr2->flags1, RF1_UNIQUE))
-            return any_bits(ap_r_ptr1->flags1, RF1_UNIQUE);
+        if (ap_r_ptr1->race_kind_flags.has(MonraceKindType::UNIQUE) != ap_r_ptr2->race_kind_flags.has(MonraceKindType::UNIQUE))
+            return ap_r_ptr1->race_kind_flags.has(MonraceKindType::UNIQUE);
 
         /* Shadowers first (あやしい影) */
         if (m_ptr1->mflag2.has(MFLAG2::KAGE) != m_ptr2->mflag2.has(MFLAG2::KAGE))

@@ -26,6 +26,7 @@
 #include "monster-race/monster-race-hook.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags3.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-damage.h"
 #include "monster/monster-describer.h"
 #include "monster/monster-status-setter.h"
@@ -413,7 +414,7 @@ static void apply_damage_negative_effect(player_attack_type *pa_ptr, bool is_zan
         pa_ptr->attack_damage = 0;
 
     monster_race *r_ptr = &r_info[pa_ptr->m_ptr->r_idx];
-    if ((pa_ptr->mode == HISSATSU_ZANMA) && !(!monster_living(pa_ptr->m_ptr->r_idx) && (r_ptr->flags3 & RF3_EVIL))) {
+    if ((pa_ptr->mode == HISSATSU_ZANMA) && !monster_living(pa_ptr->m_ptr->r_idx) && (r_ptr->race_kind_flags.has_not(MonraceKindType::EVIL))) {
         pa_ptr->attack_damage = 0;
     }
 

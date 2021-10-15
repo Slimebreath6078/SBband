@@ -6,13 +6,14 @@
 
 #include "monster-floor/monster-object.h"
 #include "flavor/flavor-describer.h"
-#include "floor/floor-object.h"
 #include "floor/cave.h"
+#include "floor/floor-object.h"
 #include "floor/geometry.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags-resistance.h"
 #include "monster-race/race-flags2.h"
 #include "monster-race/race-flags3.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-describer.h"
 #include "monster/monster-description-types.h"
 #include "monster/monster-info.h"
@@ -33,48 +34,48 @@
 /*!
  * @brief オブジェクトのフラグを更新する
  */
-static void update_object_flags(const TrFlags &flgs, BIT_FLAGS *flg2, BIT_FLAGS *flg3, EnumClassFlagGroup<MonsterResistanceType> *flgr)
+static void update_object_flags(const TrFlags &flgs, EnumClassFlagGroup<MonsterResistanceType> *flgr, EnumClassFlagGroup<MonraceKindType> *flga)
 {
     if (flgs.has(TR_SLAY_DRAGON))
-        *flg3 |= (RF3_DRAGON);
+        flga->set(MonraceKindType::DRAGON);
     if (flgs.has(TR_KILL_DRAGON))
-        *flg3 |= (RF3_DRAGON);
+        flga->set(MonraceKindType::DRAGON);
     if (flgs.has(TR_SLAY_TROLL))
-        *flg3 |= (RF3_TROLL);
+        flga->set(MonraceKindType::TROLL);
     if (flgs.has(TR_KILL_TROLL))
-        *flg3 |= (RF3_TROLL);
+        flga->set(MonraceKindType::TROLL);
     if (flgs.has(TR_SLAY_GIANT))
-        *flg3 |= (RF3_GIANT);
+        flga->set(MonraceKindType::GIANT);
     if (flgs.has(TR_KILL_GIANT))
-        *flg3 |= (RF3_GIANT);
+        flga->set(MonraceKindType::GIANT);
     if (flgs.has(TR_SLAY_ORC))
-        *flg3 |= (RF3_ORC);
+        flga->set(MonraceKindType::ORC);
     if (flgs.has(TR_KILL_ORC))
-        *flg3 |= (RF3_ORC);
+        flga->set(MonraceKindType::ORC);
     if (flgs.has(TR_SLAY_DEMON))
-        *flg3 |= (RF3_DEMON);
+        flga->set(MonraceKindType::DEMON);
     if (flgs.has(TR_KILL_DEMON))
-        *flg3 |= (RF3_DEMON);
+        flga->set(MonraceKindType::DEMON);
     if (flgs.has(TR_SLAY_UNDEAD))
-        *flg3 |= (RF3_UNDEAD);
+        flga->set(MonraceKindType::UNDEAD);
     if (flgs.has(TR_KILL_UNDEAD))
-        *flg3 |= (RF3_UNDEAD);
+        flga->set(MonraceKindType::UNDEAD);
     if (flgs.has(TR_SLAY_ANIMAL))
-        *flg3 |= (RF3_ANIMAL);
+        flga->set(MonraceKindType::ANIMAL);
     if (flgs.has(TR_KILL_ANIMAL))
-        *flg3 |= (RF3_ANIMAL);
+        flga->set(MonraceKindType::ANIMAL);
     if (flgs.has(TR_SLAY_EVIL))
-        *flg3 |= (RF3_EVIL);
+        flga->set(MonraceKindType::EVIL);
     if (flgs.has(TR_KILL_EVIL))
-        *flg3 |= (RF3_EVIL);
+        flga->set(MonraceKindType::EVIL);
     if (flgs.has(TR_SLAY_GOOD))
-        *flg3 |= (RF3_GOOD);
+        flga->set(MonraceKindType::GOOD);
     if (flgs.has(TR_KILL_GOOD))
-        *flg3 |= (RF3_GOOD);
+        flga->set(MonraceKindType::GOOD);
     if (flgs.has(TR_SLAY_HUMAN))
-        *flg2 |= (RF2_HUMAN);
+        flga->set(MonraceKindType::HUMAN);
     if (flgs.has(TR_KILL_HUMAN))
-        *flg2 |= (RF2_HUMAN);
+        flga->set(MonraceKindType::HUMAN);
     if (flgs.has(TR_BRAND_ACID))
         flgr->set(MonsterResistanceType::IMMUNE_ACID);
     if (flgs.has(TR_BRAND_ELEC))
@@ -158,7 +159,7 @@ void update_object_by_monster_movement(player_type *player_ptr, turn_flags *turn
 
     turn_flags_ptr->do_take = (r_ptr->flags2 & RF2_TAKE_ITEM) != 0;
     for (auto it = g_ptr->o_idx_list.begin(); it != g_ptr->o_idx_list.end();) {
-        BIT_FLAGS flg2 = 0L, flg3 = 0L;
+        EnumClassFlagGroup<MonraceKindType> flga;
         EnumClassFlagGroup<MonsterResistanceType> flgr;
         GAME_TEXT m_name[MAX_NLEN], o_name[MAX_NLEN];
         OBJECT_IDX this_o_idx = *it++;
@@ -173,9 +174,9 @@ void update_object_by_monster_movement(player_type *player_ptr, turn_flags *turn
         auto flgs = object_flags(o_ptr);
         describe_flavor(player_ptr, o_name, o_ptr, 0);
         monster_desc(player_ptr, m_name, m_ptr, MD_INDEF_HIDDEN);
-        update_object_flags(flgs, &flg2, &flg3, &flgr);
+        update_object_flags(flgs, &flgr, &flga);
 
-        bool is_special_object = o_ptr->is_artifact() || ((r_ptr->flags3 & flg3) != 0) || ((r_ptr->flags2 & flg2) != 0)
+        bool is_special_object = o_ptr->is_artifact() || r_ptr->race_kind_flags.has_any_of(flga)
             || (!r_ptr->resistance_flags.has_all_of(flgr) && r_ptr->resistance_flags.has_not(MonsterResistanceType::RESIST_ALL));
         monster_pickup_object(player_ptr, turn_flags_ptr, m_idx, o_ptr, is_special_object, ny, nx, m_name, o_name, this_o_idx);
     }

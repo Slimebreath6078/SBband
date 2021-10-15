@@ -14,6 +14,7 @@
 #include "monster-race/monster-race.h"
 #include "monster-race/race-ability-flags.h"
 #include "monster-race/race-flags3.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-update.h"
 #include "mspell/mspell-checker.h"
 #include "mspell/mspell-damage-calculator.h"
@@ -41,14 +42,16 @@ MonsterSpellResult spell_RF4_ROCKET(player_type *player_ptr, POSITION y, POSITIO
 {
     monster_type *m_ptr = &player_ptr->current_floor_ptr->m_list[m_idx];
     monster_race *r_ptr = &r_info[m_ptr->r_idx];
-    if (any_bits(r_ptr->flags3, RF3_KAN_SEN))
-        monspell_message(player_ptr, m_idx, t_idx, 
+    if (r_ptr->race_kind_flags.has(MonraceKindType::KAN_SEN))
+        monspell_message(player_ptr, m_idx, t_idx,
             SpellMsg_blind(_("%^sが何かを射った。", "%^s shoots something."), _("%^sが魚雷を発射した。", "%^s fires a torpedo."),
-            _("%^sが%sに魚雷を発射した。", "%^s fires a torpedo at %s.")), TARGET_TYPE);
+                _("%^sが%sに魚雷を発射した。", "%^s fires a torpedo at %s.")),
+            TARGET_TYPE);
     else
-        monspell_message(player_ptr, m_idx, t_idx, 
-        SpellMsg_blind(_("%^sが何かを射った。", "%^s shoots something."), _("%^sがロケットを発射した。", "%^s fires a rocket."),
-        _("%^sが%sにロケットを発射した。", "%^s fires a rocket at %s.")), TARGET_TYPE);
+        monspell_message(player_ptr, m_idx, t_idx,
+            SpellMsg_blind(_("%^sが何かを射った。", "%^s shoots something."), _("%^sがロケットを発射した。", "%^s fires a rocket."),
+                _("%^sが%sにロケットを発射した。", "%^s fires a rocket at %s.")),
+            TARGET_TYPE);
 
     const auto dam = monspell_damage(player_ptr, RF_ABILITY::ROCKET, m_idx, DAM_ROLL);
     const auto proj_res = breath(player_ptr, y, x, m_idx, GF_ROCKET, dam, 2, false, TARGET_TYPE);
@@ -104,9 +107,10 @@ MonsterSpellResult spell_RF6_HAND_DOOM(player_type *player_ptr, POSITION y, POSI
  */
 MonsterSpellResult spell_RF6_PSY_SPEAR(player_type *player_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
 {
-    monspell_message(player_ptr, m_idx, t_idx, 
+    monspell_message(player_ptr, m_idx, t_idx,
         SpellMsg_blind(_("%^sが何かをつぶやいた。", "%^s mumbles."), _("%^sが光の剣を放った。", "%^s throw a Psycho-Spear."),
-        _("%^sが%sに向かって光の剣を放った。", "%^s throw a Psycho-spear at %s.")), TARGET_TYPE);
+            _("%^sが%sに向かって光の剣を放った。", "%^s throw a Psycho-spear at %s.")),
+        TARGET_TYPE);
 
     const auto dam = monspell_damage(player_ptr, RF_ABILITY::PSY_SPEAR, m_idx, DAM_ROLL);
     const auto proj_res = beam(player_ptr, m_idx, y, x, GF_PSY_SPEAR, dam, MONSTER_TO_PLAYER);

@@ -7,6 +7,7 @@
 #include "monster-floor/monster-remover.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-describer.h"
 #include "monster/monster-description-types.h"
 #include "monster/monster-info.h"
@@ -44,7 +45,7 @@ void discharge_minion(player_type *player_ptr)
 
         monster_race *r_ptr;
         r_ptr = &r_info[m_ptr->r_idx];
-        if (r_ptr->flags1 & RF1_UNIQUE) {
+        if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE)) {
             GAME_TEXT m_name[MAX_NLEN];
             monster_desc(player_ptr, m_name, m_ptr, 0x00);
             msg_format(_("%sは爆破されるのを嫌がり、勝手に自分の世界へと帰った。", "%^s resists being blasted and runs away."), m_name);

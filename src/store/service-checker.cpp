@@ -1,6 +1,7 @@
 ﻿#include "store/service-checker.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags3.h"
+#include "monster-race/race-kind-flags.h"
 #include "object-enchant/tr-types.h"
 #include "object/object-flags.h"
 #include "object/object-value.h"
@@ -103,8 +104,8 @@ static bool check_store_temple(const object_type *o_ptr)
     case TV_FIGURINE:
     case TV_STATUE: {
         monster_race *r_ptr = &r_info[o_ptr->pval];
-        if (!(r_ptr->flags3 & RF3_EVIL))
-            if (((r_ptr->flags3 & RF3_GOOD) != 0) || ((r_ptr->flags3 & RF3_ANIMAL) != 0) || (angband_strchr("?!", r_ptr->d_char) != nullptr))
+        if (r_ptr->race_kind_flags.has_not(MonraceKindType::EVIL))
+            if ((r_ptr->race_kind_flags.has(MonraceKindType::GOOD)) || (r_ptr->race_kind_flags.has(MonraceKindType::ANIMAL)) || (angband_strchr("?!", r_ptr->d_char) != nullptr))
                 return true;
     }
         /* Fall through */
@@ -384,16 +385,16 @@ static byte decide_discount_rate(const PRICE cost)
 {
     if (cost < 5)
         return 0;
-    
+
     if (one_in_(25))
         return 25;
-    
+
     if (one_in_(150))
         return 50;
-    
+
     if (one_in_(300))
         return 75;
-    
+
     if (one_in_(500))
         return 90;
 

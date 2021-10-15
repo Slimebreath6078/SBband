@@ -7,6 +7,7 @@
 #include "monster-race/race-flags2.h"
 #include "monster-race/race-flags3.h"
 #include "monster-race/race-indice-types.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster-race/race-resistance-mask.h"
 #include "monster/monster-info.h"
 #include "object-enchant/tr-types.h"
@@ -33,44 +34,120 @@ MULTIPLY mult_slaying(player_type *player_ptr, MULTIPLY mult, const TrFlags &flg
 {
     static const struct slay_table_t {
         tr_type slay_flag;
-        BIT_FLAGS affect_race_flag;
+        MonraceKindType affect_race_flag;
         MULTIPLY slay_mult;
-        size_t flag_offset;
-        size_t r_flag_offset;
     } slay_table[] = {
-#define OFFSET(X) offsetof(monster_race, X)
-        { TR_SLAY_ANIMAL, RF3_ANIMAL, 25, OFFSET(flags3), OFFSET(r_flags3) },
-        { TR_KILL_ANIMAL, RF3_ANIMAL, 40, OFFSET(flags3), OFFSET(r_flags3) },
-        { TR_SLAY_EVIL, RF3_EVIL, 20, OFFSET(flags3), OFFSET(r_flags3) },
-        { TR_KILL_EVIL, RF3_EVIL, 35, OFFSET(flags3), OFFSET(r_flags3) },
-        { TR_SLAY_GOOD, RF3_GOOD, 20, OFFSET(flags3), OFFSET(r_flags3) },
-        { TR_KILL_GOOD, RF3_GOOD, 35, OFFSET(flags3), OFFSET(r_flags3) },
-        { TR_SLAY_HUMAN, RF2_HUMAN, 25, OFFSET(flags2), OFFSET(r_flags2) },
-        { TR_KILL_HUMAN, RF2_HUMAN, 40, OFFSET(flags2), OFFSET(r_flags2) },
-        { TR_SLAY_UNDEAD, RF3_UNDEAD, 30, OFFSET(flags3), OFFSET(r_flags3) },
-        { TR_KILL_UNDEAD, RF3_UNDEAD, 50, OFFSET(flags3), OFFSET(r_flags3) },
-        { TR_SLAY_DEMON, RF3_DEMON, 30, OFFSET(flags3), OFFSET(r_flags3) },
-        { TR_KILL_DEMON, RF3_DEMON, 50, OFFSET(flags3), OFFSET(r_flags3) },
-        { TR_SLAY_ORC, RF3_ORC, 30, OFFSET(flags3), OFFSET(r_flags3) },
-        { TR_KILL_ORC, RF3_ORC, 50, OFFSET(flags3), OFFSET(r_flags3) },
-        { TR_SLAY_TROLL, RF3_TROLL, 30, OFFSET(flags3), OFFSET(r_flags3) },
-        { TR_KILL_TROLL, RF3_TROLL, 50, OFFSET(flags3), OFFSET(r_flags3) },
-        { TR_SLAY_GIANT, RF3_GIANT, 30, OFFSET(flags3), OFFSET(r_flags3) },
-        { TR_KILL_GIANT, RF3_GIANT, 50, OFFSET(flags3), OFFSET(r_flags3) },
-        { TR_SLAY_DRAGON, RF3_DRAGON, 30, OFFSET(flags3), OFFSET(r_flags3) },
-        { TR_KILL_DRAGON, RF3_DRAGON, 50, OFFSET(flags3), OFFSET(r_flags3) },
-#undef OFFSET
+        {
+            TR_SLAY_ANIMAL,
+            MonraceKindType::ANIMAL,
+            25,
+        },
+        {
+            TR_KILL_ANIMAL,
+            MonraceKindType::ANIMAL,
+            40,
+        },
+        {
+            TR_SLAY_EVIL,
+            MonraceKindType::EVIL,
+            20,
+        },
+        {
+            TR_KILL_EVIL,
+            MonraceKindType::EVIL,
+            35,
+        },
+        {
+            TR_SLAY_GOOD,
+            MonraceKindType::GOOD,
+            20,
+        },
+        {
+            TR_KILL_GOOD,
+            MonraceKindType::GOOD,
+            35,
+        },
+        {
+            TR_SLAY_HUMAN,
+            MonraceKindType::HUMAN,
+            25,
+        },
+        {
+            TR_KILL_HUMAN,
+            MonraceKindType::HUMAN,
+            40,
+        },
+        {
+            TR_SLAY_UNDEAD,
+            MonraceKindType::UNDEAD,
+            30,
+        },
+        {
+            TR_KILL_UNDEAD,
+            MonraceKindType::UNDEAD,
+            50,
+        },
+        {
+            TR_SLAY_DEMON,
+            MonraceKindType::DEMON,
+            30,
+        },
+        {
+            TR_KILL_DEMON,
+            MonraceKindType::DEMON,
+            50,
+        },
+        {
+            TR_SLAY_ORC,
+            MonraceKindType::ORC,
+            30,
+        },
+        {
+            TR_KILL_ORC,
+            MonraceKindType::ORC,
+            50,
+        },
+        {
+            TR_SLAY_TROLL,
+            MonraceKindType::TROLL,
+            30,
+        },
+        {
+            TR_KILL_TROLL,
+            MonraceKindType::TROLL,
+            50,
+        },
+        {
+            TR_SLAY_GIANT,
+            MonraceKindType::GIANT,
+            30,
+        },
+        {
+            TR_KILL_GIANT,
+            MonraceKindType::GIANT,
+            50,
+        },
+        {
+            TR_SLAY_DRAGON,
+            MonraceKindType::DRAGON,
+            30,
+        },
+        {
+            TR_KILL_DRAGON,
+            MonraceKindType::DRAGON,
+            50,
+        },
     };
 
     monster_race *r_ptr = &r_info[m_ptr->r_idx];
     for (size_t i = 0; i < sizeof(slay_table) / sizeof(slay_table[0]); ++i) {
         const struct slay_table_t *p = &slay_table[i];
 
-        if (flgs.has_not(p->slay_flag) || !(atoffset(BIT_FLAGS, r_ptr, p->flag_offset) & p->affect_race_flag))
+        if (flgs.has_not(p->slay_flag) || r_ptr->race_kind_flags.has_not(p->affect_race_flag))
             continue;
 
         if (is_original_ap_and_seen(player_ptr, m_ptr)) {
-            atoffset(BIT_FLAGS, r_ptr, p->r_flag_offset) |= p->affect_race_flag;
+            r_ptr->r_race_kind_flags.set(p->affect_race_flag);
         }
 
         mult = MAX(mult, p->slay_mult);

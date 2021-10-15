@@ -28,6 +28,7 @@
 #include "monster-race/race-flags3.h"
 #include "monster-race/race-flags7.h"
 #include "monster-race/race-indice-types.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-describer.h"
 #include "monster/monster-info.h"
 #include "monster/monster-update.h"
@@ -145,7 +146,7 @@ MONRACE_IDX get_mon_num(player_type *player_ptr, DEPTH min_level, DEPTH max_leve
         r_idx = entry.index;
         r_ptr = &r_info[r_idx];
         if (!(option & GMN_ARENA) && !chameleon_change_m_idx) {
-            if (((r_ptr->flags1 & (RF1_UNIQUE)) || (r_ptr->flags7 & (RF7_NAZGUL))) && (r_ptr->cur_num >= r_ptr->max_num)) {
+            if ((r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || (r_ptr->flags7 & (RF7_NAZGUL))) && (r_ptr->cur_num >= r_ptr->max_num)) {
                 continue;
             }
 
@@ -202,7 +203,7 @@ static bool monster_hook_chameleon_lord(player_type *player_ptr, MONRACE_IDX r_i
     monster_type *m_ptr = &floor_ptr->m_list[chameleon_change_m_idx];
     monster_race *old_r_ptr = &r_info[m_ptr->r_idx];
 
-    if (!(r_ptr->flags1 & (RF1_UNIQUE)))
+    if (r_ptr->race_kind_flags.has_not(MonraceKindType::UNIQUE))
         return false;
     if (r_ptr->flags7 & (RF7_FRIENDLY | RF7_CHAMELEON))
         return false;
@@ -241,7 +242,7 @@ static bool monster_hook_chameleon(player_type *player_ptr, MONRACE_IDX r_idx)
     monster_type *m_ptr = &floor_ptr->m_list[chameleon_change_m_idx];
     monster_race *old_r_ptr = &r_info[m_ptr->r_idx];
 
-    if (r_ptr->flags1 & (RF1_UNIQUE))
+    if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE))
         return false;
     if (r_ptr->flags2 & RF2_MULTIPLY)
         return false;
@@ -256,11 +257,13 @@ static bool monster_hook_chameleon(player_type *player_ptr, MONRACE_IDX r_idx)
         return false;
 
     if (!(old_r_ptr->flags7 & RF7_CHAMELEON)) {
-        if ((old_r_ptr->flags3 & RF3_GOOD) && !(r_ptr->flags3 & RF3_GOOD))
+        auto non_neutral = { MonraceKindType::GOOD, MonraceKindType::EVIL };
+
+        if ((old_r_ptr->race_kind_flags.has(MonraceKindType::GOOD)) && r_ptr->race_kind_flags.has_not(MonraceKindType::GOOD))
             return false;
-        if ((old_r_ptr->flags3 & RF3_EVIL) && !(r_ptr->flags3 & RF3_EVIL))
+        if ((old_r_ptr->race_kind_flags.has(MonraceKindType::EVIL)) && r_ptr->race_kind_flags.has_not(MonraceKindType::EVIL))
             return false;
-        if (!(old_r_ptr->flags3 & (RF3_GOOD | RF3_EVIL)) && (r_ptr->flags3 & (RF3_GOOD | RF3_EVIL)))
+        if (old_r_ptr->race_kind_flags.has_none_of(non_neutral) && r_ptr->race_kind_flags.has_none_of(non_neutral))
             return false;
     } else if (summon_specific_who > 0) {
         if (monster_has_hostile_align(player_ptr, &floor_ptr->m_list[summon_specific_who], 0, 0, r_ptr))
@@ -284,7 +287,7 @@ void choose_new_monster(player_type *player_ptr, MONSTER_IDX m_idx, bool born, M
     monster_race *r_ptr;
 
     bool old_unique = false;
-    if (r_info[m_ptr->r_idx].flags1 & RF1_UNIQUE)
+    if (r_info[m_ptr->r_idx].race_kind_flags.has(MonraceKindType::UNIQUE))
         old_unique = true;
     if (old_unique && (r_idx == MON_CHAMELEON))
         r_idx = MON_CHAMELEON_K;
@@ -330,11 +333,12 @@ void choose_new_monster(player_type *player_ptr, MONSTER_IDX m_idx, bool born, M
         player_ptr->update |= (PU_MON_LITE);
 
     if (born) {
-        if (r_ptr->flags3 & (RF3_EVIL | RF3_GOOD)) {
+        auto non_neutral = { MonraceKindType::EVIL, MonraceKindType::GOOD };
+        if (r_ptr->race_kind_flags.has_any_of(non_neutral)) {
             m_ptr->sub_align = SUB_ALIGN_NEUTRAL;
-            if (r_ptr->flags3 & RF3_EVIL)
+            if (r_ptr->race_kind_flags.has(MonraceKindType::EVIL))
                 m_ptr->sub_align |= SUB_ALIGN_EVIL;
-            if (r_ptr->flags3 & RF3_GOOD)
+            if (r_ptr->race_kind_flags.has(MonraceKindType::GOOD))
                 m_ptr->sub_align |= SUB_ALIGN_GOOD;
         }
 
@@ -379,7 +383,7 @@ void choose_new_monster(player_type *player_ptr, MONSTER_IDX m_idx, bool born, M
 SPEED get_mspeed(floor_type *floor_ptr, monster_race *r_ptr)
 {
     SPEED mspeed = r_ptr->speed;
-    if (!(r_ptr->flags1 & RF1_UNIQUE) && !floor_ptr->inside_arena) {
+    if (r_ptr->race_kind_flags.has_not(MonraceKindType::UNIQUE) && !floor_ptr->inside_arena) {
         /* Allow some small variation per monster */
         int i = SPEED_TO_ENERGY(r_ptr->speed) / (one_in_(4) ? 3 : 10);
         if (i)

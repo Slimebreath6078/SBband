@@ -16,6 +16,7 @@
 #include "monster-race/race-flags2.h"
 #include "monster-race/race-flags3.h"
 #include "monster-race/race-flags7.h"
+#include "monster-race/race-kind-flags.h"
 #include "mspell/mspell-attack-util.h"
 #include "mspell/mspell-judgement.h"
 #include "spell/range-calc.h"
@@ -188,7 +189,7 @@ void decide_lite_area(player_type *player_ptr, msa_type *msa_ptr)
     if (msa_ptr->ability_flags.has_not(RF_ABILITY::DARKNESS))
         return;
 
-    bool can_use_lite_area = (player_ptr->pclass == CLASS_NINJA) && (!(msa_ptr->r_ptr->flags3 & (RF3_UNDEAD)) && msa_ptr->r_ptr->resistance_flags.has_not(MonsterResistanceType::HURT_LITE))
+    bool can_use_lite_area = (player_ptr->pclass == CLASS_NINJA) && msa_ptr->r_ptr->race_kind_flags.has_not(MonraceKindType::UNDEAD) && msa_ptr->r_ptr->resistance_flags.has_not(MonsterResistanceType::HURT_LITE)
         && ((msa_ptr->r_ptr->flags7 & RF7_DARK_MASK) == 0);
 
     if ((msa_ptr->r_ptr->flags2 & RF2_STUPID) != 0)

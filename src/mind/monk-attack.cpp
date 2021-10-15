@@ -18,6 +18,7 @@
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-flags3.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-status-setter.h"
 #include "monster/monster-status.h"
 #include "player-attack/player-attack-util.h"
@@ -44,7 +45,7 @@ static int calc_stun_resistance(player_attack_type *pa_ptr)
 {
     monster_race *r_ptr = &r_info[pa_ptr->m_ptr->r_idx];
     int resist_stun = 0;
-    if (r_ptr->flags1 & RF1_UNIQUE)
+    if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE))
         resist_stun += 88;
 
     if (r_ptr->flags3 & RF3_NO_STUN)
@@ -56,7 +57,7 @@ static int calc_stun_resistance(player_attack_type *pa_ptr)
     if (r_ptr->flags3 & RF3_NO_SLEEP)
         resist_stun += 33;
 
-    if ((r_ptr->flags3 & RF3_UNDEAD) || (r_ptr->flags3 & RF3_NONLIVING))
+    if (r_ptr->race_kind_flags.has(MonraceKindType::UNDEAD) || r_ptr->race_kind_flags.has(MonraceKindType::NONLIVING))
         resist_stun += 66;
 
     return resist_stun;
@@ -190,7 +191,7 @@ static void process_attack_vital_spot(player_type *player_ptr, player_attack_typ
     }
 
     if ((special_effect == MA_SLOW) && ((pa_ptr->attack_damage + player_ptr->to_d[pa_ptr->hand]) < pa_ptr->m_ptr->hp)) {
-        if (!(r_ptr->flags1 & RF1_UNIQUE) && (randint1(player_ptr->lev) > r_ptr->level) && pa_ptr->m_ptr->mspeed > 60) {
+        if (r_ptr->race_kind_flags.has_not(MonraceKindType::UNIQUE) && (randint1(player_ptr->lev) > r_ptr->level) && pa_ptr->m_ptr->mspeed > 60) {
             msg_format(_("%^sは足をひきずり始めた。", "You've hobbled %s."), pa_ptr->m_name);
             pa_ptr->m_ptr->mspeed -= 10;
         }

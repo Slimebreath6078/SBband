@@ -17,6 +17,7 @@
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-flags3.h"
 #include "monster-race/race-flags7.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-describer.h"
 #include "monster/monster-description-types.h"
 #include "monster/monster-flag-types.h"
@@ -47,7 +48,7 @@ bool genocide_aux(player_type *player_ptr, MONSTER_IDX m_idx, int power, bool pl
         return false;
 
     bool resist = false;
-    if (r_ptr->flags1 & (RF1_UNIQUE | RF1_QUESTOR))
+    if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || (r_ptr->flags1 & RF1_QUESTOR))
         resist = true;
     else if (r_ptr->flags7 & RF7_UNIQUE2)
         resist = true;
@@ -210,7 +211,7 @@ bool mass_genocide_undead(player_type *player_ptr, int power, bool player_cast)
         monster_race *r_ptr = &r_info[m_ptr->r_idx];
         if (!monster_is_valid(m_ptr))
             continue;
-        if (!(r_ptr->flags3 & RF3_UNDEAD))
+        if (r_ptr->race_kind_flags.has_not(MonraceKindType::UNDEAD))
             continue;
         if (m_ptr->cdis > MAX_SIGHT)
             continue;

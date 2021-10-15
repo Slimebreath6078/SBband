@@ -21,6 +21,7 @@
 #include "monster-race/race-flags7.h"
 #include "monster-race/race-flags8.h"
 #include "monster-race/race-indice-types.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster-race/race-resistance-mask.h"
 #include "monster/monster-describer.h"
 #include "monster/monster-flag-types.h"
@@ -222,9 +223,9 @@ bool monster_has_hostile_align(player_type *player_ptr, monster_type *m_ptr, int
     }
 
     /* Racial alignment flags */
-    if (r_ptr->flags3 & RF3_EVIL)
+    if (r_ptr->race_kind_flags.has(MonraceKindType::EVIL))
         sub_align2 |= SUB_ALIGN_EVIL;
-    if (r_ptr->flags3 & RF3_GOOD)
+    if (r_ptr->race_kind_flags.has(MonraceKindType::GOOD))
         sub_align2 |= SUB_ALIGN_GOOD;
 
     if (check_hostile_align(sub_align1, sub_align2))
@@ -304,7 +305,7 @@ MONRACE_IDX real_r_idx(monster_type *m_ptr)
 {
     monster_race *r_ptr = &r_info[m_ptr->r_idx];
     if (m_ptr->mflag2.has(MFLAG2::CHAMELEON)) {
-        if (r_ptr->flags1 & RF1_UNIQUE)
+        if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE))
             return MON_CHAMELEON_K;
         else
             return MON_CHAMELEON;

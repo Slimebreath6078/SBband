@@ -19,6 +19,7 @@
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-flags3.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-describer.h"
 #include "monster/monster-description-types.h"
 #include "monster/monster-flag-types.h"
@@ -247,7 +248,7 @@ bool exe_mutation_power(player_type *player_ptr, MUTA power)
         m_ptr = &player_ptr->current_floor_ptr->m_list[g_ptr->m_idx];
         monster_race *r_ptr;
         r_ptr = &r_info[m_ptr->r_idx];
-        if ((r_ptr->flags3 & RF3_EVIL) && !(r_ptr->flags1 & RF1_QUESTOR) && !(r_ptr->flags1 & RF1_UNIQUE) && !player_ptr->current_floor_ptr->inside_arena
+        if (r_ptr->race_kind_flags.has(MonraceKindType::EVIL) && !(r_ptr->flags1 & RF1_QUESTOR) && r_ptr->race_kind_flags.has_not(MonraceKindType::UNIQUE) && !player_ptr->current_floor_ptr->inside_arena
             && !player_ptr->current_floor_ptr->inside_quest && (r_ptr->level < randint1(player_ptr->lev + 50)) && m_ptr->mflag2.has_not(MFLAG2::NOGENO)) {
             if (record_named_pet && is_pet(m_ptr) && m_ptr->nickname) {
                 GAME_TEXT m_name[MAX_NLEN];

@@ -4,6 +4,7 @@
 #include "monster-race/monster-race.h"
 #include "monster-race/race-ability-flags.h"
 #include "monster-race/race-flags1.h"
+#include "monster-race/race-kind-flags.h"
 #include "mspell/mspell-damage-calculator.h"
 #include "system/monster-race-definition.h"
 #include "system/player-type-definition.h"
@@ -64,7 +65,7 @@ bool know_armour(MONRACE_IDX r_idx, const bool know_everything)
         return true;
     if (kills > 304 / (4 + level))
         return true;
-    if (!(r_ptr->flags1 & RF1_UNIQUE))
+    if (r_ptr->race_kind_flags.has_not(MonraceKindType::UNIQUE))
         return false;
     if (kills > 304 / (38 + (5 * level) / 4))
         return true;
@@ -97,7 +98,7 @@ bool know_damage(MONRACE_IDX r_idx, int i)
         d = ((4 + level) * MAX_UCHAR - 1) / 80;
     if ((4 + level) * a > 80 * d)
         return true;
-    if (!(r_ptr->flags1 & RF1_UNIQUE))
+    if (r_ptr->race_kind_flags.has_not(MonraceKindType::UNIQUE))
         return false;
     if ((4 + level) * (2 * a) > 80 * d)
         return true;

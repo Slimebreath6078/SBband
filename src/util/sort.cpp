@@ -4,11 +4,12 @@
 #include "grid/grid.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-flag-types.h"
+#include "system//monster-race-definition.h"
 #include "system/artifact-type-definition.h"
 #include "system/floor-type-definition.h"
 #include "system/grid-type-definition.h"
-#include "system//monster-race-definition.h"
 #include "system/monster-type-definition.h"
 #include "system/player-type-definition.h"
 
@@ -149,9 +150,9 @@ bool ang_sort_comp_importance(player_type *player_ptr, vptr u, vptr v, int a, in
     /* Compare two monsters */
     if (ap_ra_ptr && ap_rb_ptr) {
         /* Unique monsters first */
-        if ((ap_ra_ptr->flags1 & RF1_UNIQUE) && !(ap_rb_ptr->flags1 & RF1_UNIQUE))
+        if (ap_ra_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) && ap_rb_ptr->race_kind_flags.has_not(MonraceKindType::UNIQUE))
             return true;
-        if (!(ap_ra_ptr->flags1 & RF1_UNIQUE) && (ap_rb_ptr->flags1 & RF1_UNIQUE))
+        if (ap_ra_ptr->race_kind_flags.has_not(MonraceKindType::UNIQUE) && ap_rb_ptr->race_kind_flags.has(MonraceKindType::UNIQUE))
             return false;
 
         /* Shadowers first (あやしい影) */
@@ -358,10 +359,10 @@ bool ang_sort_comp_pet(player_type *player_ptr, vptr u, vptr v, int a, int b)
     if (m_ptr2->nickname && !m_ptr1->nickname)
         return false;
 
-    if ((r_ptr1->flags1 & RF1_UNIQUE) && !(r_ptr2->flags1 & RF1_UNIQUE))
+    if (r_ptr1->race_kind_flags.has(MonraceKindType::UNIQUE) && r_ptr2->race_kind_flags.has_not(MonraceKindType::UNIQUE))
         return true;
 
-    if ((r_ptr2->flags1 & RF1_UNIQUE) && !(r_ptr1->flags1 & RF1_UNIQUE))
+    if (r_ptr2->race_kind_flags.has(MonraceKindType::UNIQUE) && r_ptr1->race_kind_flags.has_not(MonraceKindType::UNIQUE))
         return false;
 
     if (r_ptr1->level > r_ptr2->level)
@@ -507,10 +508,10 @@ bool ang_sort_comp_monster_level(player_type *player_ptr, vptr u, vptr v, int a,
     if (r_ptr1->level > r_ptr2->level)
         return false;
 
-    if ((r_ptr2->flags1 & RF1_UNIQUE) && !(r_ptr1->flags1 & RF1_UNIQUE))
+    if (r_ptr2->race_kind_flags.has(MonraceKindType::UNIQUE) && r_ptr1->race_kind_flags.has_not(MonraceKindType::UNIQUE))
         return true;
 
-    if ((r_ptr1->flags1 & RF1_UNIQUE) && !(r_ptr2->flags1 & RF1_UNIQUE))
+    if (r_ptr1->race_kind_flags.has(MonraceKindType::UNIQUE) && r_ptr2->race_kind_flags.has_not(MonraceKindType::UNIQUE))
         return false;
 
     return w1 <= w2;
@@ -557,10 +558,10 @@ bool ang_sort_comp_pet_dismiss(player_type *player_ptr, vptr u, vptr v, int a, i
     if (!m_ptr2->parent_m_idx && m_ptr1->parent_m_idx)
         return false;
 
-    if ((r_ptr1->flags1 & RF1_UNIQUE) && !(r_ptr2->flags1 & RF1_UNIQUE))
+    if (r_ptr1->race_kind_flags.has(MonraceKindType::UNIQUE) && r_ptr2->race_kind_flags.has_not(MonraceKindType::UNIQUE))
         return true;
 
-    if ((r_ptr2->flags1 & RF1_UNIQUE) && !(r_ptr1->flags1 & RF1_UNIQUE))
+    if (r_ptr2->race_kind_flags.has(MonraceKindType::UNIQUE) && r_ptr1->race_kind_flags.has_not(MonraceKindType::UNIQUE))
         return false;
 
     if (r_ptr1->level > r_ptr2->level)

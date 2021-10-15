@@ -20,6 +20,7 @@
 #include "market/arena-info-table.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-describer.h"
 #include "monster/monster-description-types.h"
 #include "monster/monster-info.h"
@@ -296,7 +297,7 @@ static void dump_aux_monsters(player_type *player_ptr, FILE *fff)
         if (r_ref.idx == 0 || r_ref.name.empty())
             continue;
 
-        if (r_ref.flags1 & RF1_UNIQUE) {
+        if (r_ref.race_kind_flags.has(MonraceKindType::UNIQUE)) {
             bool dead = (r_ref.max_num == 0);
             if (dead) {
                 norm_total++;

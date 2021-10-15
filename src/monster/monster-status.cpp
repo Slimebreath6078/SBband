@@ -12,6 +12,7 @@
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-flags2.h"
 #include "monster-race/race-flags3.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-describer.h"
 #include "monster/monster-info.h"
 #include "monster/monster-list.h"
@@ -467,16 +468,18 @@ void monster_gain_exp(player_type *player_ptr, MONSTER_IDX m_idx, MONRACE_IDX s_
     /* Extract the monster base speed */
     m_ptr->mspeed = get_mspeed(floor_ptr, r_ptr);
 
+    auto non_neutral = { MonraceKindType::EVIL, MonraceKindType::GOOD };
+
     /* Sub-alignment of a monster */
-    if (!is_pet(m_ptr) && none_bits(r_ptr->flags3, RF3_EVIL | RF3_GOOD)) {
+    if (!is_pet(m_ptr) && r_ptr->race_kind_flags.has_none_of(non_neutral)) {
         m_ptr->sub_align = old_sub_align;
     } else {
         m_ptr->sub_align = SUB_ALIGN_NEUTRAL;
-        if (any_bits(r_ptr->flags3, RF3_EVIL)) {
+        if (r_ptr->race_kind_flags.has(MonraceKindType::EVIL)) {
             m_ptr->sub_align |= SUB_ALIGN_EVIL;
         }
 
-        if (any_bits(r_ptr->flags3, RF3_GOOD)) {
+        if (r_ptr->race_kind_flags.has(MonraceKindType::GOOD)) {
             m_ptr->sub_align |= SUB_ALIGN_GOOD;
         }
     }
@@ -488,7 +491,7 @@ void monster_gain_exp(player_type *player_ptr, MONSTER_IDX m_idx, MONRACE_IDX s_
                 monster_race *hallu_race;
                 do {
                     hallu_race = &r_info[randint1(max_r_idx - 1)];
-                } while (hallu_race->name.empty() || any_bits(hallu_race->flags1, RF1_UNIQUE));
+                } while (hallu_race->name.empty() || hallu_race->race_kind_flags.has(MonraceKindType::UNIQUE));
                 msg_format(_("%sは%sに進化した。", "%^s evolved into %s."), m_name, hallu_race->name.c_str());
             } else {
                 msg_format(_("%sは%sに進化した。", "%^s evolved into %s."), m_name, r_ptr->name.c_str());

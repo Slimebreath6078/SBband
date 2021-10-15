@@ -5,6 +5,7 @@
 #include "inventory/inventory-slot-types.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags3.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-info.h"
 #include "monster/monster-status.h"
 #include "player-info/equipment-info.h"
@@ -52,11 +53,11 @@ void PlayerAlignment::update_alignment()
         if (!is_pet(m_ptr))
             continue;
 
-        if (any_bits(r_ptr->flags3, RF3_GOOD)) {
+        if (r_ptr->race_kind_flags.has(MonraceKindType::GOOD)) {
             this->bias_good_alignment(r_ptr->level);
         }
 
-        if (any_bits(r_ptr->flags3, RF3_EVIL)) {
+        if (r_ptr->race_kind_flags.has(MonraceKindType::EVIL)) {
             this->bias_evil_alignment(r_ptr->level);
         }
     }

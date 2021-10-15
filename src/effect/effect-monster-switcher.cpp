@@ -25,6 +25,7 @@
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-flags2.h"
 #include "monster-race/race-flags3.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-info.h"
 #include "monster/monster-status-setter.h"
 #include "monster/monster-status.h"
@@ -49,12 +50,12 @@ process_result effect_monster_hypodynamia(player_type *player_ptr, effect_monste
     }
 
     if (is_original_ap_and_seen(player_ptr, em_ptr->m_ptr)) {
-        if (em_ptr->r_ptr->flags3 & RF3_DEMON)
-            em_ptr->r_ptr->r_flags3 |= (RF3_DEMON);
-        if (em_ptr->r_ptr->flags3 & RF3_UNDEAD)
-            em_ptr->r_ptr->r_flags3 |= (RF3_UNDEAD);
-        if (em_ptr->r_ptr->flags3 & RF3_NONLIVING)
-            em_ptr->r_ptr->r_flags3 |= (RF3_NONLIVING);
+        if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::DEMON))
+            em_ptr->r_ptr->r_race_kind_flags.set(MonraceKindType::DEMON);
+        if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNDEAD))
+            em_ptr->r_ptr->r_race_kind_flags.set(MonraceKindType::UNDEAD);
+        if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::NONLIVING))
+            em_ptr->r_ptr->r_race_kind_flags.set(MonraceKindType::NONLIVING);
     }
 
     em_ptr->note = _("には効果がなかった。", " is unaffected.");
@@ -73,12 +74,12 @@ process_result effect_monster_death_ray(player_type *player_ptr, effect_monster_
 
     if (!monster_living(em_ptr->m_ptr->r_idx)) {
         if (is_original_ap_and_seen(player_ptr, em_ptr->m_ptr)) {
-            if (em_ptr->r_ptr->flags3 & RF3_DEMON)
-                em_ptr->r_ptr->r_flags3 |= (RF3_DEMON);
-            if (em_ptr->r_ptr->flags3 & RF3_UNDEAD)
-                em_ptr->r_ptr->r_flags3 |= (RF3_UNDEAD);
-            if (em_ptr->r_ptr->flags3 & RF3_NONLIVING)
-                em_ptr->r_ptr->r_flags3 |= (RF3_NONLIVING);
+            if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::DEMON))
+                em_ptr->r_ptr->r_race_kind_flags.set(MonraceKindType::DEMON);
+            if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNDEAD))
+                em_ptr->r_ptr->r_race_kind_flags.set(MonraceKindType::UNDEAD);
+            if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::NONLIVING))
+                em_ptr->r_ptr->r_race_kind_flags.set(MonraceKindType::NONLIVING);
         }
 
         em_ptr->note = _("には完全な耐性がある！", " is immune.");
@@ -87,7 +88,7 @@ process_result effect_monster_death_ray(player_type *player_ptr, effect_monster_
         return PROCESS_CONTINUE;
     }
 
-    if (((em_ptr->r_ptr->flags1 & RF1_UNIQUE) && (randint1(888) != 666))
+    if ((em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) && (randint1(888) != 666))
         || (((em_ptr->r_ptr->level + randint1(20)) > randint1((em_ptr->caster_lev / 2) + randint1(10))) && randint1(100) != 66)) {
         em_ptr->note = _("には耐性がある！", " resists!");
         em_ptr->obvious = false;
@@ -120,7 +121,7 @@ process_result effect_monster_hand_doom(effect_monster_type *em_ptr)
     if (em_ptr->seen)
         em_ptr->obvious = true;
 
-    if (em_ptr->r_ptr->flags1 & RF1_UNIQUE) {
+    if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE)) {
         em_ptr->note = _("には効果がなかった。", " is unaffected.");
         em_ptr->dam = 0;
         return PROCESS_CONTINUE;
@@ -181,7 +182,7 @@ process_result effect_monster_engetsu(player_type *player_ptr, effect_monster_ty
 
         switch (randint0(4)) {
         case 0:
-            if (!any_bits(em_ptr->r_ptr->flags1, RF1_UNIQUE)) {
+            if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE)) {
                 if (set_monster_slow(player_ptr, em_ptr->g_ptr->m_idx, monster_slow_remaining(em_ptr->m_ptr) + 50)) {
                     em_ptr->note = _("の動きが遅くなった。", " starts moving slower.");
                 }
@@ -189,7 +190,7 @@ process_result effect_monster_engetsu(player_type *player_ptr, effect_monster_ty
             }
             break;
         case 1:
-            if (any_bits(em_ptr->r_ptr->flags1, RF1_UNIQUE)) {
+            if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE)) {
                 em_ptr->do_stun = 0;
             } else {
                 em_ptr->do_stun = damroll((player_ptr->lev / 10) + 3, (em_ptr->dam)) + 1;
@@ -197,7 +198,7 @@ process_result effect_monster_engetsu(player_type *player_ptr, effect_monster_ty
             }
             break;
         case 2:
-            if (any_bits(em_ptr->r_ptr->flags1, RF1_UNIQUE) || any_bits(em_ptr->r_ptr->flags3, RF3_NO_CONF)) {
+            if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || any_bits(em_ptr->r_ptr->flags3, RF3_NO_CONF)) {
                 if (any_bits(em_ptr->r_ptr->flags3, RF3_NO_CONF)) {
                     if (is_original_ap_and_seen(player_ptr, em_ptr->m_ptr))
                         set_bits(em_ptr->r_ptr->r_flags3, RF3_NO_CONF);
@@ -211,7 +212,7 @@ process_result effect_monster_engetsu(player_type *player_ptr, effect_monster_ty
             }
             break;
         default:
-            if (any_bits(em_ptr->r_ptr->flags1, RF1_UNIQUE) || any_bits(em_ptr->r_ptr->flags3, RF3_NO_SLEEP)) {
+            if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || any_bits(em_ptr->r_ptr->flags3, RF3_NO_SLEEP)) {
                 if (any_bits(em_ptr->r_ptr->flags3, RF3_NO_SLEEP)) {
                     if (is_original_ap_and_seen(player_ptr, em_ptr->m_ptr))
                         set_bits(em_ptr->r_ptr->r_flags3, RF3_NO_SLEEP);

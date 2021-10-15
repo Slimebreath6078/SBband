@@ -5,6 +5,7 @@
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-flags7.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-info.h"
 #include "monster/monster-status.h"
 #include "player-info/class-info.h"
@@ -80,7 +81,7 @@ PERCENTAGE calculate_upkeep(player_type *player_ptr)
         }
 
         total_friends++;
-        if (none_bits(r_ptr->flags1, RF1_UNIQUE)) {
+        if (r_ptr->race_kind_flags.has_not(MonraceKindType::UNIQUE)) {
             total_friend_levels += r_ptr->level;
             continue;
         }

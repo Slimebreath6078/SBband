@@ -12,6 +12,7 @@
 #include "main/sound-of-music.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-flag-types.h"
 #include "monster/monster-info.h"
 #include "monster/monster-status.h"
@@ -51,7 +52,7 @@
 /*! サブウィンドウ表示用の ItemTester オブジェクト */
 static std::unique_ptr<ItemTester> fix_item_tester = std::make_unique<AllMatchItemTester>();
 
-FixItemTesterSetter::FixItemTesterSetter(const ItemTester& item_tester)
+FixItemTesterSetter::FixItemTesterSetter(const ItemTester &item_tester)
 {
     fix_item_tester = item_tester.clone();
 }
@@ -107,7 +108,7 @@ static void print_monster_line(TERM_LEN x, TERM_LEN y, monster_type *m_ptr, int 
     term_gotoxy(x, y);
     if (!r_ptr)
         return;
-    if (r_ptr->flags1 & RF1_UNIQUE) {
+    if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE)) {
         bool is_bounty = false;
         for (int i = 0; i < MAX_BOUNTY; i++) {
             if (w_ptr->bounty_r_idx[i] == r_idx) {
@@ -230,7 +231,7 @@ void fix_monster_list(player_type *player_ptr)
  * @brief 装備アイテム一覧を表示する /
  * Choice window "shadow" of the "show_equip()" function
  */
-static void display_equipment(player_type *player_ptr, const ItemTester& item_tester)
+static void display_equipment(player_type *player_ptr, const ItemTester &item_tester)
 {
     if (!player_ptr || !player_ptr->inventory_list)
         return;

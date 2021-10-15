@@ -16,6 +16,7 @@
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-flags7.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-util.h"
 #include "monster/smart-learn-types.h"
 #include "object-enchant/apply-magic.h"
@@ -126,7 +127,7 @@ static void parse_qtw_D(player_type *player_ptr, qtwg_type *qtwg_ptr, char *s)
             old_cur_num = r_info[monster_index].cur_num;
             old_max_num = r_info[monster_index].max_num;
 
-            if (r_info[monster_index].flags1 & RF1_UNIQUE) {
+            if (r_info[monster_index].race_kind_flags.has(MonraceKindType::UNIQUE)) {
                 r_info[monster_index].cur_num = 0;
                 r_info[monster_index].max_num = 1;
             } else if (r_info[monster_index].flags7 & RF7_NAZGUL) {
@@ -218,7 +219,7 @@ static bool parse_qtw_QQ(quest_type *q_ptr, char **zz, int num)
         q_ptr->flags = atoi(zz[10]);
 
     r_ptr = &r_info[q_ptr->r_idx];
-    if (r_ptr->flags1 & RF1_UNIQUE)
+    if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE))
         r_ptr->flags1 |= RF1_QUESTOR;
 
     a_ptr = &a_info[q_ptr->k_idx];

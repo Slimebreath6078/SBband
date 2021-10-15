@@ -5,6 +5,7 @@
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-flags7.h"
+#include "monster-race/race-kind-flags.h"
 #include "player-attack/player-attack-util.h"
 #include "player-info/equipment-info.h"
 #include "sv-definition/sv-weapon-types.h"
@@ -131,7 +132,8 @@ static void ninja_critical(player_type *player_ptr, player_attack_type *pa_ptr)
 {
     monster_race *r_ptr = &r_info[pa_ptr->m_ptr->r_idx];
     int maxhp = pa_ptr->m_ptr->maxhp;
-    if (one_in_(pa_ptr->backstab ? 13 : (pa_ptr->stab_fleeing || pa_ptr->surprise_attack) ? 15 : 27)) {
+    if (one_in_(pa_ptr->backstab ? 13 : (pa_ptr->stab_fleeing || pa_ptr->surprise_attack) ? 15
+                                                                                          : 27)) {
         pa_ptr->attack_damage *= 5;
         pa_ptr->drain_result *= 2;
         msg_format(_("刃が%sに深々と突き刺さった！", "You critically injured %s!"), pa_ptr->m_name);
@@ -139,7 +141,7 @@ static void ninja_critical(player_type *player_ptr, player_attack_type *pa_ptr)
     }
 
     bool is_weaken = pa_ptr->m_ptr->hp < maxhp / 2;
-    bool is_unique = ((r_ptr->flags1 & RF1_UNIQUE) != 0) || ((r_ptr->flags7 & RF7_UNIQUE2) != 0);
+    bool is_unique = r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || ((r_ptr->flags7 & RF7_UNIQUE2) != 0);
     bool is_critical = (is_weaken && one_in_((player_ptr->num_blow[0] + player_ptr->num_blow[1] + 1) * 10))
         || ((one_in_(666) || ((pa_ptr->backstab || pa_ptr->surprise_attack) && one_in_(11))) && !is_unique);
     if (!is_critical)
@@ -165,7 +167,7 @@ void critical_attack(player_type *player_ptr, player_attack_type *pa_ptr)
     object_type *o_ptr = &player_ptr->inventory_list[INVEN_MAIN_HAND + pa_ptr->hand];
     monster_race *r_ptr = &r_info[pa_ptr->m_ptr->r_idx];
     if (((o_ptr->tval == TV_SWORD) && (o_ptr->sval == SV_POISON_NEEDLE)) || (pa_ptr->mode == HISSATSU_KYUSHO)) {
-        if ((randint1(randint1(r_ptr->level / 7) + 5) == 1) && !(r_ptr->flags1 & RF1_UNIQUE) && !(r_ptr->flags7 & RF7_UNIQUE2)) {
+        if ((randint1(randint1(r_ptr->level / 7) + 5) == 1) && r_ptr->race_kind_flags.has_not(MonraceKindType::UNIQUE) && !(r_ptr->flags7 & RF7_UNIQUE2)) {
             pa_ptr->attack_damage = pa_ptr->m_ptr->hp + 1;
             msg_format(_("%sの急所を突き刺した！", "You hit %s on a fatal spot!"), pa_ptr->m_name);
         } else

@@ -13,6 +13,7 @@
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags-resistance.h"
 #include "monster-race/race-flags3.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster-race/race-resistance-mask.h"
 #include "monster/monster-damage.h"
 #include "monster/monster-info.h"
@@ -130,7 +131,7 @@ static void aura_holy_by_monster_attack(player_type *player_ptr, monap_type *mon
         return;
 
     monster_race *r_ptr = &r_info[monap_ptr->m_ptr->r_idx];
-    if ((r_ptr->flags3 & RF3_EVIL) == 0)
+    if (r_ptr->race_kind_flags.has_not(MonraceKindType::EVIL))
         return;
 
     if (r_ptr->resistance_flags.has(MonsterResistanceType::RESIST_ALL)) {
@@ -150,7 +151,7 @@ static void aura_holy_by_monster_attack(player_type *player_ptr, monap_type *mon
     }
 
     if (is_original_ap_and_seen(player_ptr, monap_ptr->m_ptr))
-        r_ptr->r_flags3 |= RF3_EVIL;
+        r_ptr->r_race_kind_flags.set(MonraceKindType::EVIL);
 }
 
 static void aura_force_by_monster_attack(player_type *player_ptr, monap_type *monap_ptr)
