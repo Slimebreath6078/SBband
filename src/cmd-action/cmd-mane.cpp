@@ -777,16 +777,16 @@ static bool use_mane(player_type *player_ptr, RF_ABILITY spell)
         m_ptr = &player_ptr->current_floor_ptr->m_list[player_ptr->current_floor_ptr->grid_array[target_row][target_col].m_idx];
         r_ptr = &r_info[m_ptr->r_idx];
         monster_desc(player_ptr, m_name, m_ptr, 0);
-        if (r_ptr->flagsr & RFR_RES_TELE) {
-            if ((r_ptr->flags1 & (RF1_UNIQUE)) || (r_ptr->flagsr & RFR_RES_ALL)) {
+        if (r_ptr->resistance_flags.has(MonsterResistanceType::RESIST_TELEPORT)) {
+            if ((r_ptr->flags1 & (RF1_UNIQUE)) || (r_ptr->resistance_flags.has(MonsterResistanceType::RESIST_ALL))) {
                 if (is_original_ap_and_seen(player_ptr, m_ptr))
-                    r_ptr->r_flagsr |= RFR_RES_TELE;
+                    r_ptr->r_resistance_flags.set(MonsterResistanceType::RESIST_TELEPORT);
                 msg_format(_("%sには効果がなかった！", "%s is unaffected!"), m_name);
 
                 break;
             } else if (r_ptr->level > randint1(100)) {
                 if (is_original_ap_and_seen(player_ptr, m_ptr))
-                    r_ptr->r_flagsr |= RFR_RES_TELE;
+                    r_ptr->r_resistance_flags.set(MonsterResistanceType::RESIST_TELEPORT);
                 msg_format(_("%sには耐性がある！", "%s resists!"), m_name);
 
                 break;

@@ -21,6 +21,7 @@
 #include "monster-race/race-flags7.h"
 #include "monster-race/race-flags8.h"
 #include "monster-race/race-indice-types.h"
+#include "monster-race/race-resistance-mask.h"
 #include "monster/monster-describer.h"
 #include "monster/monster-flag-types.h"
 #include "monster/monster-status.h"
@@ -38,7 +39,10 @@
  * @brief モンスターを友好的にする
  * @param m_ptr モンスター情報構造体の参照ポインタ
  */
-void set_friendly(monster_type *m_ptr) { m_ptr->mflag2.set(MFLAG2::FRIENDLY); }
+void set_friendly(monster_type *m_ptr)
+{
+    m_ptr->mflag2.set(MFLAG2::FRIENDLY);
+}
 
 /*!
  * @brief モンスターが地形を踏破できるかどうかを返す
@@ -89,27 +93,27 @@ bool monster_can_cross_terrain(player_type *player_ptr, FEAT_IDX feat, monster_r
         return false;
 
     if (f_ptr->flags.has(FF::LAVA)) {
-        if (!(r_ptr->flagsr & RFR_EFF_IM_FIRE_MASK))
+        if (r_ptr->resistance_flags.has_none_of(RFR_EFF_IM_FIRE_MASK))
             return false;
     }
 
     if (f_ptr->flags.has(FF::COLD_PUDDLE)) {
-        if (!(r_ptr->flagsr & RFR_EFF_IM_COLD_MASK))
+        if (r_ptr->resistance_flags.has_none_of(RFR_EFF_IM_COLD_MASK))
             return false;
     }
 
     if (f_ptr->flags.has(FF::ELEC_PUDDLE)) {
-        if (!(r_ptr->flagsr & RFR_EFF_IM_ELEC_MASK))
+        if (r_ptr->resistance_flags.has_none_of(RFR_EFF_IM_ELEC_MASK))
             return false;
     }
 
     if (f_ptr->flags.has(FF::ACID_PUDDLE)) {
-        if (!(r_ptr->flagsr & RFR_EFF_IM_ACID_MASK))
+        if (r_ptr->resistance_flags.has_none_of(RFR_EFF_IM_ACID_MASK))
             return false;
     }
 
     if (f_ptr->flags.has(FF::POISON_PUDDLE)) {
-        if (!(r_ptr->flagsr & RFR_EFF_IM_POIS_MASK))
+        if (r_ptr->resistance_flags.has_none_of(RFR_EFF_IM_POISON_MASK))
             return false;
     }
 
@@ -229,16 +233,31 @@ bool monster_has_hostile_align(player_type *player_ptr, monster_type *m_ptr, int
     return false;
 }
 
-bool is_original_ap_and_seen(player_type *player_ptr, monster_type *m_ptr) { return m_ptr->ml && !player_ptr->hallucinated && (m_ptr->ap_r_idx == m_ptr->r_idx); }
+bool is_original_ap_and_seen(player_type *player_ptr, monster_type *m_ptr)
+{
+    return m_ptr->ml && !player_ptr->hallucinated && (m_ptr->ap_r_idx == m_ptr->r_idx);
+}
 
 /*  Determine monster race appearance index is same as race index */
-bool is_original_ap(monster_type *m_ptr) { return m_ptr->ap_r_idx == m_ptr->r_idx; }
+bool is_original_ap(monster_type *m_ptr)
+{
+    return m_ptr->ap_r_idx == m_ptr->r_idx;
+}
 
-bool is_friendly(monster_type *m_ptr) { return m_ptr->mflag2.has(MFLAG2::FRIENDLY); }
+bool is_friendly(monster_type *m_ptr)
+{
+    return m_ptr->mflag2.has(MFLAG2::FRIENDLY);
+}
 
-bool is_pet(monster_type *m_ptr) { return m_ptr->mflag2.has(MFLAG2::PET); }
+bool is_pet(monster_type *m_ptr)
+{
+    return m_ptr->mflag2.has(MFLAG2::PET);
+}
 
-bool is_hostile(monster_type *m_ptr) { return !is_friendly(m_ptr) && !is_pet(m_ptr); }
+bool is_hostile(monster_type *m_ptr)
+{
+    return !is_friendly(m_ptr) && !is_pet(m_ptr);
+}
 
 /*!
  * @brief モンスターがアイテム類に擬態しているかどうかを返す
@@ -276,7 +295,10 @@ bool is_mimicry(monster_type *m_ptr)
  * @param m_ptr モンスターの参照ポインタ
  * @return 本当のモンスター種族参照ポインタ
  */
-monster_race *real_r_ptr(monster_type *m_ptr) { return &r_info[real_r_idx(m_ptr)]; }
+monster_race *real_r_ptr(monster_type *m_ptr)
+{
+    return &r_info[real_r_idx(m_ptr)];
+}
 
 MONRACE_IDX real_r_idx(monster_type *m_ptr)
 {

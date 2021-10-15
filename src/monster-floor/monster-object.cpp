@@ -33,7 +33,7 @@
 /*!
  * @brief オブジェクトのフラグを更新する
  */
-static void update_object_flags(const TrFlags &flgs, BIT_FLAGS *flg2, BIT_FLAGS *flg3, BIT_FLAGS *flgr)
+static void update_object_flags(const TrFlags &flgs, BIT_FLAGS *flg2, BIT_FLAGS *flg3, EnumClassFlagGroup<MonsterResistanceType> *flgr)
 {
     if (flgs.has(TR_SLAY_DRAGON))
         *flg3 |= (RF3_DRAGON);
@@ -76,15 +76,15 @@ static void update_object_flags(const TrFlags &flgs, BIT_FLAGS *flg2, BIT_FLAGS 
     if (flgs.has(TR_KILL_HUMAN))
         *flg2 |= (RF2_HUMAN);
     if (flgs.has(TR_BRAND_ACID))
-        *flgr |= (RFR_IM_ACID);
+        flgr->set(MonsterResistanceType::IMMUNE_ACID);
     if (flgs.has(TR_BRAND_ELEC))
-        *flgr |= (RFR_IM_ELEC);
+        flgr->set(MonsterResistanceType::IMMUNE_ELEC);
     if (flgs.has(TR_BRAND_FIRE))
-        *flgr |= (RFR_IM_FIRE);
+        flgr->set(MonsterResistanceType::IMMUNE_FIRE);
     if (flgs.has(TR_BRAND_COLD))
-        *flgr |= (RFR_IM_COLD);
+        flgr->set(MonsterResistanceType::IMMUNE_COLD);
     if (flgs.has(TR_BRAND_POIS))
-        *flgr |= (RFR_IM_POIS);
+        flgr->set(MonsterResistanceType::IMMUNE_POISON);
 }
 
 /*!
@@ -158,7 +158,8 @@ void update_object_by_monster_movement(player_type *player_ptr, turn_flags *turn
 
     turn_flags_ptr->do_take = (r_ptr->flags2 & RF2_TAKE_ITEM) != 0;
     for (auto it = g_ptr->o_idx_list.begin(); it != g_ptr->o_idx_list.end();) {
-        BIT_FLAGS flg2 = 0L, flg3 = 0L, flgr = 0L;
+        BIT_FLAGS flg2 = 0L, flg3 = 0L;
+        EnumClassFlagGroup<MonsterResistanceType> flgr;
         GAME_TEXT m_name[MAX_NLEN], o_name[MAX_NLEN];
         OBJECT_IDX this_o_idx = *it++;
         object_type *o_ptr = &player_ptr->current_floor_ptr->o_list[this_o_idx];
@@ -175,7 +176,7 @@ void update_object_by_monster_movement(player_type *player_ptr, turn_flags *turn
         update_object_flags(flgs, &flg2, &flg3, &flgr);
 
         bool is_special_object = o_ptr->is_artifact() || ((r_ptr->flags3 & flg3) != 0) || ((r_ptr->flags2 & flg2) != 0)
-            || (((~(r_ptr->flagsr) & flgr) != 0) && !(r_ptr->flagsr & RFR_RES_ALL));
+            || (!r_ptr->resistance_flags.has_all_of(flgr) && r_ptr->resistance_flags.has_not(MonsterResistanceType::RESIST_ALL));
         monster_pickup_object(player_ptr, turn_flags_ptr, m_idx, o_ptr, is_special_object, ny, nx, m_name, o_name, this_o_idx);
     }
 }

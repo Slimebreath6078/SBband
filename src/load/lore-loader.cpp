@@ -51,7 +51,7 @@ void rd_lore(monster_race *r_ptr)
     rd_u32b(&r_ptr->r_flags1);
     rd_u32b(&r_ptr->r_flags2);
     rd_u32b(&r_ptr->r_flags3);
-    rd_u32b(&r_ptr->r_flagsr);
+    rd_FlagGroup(r_ptr->r_resistance_flags, rd_byte);
     rd_FlagGroup(r_ptr->r_ability_flags, rd_byte);
     
 
@@ -69,7 +69,7 @@ void rd_lore(monster_race *r_ptr)
     r_ptr->r_flags1 &= r_ptr->flags1;
     r_ptr->r_flags2 &= r_ptr->flags2;
     r_ptr->r_flags3 &= r_ptr->flags3;
-    r_ptr->r_flagsr &= r_ptr->flagsr;
+    r_ptr->r_resistance_flags &= r_ptr->r_resistance_flags;
     r_ptr->r_ability_flags &= r_ptr->ability_flags;
 }
 

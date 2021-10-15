@@ -219,7 +219,7 @@ void update_gambling_monsters(player_type *player_ptr)
 
         for (i = 0; i < 4; i++) {
             monster_race *r_ptr = &r_info[battle_mon[i]];
-            int num_taisei = count_bits(r_ptr->flagsr & (RFR_IM_ACID | RFR_IM_ELEC | RFR_IM_FIRE | RFR_IM_COLD | RFR_IM_POIS));
+            int num_taisei = count_bits(r_ptr->resistance_flags.has_any_of({ MonsterResistanceType::IMMUNE_ACID, MonsterResistanceType::IMMUNE_ELEC, MonsterResistanceType::IMMUNE_FIRE, MonsterResistanceType::IMMUNE_COLD, MonsterResistanceType::IMMUNE_POISON }));
 
             if (r_ptr->flags1 & RF1_FORCE_MAXHP)
                 power[i] = r_ptr->hdice * r_ptr->hside * 2;
@@ -242,7 +242,7 @@ void update_gambling_monsters(player_type *player_ptr)
                 power[i] = power[i] * 9 / 10;
             if (r_ptr->flags1 & RF1_RAND_50)
                 power[i] = power[i] * 9 / 10;
-            if (r_ptr->flagsr & RFR_RES_ALL)
+            if (r_ptr->resistance_flags.has(MonsterResistanceType::RESIST_ALL))
                 power[i] *= 100000;
             if (r_ptr->arena_ratio)
                 power[i] = power[i] * r_ptr->arena_ratio / 100;

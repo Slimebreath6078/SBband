@@ -99,7 +99,7 @@ process_result effect_monster_death_ray(player_type *player_ptr, effect_monster_
 
 process_result effect_monster_kill_wall(player_type *player_ptr, effect_monster_type *em_ptr)
 {
-    if ((em_ptr->r_ptr->flags3 & (RF3_HURT_ROCK)) == 0) {
+    if (em_ptr->r_ptr->resistance_flags.has(MonsterResistanceType::HURT_ROCK)) {
         em_ptr->dam = 0;
         return PROCESS_CONTINUE;
     }
@@ -108,7 +108,7 @@ process_result effect_monster_kill_wall(player_type *player_ptr, effect_monster_
         em_ptr->obvious = true;
 
     if (is_original_ap_and_seen(player_ptr, em_ptr->m_ptr))
-        em_ptr->r_ptr->r_flags3 |= (RF3_HURT_ROCK);
+        em_ptr->r_ptr->resistance_flags.set(MonsterResistanceType::HURT_ROCK);
 
     em_ptr->note = _("の皮膚がただれた！", " loses some skin!");
     em_ptr->note_dies = _("はドロドロに溶けた！", " dissolves!");
@@ -259,12 +259,12 @@ process_result effect_monster_photo(player_type *player_ptr, effect_monster_type
     if (!em_ptr->who)
         msg_format(_("%sを写真に撮った。", "You take a photograph of %s."), em_ptr->m_name);
 
-    if (em_ptr->r_ptr->flags3 & (RF3_HURT_LITE)) {
+    if (em_ptr->r_ptr->resistance_flags.has(MonsterResistanceType::HURT_LITE)) {
         if (em_ptr->seen)
             em_ptr->obvious = true;
 
         if (is_original_ap_and_seen(player_ptr, em_ptr->m_ptr))
-            em_ptr->r_ptr->r_flags3 |= (RF3_HURT_LITE);
+            em_ptr->r_ptr->r_resistance_flags.set(MonsterResistanceType::HURT_LITE);
 
         em_ptr->note = _("は光に身をすくめた！", " cringes from the light!");
         em_ptr->note_dies = _("は光を受けてしぼんでしまった！", " shrivels away in the light!");

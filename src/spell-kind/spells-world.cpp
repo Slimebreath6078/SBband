@@ -22,6 +22,7 @@
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags-resistance.h"
 #include "monster-race/race-flags1.h"
+#include "monster-race/race-resistance-mask.h"
 #include "monster/monster-describer.h"
 #include "monster/monster-description-types.h"
 #include "monster/monster-info.h"
@@ -232,7 +233,7 @@ bool teleport_level_other(player_type *player_ptr)
     monster_desc(player_ptr, m_name, m_ptr, 0);
     msg_format(_("%^sの足を指さした。", "You gesture at %^s's feet."), m_name);
 
-    if ((r_ptr->flagsr & (RFR_EFF_RES_NEXU_MASK | RFR_RES_TELE)) || (r_ptr->flags1 & RF1_QUESTOR)
+    if (r_ptr->resistance_flags.has_any_of(RFR_EFF_RESIST_NEXUS_MASK) || r_ptr->resistance_flags.has(MonsterResistanceType::RESIST_TELEPORT) || (r_ptr->flags1 & RF1_QUESTOR)
         || (r_ptr->level + randint1(50) > player_ptr->lev + randint1(60))) {
         msg_format(_("しかし効果がなかった！", "%^s is unaffected!"), m_name);
     } else {
