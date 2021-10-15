@@ -3,10 +3,11 @@
 #include <string>
 #include <unordered_map>
 
-#include "system/angband.h"
 #include "monster-attack/monster-attack-types.h"
 #include "monster-race/race-ability-flags.h"
 #include "monster-race/race-flags-resistance.h"
+#include "monster-race/race-kind-flags.h"
+#include "system/angband.h"
 #include "util/flag-group.h"
 
 enum monster_sex {
@@ -32,6 +33,7 @@ typedef struct lore_type {
     BIT_FLAGS flags3;
     EnumClassFlagGroup<MonsterResistanceType> resistance_flags;
     EnumClassFlagGroup<RF_ABILITY> ability_flags;
+    EnumClassFlagGroup<MonraceKindType> race_kind_flags;
 
     BIT_FLAGS flags7;
     bool reinforce;
@@ -71,7 +73,9 @@ extern hook_c_roff_pf hook_c_roff;
 lore_type *initialize_lore_type(lore_type *lore_ptr, MONRACE_IDX r_idx, monster_lore_mode mode);
 void hooked_roff(concptr str);
 
-enum WHO_WORD_TYPE { WHO = 0, WHOSE = 1, WHOM = 2 };
+enum WHO_WORD_TYPE { WHO = 0,
+    WHOSE = 1,
+    WHOM = 2 };
 using who_word_definition = std::unordered_map<WHO_WORD_TYPE, const std::unordered_map<bool, const std::unordered_map<monster_sex, std::string>>>;
 
 class Who {

@@ -6,6 +6,7 @@
 #include "dungeon/dungeon-flag-types.h"
 #include "monster-race/race-ability-flags.h"
 #include "monster-race/race-flags-resistance.h"
+#include "monster-race/race-kind-flags.h"
 #include "system/angband.h"
 #include "util/flag-group.h"
 
@@ -74,6 +75,7 @@ typedef struct dungeon_type {
     BIT_FLAGS mflags9{};
 
     EnumClassFlagGroup<MonsterResistanceType> m_resistance_flags;
+    EnumClassFlagGroup<MonraceKindType> m_race_kind_flags;
     EnumClassFlagGroup<RF_ABILITY> m_ability_flags;
 
     char r_char[5]{}; /* Monster race allowed */
