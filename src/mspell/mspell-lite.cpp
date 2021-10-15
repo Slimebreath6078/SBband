@@ -123,18 +123,18 @@ static void check_lite_area_by_mspell(player_type *player_ptr, msa_type *msa_ptr
         return;
     }
 
-    if (msa_ptr->ability_flags.has_none_of({RF_ABILITY::BA_LITE, RF_ABILITY::BO_LITE}) || (msa_ptr->m_ptr->cdis > get_max_range(player_ptr)))
+    if (msa_ptr->ability_flags.has_none_of({ RF_ABILITY::BA_LITE, RF_ABILITY::BO_LITE }) || (msa_ptr->m_ptr->cdis > get_max_range(player_ptr)))
         return;
 
     POSITION by = msa_ptr->y, bx = msa_ptr->x;
     get_project_point(player_ptr, msa_ptr->m_ptr->fy, msa_ptr->m_ptr->fx, &by, &bx, 0L);
     if (los(player_ptr, by, bx, msa_ptr->y, msa_ptr->x)) {
-        if (distance(by, bx, msa_ptr->y, msa_ptr->x) == 0  && one_in_(5)) {
+        if (distance(by, bx, msa_ptr->y, msa_ptr->x) == 0 && one_in_(5)) {
             msa_ptr->do_spell = DO_SPELL_BO_LITE;
             msa_ptr->success = true;
             return;
         }
-        if (distance(by, bx, msa_ptr->y, msa_ptr->x) <= 3  && one_in_(5)) {
+        if (distance(by, bx, msa_ptr->y, msa_ptr->x) <= 3 && one_in_(5)) {
             msa_ptr->do_spell = DO_SPELL_BA_LITE;
             msa_ptr->success = true;
         }
@@ -188,7 +188,7 @@ void decide_lite_area(player_type *player_ptr, msa_type *msa_ptr)
     if (msa_ptr->ability_flags.has_not(RF_ABILITY::DARKNESS))
         return;
 
-    bool can_use_lite_area = (player_ptr->pclass == CLASS_NINJA) && ((msa_ptr->r_ptr->flags3 & (RF3_UNDEAD | RF3_HURT_LITE)) == 0)
+    bool can_use_lite_area = (player_ptr->pclass == CLASS_NINJA) && (!(msa_ptr->r_ptr->flags3 & (RF3_UNDEAD)) && msa_ptr->r_ptr->resistance_flags.has_not(MonsterResistanceType::HURT_LITE))
         && ((msa_ptr->r_ptr->flags7 & RF7_DARK_MASK) == 0);
 
     if ((msa_ptr->r_ptr->flags2 & RF2_STUPID) != 0)

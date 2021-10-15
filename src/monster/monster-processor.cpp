@@ -311,7 +311,7 @@ void process_angar(player_type *player_ptr, MONSTER_IDX m_idx, bool see_m)
 
     if (is_pet(m_ptr)
         && ((((r_ptr->flags1 & RF1_UNIQUE) || (r_ptr->flags7 & RF7_NAZGUL)) && monster_has_hostile_align(player_ptr, nullptr, 10, -10, r_ptr))
-            || (r_ptr->flagsr & RFR_RES_ALL)))
+            || r_ptr->resistance_flags.has(MonsterResistanceType::RESIST_ALL)))
         gets_angry = true;
 
     if (player_ptr->phase_out || !gets_angry)

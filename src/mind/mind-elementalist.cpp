@@ -975,23 +975,23 @@ bool is_elemental_genocide_effective(monster_race *r_ptr, spells_type type)
 {
     switch (type) {
     case GF_FIRE:
-        if (any_bits(r_ptr->flagsr, RFR_IM_FIRE))
+        if (r_ptr->resistance_flags.has(MonsterResistanceType::IMMUNE_FIRE))
             return false;
         break;
     case GF_COLD:
-        if (any_bits(r_ptr->flagsr, RFR_IM_COLD))
+        if (r_ptr->resistance_flags.has(MonsterResistanceType::IMMUNE_COLD))
             return false;
         break;
     case GF_ELEC:
-        if (any_bits(r_ptr->flagsr, RFR_IM_ELEC))
+        if (r_ptr->resistance_flags.has(MonsterResistanceType::IMMUNE_ELEC))
             return false;
         break;
     case GF_ACID:
-        if (any_bits(r_ptr->flagsr, RFR_IM_ACID))
+        if (r_ptr->resistance_flags.has(MonsterResistanceType::IMMUNE_ACID))
             return false;
         break;
     case GF_DARK:
-        if (any_bits(r_ptr->flagsr, RFR_RES_DARK) || any_bits(r_ptr->r_flags3, RF3_HURT_LITE))
+        if (r_ptr->resistance_flags.has(MonsterResistanceType::RESIST_DARK) || r_ptr->resistance_flags.has(MonsterResistanceType::HURT_LITE))
             return false;
         break;
     case GF_CONFUSION:
@@ -999,11 +999,11 @@ bool is_elemental_genocide_effective(monster_race *r_ptr, spells_type type)
             return false;
         break;
     case GF_SHARDS:
-        if (any_bits(r_ptr->flagsr, RFR_RES_SHAR))
+        if (r_ptr->resistance_flags.has(MonsterResistanceType::RESIST_SHARDS))
             return false;
         break;
     case GF_POIS:
-        if (any_bits(r_ptr->flagsr, RFR_IM_POIS))
+        if (r_ptr->resistance_flags.has(MonsterResistanceType::IMMUNE_POISON))
             return false;
         break;
     default:

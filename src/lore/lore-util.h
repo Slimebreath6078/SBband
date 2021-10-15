@@ -6,6 +6,7 @@
 #include "system/angband.h"
 #include "monster-attack/monster-attack-types.h"
 #include "monster-race/race-ability-flags.h"
+#include "monster-race/race-flags-resistance.h"
 #include "util/flag-group.h"
 
 enum monster_sex {
@@ -29,10 +30,10 @@ typedef struct lore_type {
     BIT_FLAGS flags1;
     BIT_FLAGS flags2;
     BIT_FLAGS flags3;
+    EnumClassFlagGroup<MonsterResistanceType> resistance_flags;
     EnumClassFlagGroup<RF_ABILITY> ability_flags;
 
     BIT_FLAGS flags7;
-    BIT_FLAGS flagsr;
     bool reinforce;
     bool know_everything;
     BIT_FLAGS mode;

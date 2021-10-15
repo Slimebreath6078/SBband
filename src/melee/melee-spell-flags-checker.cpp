@@ -2,8 +2,8 @@
 #include "dungeon/dungeon-flag-types.h"
 #include "dungeon/dungeon.h"
 #include "effect/effect-characteristics.h"
-#include "floor/line-of-sight.h"
 #include "floor/geometry.h"
+#include "floor/line-of-sight.h"
 #include "melee/melee-spell-util.h"
 #include "monster-floor/monster-move.h"
 #include "monster-race/monster-race.h"
@@ -98,7 +98,7 @@ static void check_darkness(player_type *player_ptr, melee_spell_type *ms_ptr)
         return;
 
     bool vs_ninja = (player_ptr->pclass == CLASS_NINJA) && !is_hostile(ms_ptr->t_ptr);
-    bool can_use_lite_area = vs_ninja && !(ms_ptr->r_ptr->flags3 & (RF3_UNDEAD | RF3_HURT_LITE)) && !(ms_ptr->r_ptr->flags7 & RF7_DARK_MASK);
+    bool can_use_lite_area = vs_ninja && (!(ms_ptr->r_ptr->flags3 & (RF3_UNDEAD)) && ms_ptr->r_ptr->resistance_flags.has_not(MonsterResistanceType::HURT_LITE)) && !(ms_ptr->r_ptr->flags7 & RF7_DARK_MASK);
     if ((ms_ptr->r_ptr->flags2 & RF2_STUPID) != 0)
         return;
 

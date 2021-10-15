@@ -37,7 +37,7 @@ static bool grab_one_basic_flag(monster_race *r_ptr, std::string_view what)
     if (info_grab_one_flag(r_ptr->flags9, r_info_flags9, what))
         return true;
 
-    if (info_grab_one_flag(r_ptr->flagsr, r_info_flagsr, what))
+    if (EnumClassFlagGroup<MonsterResistanceType>::grab_one_flag(r_ptr->resistance_flags, r_info_resistance_flags, what))
         return true;
 
     msg_format(_("未知のモンスター・フラグ '%s'。", "Unknown monster flag '%s'."), what.data());
@@ -53,6 +53,7 @@ static bool grab_one_basic_flag(monster_race *r_ptr, std::string_view what)
  */
 static bool grab_one_spell_flag(monster_race *r_ptr, std::string_view what)
 {
+
     if (EnumClassFlagGroup<RF_ABILITY>::grab_one_flag(r_ptr->ability_flags, r_info_ability_flags, what))
         return true;
 

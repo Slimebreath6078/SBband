@@ -11,6 +11,7 @@
 #include "monster-race/race-flags7.h"
 #include "monster-race/race-flags8.h"
 #include "monster-race/race-indice-types.h"
+#include "monster-race/race-resistance-mask.h"
 #include "monster/monster-list.h"
 #include "monster/monster-util.h"
 #include "player/player-status.h"
@@ -291,7 +292,7 @@ bool mon_hook_lava(player_type *player_ptr, MONRACE_IDX r_idx)
     if (!mon_hook_dungeon(player_ptr, r_idx))
         return false;
 
-    return (any_bits(r_ptr->flagsr, RFR_EFF_IM_FIRE_MASK) || any_bits(r_ptr->flags7, RF7_CAN_FLY)) && none_bits(r_ptr->flags3, RF3_AURA_COLD);
+    return (r_ptr->resistance_flags.has_any_of(RFR_EFF_IM_FIRE_MASK) || any_bits(r_ptr->flags7, RF7_CAN_FLY)) && none_bits(r_ptr->flags3, RF3_AURA_COLD);
 }
 
 /*!
@@ -866,7 +867,7 @@ bool item_monster_okay(player_type *player_ptr, MONRACE_IDX r_idx)
     if (any_bits(r_ptr->flags7, RF7_KAGE))
         return false;
 
-    if (any_bits(r_ptr->flagsr, RFR_RES_ALL))
+    if (r_ptr->resistance_flags.has(MonsterResistanceType::RESIST_ALL))
         return false;
 
     if (any_bits(r_ptr->flags7, RF7_NAZGUL))
@@ -893,5 +894,5 @@ bool item_monster_okay(player_type *player_ptr, MONRACE_IDX r_idx)
 bool vault_monster_okay(player_type *player_ptr, MONRACE_IDX r_idx)
 {
     return (mon_hook_dungeon(player_ptr, r_idx) && none_bits(r_info[r_idx].flags1, RF1_UNIQUE) && none_bits(r_info[r_idx].flags7, RF7_UNIQUE2)
-        && none_bits(r_info[r_idx].flagsr, RFR_RES_ALL) && none_bits(r_info[r_idx].flags7, RF7_AQUATIC));
+        && r_info[r_idx].resistance_flags.has_not(MonsterResistanceType::RESIST_ALL) && none_bits(r_info[r_idx].flags7, RF7_AQUATIC));
 }

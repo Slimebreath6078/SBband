@@ -8,6 +8,7 @@
 
 #include "system/angband.h"
 #include "monster-race/race-ability-flags.h"
+#include "monster-race/race-flags-resistance.h"
 #include "util/flag-group.h"
 
 typedef struct turn_flags {
@@ -33,7 +34,7 @@ typedef struct old_race_flags {
 	BIT_FLAGS old_r_flags1;
 	BIT_FLAGS old_r_flags2;
 	BIT_FLAGS old_r_flags3;
-	BIT_FLAGS old_r_flagsr;
+	EnumClassFlagGroup<MonsterResistanceType> old_r_resistance_flags;
 	EnumClassFlagGroup<RF_ABILITY> old_r_ability_flags;
 
 	byte old_r_blows0;

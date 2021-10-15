@@ -13,6 +13,7 @@
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags-resistance.h"
 #include "monster-race/race-flags3.h"
+#include "monster-race/race-resistance-mask.h"
 #include "monster/monster-damage.h"
 #include "monster/monster-info.h"
 #include "monster/monster-status.h"
@@ -24,9 +25,9 @@
 #include "spell/spell-types.h"
 #include "system/floor-type-definition.h"
 #include "system/grid-type-definition.h"
+#include "system/monster-race-definition.h"
 #include "system/monster-type-definition.h"
 #include "system/object-type-definition.h"
-#include "system/monster-race-definition.h"
 #include "system/player-type-definition.h"
 #include "view/display-messages.h"
 
@@ -36,9 +37,9 @@ static void aura_fire_by_monster_attack(player_type *player_ptr, monap_type *mon
         return;
 
     monster_race *r_ptr = &r_info[monap_ptr->m_ptr->r_idx];
-    if ((r_ptr->flagsr & RFR_EFF_IM_FIRE_MASK) != 0) {
+    if (r_ptr->resistance_flags.has_any_of(RFR_EFF_IM_FIRE_MASK)) {
         if (is_original_ap_and_seen(player_ptr, monap_ptr->m_ptr))
-            r_ptr->r_flagsr |= (r_ptr->flagsr & RFR_EFF_IM_FIRE_MASK);
+            r_ptr->r_resistance_flags.set((r_ptr->resistance_flags & RFR_EFF_IM_FIRE_MASK));
 
         return;
     }
@@ -59,9 +60,9 @@ static void aura_elec_by_monster_attack(player_type *player_ptr, monap_type *mon
         return;
 
     monster_race *r_ptr = &r_info[monap_ptr->m_ptr->r_idx];
-    if ((r_ptr->flagsr & RFR_EFF_IM_ELEC_MASK) != 0) {
+    if (r_ptr->resistance_flags.has_any_of(RFR_EFF_IM_ELEC_MASK)) {
         if (is_original_ap_and_seen(player_ptr, monap_ptr->m_ptr))
-            r_ptr->r_flagsr |= (r_ptr->flagsr & RFR_EFF_IM_ELEC_MASK);
+            r_ptr->r_resistance_flags.set((r_ptr->resistance_flags & RFR_EFF_IM_ELEC_MASK));
 
         return;
     }
@@ -82,9 +83,9 @@ static void aura_cold_by_monster_attack(player_type *player_ptr, monap_type *mon
         return;
 
     monster_race *r_ptr = &r_info[monap_ptr->m_ptr->r_idx];
-    if ((r_ptr->flagsr & RFR_EFF_IM_COLD_MASK) != 0) {
+    if (r_ptr->resistance_flags.has_any_of(RFR_EFF_IM_COLD_MASK)) {
         if (is_original_ap_and_seen(player_ptr, monap_ptr->m_ptr))
-            r_ptr->r_flagsr |= (r_ptr->flagsr & RFR_EFF_IM_COLD_MASK);
+            r_ptr->r_resistance_flags.set((r_ptr->resistance_flags & RFR_EFF_IM_COLD_MASK));
 
         return;
     }
@@ -105,9 +106,9 @@ static void aura_shards_by_monster_attack(player_type *player_ptr, monap_type *m
         return;
 
     monster_race *r_ptr = &r_info[monap_ptr->m_ptr->r_idx];
-    if ((r_ptr->flagsr & RFR_EFF_RES_SHAR_MASK) != 0) {
+    if (r_ptr->resistance_flags.has_any_of(RFR_EFF_RESIST_SHARDS_MASK)) {
         if (is_original_ap_and_seen(player_ptr, monap_ptr->m_ptr))
-            r_ptr->r_flagsr |= (r_ptr->flagsr & RFR_EFF_RES_SHAR_MASK);
+            r_ptr->r_resistance_flags.set((r_ptr->resistance_flags & RFR_EFF_RESIST_SHARDS_MASK));
     } else {
         HIT_POINT dam = damroll(2, 6);
         dam = mon_damage_mod(player_ptr, monap_ptr->m_ptr, dam, false);
@@ -132,9 +133,9 @@ static void aura_holy_by_monster_attack(player_type *player_ptr, monap_type *mon
     if ((r_ptr->flags3 & RF3_EVIL) == 0)
         return;
 
-    if ((r_ptr->flagsr & RFR_RES_ALL) != 0) {
+    if (r_ptr->resistance_flags.has(MonsterResistanceType::RESIST_ALL)) {
         if (is_original_ap_and_seen(player_ptr, monap_ptr->m_ptr))
-            r_ptr->r_flagsr |= RFR_RES_ALL;
+            r_ptr->r_resistance_flags.set(MonsterResistanceType::RESIST_ALL);
 
         return;
     }
@@ -158,9 +159,9 @@ static void aura_force_by_monster_attack(player_type *player_ptr, monap_type *mo
         return;
 
     monster_race *r_ptr = &r_info[monap_ptr->m_ptr->r_idx];
-    if ((r_ptr->flagsr & RFR_RES_ALL) != 0) {
+    if (r_ptr->resistance_flags.has(MonsterResistanceType::RESIST_ALL)) {
         if (is_original_ap_and_seen(player_ptr, monap_ptr->m_ptr))
-            r_ptr->r_flagsr |= RFR_RES_ALL;
+            r_ptr->r_resistance_flags.set(MonsterResistanceType::RESIST_ALL);
 
         return;
     }
@@ -183,9 +184,9 @@ static void aura_shadow_by_monster_attack(player_type *player_ptr, monap_type *m
     HIT_POINT dam = 1;
     object_type *o_armed_ptr = &player_ptr->inventory_list[INVEN_MAIN_HAND];
     monster_race *r_ptr = &r_info[monap_ptr->m_ptr->r_idx];
-    if (((r_ptr->flagsr & RFR_RES_ALL) != 0) || ((r_ptr->flagsr & RFR_RES_DARK) != 0)) {
+    if (r_ptr->resistance_flags.has(MonsterResistanceType::RESIST_ALL) || r_ptr->resistance_flags.has(MonsterResistanceType::RESIST_DARK)) {
         if (is_original_ap_and_seen(player_ptr, monap_ptr->m_ptr))
-            r_ptr->r_flagsr |= (RFR_RES_ALL | RFR_RES_DARK);
+            r_ptr->r_resistance_flags.set({ MonsterResistanceType::RESIST_ALL, MonsterResistanceType::RESIST_DARK });
 
         return;
     }

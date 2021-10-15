@@ -400,25 +400,24 @@ MULTIPLY calc_snipe_damage_with_slay(player_type *player_ptr, MULTIPLY mult, mon
 
     switch (snipe_type) {
     case SP_LITE:
-        if (any_bits(r_ptr->flags3, RF3_HURT_LITE)) {
+        if (r_ptr->resistance_flags.has(MonsterResistanceType::HURT_LITE)) {
             MULTIPLY n = 20 + player_ptr->concent;
             if (seen)
-                r_ptr->r_flags3 |= (RF3_HURT_LITE);
+                r_ptr->r_resistance_flags.set(MonsterResistanceType::HURT_LITE);
             if (mult < n)
                 mult = n;
         }
         break;
     case SP_FIRE:
-        if (any_bits(r_ptr->flagsr, RFR_IM_FIRE)) {
+        if (r_ptr->resistance_flags.has(MonsterResistanceType::IMMUNE_FIRE)) {
             if (seen)
-                set_bits(r_ptr->r_flagsr, RFR_IM_FIRE);
+                r_ptr->resistance_flags.set(MonsterResistanceType::IMMUNE_FIRE);
         } else {
             MULTIPLY n;
-            if (any_bits(r_ptr->flags3, RF3_HURT_FIRE)) {
+            if (r_ptr->resistance_flags.has(MonsterResistanceType::HURT_FIRE)) {
                 n = 22 + (player_ptr->concent * 4);
-                set_bits(r_ptr->r_flags3, RF3_HURT_FIRE);
-            }
-            else
+                r_ptr->r_resistance_flags.set(MonsterResistanceType::HURT_FIRE);
+            } else
                 n = 15 + (player_ptr->concent * 3);
 
             if (mult < n)
@@ -426,16 +425,15 @@ MULTIPLY calc_snipe_damage_with_slay(player_type *player_ptr, MULTIPLY mult, mon
         }
         break;
     case SP_COLD:
-        if (any_bits(r_ptr->flagsr, RFR_IM_COLD)) {
+        if (r_ptr->resistance_flags.has(MonsterResistanceType::IMMUNE_COLD)) {
             if (seen)
-                set_bits(r_ptr->r_flagsr, RFR_IM_COLD);
+                r_ptr->resistance_flags.set(MonsterResistanceType::IMMUNE_COLD);
         } else {
             MULTIPLY n;
-            if (any_bits(r_ptr->flags3, RF3_HURT_COLD)) {
+            if (r_ptr->resistance_flags.has(MonsterResistanceType::HURT_COLD)) {
                 n = 22 + (player_ptr->concent * 4);
-                set_bits(r_ptr->r_flags3, RF3_HURT_COLD);
-            }
-            else
+                r_ptr->r_resistance_flags.set(MonsterResistanceType::HURT_COLD);
+            } else
                 n = 15 + (player_ptr->concent * 3);
 
             if (mult < n)
@@ -443,9 +441,9 @@ MULTIPLY calc_snipe_damage_with_slay(player_type *player_ptr, MULTIPLY mult, mon
         }
         break;
     case SP_ELEC:
-        if (any_bits(r_ptr->flagsr, RFR_IM_ELEC)) {
+        if (r_ptr->resistance_flags.has(MonsterResistanceType::IMMUNE_ELEC)) {
             if (seen)
-                set_bits(r_ptr->r_flagsr, RFR_IM_ELEC);
+                r_ptr->resistance_flags.set(MonsterResistanceType::IMMUNE_ELEC);
         } else {
             MULTIPLY n = 18 + (player_ptr->concent * 4);
             if (mult < n)
@@ -453,10 +451,10 @@ MULTIPLY calc_snipe_damage_with_slay(player_type *player_ptr, MULTIPLY mult, mon
         }
         break;
     case SP_KILL_WALL:
-        if (any_bits(r_ptr->flags3, RF3_HURT_ROCK)) {
+        if (r_ptr->resistance_flags.has(MonsterResistanceType::HURT_ROCK)) {
             MULTIPLY n = 15 + (player_ptr->concent * 2);
             if (seen)
-                set_bits(r_ptr->r_flags3, RF3_HURT_ROCK);
+                r_ptr->resistance_flags.set(MonsterResistanceType::HURT_ROCK);
             if (mult < n)
                 mult = n;
         } else if (any_bits(r_ptr->flags3, RF3_NONLIVING)) {
@@ -481,10 +479,10 @@ MULTIPLY calc_snipe_damage_with_slay(player_type *player_ptr, MULTIPLY mult, mon
             MULTIPLY n = 12 + (player_ptr->concent * 3);
             if (seen)
                 set_bits(r_ptr->r_flags3, RF3_EVIL);
-            if (r_ptr->flags3 & (RF3_HURT_LITE)) {
+            if (r_ptr->resistance_flags.has(MonsterResistanceType::HURT_LITE)) {
                 n += (player_ptr->concent * 3);
                 if (seen)
-                    r_ptr->r_flags3 |= (RF3_HURT_LITE);
+                    r_ptr->r_resistance_flags.set(MonsterResistanceType::HURT_LITE);
             }
             if (mult < n)
                 mult = n;
