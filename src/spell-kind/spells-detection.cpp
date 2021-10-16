@@ -564,63 +564,6 @@ bool detect_monsters_string(player_type *player_ptr, POSITION range, concptr Mat
 }
 
 /*!
- * @brief flags3に対応するモンスターを感知する / A "generic" detect monsters routine, tagged to flags3
- * @param player_ptr プレイヤーへの参照ポインタ
- * @param range 効果範囲
- * @param match_flag 感知フラグ
- * @return 効力があった場合TRUEを返す
- */
-bool detect_monsters_xxx(player_type *player_ptr, POSITION range, uint32_t match_flag)
-{
-    if (d_info[player_ptr->dungeon_idx].flags.has(DF::DARKNESS))
-        range /= 3;
-
-    bool flag = false;
-    for (MONSTER_IDX i = 1; i < player_ptr->current_floor_ptr->m_max; i++) {
-        monster_type *m_ptr = &player_ptr->current_floor_ptr->m_list[i];
-        monster_race *r_ptr = &r_info[m_ptr->r_idx];
-        if (!monster_is_valid(m_ptr))
-            continue;
-
-        POSITION y = m_ptr->fy;
-        POSITION x = m_ptr->fx;
-
-        if (distance(player_ptr->y, player_ptr->x, y, x) > range)
-            continue;
-
-        if (r_ptr->flags3 & (match_flag)) {
-            if (is_original_ap(m_ptr)) {
-                r_ptr->r_flags3 |= (match_flag);
-                if (player_ptr->monster_race_idx == m_ptr->r_idx) {
-                    player_ptr->window_flags |= (PW_MONSTER);
-                }
-            }
-
-            m_ptr->mflag2.set({ MFLAG2::MARK, MFLAG2::SHOW });
-            update_monster(player_ptr, i, false);
-            flag = true;
-        }
-    }
-
-    concptr desc_monsters = _("変なモンスター", "weird monsters");
-    if (flag) {
-        switch (match_flag) {
-        case MonraceKindType::DEMON:
-            desc_monsters = _("デーモン", "demons");
-            break;
-        case MonraceKindType::UNDEAD:
-            desc_monsters = _("アンデッド", "the undead");
-            break;
-        }
-
-        msg_format(_("%sの存在を感じとった！", "You sense the presence of %s!"), desc_monsters);
-        msg_print(nullptr);
-    }
-
-    return flag;
-}
-
-/*!
  * @brief 全感知処理 / Detect everything
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param range 効果範囲
