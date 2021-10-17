@@ -36,6 +36,9 @@ static bool grab_one_dungeon_flag(dungeon_type *d_ptr, std::string_view what)
  */
 static bool grab_one_basic_monster_flag(dungeon_type *d_ptr, std::string_view what)
 {
+    if (EnumClassFlagGroup<MonraceKindType>::grab_one_flag(d_ptr->m_race_kind_flags, r_info_race_kind_flags, what))
+        return true;
+
     if (info_grab_one_flag(d_ptr->mflags1, r_info_flags1, what))
         return true;
 
