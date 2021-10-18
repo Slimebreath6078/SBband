@@ -6,6 +6,7 @@
 #include "monster-floor/place-monster-types.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-flag-types.h"
 #include "monster/monster-info.h"
 #include "monster/monster-list.h"
@@ -31,7 +32,7 @@
 static MONRACE_IDX poly_r_idx(player_type *player_ptr, MONRACE_IDX r_idx)
 {
     monster_race *r_ptr = &r_info[r_idx];
-    if ((r_ptr->flags1 & RF1_UNIQUE) || (r_ptr->flags1 & RF1_QUESTOR))
+    if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || (r_ptr->flags1 & RF1_QUESTOR))
         return (r_idx);
 
     DEPTH lev1 = r_ptr->level - ((randint1(20) / randint1(9)) + 1);
@@ -43,7 +44,7 @@ static MONRACE_IDX poly_r_idx(player_type *player_ptr, MONRACE_IDX r_idx)
             break;
 
         r_ptr = &r_info[r];
-        if (r_ptr->flags1 & RF1_UNIQUE)
+        if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE))
             continue;
         if ((r_ptr->level < lev1) || (r_ptr->level > lev2))
             continue;

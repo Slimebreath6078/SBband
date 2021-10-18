@@ -15,6 +15,7 @@
 #include "monster-race/race-flags2.h"
 #include "monster-race/race-flags7.h"
 #include "monster-race/race-indice-types.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-describer.h"
 #include "monster/monster-info.h"
 #include "monster/monster-processor-util.h"
@@ -72,7 +73,7 @@ bool runaway_monster(player_type *player_ptr, turn_flags *turn_flags_ptr, MONSTE
     monster_type *m_ptr = &player_ptr->current_floor_ptr->m_list[m_idx];
     monster_race *r_ptr = &r_info[m_ptr->r_idx];
     bool can_runaway = is_pet(m_ptr) || is_friendly(m_ptr);
-    can_runaway &= ((r_ptr->flags1 & RF1_UNIQUE) != 0) || ((r_ptr->flags7 & RF7_NAZGUL) != 0);
+    can_runaway &= r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || ((r_ptr->flags7 & RF7_NAZGUL) != 0);
     can_runaway &= !player_ptr->phase_out;
     if (!can_runaway)
         return false;

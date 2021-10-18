@@ -32,6 +32,7 @@
 #include "monster-race/race-ability-flags.h"
 #include "monster-race/race-flags-resistance.h"
 #include "monster-race/race-flags1.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-describer.h"
 #include "monster/monster-info.h"
 #include "monster/monster-processor.h"
@@ -72,21 +73,21 @@
 
 static int damage;
 
-summon_data::summon_data(summon_type type, BIT_FLAGS mode, 
+summon_data::summon_data(summon_type type, BIT_FLAGS mode,
     std::function<bool(player_type *, MONSTER_IDX, POSITION, POSITION, DEPTH, summon_type, BIT_FLAGS)> summon)
     : type(type)
     , mode(mode)
     , summon(std::move(summon))
-{}
+{
+}
 
-summon_data::summon_data(summon_type type, BIT_FLAGS mode, 
+summon_data::summon_data(summon_type type, BIT_FLAGS mode,
     std::function<bool(player_type *, DEPTH, POSITION, POSITION, BIT_FLAGS)> summon)
     : type(type)
     , mode(mode)
-    , summon([func = std::move(summon)]
-        (player_type *player_ptr, MONSTER_IDX, POSITION y, POSITION x, DEPTH lev, summon_type, BIT_FLAGS mode)
-        {return func(player_ptr, lev, y, x, mode);})
-{}
+    , summon([func = std::move(summon)](player_type *player_ptr, MONSTER_IDX, POSITION y, POSITION x, DEPTH lev, summon_type, BIT_FLAGS mode) { return func(player_ptr, lev, y, x, mode); })
+{
+}
 
 mane_attack_spell::mane_attack_spell(player_type *player_ptr, concptr msg, EFFECT_ID typ, POSITION rad,
     std::function<bool(player_type *, EFFECT_ID, DIRECTION, HIT_POINT, POSITION)> func)
@@ -96,7 +97,8 @@ mane_attack_spell::mane_attack_spell(player_type *player_ptr, concptr msg, EFFEC
     , rad(rad)
     , dam(damage)
     , func(func)
-{}
+{
+}
 
 mane_attack_spell::mane_attack_spell(player_type *player_ptr, concptr msg, EFFECT_ID typ, POSITION rad, HIT_POINT dam,
     std::function<bool(player_type *, EFFECT_ID, DIRECTION, HIT_POINT, POSITION)> func)
@@ -106,28 +108,33 @@ mane_attack_spell::mane_attack_spell(player_type *player_ptr, concptr msg, EFFEC
     , rad(rad)
     , dam(dam)
     , func(func)
-{}
+{
+}
 
 mane_bolt::mane_bolt(player_type *player_ptr, concptr msg, EFFECT_ID typ)
-    : mane_attack_spell(player_ptr, msg, typ, 0, 
-    [func = fire_bolt](player_type *pl_ptr, EFFECT_ID type, DIRECTION direct, HIT_POINT damag, POSITION) { return func(pl_ptr, type, direct, damag); })
-{}
+    : mane_attack_spell(player_ptr, msg, typ, 0,
+        [func = fire_bolt](player_type *pl_ptr, EFFECT_ID type, DIRECTION direct, HIT_POINT damag, POSITION) { return func(pl_ptr, type, direct, damag); })
+{
+}
 
 mane_ball::mane_ball(player_type *player_ptr, concptr msg, EFFECT_ID typ, POSITION rad)
     : mane_attack_spell(player_ptr, msg, typ, rad, fire_ball)
-{}
+{
+}
 
 mane_beam::mane_beam(player_type *player_ptr, concptr msg, EFFECT_ID typ)
     : mane_attack_spell(player_ptr, msg, typ, 0,
-    [func = fire_beam](player_type *player_ptr, EFFECT_ID typ, DIRECTION dir, HIT_POINT dam, POSITION){ return func(player_ptr, typ, dir, dam); })
-{}
+        [func = fire_beam](player_type *player_ptr, EFFECT_ID typ, DIRECTION dir, HIT_POINT dam, POSITION) { return func(player_ptr, typ, dir, dam); })
+{
+}
 
 mane_beam::mane_beam(player_type *player_ptr, concptr msg, EFFECT_ID typ, HIT_POINT dam)
     : mane_attack_spell(player_ptr, msg, typ, 0, dam,
-    [func = fire_beam](player_type *player_ptr, EFFECT_ID typ, DIRECTION dir, HIT_POINT dam, POSITION){ return func(player_ptr, typ, dir, dam); })
-{}
+        [func = fire_beam](player_type *player_ptr, EFFECT_ID typ, DIRECTION dir, HIT_POINT dam, POSITION) { return func(player_ptr, typ, dir, dam); })
+{
+}
 
-mane_breath::mane_breath(player_type *player_ptr, concptr msg, char* buffer, EFFECT_ID typ, POSITION rad)
+mane_breath::mane_breath(player_type *player_ptr, concptr msg, char *buffer, EFFECT_ID typ, POSITION rad)
     : mane_attack_spell(player_ptr, buffer, typ, rad, fire_breath)
 {
     sprintf(buffer, _("%sのブレスを吐いた。", "You breathe %s."), msg);
@@ -135,18 +142,21 @@ mane_breath::mane_breath(player_type *player_ptr, concptr msg, char* buffer, EFF
 
 mane_ball_hide::mane_ball_hide(player_type *player_ptr, concptr msg, EFFECT_ID typ, POSITION rad)
     : mane_attack_spell(player_ptr, msg, typ, rad, fire_ball_hide)
-{}
+{
+}
 
 mane_ball_hide::mane_ball_hide(player_type *player_ptr, concptr msg, EFFECT_ID typ, POSITION rad, HIT_POINT dam)
     : mane_attack_spell(player_ptr, msg, typ, rad, dam, fire_ball_hide)
-{}
+{
+}
 
 mane_bad_st::mane_bad_st(player_type *player_ptr, concptr msg, int power, std::function<bool(player_type *, DIRECTION, int)> func)
     : player_ptr(player_ptr)
     , msg(msg)
     , power(power)
     , func(func)
-{}
+{
+}
 
 mane_summon::mane_summon(player_type *player_ptr, concptr msg, POSITION target_y, POSITION target_x, DEPTH plev, int num, std::vector<summon_data> summon_list)
     : player_ptr(player_ptr)
@@ -156,36 +166,40 @@ mane_summon::mane_summon(player_type *player_ptr, concptr msg, POSITION target_y
     , plev(plev)
     , num(num)
     , summon_list(summon_list)
-{}
+{
+}
 
-bool mane_attack_spell::fire(){
+bool mane_attack_spell::fire()
+{
     DIRECTION dir;
     if (!get_aim_dir(this->player_ptr, &dir))
-            return false;
-    else if(this->msg)
+        return false;
+    else if (this->msg)
         msg_print(this->msg);
     func(this->player_ptr, this->typ, dir, dam, this->rad);
     return true;
 }
 
-bool mane_bad_st::fire(){
+bool mane_bad_st::fire()
+{
     DIRECTION dir;
     if (!get_aim_dir(this->player_ptr, &dir))
         return false;
-    else if(this->msg)
+    else if (this->msg)
         msg_print(this->msg);
 
     func(this->player_ptr, dir, this->power);
     return true;
 }
 
-bool mane_summon::fire(){
+bool mane_summon::fire()
+{
     int count = 0;
     if (!target_set(this->player_ptr, TARGET_KILL))
         return false;
     msg_print(this->msg);
-    for (const auto &job : summon_list){
-        for (int k = count; k < this->num; k++){
+    for (const auto &job : summon_list) {
+        for (int k = count; k < this->num; k++) {
             if (job.summon(this->player_ptr, -1, this->target_y, this->target_x, this->plev, job.type, job.mode))
                 count++;
         }
@@ -497,7 +511,7 @@ static bool use_mane(player_type *player_ptr, RF_ABILITY spell)
         if (!mane_breath(player_ptr, _("火炎", "fire"), p, GF_FIRE, (plev > 35 ? 3 : 2)).fire())
             return false;
         break;
-        
+
     case RF_ABILITY::BR_COLD:
         if (!mane_breath(player_ptr, _("冷気", "frost"), p, GF_COLD, (plev > 35 ? 3 : 2)).fire())
             return false;
@@ -519,7 +533,7 @@ static bool use_mane(player_type *player_ptr, RF_ABILITY spell)
         break;
 
     case RF_ABILITY::BR_DARK:
-        if (!mane_breath(player_ptr, _("暗黒","darkness"), p, GF_DARK, (plev > 35 ? 3 : 2)).fire())
+        if (!mane_breath(player_ptr, _("暗黒", "darkness"), p, GF_DARK, (plev > 35 ? 3 : 2)).fire())
             return false;
         break;
 
@@ -572,7 +586,7 @@ static bool use_mane(player_type *player_ptr, RF_ABILITY spell)
         if (!mane_breath(player_ptr, _("プラズマ", "plasma"), p, GF_PLASMA, (plev > 35 ? 3 : 2)).fire())
             return false;
         break;
-        
+
     case RF_ABILITY::BR_FORC:
         if (!mane_breath(player_ptr, _("フォース", "force"), p, GF_FORCE, (plev > 35 ? 3 : 2)).fire())
             return false;
@@ -601,7 +615,7 @@ static bool use_mane(player_type *player_ptr, RF_ABILITY spell)
         if (!mane_breath(player_ptr, _("分解", "disintegration"), p, GF_DISINTEGRATE, (plev > 35 ? 3 : 2)).fire())
             return false;
         break;
-        
+
     case RF_ABILITY::BA_ACID:
         if (!mane_ball(player_ptr, _("アシッド・ボールの呪文を唱えた。", "You cast an acid ball."), GF_ACID, 2).fire())
             return false;
@@ -639,7 +653,7 @@ static bool use_mane(player_type *player_ptr, RF_ABILITY spell)
             return false;
         break;
     case RF_ABILITY::DRAIN_MANA:
-        if(!mane_ball_hide(player_ptr, nullptr, GF_DRAIN_MANA, randint1(plev * 3) + plev, 0).fire())
+        if (!mane_ball_hide(player_ptr, nullptr, GF_DRAIN_MANA, randint1(plev * 3) + plev, 0).fire())
             return false;
         break;
     case RF_ABILITY::MIND_BLAST:
@@ -655,19 +669,19 @@ static bool use_mane(player_type *player_ptr, RF_ABILITY spell)
             return false;
         break;
     case RF_ABILITY::CAUSE_2:
-        if(!mane_ball_hide(player_ptr, nullptr, GF_CAUSE_2, 0).fire())
+        if (!mane_ball_hide(player_ptr, nullptr, GF_CAUSE_2, 0).fire())
             return false;
         break;
     case RF_ABILITY::CAUSE_3:
-        if(!mane_ball_hide(player_ptr, nullptr, GF_CAUSE_3, 0).fire())
+        if (!mane_ball_hide(player_ptr, nullptr, GF_CAUSE_3, 0).fire())
             return false;
         break;
     case RF_ABILITY::CAUSE_4:
-        if(!mane_ball_hide(player_ptr, nullptr, GF_CAUSE_4, 0).fire())
+        if (!mane_ball_hide(player_ptr, nullptr, GF_CAUSE_4, 0).fire())
             return false;
         break;
     case RF_ABILITY::BO_ACID:
-        if(!mane_bolt(player_ptr, _("アシッド・ボルトの呪文を唱えた。", "You cast an acid bolt."), GF_ACID).fire())
+        if (!mane_bolt(player_ptr, _("アシッド・ボルトの呪文を唱えた。", "You cast an acid bolt."), GF_ACID).fire())
             return false;
         break;
     case RF_ABILITY::BO_ELEC:
@@ -707,7 +721,7 @@ static bool use_mane(player_type *player_ptr, RF_ABILITY spell)
             return false;
         break;
     case RF_ABILITY::MISSILE:
-        if(!mane_bolt(player_ptr, _("マジック・ミサイルの呪文を唱えた。", "You cast a magic missile."), GF_MISSILE).fire())
+        if (!mane_bolt(player_ptr, _("マジック・ミサイルの呪文を唱えた。", "You cast a magic missile."), GF_MISSILE).fire())
             return false;
         break;
     case RF_ABILITY::SCARE:
@@ -778,7 +792,7 @@ static bool use_mane(player_type *player_ptr, RF_ABILITY spell)
         r_ptr = &r_info[m_ptr->r_idx];
         monster_desc(player_ptr, m_name, m_ptr, 0);
         if (r_ptr->resistance_flags.has(MonsterResistanceType::RESIST_TELEPORT)) {
-            if ((r_ptr->flags1 & (RF1_UNIQUE)) || (r_ptr->resistance_flags.has(MonsterResistanceType::RESIST_ALL))) {
+            if ((r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE)) || (r_ptr->resistance_flags.has(MonsterResistanceType::RESIST_ALL))) {
                 if (is_original_ap_and_seen(player_ptr, m_ptr))
                     r_ptr->r_resistance_flags.set(MonsterResistanceType::RESIST_TELEPORT);
                 msg_format(_("%sには効果がなかった！", "%s is unaffected!"), m_name);
@@ -831,8 +845,9 @@ static bool use_mane(player_type *player_ptr, RF_ABILITY spell)
         (void)animate_dead(player_ptr, 0, player_ptr->y, player_ptr->x);
         break;
     case RF_ABILITY::S_KIN: {
-        if(!mane_summon(player_ptr, _("援軍を召喚した。", "You summon minions."), target_row, target_col, plev, 4,
-            {summon_data(SUMMON_NONE, (PM_FORCE_PET | PM_ALLOW_GROUP), summon_kin_player)}).fire())
+        if (!mane_summon(player_ptr, _("援軍を召喚した。", "You summon minions."), target_row, target_col, plev, 4,
+                { summon_data(SUMMON_NONE, (PM_FORCE_PET | PM_ALLOW_GROUP), summon_kin_player) })
+                 .fire())
             return false;
         break;
     }
@@ -840,93 +855,108 @@ static bool use_mane(player_type *player_ptr, RF_ABILITY spell)
         int max_cyber = (player_ptr->current_floor_ptr->dun_level / 50) + randint1(3);
         if (max_cyber > 4)
             max_cyber = 4;
-        if(!mane_summon(player_ptr, _("サイバーデーモンを召喚した！", "You summon Cyberdemons!"), target_row, target_col, plev, max_cyber,
-            {summon_data(SUMMON_CYBER, mode, summon_specific)}).fire())
+        if (!mane_summon(player_ptr, _("サイバーデーモンを召喚した！", "You summon Cyberdemons!"), target_row, target_col, plev, max_cyber,
+                { summon_data(SUMMON_CYBER, mode, summon_specific) })
+                 .fire())
             return false;
         break;
     }
     case RF_ABILITY::S_MONSTER: {
         if (!mane_summon(player_ptr, _("仲間を召喚した。", "You summon help."), target_row, target_col, plev, 1,
-            {summon_data(SUMMON_NONE, (mode | u_mode), summon_specific)}).fire())
+                { summon_data(SUMMON_NONE, (mode | u_mode), summon_specific) })
+                 .fire())
             return false;
         break;
     }
     case RF_ABILITY::S_MONSTERS: {
         if (!mane_summon(player_ptr, _("モンスターを召喚した！", "You summon monsters!"), target_row, target_col, plev, 6,
-            {summon_data(SUMMON_NONE, (mode | u_mode), summon_specific)}).fire())
+                { summon_data(SUMMON_NONE, (mode | u_mode), summon_specific) })
+                 .fire())
             return false;
         break;
     }
     case RF_ABILITY::S_ANT: {
         if (!mane_summon(player_ptr, _("アリを召喚した。", "You summon ants."), target_row, target_col, plev, 6,
-            {summon_data(SUMMON_ANT, mode, summon_specific)}).fire())
+                { summon_data(SUMMON_ANT, mode, summon_specific) })
+                 .fire())
             return false;
         break;
     }
     case RF_ABILITY::S_SPIDER: {
         if (!mane_summon(player_ptr, _("蜘蛛を召喚した。", "You summon spiders."), target_row, target_col, plev, 6,
-            {summon_data(SUMMON_SPIDER, mode, summon_specific)}).fire())
+                { summon_data(SUMMON_SPIDER, mode, summon_specific) })
+                 .fire())
             return false;
         break;
     }
     case RF_ABILITY::S_HOUND: {
         if (!mane_summon(player_ptr, _("ハウンドを召喚した。", "You summon hounds."), target_row, target_col, plev, 4,
-            {summon_data(SUMMON_HOUND, mode, summon_specific)}).fire())
+                { summon_data(SUMMON_HOUND, mode, summon_specific) })
+                 .fire())
             return false;
         break;
     }
     case RF_ABILITY::S_HYDRA: {
         if (!mane_summon(player_ptr, _("ヒドラを召喚した。", "You summon hydras."), target_row, target_col, plev, 4,
-            {summon_data(SUMMON_HYDRA, mode, summon_specific)}).fire())
+                { summon_data(SUMMON_HYDRA, mode, summon_specific) })
+                 .fire())
             return false;
         break;
     }
     case RF_ABILITY::S_ANGEL: {
         if (!mane_summon(player_ptr, _("天使を召喚した！", "You summon an angel!"), target_row, target_col, plev, 1,
-            {summon_data(SUMMON_ANGEL, mode, summon_specific)}).fire())
+                { summon_data(SUMMON_ANGEL, mode, summon_specific) })
+                 .fire())
             return false;
         break;
     }
     case RF_ABILITY::S_DEMON: {
         if (!mane_summon(player_ptr, _("混沌の宮廷から悪魔を召喚した！", "You summon a demon from the Courts of Chaos!"), target_row, target_col, plev, 1,
-            {summon_data(SUMMON_DEMON, (mode | u_mode), summon_specific)}).fire())
+                { summon_data(SUMMON_DEMON, (mode | u_mode), summon_specific) })
+                 .fire())
             return false;
         break;
     }
     case RF_ABILITY::S_UNDEAD: {
         if (!mane_summon(player_ptr, _("アンデッドの強敵を召喚した！", "You summon an undead adversary!"), target_row, target_col, plev, 1,
-            {summon_data(SUMMON_UNDEAD, (mode | u_mode), summon_specific)}).fire())
+                { summon_data(SUMMON_UNDEAD, (mode | u_mode), summon_specific) })
+                 .fire())
             return false;
         break;
     }
     case RF_ABILITY::S_DRAGON: {
         if (!mane_summon(player_ptr, _("ドラゴンを召喚した！", "You summon a dragon!"), target_row, target_col, plev, 1,
-            {summon_data(SUMMON_DRAGON, (mode | u_mode), summon_specific)}).fire())
+                { summon_data(SUMMON_DRAGON, (mode | u_mode), summon_specific) })
+                 .fire())
             return false;
         break;
     }
     case RF_ABILITY::S_HI_UNDEAD: {
         if (!mane_summon(player_ptr, _("強力なアンデッドを召喚した！", "You summon greater undead!"), target_row, target_col, plev, 6,
-            {summon_data(SUMMON_HI_UNDEAD, (mode | u_mode), summon_specific)}).fire())
+                { summon_data(SUMMON_HI_UNDEAD, (mode | u_mode), summon_specific) })
+                 .fire())
             return false;
         break;
     }
     case RF_ABILITY::S_HI_DRAGON: {
         if (!mane_summon(player_ptr, _("古代ドラゴンを召喚した！", "You summon ancient dragons!"), target_row, target_col, plev, 4,
-            {summon_data(SUMMON_HI_DRAGON, (mode | u_mode), summon_specific)}).fire())
+                { summon_data(SUMMON_HI_DRAGON, (mode | u_mode), summon_specific) })
+                 .fire())
             return false;
         break;
     }
     case RF_ABILITY::S_AMBERITES: {
         if (!mane_summon(player_ptr, _("アンバーの王族を召喚した！", "You summon Lords of Amber!"), target_row, target_col, plev, 4,
-            {summon_data(SUMMON_AMBERITES, (mode | PM_ALLOW_UNIQUE), summon_specific)}).fire())
+                { summon_data(SUMMON_AMBERITES, (mode | PM_ALLOW_UNIQUE), summon_specific) })
+                 .fire())
             return false;
         break;
     }
     case RF_ABILITY::S_UNIQUE: {
         if (!mane_summon(player_ptr, _("特別な強敵を召喚した！", "You summon special opponents!"), target_row, target_col, plev, 4,
-            {summon_data(SUMMON_UNIQUE, (mode | PM_ALLOW_UNIQUE), summon_specific),
-             summon_data(SUMMON_HI_UNDEAD, (mode | u_mode), summon_specific)}).fire())
+                { summon_data(SUMMON_UNIQUE, (mode | PM_ALLOW_UNIQUE), summon_specific),
+                    summon_data(SUMMON_HI_UNDEAD, (mode | u_mode), summon_specific) })
+                 .fire())
             return false;
         break;
     }

@@ -14,6 +14,7 @@
 #include "monster-race/race-flags2.h"
 #include "monster-race/race-flags3.h"
 #include "monster-race/race-indice-types.h"
+#include "monster-race/race-kind-flags.h"
 #include "player-ability/player-ability-types.h"
 #include "system/angband.h"
 #include "system/monster-race-definition.h"
@@ -38,8 +39,6 @@ static void set_msex_flags(lore_type *lore_ptr)
 
 static void set_flags1(lore_type *lore_ptr)
 {
-    if (lore_ptr->r_ptr->flags1 & RF1_UNIQUE)
-        lore_ptr->flags1 |= (RF1_UNIQUE);
 
     if (lore_ptr->r_ptr->flags1 & RF1_QUESTOR)
         lore_ptr->flags1 |= (RF1_QUESTOR);
@@ -65,47 +64,50 @@ static void set_race_flags(lore_type *lore_ptr)
     if (!lore_ptr->r_ptr->r_tkills && !lore_ptr->know_everything)
         return;
 
-    if (lore_ptr->r_ptr->flags3 & RF3_ORC)
-        lore_ptr->flags3 |= (RF3_ORC);
+    if (lore_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE))
+        lore_ptr->race_kind_flags.set(MonraceKindType::UNIQUE);
 
-    if (lore_ptr->r_ptr->flags3 & RF3_TROLL)
-        lore_ptr->flags3 |= (RF3_TROLL);
+    if (lore_ptr->r_ptr->race_kind_flags.has(MonraceKindType::ORC))
+        lore_ptr->race_kind_flags.set(MonraceKindType::ORC);
 
-    if (lore_ptr->r_ptr->flags3 & RF3_GIANT)
-        lore_ptr->flags3 |= (RF3_GIANT);
+    if (lore_ptr->r_ptr->race_kind_flags.has(MonraceKindType::TROLL))
+        lore_ptr->race_kind_flags.set(MonraceKindType::TROLL);
 
-    if (lore_ptr->r_ptr->flags3 & RF3_DRAGON)
-        lore_ptr->flags3 |= (RF3_DRAGON);
+    if (lore_ptr->r_ptr->race_kind_flags.has(MonraceKindType::GIANT))
+        lore_ptr->race_kind_flags.set(MonraceKindType::GIANT);
 
-    if (lore_ptr->r_ptr->flags3 & RF3_DEMON)
-        lore_ptr->flags3 |= (RF3_DEMON);
+    if (lore_ptr->r_ptr->race_kind_flags.has(MonraceKindType::DRAGON))
+        lore_ptr->race_kind_flags.set(MonraceKindType::DRAGON);
 
-    if (lore_ptr->r_ptr->flags3 & RF3_UNDEAD)
-        lore_ptr->flags3 |= (RF3_UNDEAD);
+    if (lore_ptr->r_ptr->race_kind_flags.has(MonraceKindType::DEMON))
+        lore_ptr->race_kind_flags.set(MonraceKindType::DEMON);
 
-    if (lore_ptr->r_ptr->flags3 & RF3_EVIL)
-        lore_ptr->flags3 |= (RF3_EVIL);
+    if (lore_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNDEAD))
+        lore_ptr->race_kind_flags.set(MonraceKindType::UNDEAD);
 
-    if (lore_ptr->r_ptr->flags3 & RF3_GOOD)
-        lore_ptr->flags3 |= (RF3_GOOD);
+    if (lore_ptr->r_ptr->race_kind_flags.has(MonraceKindType::EVIL))
+        lore_ptr->race_kind_flags.set(MonraceKindType::EVIL);
 
-    if (lore_ptr->r_ptr->flags3 & RF3_ANIMAL)
-        lore_ptr->flags3 |= (RF3_ANIMAL);
+    if (lore_ptr->r_ptr->race_kind_flags.has(MonraceKindType::GOOD))
+        lore_ptr->race_kind_flags.set(MonraceKindType::GOOD);
 
-    if (lore_ptr->r_ptr->flags3 & RF3_AMBERITE)
-        lore_ptr->flags3 |= (RF3_AMBERITE);
+    if (lore_ptr->r_ptr->race_kind_flags.has(MonraceKindType::ANIMAL))
+        lore_ptr->race_kind_flags.set(MonraceKindType::ANIMAL);
 
-    if (lore_ptr->r_ptr->flags3 & RF3_KAN_SEN)
-        lore_ptr->flags3 |= RF3_KAN_SEN;
+    if (lore_ptr->r_ptr->race_kind_flags.has(MonraceKindType::AMBERITE))
+        lore_ptr->race_kind_flags.set(MonraceKindType::AMBERITE);
 
-    if (lore_ptr->r_ptr->flags3 & RF3_MINERAL)
-        lore_ptr->flags3 |= RF3_MINERAL;
+    if (lore_ptr->r_ptr->race_kind_flags.has(MonraceKindType::KAN_SEN))
+        lore_ptr->race_kind_flags.set(MonraceKindType::KAN_SEN);
 
-    if (lore_ptr->r_ptr->flags2 & RF2_HUMAN)
-        lore_ptr->flags2 |= (RF2_HUMAN);
+    if (lore_ptr->r_ptr->race_kind_flags.has(MonraceKindType::MINERAL))
+        lore_ptr->race_kind_flags.set(MonraceKindType::MINERAL);
 
-    if (lore_ptr->r_ptr->flags2 & RF2_QUANTUM)
-        lore_ptr->flags2 |= (RF2_QUANTUM);
+    if (lore_ptr->r_ptr->race_kind_flags.has(MonraceKindType::HUMAN))
+        lore_ptr->race_kind_flags.set(MonraceKindType::HUMAN);
+
+    if (lore_ptr->r_ptr->race_kind_flags.has(MonraceKindType::QUANTUM))
+        lore_ptr->race_kind_flags.set(MonraceKindType::QUANTUM);
 
     if (lore_ptr->r_ptr->flags1 & RF1_FORCE_DEPTH)
         lore_ptr->flags1 |= (RF1_FORCE_DEPTH);

@@ -25,6 +25,7 @@
 #include "mind/mind-ninja.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-compaction.h"
 #include "monster/monster-processor.h"
 #include "monster/monster-status.h"
@@ -216,7 +217,7 @@ void process_dungeon(player_type *player_ptr, bool load_game)
             wild_regen--;
     }
 
-    if (quest_num && !(r_info[quest[quest_num].r_idx].flags1 & RF1_UNIQUE)) {
+    if (quest_num && r_info[quest[quest_num].r_idx].race_kind_flags.has_not(MonraceKindType::UNIQUE)) {
         r_info[quest[quest_num].r_idx].flags1 &= ~RF1_QUESTOR;
     }
 

@@ -7,6 +7,7 @@
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-flags7.h"
+#include "monster-race/race-kind-flags.h"
 #include "object-enchant/trg-types.h"
 #include "system/artifact-type-definition.h"
 #include "system/floor-type-definition.h"
@@ -24,7 +25,7 @@ void rd_unique_info(void)
     const int MAX_TRIES = 100;
     for (auto &r_ref : r_info) {
         r_ref.max_num = MAX_TRIES;
-        if (r_ref.flags1 & RF1_UNIQUE)
+        if (r_ref.race_kind_flags.has(MonraceKindType::UNIQUE))
             r_ref.max_num = 1;
         else if (r_ref.flags7 & RF7_NAZGUL)
             r_ref.max_num = MAX_NAZGUL_NUM;
@@ -118,10 +119,9 @@ void analyze_quests(player_type *player_ptr, const uint16_t max_quests_load, con
         byte tmp8u;
         rd_byte(&tmp8u);
         q_ptr->dungeon = tmp8u;
-        
 
         if (q_ptr->status == QUEST_STATUS_TAKEN || q_ptr->status == QUEST_STATUS_UNTAKEN)
-            if (r_info[q_ptr->r_idx].flags1 & RF1_UNIQUE)
+            if (r_info[q_ptr->r_idx].race_kind_flags.has(MonraceKindType::UNIQUE))
                 r_info[q_ptr->r_idx].flags1 |= RF1_QUESTOR;
     }
 }

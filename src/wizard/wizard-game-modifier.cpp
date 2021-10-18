@@ -12,6 +12,7 @@
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-flags7.h"
+#include "monster-race/race-kind-flags.h"
 #include "player-info/self-info.h"
 #include "system/floor-type-definition.h"
 #include "system/monster-race-definition.h"
@@ -100,7 +101,7 @@ void wizard_game_modifier(player_type *player_ptr)
  * @brief 指定したクエストに突入する
  * @param プレイヤーの情報へのポインタ
  */
-void wiz_enter_quest(player_type* player_ptr)
+void wiz_enter_quest(player_type *player_ptr)
 {
     char ppp[30];
     char tmp_val[5];
@@ -163,7 +164,7 @@ void wiz_restore_monster_max_num()
     }
 
     MONSTER_NUMBER n = 0;
-    if (any_bits(r_ptr->flags1, RF1_UNIQUE))
+    if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE))
         n = 1;
     else if (any_bits(r_ptr->flags7, RF7_NAZGUL))
         n = MAX_NAZGUL_NUM;

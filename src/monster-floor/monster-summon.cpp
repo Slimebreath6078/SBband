@@ -11,6 +11,7 @@
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-flags7.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-info.h"
 #include "monster/monster-list.h"
 #include "monster/monster-util.h"
@@ -55,13 +56,13 @@ static bool summon_specific_okay(player_type *player_ptr, MONRACE_IDX r_idx)
             return false;
     }
 
-    if (!summon_unique_okay && ((r_ptr->flags1 & RF1_UNIQUE) || (r_ptr->flags7 & RF7_NAZGUL)))
+    if (!summon_unique_okay && (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || (r_ptr->flags7 & RF7_NAZGUL)))
         return false;
 
     if (!summon_specific_type)
         return true;
 
-    if ((summon_specific_who < 0) && ((r_ptr->flags1 & RF1_UNIQUE) || (r_ptr->flags7 & RF7_NAZGUL))
+    if ((summon_specific_who < 0) && (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || (r_ptr->flags7 & RF7_NAZGUL))
         && monster_has_hostile_align(player_ptr, nullptr, 10, -10, r_ptr))
         return false;
 
@@ -185,11 +186,11 @@ bool summon_named_creature(player_type *player_ptr, MONSTER_IDX who, POSITION oy
     if ((r_idx <= 0) || (r_idx >= max_r_idx)) {
         return false;
     }
-    
+
     POSITION x, y;
     if (player_ptr->current_floor_ptr->inside_arena || !mon_scatter(player_ptr, r_idx, &y, &x, oy, ox, 2)) {
         return false;
     }
-    
+
     return place_monster_aux(player_ptr, who, y, x, r_idx, (mode | PM_NO_KAGE));
 }

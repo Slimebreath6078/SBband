@@ -27,6 +27,7 @@
 #include "monster-race/race-flags3.h"
 #include "monster-race/race-flags7.h"
 #include "monster-race/race-indice-types.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-flag-types.h"
 #include "monster/monster-info.h"
 #include "monster/monster-list.h"
@@ -60,7 +61,7 @@ static bool is_friendly_idx(player_type *player_ptr, MONSTER_IDX m_idx)
 static bool monster_hook_tanuki(player_type *player_ptr, MONRACE_IDX r_idx)
 {
     monster_race *r_ptr = &r_info[r_idx];
-    bool unselectable = any_bits(r_ptr->flags1, RF1_UNIQUE);
+    bool unselectable = r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE);
     unselectable |= any_bits(r_ptr->flags2, RF2_MULTIPLY);
     unselectable |= any_bits(r_ptr->flags7, RF7_FRIENDLY | RF7_CHAMELEON);
     unselectable |= any_bits(r_ptr->flags7, RF7_AQUATIC);
@@ -113,7 +114,7 @@ static bool check_unique_placeable(player_type *player_ptr, MONRACE_IDX r_idx)
         return true;
 
     monster_race *r_ptr = &r_info[r_idx];
-    if ((any_bits(r_ptr->flags1, RF1_UNIQUE) || any_bits(r_ptr->flags7, RF7_NAZGUL)) && (r_ptr->cur_num >= r_ptr->max_num)) {
+    if ((r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || any_bits(r_ptr->flags7, RF7_NAZGUL)) && (r_ptr->cur_num >= r_ptr->max_num)) {
         return false;
     }
 
@@ -201,7 +202,7 @@ static void warn_unique_generation(player_type *player_ptr, MONRACE_IDX r_idx)
         return;
 
     monster_race *r_ptr = &r_info[r_idx];
-    if (none_bits(r_ptr->flags1, RF1_UNIQUE))
+    if (r_ptr->race_kind_flags.has_not(MonraceKindType::UNIQUE))
         return;
 
     concptr color;
@@ -256,7 +257,7 @@ bool place_monster_one(player_type *player_ptr, MONSTER_IDX who, POSITION y, POS
         return false;
 
     msg_format_wizard(player_ptr, CHEAT_MONSTER, _("%s(Lv%d)を生成しました。", "%s(Lv%d) was generated."), name, r_ptr->level);
-    if (any_bits(r_ptr->flags1, RF1_UNIQUE) || any_bits(r_ptr->flags7, RF7_NAZGUL) || (r_ptr->level < 10))
+    if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || any_bits(r_ptr->flags7, RF7_NAZGUL) || (r_ptr->level < 10))
         reset_bits(mode, PM_KAGE);
 
     g_ptr->m_idx = m_pop(floor_ptr);
@@ -277,13 +278,13 @@ bool place_monster_one(player_type *player_ptr, MONSTER_IDX who, POSITION y, POS
             m_ptr->mflag2.set(MFLAG2::KAGE);
     }
 
-    if ((who > 0) && none_bits(r_ptr->flags3, RF3_EVIL | RF3_GOOD))
+    if ((who > 0) && r_ptr->race_kind_flags.has_none_of({ MonraceKindType::EVIL, MonraceKindType::GOOD }))
         m_ptr->sub_align = floor_ptr->m_list[who].sub_align;
     else {
         m_ptr->sub_align = SUB_ALIGN_NEUTRAL;
-        if (any_bits(r_ptr->flags3, RF3_EVIL))
+        if (r_ptr->race_kind_flags.has(MonraceKindType::EVIL))
             set_bits(m_ptr->sub_align, SUB_ALIGN_EVIL);
-        if (any_bits(r_ptr->flags3, RF3_GOOD))
+        if (r_ptr->race_kind_flags.has(MonraceKindType::GOOD))
             set_bits(m_ptr->sub_align, SUB_ALIGN_GOOD);
     }
 
@@ -310,7 +311,7 @@ bool place_monster_one(player_type *player_ptr, MONSTER_IDX who, POSITION y, POS
         choose_new_monster(player_ptr, g_ptr->m_idx, true, 0);
         r_ptr = &r_info[m_ptr->r_idx];
         m_ptr->mflag2.set(MFLAG2::CHAMELEON);
-        if (any_bits(r_ptr->flags1, RF1_UNIQUE) && (who <= 0))
+        if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) && (who <= 0))
             m_ptr->sub_align = SUB_ALIGN_NEUTRAL;
     } else if (any_bits(mode, PM_KAGE) && none_bits(mode, PM_FORCE_PET)) {
         m_ptr->ap_r_idx = MON_KAGE;
@@ -385,7 +386,7 @@ bool place_monster_one(player_type *player_ptr, MONSTER_IDX who, POSITION y, POS
      * Memorize location of the unique monster in saved floors.
      * A unique monster move from old saved floor.
      */
-    if (w_ptr->character_dungeon && (any_bits(r_ptr->flags1, RF1_UNIQUE) || any_bits(r_ptr->flags7, RF7_NAZGUL)))
+    if (w_ptr->character_dungeon && (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || any_bits(r_ptr->flags7, RF7_NAZGUL)))
         real_r_ptr(m_ptr)->floor_id = player_ptr->floor_id;
 
     if (any_bits(r_ptr->flags2, RF2_MULTIPLY))

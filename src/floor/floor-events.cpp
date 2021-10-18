@@ -20,6 +20,7 @@
 #include "mind/mind-ninja.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-info.h"
 #include "monster/monster-list.h"
 #include "monster/monster-status.h"
@@ -101,7 +102,10 @@ void night_falls(player_type *player_ptr)
 /*!
  * ダンジョンの雰囲気を計算するための非線形基準値 / Dungeon rating is no longer linear
  */
-static int rating_boost(int delta) { return delta * delta + 50 * delta; }
+static int rating_boost(int delta)
+{
+    return delta * delta + 50 * delta;
+}
 
 /*!
  * @brief ダンジョンの雰囲気を算出する。
@@ -124,7 +128,7 @@ static byte get_dungeon_feeling(player_type *player_ptr)
             continue;
 
         r_ptr = &r_info[m_ptr->r_idx];
-        if (r_ptr->flags1 & RF1_UNIQUE) {
+        if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE)) {
             if (r_ptr->level + 10 > floor_ptr->dun_level)
                 delta += (r_ptr->level + 10 - floor_ptr->dun_level) * 2 * base;
         } else if (r_ptr->level > floor_ptr->dun_level)

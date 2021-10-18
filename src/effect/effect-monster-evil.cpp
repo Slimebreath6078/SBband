@@ -5,6 +5,7 @@
 #include "monster-race/race-flags-resistance.h"
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-flags3.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-info.h"
 #include "system/monster-race-definition.h"
 #include "system/monster-type-definition.h"
@@ -15,7 +16,7 @@ static bool effect_monster_away_resist(player_type *player_ptr, effect_monster_t
     if (em_ptr->r_ptr->resistance_flags.has_not(MonsterResistanceType::RESIST_TELEPORT))
         return false;
 
-    if ((em_ptr->r_ptr->flags1 & (RF1_UNIQUE)) || em_ptr->r_ptr->resistance_flags.has(MonsterResistanceType::RESIST_ALL)) {
+    if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || em_ptr->r_ptr->resistance_flags.has(MonsterResistanceType::RESIST_ALL)) {
         if (is_original_ap_and_seen(player_ptr, em_ptr->m_ptr))
             em_ptr->r_ptr->r_resistance_flags.set(MonsterResistanceType::RESIST_TELEPORT);
         em_ptr->note = _("には効果がなかった。", " is unaffected.");
@@ -34,7 +35,7 @@ static bool effect_monster_away_resist(player_type *player_ptr, effect_monster_t
 
 process_result effect_monster_away_undead(player_type *player_ptr, effect_monster_type *em_ptr)
 {
-    if ((em_ptr->r_ptr->flags3 & (RF3_UNDEAD)) == 0) {
+    if (em_ptr->r_ptr->race_kind_flags.has_not(MonraceKindType::UNDEAD)) {
         em_ptr->skipped = true;
         em_ptr->dam = 0;
         return PROCESS_CONTINUE;
@@ -45,7 +46,7 @@ process_result effect_monster_away_undead(player_type *player_ptr, effect_monste
         if (em_ptr->seen)
             em_ptr->obvious = true;
         if (is_original_ap_and_seen(player_ptr, em_ptr->m_ptr))
-            em_ptr->r_ptr->r_flags3 |= (RF3_UNDEAD);
+            em_ptr->r_ptr->r_race_kind_flags.set(MonraceKindType::UNDEAD);
 
         em_ptr->do_dist = em_ptr->dam;
     }
@@ -56,7 +57,7 @@ process_result effect_monster_away_undead(player_type *player_ptr, effect_monste
 
 process_result effect_monster_away_evil(player_type *player_ptr, effect_monster_type *em_ptr)
 {
-    if ((em_ptr->r_ptr->flags3 & (RF3_EVIL)) == 0) {
+    if (em_ptr->r_ptr->race_kind_flags.has_not(MonraceKindType::EVIL)) {
         em_ptr->skipped = true;
         em_ptr->dam = 0;
         return PROCESS_CONTINUE;
@@ -67,7 +68,7 @@ process_result effect_monster_away_evil(player_type *player_ptr, effect_monster_
         if (em_ptr->seen)
             em_ptr->obvious = true;
         if (is_original_ap_and_seen(player_ptr, em_ptr->m_ptr))
-            em_ptr->r_ptr->r_flags3 |= (RF3_EVIL);
+            em_ptr->r_ptr->r_race_kind_flags.set(MonraceKindType::EVIL);
 
         em_ptr->do_dist = em_ptr->dam;
     }
@@ -92,7 +93,7 @@ process_result effect_monster_away_all(player_type *player_ptr, effect_monster_t
 
 process_result effect_monster_turn_undead(player_type *player_ptr, effect_monster_type *em_ptr)
 {
-    if ((em_ptr->r_ptr->flags3 & (RF3_UNDEAD)) == 0) {
+    if (em_ptr->r_ptr->race_kind_flags.has_not(MonraceKindType::UNDEAD)) {
         em_ptr->skipped = true;
         em_ptr->dam = 0;
         return PROCESS_CONTINUE;
@@ -102,7 +103,7 @@ process_result effect_monster_turn_undead(player_type *player_ptr, effect_monste
         em_ptr->obvious = true;
 
     if (is_original_ap_and_seen(player_ptr, em_ptr->m_ptr))
-        em_ptr->r_ptr->r_flags3 |= (RF3_UNDEAD);
+        em_ptr->r_ptr->r_race_kind_flags.set(MonraceKindType::UNDEAD);
 
     em_ptr->do_fear = damroll(3, (em_ptr->dam / 2)) + 1;
     if (em_ptr->r_ptr->level > randint1((em_ptr->dam - 10) < 1 ? 1 : (em_ptr->dam - 10)) + 10) {
@@ -117,7 +118,7 @@ process_result effect_monster_turn_undead(player_type *player_ptr, effect_monste
 
 process_result effect_monster_turn_evil(player_type *player_ptr, effect_monster_type *em_ptr)
 {
-    if ((em_ptr->r_ptr->flags3 & (RF3_EVIL)) == 0) {
+    if (em_ptr->r_ptr->race_kind_flags.has_not(MonraceKindType::EVIL)) {
         em_ptr->skipped = true;
         em_ptr->dam = 0;
         return PROCESS_CONTINUE;
@@ -127,7 +128,7 @@ process_result effect_monster_turn_evil(player_type *player_ptr, effect_monster_
         em_ptr->obvious = true;
 
     if (is_original_ap_and_seen(player_ptr, em_ptr->m_ptr))
-        em_ptr->r_ptr->r_flags3 |= (RF3_EVIL);
+        em_ptr->r_ptr->r_race_kind_flags.set(MonraceKindType::EVIL);
 
     em_ptr->do_fear = damroll(3, (em_ptr->dam / 2)) + 1;
     if (em_ptr->r_ptr->level > randint1((em_ptr->dam - 10) < 1 ? 1 : (em_ptr->dam - 10)) + 10) {
@@ -146,7 +147,7 @@ process_result effect_monster_turn_all(effect_monster_type *em_ptr)
         em_ptr->obvious = true;
 
     em_ptr->do_fear = damroll(3, (em_ptr->dam / 2)) + 1;
-    if ((em_ptr->r_ptr->flags1 & (RF1_UNIQUE)) || (em_ptr->r_ptr->flags3 & (RF3_NO_FEAR)) || (em_ptr->r_ptr->level > randint1((em_ptr->dam - 10) < 1 ? 1 : (em_ptr->dam - 10)) + 10)) {
+    if ((em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE)) || (em_ptr->r_ptr->flags3 & (RF3_NO_FEAR)) || (em_ptr->r_ptr->level > randint1((em_ptr->dam - 10) < 1 ? 1 : (em_ptr->dam - 10)) + 10)) {
         em_ptr->note = _("には効果がなかった。", " is unaffected.");
         em_ptr->obvious = false;
         em_ptr->do_fear = 0;
@@ -158,7 +159,7 @@ process_result effect_monster_turn_all(effect_monster_type *em_ptr)
 
 process_result effect_monster_disp_undead(player_type *player_ptr, effect_monster_type *em_ptr)
 {
-    if ((em_ptr->r_ptr->flags3 & (RF3_UNDEAD)) == 0) {
+    if (em_ptr->r_ptr->race_kind_flags.has_not(MonraceKindType::UNDEAD)) {
         em_ptr->skipped = true;
         em_ptr->dam = 0;
         return PROCESS_CONTINUE;
@@ -168,7 +169,7 @@ process_result effect_monster_disp_undead(player_type *player_ptr, effect_monste
         em_ptr->obvious = true;
 
     if (is_original_ap_and_seen(player_ptr, em_ptr->m_ptr))
-        em_ptr->r_ptr->r_flags3 |= (RF3_UNDEAD);
+        em_ptr->r_ptr->r_race_kind_flags.set(MonraceKindType::UNDEAD);
 
     em_ptr->note = _("は身震いした。", " shudders.");
     em_ptr->note_dies = _("はドロドロに溶けた！", " dissolves!");
@@ -177,7 +178,7 @@ process_result effect_monster_disp_undead(player_type *player_ptr, effect_monste
 
 process_result effect_monster_disp_evil(player_type *player_ptr, effect_monster_type *em_ptr)
 {
-    if ((em_ptr->r_ptr->flags3 & (RF3_EVIL)) == 0) {
+    if (em_ptr->r_ptr->race_kind_flags.has_not(MonraceKindType::EVIL)) {
         em_ptr->skipped = true;
         em_ptr->dam = 0;
         return PROCESS_CONTINUE;
@@ -187,7 +188,7 @@ process_result effect_monster_disp_evil(player_type *player_ptr, effect_monster_
         em_ptr->obvious = true;
 
     if (is_original_ap_and_seen(player_ptr, em_ptr->m_ptr))
-        em_ptr->r_ptr->r_flags3 |= (RF3_EVIL);
+        em_ptr->r_ptr->r_race_kind_flags.set(MonraceKindType::EVIL);
 
     em_ptr->note = _("は身震いした。", " shudders.");
     em_ptr->note_dies = _("はドロドロに溶けた！", " dissolves!");
@@ -196,7 +197,7 @@ process_result effect_monster_disp_evil(player_type *player_ptr, effect_monster_
 
 process_result effect_monster_disp_good(player_type *player_ptr, effect_monster_type *em_ptr)
 {
-    if ((em_ptr->r_ptr->flags3 & (RF3_GOOD)) == 0) {
+    if (em_ptr->r_ptr->race_kind_flags.has_not(MonraceKindType::GOOD)) {
         em_ptr->skipped = true;
         em_ptr->dam = 0;
         return PROCESS_CONTINUE;
@@ -206,7 +207,7 @@ process_result effect_monster_disp_good(player_type *player_ptr, effect_monster_
         em_ptr->obvious = true;
 
     if (is_original_ap_and_seen(player_ptr, em_ptr->m_ptr))
-        em_ptr->r_ptr->r_flags3 |= (RF3_GOOD);
+        em_ptr->r_ptr->r_race_kind_flags.set(MonraceKindType::GOOD);
 
     em_ptr->note = _("は身震いした。", " shudders.");
     em_ptr->note_dies = _("はドロドロに溶けた！", " dissolves!");
@@ -231,7 +232,7 @@ process_result effect_monster_disp_living(effect_monster_type *em_ptr)
 
 process_result effect_monster_disp_demon(player_type *player_ptr, effect_monster_type *em_ptr)
 {
-    if ((em_ptr->r_ptr->flags3 & (RF3_DEMON)) == 0) {
+    if (em_ptr->r_ptr->race_kind_flags.has_not(MonraceKindType::DEMON)) {
         em_ptr->skipped = true;
         em_ptr->dam = 0;
         return PROCESS_CONTINUE;
@@ -241,7 +242,7 @@ process_result effect_monster_disp_demon(player_type *player_ptr, effect_monster
         em_ptr->obvious = true;
 
     if (is_original_ap_and_seen(player_ptr, em_ptr->m_ptr))
-        em_ptr->r_ptr->r_flags3 |= (RF3_DEMON);
+        em_ptr->r_ptr->r_race_kind_flags.set(MonraceKindType::DEMON);
 
     em_ptr->note = _("は身震いした。", " shudders.");
     em_ptr->note_dies = _("はドロドロに溶けた！", " dissolves!");

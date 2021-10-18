@@ -8,6 +8,7 @@
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-flags2.h"
 #include "monster-race/race-flags3.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-describer.h"
 #include "monster/monster-description-types.h"
 #include "monster/monster-info.h"
@@ -54,7 +55,7 @@ static bool resisted_psi_because_empty_mind(player_type *player_ptr, effect_mons
  */
 static bool resisted_psi_because_weird_mind_or_powerful(effect_monster_type *em_ptr)
 {
-    bool has_resistance = any_bits(em_ptr->r_ptr->flags2, RF2_STUPID | RF2_WEIRD_MIND) || any_bits(em_ptr->r_ptr->flags3, RF3_ANIMAL)
+    bool has_resistance = any_bits(em_ptr->r_ptr->flags2, RF2_STUPID | RF2_WEIRD_MIND) || em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::ANIMAL)
         || (em_ptr->r_ptr->level > randint1(3 * em_ptr->dam));
     if (!has_resistance)
         return false;
@@ -76,7 +77,7 @@ static bool resisted_psi_because_weird_mind_or_powerful(effect_monster_type *em_
  */
 static bool reflects_psi_with_currupted_mind(player_type *player_ptr, effect_monster_type *em_ptr)
 {
-    bool is_corrupted = any_bits(em_ptr->r_ptr->flags3, RF3_UNDEAD | RF3_DEMON) && (em_ptr->r_ptr->level > player_ptr->lev / 2) && one_in_(2);
+    bool is_corrupted = em_ptr->r_ptr->race_kind_flags.has_any_of({ MonraceKindType::UNDEAD, MonraceKindType::DEMON }) && (em_ptr->r_ptr->level > player_ptr->lev / 2) && one_in_(2);
     if (!is_corrupted)
         return false;
 
@@ -313,7 +314,7 @@ process_result effect_monster_telekinesis(player_type *player_ptr, effect_monste
     }
 
     em_ptr->do_stun = damroll((em_ptr->caster_lev / 20) + 3, em_ptr->dam) + 1;
-    if (any_bits(em_ptr->r_ptr->flags1, RF1_UNIQUE) || (em_ptr->r_ptr->level > 5 + randint1(em_ptr->dam))) {
+    if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || (em_ptr->r_ptr->level > 5 + randint1(em_ptr->dam))) {
         em_ptr->do_stun = 0;
         em_ptr->obvious = false;
     }

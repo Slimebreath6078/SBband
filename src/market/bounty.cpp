@@ -20,6 +20,7 @@
 #include "monster-race/race-flags7.h"
 #include "monster-race/race-flags9.h"
 #include "monster-race/race-indice-types.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-list.h"
 #include "monster/monster-util.h"
 #include "object-enchant/apply-magic.h"
@@ -293,7 +294,7 @@ void determine_daily_bounty(player_type *player_ptr, bool conv_old)
             msg_format("日替わり候補: %s ", r_ptr->name.c_str());
         }
 
-        if (r_ptr->flags1 & RF1_UNIQUE)
+        if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE))
             continue;
         if (r_ptr->flags7 & (RF7_NAZGUL | RF7_UNIQUE2))
             continue;
@@ -324,7 +325,7 @@ void determine_bounty_uniques(player_type *player_ptr)
             monster_race *r_ptr;
             r_ptr = &r_info[w_ptr->bounty_r_idx[i]];
 
-            if (!(r_ptr->flags1 & RF1_UNIQUE))
+            if (r_ptr->race_kind_flags.has_not(MonraceKindType::UNIQUE))
                 continue;
 
             if (!(r_ptr->flags9 & (RF9_DROP_CORPSE | RF9_DROP_SKELETON)))

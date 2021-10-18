@@ -11,6 +11,7 @@
 #include "monster-race/race-flags7.h"
 #include "monster-race/race-flags8.h"
 #include "monster-race/race-indice-types.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster-race/race-resistance-mask.h"
 #include "monster/monster-list.h"
 #include "monster/monster-util.h"
@@ -380,7 +381,7 @@ bool vault_aux_jelly(player_type *player_ptr, MONRACE_IDX r_idx)
     if (any_bits(r_ptr->flags2, RF2_KILL_BODY) && none_bits(r_ptr->flags1, RF1_NEVER_BLOW))
         return false;
 
-    if (any_bits(r_ptr->flags3, RF3_EVIL))
+    if (r_ptr->race_kind_flags.has(MonraceKindType::EVIL))
         return false;
 
     if (!angband_strchr("ijm,", r_ptr->d_char))
@@ -401,7 +402,7 @@ bool vault_aux_animal(player_type *player_ptr, MONRACE_IDX r_idx)
     if (!vault_monster_okay(player_ptr, r_idx))
         return false;
 
-    if (none_bits(r_ptr->flags3, RF3_ANIMAL))
+    if (r_ptr->race_kind_flags.has_not(MonraceKindType::ANIMAL))
         return false;
 
     return true;
@@ -419,7 +420,7 @@ bool vault_aux_undead(player_type *player_ptr, MONRACE_IDX r_idx)
     if (!vault_monster_okay(player_ptr, r_idx))
         return false;
 
-    if (none_bits(r_ptr->flags3, RF3_UNDEAD))
+    if (r_ptr->race_kind_flags.has_not(MonraceKindType::UNDEAD))
         return false;
 
     return true;
@@ -440,7 +441,7 @@ bool vault_aux_chapel_g(player_type *player_ptr, MONRACE_IDX r_idx)
     if (!vault_monster_okay(player_ptr, r_idx))
         return false;
 
-    if (any_bits(r_ptr->flags3, RF3_EVIL))
+    if (r_ptr->race_kind_flags.has(MonraceKindType::EVIL))
         return false;
 
     if ((r_idx == MON_A_GOLD) || (r_idx == MON_A_SILVER))
@@ -521,7 +522,7 @@ bool vault_aux_symbol_e(player_type *player_ptr, MONRACE_IDX r_idx)
     if (any_bits(r_ptr->flags2, RF2_KILL_BODY) && none_bits(r_ptr->flags1, RF1_NEVER_BLOW))
         return false;
 
-    if (any_bits(r_ptr->flags3, RF3_GOOD))
+    if (r_ptr->race_kind_flags.has(MonraceKindType::GOOD))
         return false;
 
     if (r_ptr->d_char != vault_aux_char)
@@ -545,7 +546,7 @@ bool vault_aux_symbol_g(player_type *player_ptr, MONRACE_IDX r_idx)
     if (any_bits(r_ptr->flags2, RF2_KILL_BODY) && none_bits(r_ptr->flags1, RF1_NEVER_BLOW))
         return false;
 
-    if (any_bits(r_ptr->flags3, RF3_EVIL))
+    if (r_ptr->race_kind_flags.has(MonraceKindType::EVIL))
         return false;
 
     if (r_ptr->d_char != vault_aux_char)
@@ -566,10 +567,10 @@ bool vault_aux_orc(player_type *player_ptr, MONRACE_IDX r_idx)
     if (!vault_monster_okay(player_ptr, r_idx))
         return false;
 
-    if (none_bits(r_ptr->flags3, RF3_ORC))
+    if (r_ptr->race_kind_flags.has_not(MonraceKindType::ORC))
         return false;
 
-    if (any_bits(r_ptr->flags3, RF3_UNDEAD))
+    if (r_ptr->race_kind_flags.has(MonraceKindType::UNDEAD))
         return false;
 
     return true;
@@ -587,10 +588,10 @@ bool vault_aux_troll(player_type *player_ptr, MONRACE_IDX r_idx)
     if (!vault_monster_okay(player_ptr, r_idx))
         return false;
 
-    if (none_bits(r_ptr->flags3, RF3_TROLL))
+    if (r_ptr->race_kind_flags.has_not(MonraceKindType::TROLL))
         return false;
 
-    if (any_bits(r_ptr->flags3, RF3_UNDEAD))
+    if (r_ptr->race_kind_flags.has(MonraceKindType::UNDEAD))
         return false;
 
     return true;
@@ -608,13 +609,13 @@ bool vault_aux_giant(player_type *player_ptr, MONRACE_IDX r_idx)
     if (!vault_monster_okay(player_ptr, r_idx))
         return false;
 
-    if (none_bits(r_ptr->flags3, RF3_GIANT))
+    if (r_ptr->race_kind_flags.has_not(MonraceKindType::GIANT))
         return false;
 
-    if (any_bits(r_ptr->flags3, RF3_GOOD))
+    if (r_ptr->race_kind_flags.has(MonraceKindType::GOOD))
         return false;
 
-    if (any_bits(r_ptr->flags3, RF3_UNDEAD))
+    if (r_ptr->race_kind_flags.has(MonraceKindType::UNDEAD))
         return false;
 
     return true;
@@ -632,10 +633,10 @@ bool vault_aux_dragon(player_type *player_ptr, MONRACE_IDX r_idx)
     if (!vault_monster_okay(player_ptr, r_idx))
         return false;
 
-    if (none_bits(r_ptr->flags3, RF3_DRAGON))
+    if (r_ptr->race_kind_flags.has_not(MonraceKindType::DRAGON))
         return false;
 
-    if (any_bits(r_ptr->flags3, RF3_UNDEAD))
+    if (r_ptr->race_kind_flags.has(MonraceKindType::UNDEAD))
         return false;
 
     auto flags = RF_ABILITY_BREATH_MASK;
@@ -662,7 +663,7 @@ bool vault_aux_demon(player_type *player_ptr, MONRACE_IDX r_idx)
     if (any_bits(r_ptr->flags2, RF2_KILL_BODY) && none_bits(r_ptr->flags1, RF1_NEVER_BLOW))
         return false;
 
-    if (none_bits(r_ptr->flags3, RF3_DEMON))
+    if (r_ptr->race_kind_flags.has_not(MonraceKindType::DEMON))
         return false;
 
     return true;
@@ -733,7 +734,7 @@ bool vault_aux_dark_elf(player_type *player_ptr, MONRACE_IDX r_idx)
 bool monster_living(MONRACE_IDX r_idx)
 {
     monster_race *r_ptr = &r_info[r_idx];
-    return none_bits(r_ptr->flags3, (RF3_DEMON | RF3_UNDEAD | RF3_NONLIVING));
+    return r_ptr->race_kind_flags.has_none_of({ MonraceKindType::DEMON, MonraceKindType::UNDEAD }) && r_ptr->race_kind_flags.has(MonraceKindType::NONLIVING);
 }
 
 /*!
@@ -771,7 +772,7 @@ bool monster_hook_human(player_type *player_ptr, MONRACE_IDX r_idx)
     (void)player_ptr;
 
     monster_race *r_ptr = &r_info[r_idx];
-    if (any_bits(r_ptr->flags1, RF1_UNIQUE))
+    if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE))
         return false;
 
     if (angband_strchr("pht", r_ptr->d_char))
@@ -808,7 +809,7 @@ bool monster_is_fishing_target(player_type *player_ptr, MONRACE_IDX r_idx)
     (void)player_ptr;
 
     monster_race *r_ptr = &r_info[r_idx];
-    if (any_bits(r_ptr->flags7, RF7_AQUATIC) && none_bits(r_ptr->flags1, RF1_UNIQUE) && angband_strchr("Jjlw", r_ptr->d_char))
+    if (any_bits(r_ptr->flags7, RF7_AQUATIC) && r_ptr->race_kind_flags.has_not(MonraceKindType::UNIQUE) && angband_strchr("Jjlw", r_ptr->d_char))
         return true;
     else
         return false;
@@ -830,7 +831,7 @@ bool monster_can_entry_arena(player_type *player_ptr, MONRACE_IDX r_idx)
     monster_race *r_ptr = &r_info[r_idx];
     bool unselectable = any_bits(r_ptr->flags1, RF1_NEVER_MOVE);
     unselectable |= any_bits(r_ptr->flags2, RF2_MULTIPLY);
-    unselectable |= any_bits(r_ptr->flags2, RF2_QUANTUM) && none_bits(r_ptr->flags1, RF1_UNIQUE);
+    unselectable |= r_ptr->race_kind_flags.has(MonraceKindType::QUANTUM) && r_ptr->race_kind_flags.has_not(MonraceKindType::UNIQUE);
     unselectable |= any_bits(r_ptr->flags7, RF7_AQUATIC);
     unselectable |= any_bits(r_ptr->flags7, RF7_CHAMELEON);
     if (unselectable)
@@ -861,7 +862,7 @@ bool item_monster_okay(player_type *player_ptr, MONRACE_IDX r_idx)
     (void)player_ptr;
 
     monster_race *r_ptr = &r_info[r_idx];
-    if (any_bits(r_ptr->flags1, RF1_UNIQUE))
+    if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE))
         return false;
 
     if (any_bits(r_ptr->flags7, RF7_KAGE))
@@ -893,6 +894,6 @@ bool item_monster_okay(player_type *player_ptr, MONRACE_IDX r_idx)
  */
 bool vault_monster_okay(player_type *player_ptr, MONRACE_IDX r_idx)
 {
-    return (mon_hook_dungeon(player_ptr, r_idx) && none_bits(r_info[r_idx].flags1, RF1_UNIQUE) && none_bits(r_info[r_idx].flags7, RF7_UNIQUE2)
+    return (mon_hook_dungeon(player_ptr, r_idx) && r_info[r_idx].race_kind_flags.has_not(MonraceKindType::UNIQUE) && none_bits(r_info[r_idx].flags7, RF7_UNIQUE2)
         && r_info[r_idx].resistance_flags.has_not(MonsterResistanceType::RESIST_ALL) && none_bits(r_info[r_idx].flags7, RF7_AQUATIC));
 }

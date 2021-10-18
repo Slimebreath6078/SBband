@@ -5,6 +5,7 @@
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-flags3.h"
 #include "monster-race/race-flags7.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-flag-types.h"
 #include "monster/monster-info.h"
 #include "player-info/class-info.h"
@@ -45,7 +46,7 @@ bool common_saving_throw_charm(player_type *player_ptr, HIT_POINT pow, monster_t
         return true;
 
     pow += (adj_chr_chm[player_ptr->stat_index[A_CHR]] - 1);
-    if ((r_ptr->flags1 & RF1_UNIQUE) || (r_ptr->flags7 & RF7_NAZGUL))
+    if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || (r_ptr->flags7 & RF7_NAZGUL))
         pow = pow * 2 / 3;
     return (r_ptr->level > randint1((pow - 10) < 1 ? 1 : (pow - 10)) + 5);
 }
@@ -74,7 +75,7 @@ bool common_saving_throw_control(player_type *player_ptr, HIT_POINT pow, monster
         return true;
 
     pow += adj_chr_chm[player_ptr->stat_index[A_CHR]] - 1;
-    if ((r_ptr->flags1 & RF1_UNIQUE) || (r_ptr->flags7 & RF7_NAZGUL))
+    if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || (r_ptr->flags7 & RF7_NAZGUL))
         pow = pow * 2 / 3;
     return (r_ptr->level > randint1((pow - 10) < 1 ? 1 : (pow - 10)) + 5);
 }

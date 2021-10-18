@@ -5,6 +5,7 @@
 #include "monster-floor/monster-remover.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-describer.h"
 #include "monster/monster-description-types.h"
 #include "monster/monster-info.h"
@@ -118,7 +119,7 @@ void compact_monsters(player_type *player_ptr, int size)
             if ((r_ptr->flags1 & (RF1_QUESTOR)) && (cnt < 1000))
                 chance = 100;
 
-            if (r_ptr->flags1 & (RF1_UNIQUE))
+            if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE))
                 chance = 100;
 
             if (randint0(100) < chance)

@@ -28,6 +28,7 @@
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-flags7.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-describer.h"
 #include "monster/monster-description-types.h"
 #include "monster/monster-info.h"
@@ -325,7 +326,7 @@ static void do_name_pet(player_type *player_ptr)
             msg_print(_("そのモンスターはペットではない。", "This monster is not a pet."));
             return;
         }
-        if (r_info[m_ptr->r_idx].flags1 & RF1_UNIQUE) {
+        if (r_info[m_ptr->r_idx].race_kind_flags.has(MonraceKindType::UNIQUE)) {
             msg_print(_("そのモンスターの名前は変えられない！", "You cannot change the name of this monster!"));
             return;
         }

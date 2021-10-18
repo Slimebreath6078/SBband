@@ -10,6 +10,7 @@
 #include "floor/floor-object.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
+#include "monster-race/race-kind-flags.h"
 #include "object-enchant/item-feeling.h"
 #include "object-enchant/object-ego.h"
 #include "object-enchant/special-object-flags.h"
@@ -382,7 +383,7 @@ void autopick_entry_from_object(player_type *player_ptr, autopick_type *entry, o
         ADD_FLG(FLG_WANTED);
     }
 
-    if ((o_ptr->tval == TV_CORPSE || o_ptr->tval == TV_STATUE) && (r_info[o_ptr->pval].flags1 & RF1_UNIQUE)) {
+    if ((o_ptr->tval == TV_CORPSE || o_ptr->tval == TV_STATUE) && r_info[o_ptr->pval].race_kind_flags.has(MonraceKindType::UNIQUE)) {
         ADD_FLG(FLG_UNIQUE);
     }
 

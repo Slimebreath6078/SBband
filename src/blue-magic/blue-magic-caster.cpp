@@ -18,6 +18,7 @@
 #include "monster-race/race-ability-flags.h"
 #include "monster-race/race-flags-resistance.h"
 #include "monster-race/race-flags1.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-describer.h"
 #include "monster/monster-info.h"
 #include "monster/monster-status.h"
@@ -106,7 +107,7 @@ static bool exe_blue_teleport_back(player_type *player_ptr, GAME_TEXT *m_name)
     if (r_ptr->resistance_flags.has(MonsterResistanceType::RESIST_TELEPORT))
         return false;
 
-    if ((r_ptr->flags1 & RF1_UNIQUE) || r_ptr->resistance_flags.has(MonsterResistanceType::RESIST_ALL)) {
+    if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || r_ptr->resistance_flags.has(MonsterResistanceType::RESIST_ALL)) {
         if (is_original_ap_and_seen(player_ptr, m_ptr))
             r_ptr->r_resistance_flags.set(MonsterResistanceType::RESIST_TELEPORT);
 

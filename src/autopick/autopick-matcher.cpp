@@ -12,6 +12,7 @@
 #include "inventory/inventory-slot-types.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
+#include "monster-race/race-kind-flags.h"
 #include "object-enchant/item-feeling.h"
 #include "object-enchant/special-object-flags.h"
 #include "object-hook/hook-armor.h"
@@ -171,7 +172,7 @@ bool is_autopick_match(player_type *player_ptr, object_type *o_ptr, autopick_typ
     if (IS_FLG(FLG_WANTED) && !object_is_bounty(player_ptr, o_ptr))
         return false;
 
-    if (IS_FLG(FLG_UNIQUE) && ((o_ptr->tval != TV_CORPSE && o_ptr->tval != TV_STATUE) || !(r_info[o_ptr->pval].flags1 & RF1_UNIQUE)))
+    if (IS_FLG(FLG_UNIQUE) && ((o_ptr->tval != TV_CORPSE && o_ptr->tval != TV_STATUE) || r_info[o_ptr->pval].race_kind_flags.has_not(MonraceKindType::UNIQUE)))
         return false;
 
     if (IS_FLG(FLG_HUMAN) && (o_ptr->tval != TV_CORPSE || !angband_strchr("pht", r_info[o_ptr->pval].d_char)))

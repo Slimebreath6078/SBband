@@ -8,6 +8,7 @@
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-flags7.h"
+#include "monster-race/race-kind-flags.h"
 #include "system/monster-race-definition.h"
 #include "system/player-type-definition.h"
 #include "term/gameterm.h"
@@ -91,10 +92,10 @@ void do_cmd_query_symbol(player_type *player_ptr)
         if (!cheat_know && !r_ref.r_sights)
             continue;
 
-        if (norm && (r_ref.flags1 & (RF1_UNIQUE)))
+        if (norm && r_ref.race_kind_flags.has(MonraceKindType::UNIQUE))
             continue;
 
-        if (uniq && !(r_ref.flags1 & (RF1_UNIQUE)))
+        if (uniq && r_ref.race_kind_flags.has_not(MonraceKindType::UNIQUE))
             continue;
 
         if (ride && !(r_ref.flags7 & (RF7_RIDING)))

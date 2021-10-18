@@ -18,6 +18,7 @@
 #include "monster-race/race-flags3.h"
 #include "monster-race/race-flags7.h"
 #include "monster-race/race-indice-types.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster-race/race-resistance-mask.h"
 #include "monster/monster-info.h"
 #include "monster/monster-status-setter.h"
@@ -192,7 +193,7 @@ MonsterSpellResult spell_RF6_TELE_TO(player_type *player_ptr, MONSTER_IDX m_idx,
     monster_name(player_ptr, t_idx, t_name);
 
     if (tr_ptr->resistance_flags.has(MonsterResistanceType::RESIST_TELEPORT)) {
-        if ((tr_ptr->flags1 & RF1_UNIQUE) || tr_ptr->resistance_flags.has(MonsterResistanceType::RESIST_ALL)) {
+        if (tr_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || tr_ptr->resistance_flags.has(MonsterResistanceType::RESIST_ALL)) {
             if (is_original_ap_and_seen(player_ptr, t_ptr))
                 tr_ptr->r_resistance_flags.set(MonsterResistanceType::RESIST_TELEPORT);
             if (see_monster(player_ptr, t_idx)) {
@@ -266,7 +267,7 @@ MonsterSpellResult spell_RF6_TELE_AWAY(player_type *player_ptr, MONSTER_IDX m_id
     monster_name(player_ptr, t_idx, t_name);
 
     if (tr_ptr->resistance_flags.has(MonsterResistanceType::RESIST_TELEPORT)) {
-        if ((tr_ptr->flags1 & RF1_UNIQUE) || tr_ptr->resistance_flags.has(MonsterResistanceType::RESIST_ALL)) {
+        if (tr_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || tr_ptr->resistance_flags.has(MonsterResistanceType::RESIST_ALL)) {
             if (is_original_ap_and_seen(player_ptr, t_ptr))
                 tr_ptr->r_resistance_flags.set(MonsterResistanceType::RESIST_TELEPORT);
             if (see_monster(player_ptr, t_idx)) {
@@ -374,7 +375,7 @@ MonsterSpellResult spell_RF6_DARKNESS(player_type *player_ptr, POSITION y, POSIT
     GAME_TEXT t_name[MAX_NLEN];
     monster_name(player_ptr, t_idx, t_name);
 
-    if ((player_ptr->pclass == CLASS_NINJA) && (!(r_ptr->flags3 & (RF3_UNDEAD)) && r_ptr->resistance_flags.has_not(MonsterResistanceType::HURT_LITE)) && !(r_ptr->flags7 & RF7_DARK_MASK))
+    if ((player_ptr->pclass == CLASS_NINJA) && r_ptr->race_kind_flags.has_not(MonraceKindType::UNDEAD) && r_ptr->resistance_flags.has_not(MonsterResistanceType::HURT_LITE) && !(r_ptr->flags7 & RF7_DARK_MASK))
         can_use_lite_area = true;
 
     if (monster_to_monster && !is_hostile(t_ptr))

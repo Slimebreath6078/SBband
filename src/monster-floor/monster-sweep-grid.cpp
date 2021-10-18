@@ -16,6 +16,7 @@
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-flags2.h"
 #include "monster-race/race-flags3.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-flag-types.h"
 #include "monster/monster-info.h"
 #include "monster/monster-processor-util.h"
@@ -177,7 +178,7 @@ void MonsterSweepGrid::search_room_to_run(POSITION *y, POSITION *x)
 {
     auto *floor_ptr = this->player_ptr->current_floor_ptr;
     auto *r_ptr = &r_info[floor_ptr->m_list[this->m_idx].r_idx];
-    if (none_bits(r_ptr->flags3, RF3_ANIMAL) || this->can_pass_wall || any_bits(r_ptr->flags2, RF2_KILL_WALL)) {
+    if (r_ptr->race_kind_flags.has_not(MonraceKindType::ANIMAL) || this->can_pass_wall || any_bits(r_ptr->flags2, RF2_KILL_WALL)) {
         return;
     }
 
@@ -362,7 +363,7 @@ bool MonsterSweepGrid::is_best_cost(const POSITION y, const POSITION x, const in
     auto *r_ptr = &r_info[floor_ptr->m_list[this->m_idx].r_idx];
     auto is_riding = this->m_idx == this->player_ptr->riding;
     if ((none_bits(r_ptr->flags2, RF2_PASS_WALL) || (is_riding && !has_pass_wall(this->player_ptr)))
-            && (none_bits(r_ptr->flags2, RF2_KILL_WALL) || is_riding)) {
+        && (none_bits(r_ptr->flags2, RF2_KILL_WALL) || is_riding)) {
         if (this->cost == 0) {
             return false;
         }

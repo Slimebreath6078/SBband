@@ -17,6 +17,7 @@
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-indice-types.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-status.h"
 #include "player-attack/player-attack.h"
 #include "player/player-damage.h"
@@ -162,7 +163,7 @@ bool activate_unique_detection(player_type *player_ptr)
             continue;
 
         r_ptr = &r_info[m_ptr->r_idx];
-        if (r_ptr->flags1 & RF1_UNIQUE)
+        if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE))
             msg_format(_("%s． ", "%s. "), r_ptr->name.c_str());
 
         if (m_ptr->r_idx == MON_DIO)

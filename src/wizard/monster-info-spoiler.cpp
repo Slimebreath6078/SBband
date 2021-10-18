@@ -4,6 +4,7 @@
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-flags7.h"
 #include "monster-race/race-flags8.h"
+#include "monster-race/race-kind-flags.h"
 #include "system/angband-version.h"
 #include "system/monster-race-definition.h"
 #include "term/term-color-types.h"
@@ -124,7 +125,7 @@ spoiler_output_status spoil_mon_desc(concptr fname, std::function<bool(const mon
             continue;
         }
 
-        if (any_bits(r_ptr->flags1, RF1_UNIQUE)) {
+        if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE)) {
             sprintf(nam, "[U] %s", name_buf);
         } else if (any_bits(r_ptr->flags7, RF7_NAZGUL)) {
             sprintf(nam, "[N] %s", name_buf);
@@ -207,7 +208,7 @@ spoiler_output_status spoil_mon_info(concptr fname)
     for (auto r_idx : who) {
         monster_race *r_ptr = &r_info[r_idx];
         BIT_FLAGS flags1 = r_ptr->flags1;
-        if (any_bits(flags1, RF1_UNIQUE)) {
+        if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE)) {
             spoil_out("[U] ");
         } else if (any_bits(r_ptr->flags7, RF7_NAZGUL)) {
             spoil_out("[N] ");

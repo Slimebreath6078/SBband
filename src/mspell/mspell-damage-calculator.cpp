@@ -6,6 +6,7 @@
 #include "monster-race/race-flags2.h"
 #include "monster-race/race-flags3.h"
 #include "monster-race/race-indice-types.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-status.h"
 #include "player-info/equipment-info.h"
 #include "system/floor-type-definition.h"
@@ -81,7 +82,7 @@ static HIT_POINT monspell_damage_base(
     case RF_ABILITY::DISPEL:
         return -1;
     case RF_ABILITY::ROCKET:
-        if (any_bits(r_ptr->flags3, RF3_KAN_SEN)) {
+        if (r_ptr->race_kind_flags.has(MonraceKindType::KAN_SEN)) {
             switch (r_idx) {
             case MON_RF_AYANAMI:
                 dam = (hp / 4) > 800 ? 800 : (hp / 4);
@@ -90,8 +91,7 @@ static HIT_POINT monspell_damage_base(
                 dam = (hp / 8) > 800 ? 800 : (hp / 8);
                 break;
             }
-        }
-        else
+        } else
             dam = (hp / 4) > 800 ? 800 : (hp / 4);
         break;
     case RF_ABILITY::SHOOT:

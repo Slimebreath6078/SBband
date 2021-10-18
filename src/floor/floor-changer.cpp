@@ -25,6 +25,7 @@
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-flags2.h"
 #include "monster-race/race-flags7.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-describer.h"
 #include "monster/monster-description-types.h"
 #include "monster/monster-flag-types.h"
@@ -170,7 +171,7 @@ static void update_unique_artifact(floor_type *floor_ptr, int16_t cur_floor_id)
             continue;
 
         r_ptr = real_r_ptr(m_ptr);
-        if ((r_ptr->flags1 & RF1_UNIQUE) || (r_ptr->flags7 & RF7_NAZGUL))
+        if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || (r_ptr->flags7 & RF7_NAZGUL))
             r_ptr->floor_id = cur_floor_id;
     }
 
@@ -246,7 +247,7 @@ static void reset_unique_by_floor_change(player_type *player_ptr)
         }
 
         r_ptr = real_r_ptr(m_ptr);
-        if (!(r_ptr->flags1 & RF1_UNIQUE) && !(r_ptr->flags7 & RF7_NAZGUL))
+        if (r_ptr->race_kind_flags.has_not(MonraceKindType::UNIQUE) && !(r_ptr->flags7 & RF7_NAZGUL))
             continue;
 
         if (r_ptr->floor_id != new_floor_id)

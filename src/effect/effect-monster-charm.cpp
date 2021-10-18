@@ -10,6 +10,7 @@
 #include "monster-race/race-flags3.h"
 #include "monster-race/race-flags7.h"
 #include "monster-race/race-indice-types.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-flag-types.h"
 #include "monster/monster-info.h"
 #include "monster/monster-list.h"
@@ -48,7 +49,7 @@ static void effect_monster_charm_resist(player_type *player_ptr, effect_monster_
         set_pet(player_ptr, em_ptr->m_ptr);
 
         chg_virtue(player_ptr, V_INDIVIDUALISM, -1);
-        if (em_ptr->r_ptr->flags3 & RF3_ANIMAL)
+        if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::ANIMAL))
             chg_virtue(player_ptr, V_NATURE, 1);
     }
 }
@@ -88,7 +89,7 @@ process_result effect_monster_control_undead(player_type *player_ptr, effect_mon
         em_ptr->dam -= player_ptr->virtues[vir - 1] / 20;
     }
 
-    if (common_saving_throw_control(player_ptr, em_ptr->dam, em_ptr->m_ptr) || !(em_ptr->r_ptr->flags3 & RF3_UNDEAD)) {
+    if (common_saving_throw_control(player_ptr, em_ptr->dam, em_ptr->m_ptr) || em_ptr->r_ptr->race_kind_flags.has_not(MonraceKindType::UNDEAD)) {
         em_ptr->note = _("には効果がなかった。", " is unaffected.");
         em_ptr->obvious = false;
         if (one_in_(4))
@@ -121,7 +122,7 @@ process_result effect_monster_control_demon(player_type *player_ptr, effect_mons
         em_ptr->dam -= player_ptr->virtues[vir - 1] / 20;
     }
 
-    if (common_saving_throw_control(player_ptr, em_ptr->dam, em_ptr->m_ptr) || !(em_ptr->r_ptr->flags3 & RF3_DEMON)) {
+    if (common_saving_throw_control(player_ptr, em_ptr->dam, em_ptr->m_ptr) || em_ptr->r_ptr->race_kind_flags.has_not(MonraceKindType::DEMON)) {
         em_ptr->note = _("には効果がなかった。", " is unaffected.");
         em_ptr->obvious = false;
         if (one_in_(4))
@@ -154,7 +155,7 @@ process_result effect_monster_control_animal(player_type *player_ptr, effect_mon
         em_ptr->dam -= player_ptr->virtues[vir - 1] / 20;
     }
 
-    if (common_saving_throw_control(player_ptr, em_ptr->dam, em_ptr->m_ptr) || !(em_ptr->r_ptr->flags3 & RF3_ANIMAL)) {
+    if (common_saving_throw_control(player_ptr, em_ptr->dam, em_ptr->m_ptr) || em_ptr->r_ptr->race_kind_flags.has_not(MonraceKindType::ANIMAL)) {
         em_ptr->note = _("には効果がなかった。", " is unaffected.");
         em_ptr->obvious = false;
         if (one_in_(4))
@@ -166,7 +167,7 @@ process_result effect_monster_control_animal(player_type *player_ptr, effect_mon
     } else {
         em_ptr->note = _("はなついた。", " is tamed!");
         set_pet(player_ptr, em_ptr->m_ptr);
-        if (em_ptr->r_ptr->flags3 & RF3_ANIMAL)
+        if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::ANIMAL))
             chg_virtue(player_ptr, V_NATURE, 1);
     }
 
@@ -204,7 +205,7 @@ process_result effect_monster_charm_living(player_type *player_ptr, effect_monst
     } else {
         em_ptr->note = _("を支配した。", " is tamed!");
         set_pet(player_ptr, em_ptr->m_ptr);
-        if (em_ptr->r_ptr->flags3 & RF3_ANIMAL)
+        if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::ANIMAL))
             chg_virtue(player_ptr, V_NATURE, 1);
     }
 
@@ -236,7 +237,7 @@ static void effect_monster_domination_corrupted_addition(player_type *player_ptr
 // Powerful demons & undead can turn a mindcrafter's attacks back on them.
 static void effect_monster_domination_corrupted(player_type *player_ptr, effect_monster_type *em_ptr)
 {
-    bool is_corrupted = ((em_ptr->r_ptr->flags3 & (RF3_UNDEAD | RF3_DEMON)) != 0) && (em_ptr->r_ptr->level > player_ptr->lev / 2) && (one_in_(2));
+    bool is_corrupted = em_ptr->r_ptr->race_kind_flags.has_any_of({ MonraceKindType::UNDEAD, MonraceKindType::DEMON }) && (em_ptr->r_ptr->level > player_ptr->lev / 2) && (one_in_(2));
     if (!is_corrupted) {
         em_ptr->note = _("には効果がなかった。", " is unaffected.");
         em_ptr->obvious = false;
@@ -277,7 +278,7 @@ process_result effect_monster_domination(player_type *player_ptr, effect_monster
     if (em_ptr->seen)
         em_ptr->obvious = true;
 
-    if ((em_ptr->r_ptr->flags1 & (RF1_UNIQUE | RF1_QUESTOR)) || (em_ptr->r_ptr->flags3 & RF3_NO_CONF)
+    if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || (em_ptr->r_ptr->flags1 & RF1_QUESTOR) || (em_ptr->r_ptr->flags3 & RF3_NO_CONF)
         || (em_ptr->r_ptr->level > randint1((em_ptr->dam - 10) < 1 ? 1 : (em_ptr->dam - 10)) + 10)) {
         if (((em_ptr->r_ptr->flags3 & RF3_NO_CONF) != 0) && is_original_ap_and_seen(player_ptr, em_ptr->m_ptr))
             em_ptr->r_ptr->r_flags3 |= (RF3_NO_CONF);
@@ -302,7 +303,7 @@ process_result effect_monster_domination(player_type *player_ptr, effect_monster
 
 static bool effect_monster_crusade_domination(player_type *player_ptr, effect_monster_type *em_ptr)
 {
-    if (((em_ptr->r_ptr->flags3 & RF3_GOOD) == 0) || player_ptr->current_floor_ptr->inside_arena)
+    if (em_ptr->r_ptr->race_kind_flags.has_not(MonraceKindType::GOOD) || player_ptr->current_floor_ptr->inside_arena)
         return false;
 
     if (em_ptr->r_ptr->flags3 & RF3_NO_CONF)
@@ -316,7 +317,7 @@ static bool effect_monster_crusade_domination(player_type *player_ptr, effect_mo
         return true;
     }
 
-    if ((em_ptr->r_ptr->flags1 & RF1_QUESTOR) || (em_ptr->r_ptr->flags1 & RF1_UNIQUE) || em_ptr->m_ptr->mflag2.has(MFLAG2::NOPET) || has_aggravate(player_ptr)
+    if ((em_ptr->r_ptr->flags1 & RF1_QUESTOR) || em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || em_ptr->m_ptr->mflag2.has(MFLAG2::NOPET) || has_aggravate(player_ptr)
         || ((em_ptr->r_ptr->level + 10) > randint1(em_ptr->dam))) {
         if (one_in_(4))
             em_ptr->m_ptr->mflag2.set(MFLAG2::NOPET);
@@ -328,7 +329,7 @@ static bool effect_monster_crusade_domination(player_type *player_ptr, effect_mo
     set_pet(player_ptr, em_ptr->m_ptr);
     (void)set_monster_fast(player_ptr, em_ptr->g_ptr->m_idx, monster_fast_remaining(em_ptr->m_ptr) + 100);
     if (is_original_ap_and_seen(player_ptr, em_ptr->m_ptr))
-        em_ptr->r_ptr->r_flags3 |= RF3_GOOD;
+        em_ptr->r_ptr->r_race_kind_flags.set(MonraceKindType::GOOD);
 
     return true;
 }
@@ -403,7 +404,7 @@ process_result effect_monster_capture(player_type *player_ptr, effect_monster_ty
 {
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
     if ((floor_ptr->inside_quest && (quest[floor_ptr->inside_quest].type == QUEST_TYPE_KILL_ALL) && !is_pet(em_ptr->m_ptr))
-        || any_bits(em_ptr->r_ptr->flags1, RF1_UNIQUE | RF1_QUESTOR) || any_bits(em_ptr->r_ptr->flags7, RF7_NAZGUL | RF7_UNIQUE2)
+        || em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || em_ptr->r_ptr->flags1 & RF1_QUESTOR || any_bits(em_ptr->r_ptr->flags7, RF7_NAZGUL | RF7_UNIQUE2)
         || em_ptr->m_ptr->parent_m_idx) {
         msg_format(_("%sには効果がなかった。", "%s is unaffected."), em_ptr->m_name);
         em_ptr->skipped = true;

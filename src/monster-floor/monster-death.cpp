@@ -25,6 +25,7 @@
 #include "monster-race/race-flags7.h"
 #include "monster-race/race-flags9.h"
 #include "monster-race/race-indice-types.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-describer.h"
 #include "monster/monster-description-types.h"
 #include "monster/monster-flag-types.h"
@@ -110,7 +111,7 @@ static void on_defeat_arena_monster(player_type *player_ptr, monster_death_type 
 static void drop_corpse(player_type *player_ptr, monster_death_type *md_ptr)
 {
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
-    bool is_drop_corpse = one_in_(md_ptr->r_ptr->flags1 & RF1_UNIQUE ? 1 : 4);
+    bool is_drop_corpse = one_in_(md_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) ? 1 : 4);
     is_drop_corpse &= (md_ptr->r_ptr->flags9 & (RF9_DROP_CORPSE | RF9_DROP_SKELETON)) != 0;
     is_drop_corpse &= !(floor_ptr->inside_arena || player_ptr->phase_out || md_ptr->cloned
         || ((md_ptr->m_ptr->r_idx == w_ptr->today_mon) && is_pet(md_ptr->m_ptr)));
@@ -120,7 +121,7 @@ static void drop_corpse(player_type *player_ptr, monster_death_type *md_ptr)
     bool corpse = false;
     if (!(md_ptr->r_ptr->flags9 & RF9_DROP_SKELETON))
         corpse = true;
-    else if ((md_ptr->r_ptr->flags9 & RF9_DROP_CORPSE) && (md_ptr->r_ptr->flags1 & RF1_UNIQUE))
+    else if ((md_ptr->r_ptr->flags9 & RF9_DROP_CORPSE) && md_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE))
         corpse = true;
     else if (md_ptr->r_ptr->flags9 & RF9_DROP_CORPSE) {
         if ((0 - ((md_ptr->m_ptr->maxhp) / 4)) > md_ptr->m_ptr->hp) {
@@ -254,7 +255,7 @@ static int decide_drop_numbers(player_type *player_ptr, monster_death_type *md_p
     if (md_ptr->r_ptr->flags1 & RF1_DROP_4D2)
         drop_numbers += damroll(4, 2);
 
-    if (md_ptr->cloned && !(md_ptr->r_ptr->flags1 & RF1_UNIQUE))
+    if (md_ptr->cloned && md_ptr->r_ptr->race_kind_flags.has_not(MonraceKindType::UNIQUE))
         drop_numbers = 0;
 
     if (is_pet(md_ptr->m_ptr) || player_ptr->phase_out || player_ptr->current_floor_ptr->inside_arena)
@@ -295,7 +296,7 @@ static void drop_items_golds(player_type *player_ptr, monster_death_type *md_ptr
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
     floor_ptr->object_level = floor_ptr->base_level;
     coin_type = 0;
-    bool visible = (md_ptr->m_ptr->ml && !player_ptr->hallucinated) || ((md_ptr->r_ptr->flags1 & RF1_UNIQUE) != 0);
+    bool visible = (md_ptr->m_ptr->ml && !player_ptr->hallucinated) || md_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE);
     if (visible && (dump_item || dump_gold))
         lore_treasure(player_ptr, md_ptr->m_idx, dump_item, dump_gold);
 }
@@ -342,7 +343,7 @@ void monster_death(player_type *player_ptr, MONSTER_IDX m_idx, bool drop_item)
         w_ptr->timewalk_m_idx = 0;
 
     // プレイヤーしかユニークを倒せないのでここで時間を記録
-    if (any_bits(md_ptr->r_ptr->flags1, RF1_UNIQUE) && md_ptr->m_ptr->mflag2.has_not(MFLAG2::CLONED)) {
+    if (md_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) && md_ptr->m_ptr->mflag2.has_not(MFLAG2::CLONED)) {
         update_playtime();
         md_ptr->r_ptr->defeat_time = w_ptr->play_time;
         md_ptr->r_ptr->defeat_level = player_ptr->lev;

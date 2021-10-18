@@ -28,6 +28,7 @@
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-flags3.h"
 #include "monster-race/race-flags7.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-describer.h"
 #include "monster/monster-description-types.h"
 #include "monster/monster-info.h"
@@ -174,7 +175,7 @@ static bool check_monster_hp(player_type *player_ptr, mam_pp_type *mam_pp_ptr)
     if (mam_pp_ptr->m_ptr->hp < 0)
         return false;
 
-    if (((r_ptr->flags1 & (RF1_UNIQUE | RF1_QUESTOR)) || (r_ptr->flags7 & RF7_NAZGUL)) && !player_ptr->phase_out) {
+    if (((r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || (r_ptr->flags1 & RF1_QUESTOR)) || (r_ptr->flags7 & RF7_NAZGUL)) && !player_ptr->phase_out) {
         mam_pp_ptr->m_ptr->hp = 1;
         return false;
     }

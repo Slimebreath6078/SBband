@@ -29,6 +29,7 @@
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-flags3.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-damage.h"
 #include "monster/monster-describer.h"
 #include "monster/monster-description-types.h"
@@ -82,7 +83,7 @@ static bool check_monster_continuous_attack(player_type *player_ptr, monap_type 
     }
 
     auto *r_ptr = &r_info[monap_ptr->m_ptr->r_idx];
-    if (is_pet(monap_ptr->m_ptr) && (r_ptr->flags1 & RF1_UNIQUE) && (monap_ptr->method == RBM_EXPLODE)) {
+    if (is_pet(monap_ptr->m_ptr) && r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) && (monap_ptr->method == RBM_EXPLODE)) {
         monap_ptr->method = RBM_HIT;
         monap_ptr->d_dice /= 10;
     }
@@ -100,12 +101,12 @@ static bool check_monster_continuous_attack(player_type *player_ptr, monap_type 
 static bool effect_protecion_from_evil(player_type *player_ptr, monap_type *monap_ptr)
 {
     auto *r_ptr = &r_info[monap_ptr->m_ptr->r_idx];
-    if ((player_ptr->protevil <= 0) || none_bits(r_ptr->flags3, RF3_EVIL) || (player_ptr->lev < monap_ptr->rlev) || ((randint0(100) + player_ptr->lev) <= 50)) {
+    if ((player_ptr->protevil <= 0) || r_ptr->race_kind_flags.has_not(MonraceKindType::EVIL) || (player_ptr->lev < monap_ptr->rlev) || ((randint0(100) + player_ptr->lev) <= 50)) {
         return false;
     }
 
     if (is_original_ap_and_seen(player_ptr, monap_ptr->m_ptr)) {
-        r_ptr->r_flags3 |= RF3_EVIL;
+        r_ptr->r_race_kind_flags.set(MonraceKindType::EVIL);
     }
 
 #ifdef JP
@@ -137,8 +138,8 @@ static void describe_silly_attacks(monap_type *monap_ptr)
     } else if (monap_ptr->abbreviate == 1) {
         msg_format("%s", monap_ptr->act);
     } else {
-       /* if (monap_ptr->abbreviate == -1) */
-       msg_format("%^s%s", monap_ptr->m_name, monap_ptr->act);
+        /* if (monap_ptr->abbreviate == -1) */
+        msg_format("%^s%s", monap_ptr->m_name, monap_ptr->act);
     }
 
     monap_ptr->abbreviate = 1; /*2回目以降は省略 */

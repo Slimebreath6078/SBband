@@ -15,6 +15,7 @@
 #include "lore/lore-store.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags3.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-describer.h"
 #include "monster/monster-description-types.h"
 #include "monster/monster-flag-types.h"
@@ -381,11 +382,11 @@ void probed_monster_info(char *buf, player_type *player_ptr, monster_type *m_ptr
         speed += 5;
 
     concptr align;
-    if ((r_ptr->flags3 & (RF3_EVIL | RF3_GOOD)) == (RF3_EVIL | RF3_GOOD))
+    if (r_ptr->race_kind_flags.has_all_of({ MonraceKindType::EVIL, MonraceKindType::GOOD }))
         align = _("善悪", "good&evil");
-    else if (r_ptr->flags3 & RF3_EVIL)
+    else if (r_ptr->race_kind_flags.has(MonraceKindType::EVIL))
         align = _("邪悪", "evil");
-    else if (r_ptr->flags3 & RF3_GOOD)
+    else if (r_ptr->race_kind_flags.has(MonraceKindType::GOOD))
         align = _("善良", "good");
     else if ((m_ptr->sub_align & (SUB_ALIGN_EVIL | SUB_ALIGN_GOOD)) == (SUB_ALIGN_EVIL | SUB_ALIGN_GOOD))
         align = _("中立(善悪)", "neutral(good&evil)");

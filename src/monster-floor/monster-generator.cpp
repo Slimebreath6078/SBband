@@ -12,6 +12,7 @@
 #include "floor/floor-util.h"
 #include "floor/geometry.h"
 #include "game-option/cheat-options.h"
+#include "game-option/cheat-types.h"
 #include "monster-floor/one-monster-placer.h"
 #include "monster-floor/place-monster-types.h"
 #include "monster-race/monster-race-hook.h"
@@ -20,6 +21,7 @@
 #include "monster-race/race-flags7.h"
 #include "monster-race/race-flags8.h"
 #include "monster-race/race-indice-types.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-flag-types.h"
 #include "monster/monster-info.h"
 #include "monster/monster-list.h"
@@ -36,7 +38,6 @@
 #include "util/string-processor.h"
 #include "view/display-messages.h"
 #include "wizard/wizard-messages.h"
-#include "game-option/cheat-types.h"
 
 #define MON_SCAT_MAXD 10 /*!< mon_scatter()関数によるモンスター配置で許される中心からの最大距離 */
 
@@ -146,7 +147,7 @@ bool multiply_monster(player_type *player_ptr, MONSTER_IDX m_idx, bool clone, BI
         return false;
 
     if (clone || m_ptr->mflag2.has(MFLAG2::CLONED)) {
-        floor_ptr->m_list[hack_m_idx_ii].mflag2.set({MFLAG2::CLONED, MFLAG2::NOPET});
+        floor_ptr->m_list[hack_m_idx_ii].mflag2.set({ MFLAG2::CLONED, MFLAG2::NOPET });
     }
 
     return true;
@@ -232,7 +233,7 @@ static bool place_monster_can_escort(player_type *player_ptr, MONRACE_IDX r_idx)
     if (z_ptr->level > r_ptr->level)
         return false;
 
-    if (z_ptr->flags1 & RF1_UNIQUE)
+    if (z_ptr->race_kind_flags.has(MonraceKindType::UNIQUE))
         return false;
 
     if (place_monster_idx == r_idx)
@@ -345,7 +346,7 @@ bool place_monster(player_type *player_ptr, POSITION y, POSITION x, BIT_FLAGS mo
     if (r_idx == 0)
         return false;
 
-    if ((one_in_(5) || (player_ptr->current_floor_ptr->dun_level == 0)) && !(r_info[r_idx].flags1 & RF1_UNIQUE)
+    if ((one_in_(5) || (player_ptr->current_floor_ptr->dun_level == 0)) && r_info[r_idx].race_kind_flags.has_not(MonraceKindType::UNIQUE)
         && angband_strchr("hkoptuyAHLOPTUVY", r_info[r_idx].d_char)) {
         mode |= PM_JURAL;
     }
@@ -374,7 +375,7 @@ bool alloc_horde(player_type *player_ptr, POSITION y, POSITION x, summon_specifi
             return false;
 
         r_ptr = &r_info[r_idx];
-        if (r_ptr->flags1 & RF1_UNIQUE)
+        if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE))
             continue;
 
         if (r_idx == MON_HAGURE)

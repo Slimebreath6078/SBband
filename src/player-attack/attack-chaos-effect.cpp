@@ -19,6 +19,7 @@
 #include "monster-race/race-flags-resistance.h"
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-flags3.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster-race/race-resistance-mask.h"
 #include "monster/monster-describer.h"
 #include "monster/monster-info.h"
@@ -174,7 +175,7 @@ static bool judge_tereprt_resistance(player_type *player_ptr, player_attack_type
     if (r_ptr->resistance_flags.has_not(MonsterResistanceType::RESIST_TELEPORT))
         return false;
 
-    if (r_ptr->flags1 & RF1_UNIQUE) {
+    if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE)) {
         if (is_original_ap_and_seen(player_ptr, pa_ptr->m_ptr))
             r_ptr->r_resistance_flags.set(MonsterResistanceType::RESIST_TELEPORT);
 
@@ -220,7 +221,7 @@ static void attack_teleport_away(player_type *player_ptr, player_attack_type *pa
 static void attack_polymorph(player_type *player_ptr, player_attack_type *pa_ptr, POSITION y, POSITION x)
 {
     monster_race *r_ptr = pa_ptr->r_ptr;
-    if (((r_ptr->flags1 & (RF1_UNIQUE | RF1_QUESTOR)) != 0) || r_ptr->resistance_flags.has_any_of(RFR_EFF_RESIST_CHAOS_MASK))
+    if ((r_ptr->race_kind_flags.has_not(MonraceKindType::UNIQUE) && !(r_ptr->flags1 & RF1_QUESTOR)) || r_ptr->resistance_flags.has_any_of(RFR_EFF_RESIST_CHAOS_MASK))
         return;
 
     if (polymorph_monster(player_ptr, y, x)) {

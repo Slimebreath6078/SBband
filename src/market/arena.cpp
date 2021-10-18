@@ -16,6 +16,7 @@
 #include "monster-race/race-flags-resistance.h"
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-flags7.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-list.h"
 #include "monster/monster-util.h"
 #include "status/buff-setter.h"
@@ -199,7 +200,7 @@ void update_gambling_monsters(player_type *player_ptr)
                 if (!r_idx)
                     continue;
 
-                if ((r_info[r_idx].flags1 & RF1_UNIQUE) || (r_info[r_idx].flags7 & RF7_UNIQUE2)) {
+                if (r_info[r_idx].race_kind_flags.has(MonraceKindType::UNIQUE) || (r_info[r_idx].flags7 & RF7_UNIQUE2)) {
                     if ((r_info[r_idx].level + 10) > mon_level)
                         continue;
                 }
@@ -302,8 +303,8 @@ bool monster_arena_comm(player_type *player_ptr)
         monster_race *r_ptr = &r_info[battle_mon[i]];
 
         sprintf(buf, _("%d) %-58s  %4ld.%02ld倍", "%d) %-58s  %4ld.%02ld"), i + 1,
-            _(format("%s%s", r_ptr->name.c_str(), (r_ptr->flags1 & RF1_UNIQUE) ? "もどき" : "      "),
-                format("%s%s", (r_ptr->flags1 & RF1_UNIQUE) ? "Fake " : "", r_ptr->name.c_str())),
+            _(format("%s%s", r_ptr->name.c_str(), r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) ? "もどき" : "      "),
+                format("%s%s", r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) ? "Fake " : "", r_ptr->name.c_str())),
             (long int)mon_odds[i] / 100, (long int)mon_odds[i] % 100);
         prt(buf, 5 + i, 1);
     }

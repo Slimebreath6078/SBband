@@ -7,6 +7,7 @@
 #include "lore/lore-util.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
+#include "monster-race/race-kind-flags.h"
 #include "system/monster-race-definition.h"
 #include "term/gameterm.h"
 #include "term/screen-processor.h"
@@ -92,11 +93,11 @@ bool research_mon(player_type *player_ptr)
 
         /* XTRA HACK WHATSEARCH */
         /* Require non-unique monsters if needed */
-        if (norm && (r_ref.flags1 & (RF1_UNIQUE)))
+        if (norm && r_ref.race_kind_flags.has(MonraceKindType::UNIQUE))
             continue;
 
         /* Require unique monsters if needed */
-        if (uniq && !(r_ref.flags1 & (RF1_UNIQUE)))
+        if (uniq && r_ref.race_kind_flags.has_not(MonraceKindType::UNIQUE))
             continue;
 
         /* 名前検索 */

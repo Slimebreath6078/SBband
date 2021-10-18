@@ -8,6 +8,7 @@
 #include "monster-race/race-flags3.h"
 #include "monster-race/race-flags7.h"
 #include "monster-race/race-indice-types.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-info.h"
 #include "monster/monster-status-setter.h"
 #include "monster/monster-status.h"
@@ -25,7 +26,7 @@ process_result effect_monster_old_poly(effect_monster_type *em_ptr)
         em_ptr->obvious = true;
     em_ptr->do_polymorph = true;
 
-    if ((em_ptr->r_ptr->flags1 & RF1_UNIQUE) || (em_ptr->r_ptr->flags1 & RF1_QUESTOR)
+    if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || (em_ptr->r_ptr->flags1 & RF1_QUESTOR)
         || (em_ptr->r_ptr->level > randint1((em_ptr->dam - 10) < 1 ? 1 : (em_ptr->dam - 10)) + 10)) {
         em_ptr->note = _("には効果がなかった。", " is unaffected.");
         em_ptr->do_polymorph = false;
@@ -41,8 +42,8 @@ process_result effect_monster_old_clone(player_type *player_ptr, effect_monster_
     if (em_ptr->seen)
         em_ptr->obvious = true;
 
-    if ((player_ptr->current_floor_ptr->inside_arena) || is_pet(em_ptr->m_ptr) || (em_ptr->r_ptr->flags1 & (RF1_UNIQUE | RF1_QUESTOR))
-        || (em_ptr->r_ptr->flags7 & (RF7_NAZGUL | RF7_UNIQUE2))) {
+    if ((player_ptr->current_floor_ptr->inside_arena) || is_pet(em_ptr->m_ptr) || em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE)
+        || (em_ptr->r_ptr->flags1 & RF1_QUESTOR) || (em_ptr->r_ptr->flags7 & (RF7_NAZGUL | RF7_UNIQUE2))) {
         em_ptr->note = _("には効果がなかった。", " is unaffected.");
         em_ptr->dam = 0;
         return PROCESS_CONTINUE;
@@ -89,19 +90,19 @@ static void effect_monster_old_heal_check_player(player_type *player_ptr, effect
         return;
 
     chg_virtue(player_ptr, V_VITALITY, 1);
-    if (em_ptr->r_ptr->flags1 & RF1_UNIQUE)
+    if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE))
         chg_virtue(player_ptr, V_INDIVIDUALISM, 1);
 
     if (is_friendly(em_ptr->m_ptr))
         chg_virtue(player_ptr, V_HONOUR, 1);
-    else if (!(em_ptr->r_ptr->flags3 & RF3_EVIL)) {
-        if (em_ptr->r_ptr->flags3 & RF3_GOOD)
+    else if (em_ptr->r_ptr->race_kind_flags.has_not(MonraceKindType::EVIL)) {
+        if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::GOOD))
             chg_virtue(player_ptr, V_COMPASSION, 2);
         else
             chg_virtue(player_ptr, V_COMPASSION, 1);
     }
 
-    if (em_ptr->r_ptr->flags3 & RF3_ANIMAL)
+    if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::ANIMAL))
         chg_virtue(player_ptr, V_NATURE, 1);
 }
 
@@ -172,7 +173,7 @@ process_result effect_monster_old_speed(player_type *player_ptr, effect_monster_
     }
 
     if (!em_ptr->who) {
-        if (em_ptr->r_ptr->flags1 & RF1_UNIQUE)
+        if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE))
             chg_virtue(player_ptr, V_INDIVIDUALISM, 1);
         if (is_friendly(em_ptr->m_ptr))
             chg_virtue(player_ptr, V_HONOUR, 1);
@@ -188,7 +189,7 @@ process_result effect_monster_old_slow(player_type *player_ptr, effect_monster_t
         em_ptr->obvious = true;
 
     /* Powerful monsters can resist */
-    if ((em_ptr->r_ptr->flags1 & RF1_UNIQUE) || (em_ptr->r_ptr->level > randint1((em_ptr->dam - 10) < 1 ? 1 : (em_ptr->dam - 10)) + 10)) {
+    if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || (em_ptr->r_ptr->level > randint1((em_ptr->dam - 10) < 1 ? 1 : (em_ptr->dam - 10)) + 10)) {
         em_ptr->note = _("には効果がなかった。", " is unaffected.");
         em_ptr->obvious = false;
         em_ptr->dam = 0;
@@ -211,7 +212,7 @@ process_result effect_monster_old_sleep(player_type *player_ptr, effect_monster_
     if (em_ptr->seen)
         em_ptr->obvious = true;
 
-    if ((em_ptr->r_ptr->flags1 & RF1_UNIQUE) || (em_ptr->r_ptr->flags3 & RF3_NO_SLEEP)
+    if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || (em_ptr->r_ptr->flags3 & RF3_NO_SLEEP)
         || (em_ptr->r_ptr->level > randint1((em_ptr->dam - 10) < 1 ? 1 : (em_ptr->dam - 10)) + 10)) {
         if (em_ptr->r_ptr->flags3 & RF3_NO_SLEEP) {
             if (is_original_ap_and_seen(player_ptr, em_ptr->m_ptr))
@@ -239,7 +240,7 @@ process_result effect_monster_old_conf(player_type *player_ptr, effect_monster_t
         em_ptr->obvious = true;
 
     em_ptr->do_conf = damroll(3, (em_ptr->dam / 2)) + 1;
-    if ((em_ptr->r_ptr->flags1 & (RF1_UNIQUE)) || (em_ptr->r_ptr->flags3 & (RF3_NO_CONF))
+    if ((em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE)) || (em_ptr->r_ptr->flags3 & (RF3_NO_CONF))
         || (em_ptr->r_ptr->level > randint1((em_ptr->dam - 10) < 1 ? 1 : (em_ptr->dam - 10)) + 10)) {
         if (em_ptr->r_ptr->flags3 & (RF3_NO_CONF)) {
             if (is_original_ap_and_seen(player_ptr, em_ptr->m_ptr))
@@ -261,10 +262,10 @@ process_result effect_monster_stasis(effect_monster_type *em_ptr, bool to_evil)
         em_ptr->obvious = true;
 
     int stasis_damage = (em_ptr->dam - 10) < 1 ? 1 : (em_ptr->dam - 10);
-    bool has_resistance = (em_ptr->r_ptr->flags1 & RF1_UNIQUE) != 0;
+    bool has_resistance = em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE);
     has_resistance |= em_ptr->r_ptr->level > randint1(stasis_damage) + 10;
     if (to_evil)
-        has_resistance |= (em_ptr->r_ptr->flags3 & RF3_EVIL) == 0;
+        has_resistance |= em_ptr->r_ptr->race_kind_flags.has_not(MonraceKindType::EVIL);
 
     if (has_resistance) {
         em_ptr->note = _("には効果がなかった。", " is unaffected.");
@@ -284,7 +285,7 @@ process_result effect_monster_stun(effect_monster_type *em_ptr)
         em_ptr->obvious = true;
 
     em_ptr->do_stun = damroll((em_ptr->caster_lev / 20) + 3, (em_ptr->dam)) + 1;
-    if ((em_ptr->r_ptr->flags1 & (RF1_UNIQUE)) || (em_ptr->r_ptr->level > randint1((em_ptr->dam - 10) < 1 ? 1 : (em_ptr->dam - 10)) + 10)) {
+    if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || (em_ptr->r_ptr->level > randint1((em_ptr->dam - 10) < 1 ? 1 : (em_ptr->dam - 10)) + 10)) {
         em_ptr->do_stun = 0;
         em_ptr->note = _("には効果がなかった。", " is unaffected.");
         em_ptr->obvious = false;

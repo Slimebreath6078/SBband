@@ -10,6 +10,7 @@
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-flags7.h"
+#include "monster-race/race-kind-flags.h"
 #include "object/object-kind.h"
 #include "pet/pet-util.h"
 #include "player-info/race-info.h"
@@ -87,7 +88,7 @@ void player_wipe_without_name(player_type *player_ptr)
         }
         r_ref.cur_num = 0;
         r_ref.max_num = 100;
-        if (r_ref.flags1 & RF1_UNIQUE)
+        if (r_ref.race_kind_flags.has(MonraceKindType::UNIQUE))
             r_ref.max_num = 1;
         else if (r_ref.flags7 & RF7_NAZGUL)
             r_ref.max_num = MAX_NAZGUL_NUM;

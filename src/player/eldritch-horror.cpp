@@ -12,6 +12,7 @@
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-flags2.h"
 #include "monster-race/race-flags3.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/horror-descriptions.h"
 #include "monster/monster-describer.h"
 #include "monster/monster-info.h"
@@ -47,7 +48,7 @@ static concptr decide_horror_message(monster_race *r_ptr)
         return horror_desc_common[horror_num];
     }
 
-    if ((r_ptr->flags3 & RF3_EVIL) != 0) {
+    if (r_ptr->race_kind_flags.has(MonraceKindType::EVIL)) {
         return horror_desc_evil[horror_num - MAX_SAN_HORROR_COMMON];
     }
 
@@ -95,7 +96,7 @@ void sanity_blast(player_type *player_ptr, monster_type *m_ptr, bool necro)
         monster_race *r_ptr = &r_info[m_ptr->ap_r_idx];
         power = r_ptr->level / 2;
         monster_desc(player_ptr, m_name, m_ptr, 0);
-        if (!(r_ptr->flags1 & RF1_UNIQUE)) {
+        if (r_ptr->race_kind_flags.has_not(MonraceKindType::UNIQUE)) {
             if (r_ptr->flags1 & RF1_FRIENDS)
                 power /= 2;
         } else
@@ -152,13 +153,13 @@ void sanity_blast(player_type *player_ptr, monster_type *m_ptr, bool necro)
 #ifdef JP
 #else
 
-        if (!(r_ptr->flags1 & RF1_UNIQUE))
+        if (r_ptr->race_kind_flags.has_not(MonraceKindType::UNIQUE))
             sprintf(m_name, "%s %s", (is_a_vowel(desc[0]) ? "an" : "a"), desc);
         else
 #endif
         sprintf(m_name, "%s", desc);
 
-        if (!(r_ptr->flags1 & RF1_UNIQUE)) {
+        if (r_ptr->race_kind_flags.has_not(MonraceKindType::UNIQUE)) {
             if (r_ptr->flags1 & RF1_FRIENDS)
                 power /= 2;
         } else

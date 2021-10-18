@@ -16,6 +16,7 @@
 #include "inventory/inventory-slot-types.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
+#include "monster-race/race-kind-flags.h"
 #include "object-enchant/apply-magic.h"
 #include "object-enchant/item-apply-magic.h"
 #include "object-enchant/item-feeling.h"
@@ -149,7 +150,7 @@ void amusement(player_type *player_ptr, POSITION y1, POSITION x1, int num, bool 
         apply_magic_to_object(player_ptr, i_ptr, 1, AM_NO_FIXED_ART);
 
         if (amuse_info[i].flag & AMS_NO_UNIQUE) {
-            if (r_info[i_ptr->pval].flags1 & RF1_UNIQUE)
+            if (r_info[i_ptr->pval].race_kind_flags.has(MonraceKindType::UNIQUE))
                 continue;
         }
 

@@ -20,6 +20,7 @@
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-flags3.h"
 #include "monster-race/race-flags7.h"
+#include "monster-race/race-kind-flags.h"
 #include "monster/monster-describer.h"
 #include "monster/monster-description-types.h"
 #include "monster/monster-info.h"
@@ -65,7 +66,7 @@ static IDX collect_monsters(player_type *player_ptr, IDX grp_cur, IDX mon_idx[],
             continue;
 
         if (grp_unique) {
-            if (none_bits(r_ref.flags1, RF1_UNIQUE))
+            if (r_ref.race_kind_flags.has_not(MonraceKindType::UNIQUE))
                 continue;
         } else if (grp_riding) {
             if (none_bits(r_ref.flags7, RF7_RIDING))
@@ -83,7 +84,7 @@ static IDX collect_monsters(player_type *player_ptr, IDX grp_cur, IDX mon_idx[],
             if (!wanted)
                 continue;
         } else if (grp_amberite) {
-            if (none_bits(r_ref.flags3, RF3_AMBERITE))
+            if (r_ref.race_kind_flags.has_not(MonraceKindType::AMBERITE))
                 continue;
         } else {
             if (!angband_strchr(group_char, r_ref.d_char))
@@ -158,7 +159,7 @@ void do_cmd_knowledge_kill_count(player_type *player_ptr)
 
     int32_t total = 0;
     for (const auto &r_ref : r_info) {
-        if (any_bits(r_ref.flags1, RF1_UNIQUE)) {
+        if (r_ref.race_kind_flags.has(MonraceKindType::UNIQUE)) {
             bool dead = (r_ref.max_num == 0);
 
             if (dead) {
@@ -192,7 +193,7 @@ void do_cmd_knowledge_kill_count(player_type *player_ptr)
     ang_sort(player_ptr, who.data(), &why, who.size(), ang_sort_comp_hook, ang_sort_swap_hook);
     for (auto r_idx : who) {
         monster_race *r_ptr = &r_info[r_idx];
-        if (any_bits(r_ptr->flags1, RF1_UNIQUE)) {
+        if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE)) {
             bool dead = (r_ptr->max_num == 0);
             if (dead) {
                 if (r_ptr->defeat_level && r_ptr->defeat_time)
@@ -265,7 +266,7 @@ static void display_monster_list(int col, int row, int per_page, int16_t mon_idx
         term_erase(69, row + i, 255);
         term_queue_bigchar(use_bigtile ? 69 : 70, row + i, r_ptr->x_attr, r_ptr->x_char, 0, 0);
         if (!visual_only) {
-            if (none_bits(r_ptr->flags1, RF1_UNIQUE))
+            if (r_ptr->race_kind_flags.has_not(MonraceKindType::UNIQUE))
                 put_str(format("%5d", r_ptr->r_pkills), row + i, 73);
             else
                 c_put_str((r_ptr->max_num == 0 ? TERM_L_DARK : TERM_WHITE), (r_ptr->max_num == 0 ? _("死亡", " dead") : _("生存", "alive")), row + i, 74);
