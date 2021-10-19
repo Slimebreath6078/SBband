@@ -3,6 +3,7 @@
 #include "monster-attack/monster-attack-types.h"
 #include "monster-race/monster-aura-types.h"
 #include "monster-race/race-ability-flags.h"
+#include "monster-race/race-behavior-flags.h"
 #include "monster-race/race-flags-resistance.h"
 #include "monster-race/race-kind-flags.h"
 #include "system/angband.h"
@@ -35,6 +36,7 @@ typedef struct lore_type {
     EnumClassFlagGroup<MonsterAbilityType> ability_flags;
     EnumClassFlagGroup<MonraceKindType> race_kind_flags;
     EnumClassFlagGroup<MonsterAuraType> aura_flags;
+    EnumClassFlagGroup<MonraceBehaviorType> race_behavior_flags;
 
     BIT_FLAGS flags7;
     bool reinforce;
