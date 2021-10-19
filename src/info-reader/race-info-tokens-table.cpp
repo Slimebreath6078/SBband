@@ -423,6 +423,6 @@ const std::unordered_map<std::string_view, MonraceKindType> r_info_race_kind_fla
     { "GOOD", MonraceKindType::GOOD },
     { "ANIMAL", MonraceKindType::ANIMAL },
     { "UNDEAD", MonraceKindType::UNDEAD },
-    { "KAN_SEN", MonraceKindType::KAN_SEN },
+    { "KAN-SEN", MonraceKindType::KAN_SEN },
     { "MINERAL", MonraceKindType::MINERAL },
 };
