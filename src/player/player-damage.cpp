@@ -76,34 +76,34 @@ damage_function::damage_function(std::function<PERCENTAGE(player_type *player_pt
 {
 }
 
-element_dam::element_dam(player_type *player_ptr, concptr kb_str, HIT_POINT dam, bool aura, int stat, const ObjectBreaker &breaker, damage_function function)
+element_dam::element_dam(player_type *player_ptr, concptr kb_str, HIT_POINT dam, bool aura, int stat, std::unique_ptr<ObjectBreaker> breaker, damage_function function)
     : player_ptr(player_ptr)
     , kb_str(kb_str)
     , dam(dam)
     , aura(aura)
     , stat(stat)
-    , breaker(breaker)
+    , breaker(std::move(breaker))
     , function(function)
 {
 }
 
 acid_dam::acid_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str)
-    : element_dam(player_ptr, kb_str, dam, false, A_CHR, BreakerAcid(), damage_function(calc_acid_damage_rate, has_resist_acid, is_oppose_acid))
+    : element_dam(player_ptr, kb_str, dam, false, A_CHR, std::make_unique<BreakerAcid>(), damage_function(calc_acid_damage_rate, has_resist_acid, is_oppose_acid))
 {
 }
 
 elec_dam::elec_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura)
-    : element_dam(player_ptr, kb_str, dam, aura, A_DEX, BreakerElec(), damage_function(calc_elec_damage_rate, has_resist_elec, is_oppose_elec))
+    : element_dam(player_ptr, kb_str, dam, aura, A_DEX, std::make_unique<BreakerElec>(), damage_function(calc_elec_damage_rate, has_resist_elec, is_oppose_elec))
 {
 }
 
 fire_dam::fire_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura)
-    : element_dam(player_ptr, kb_str, dam, aura, A_STR, BreakerFire(), damage_function(calc_fire_damage_rate, has_resist_fire, is_oppose_fire))
+    : element_dam(player_ptr, kb_str, dam, aura, A_STR, std::make_unique<BreakerFire>(), damage_function(calc_fire_damage_rate, has_resist_fire, is_oppose_fire))
 {
 }
 
 cold_dam::cold_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura)
-    : element_dam(player_ptr, kb_str, dam, aura, A_STR, BreakerCold(), damage_function(calc_cold_damage_rate, has_resist_cold, is_oppose_cold))
+    : element_dam(player_ptr, kb_str, dam, aura, A_STR, std::make_unique<BreakerCold>(), damage_function(calc_cold_damage_rate, has_resist_cold, is_oppose_cold))
 {
 }
 
@@ -128,7 +128,7 @@ HIT_POINT element_dam::process()
     this->dam = dam;
 
     if (!this->aura && !double_resist && this->function.has_resist(this->player_ptr) == FLAG_CAUSE_NONE)
-        inventory_damage(this->player_ptr, this->breaker, inv);
+        inventory_damage(this->player_ptr, *this->breaker.get(), inv);
 
     return get_damage;
 }
