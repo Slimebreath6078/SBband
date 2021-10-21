@@ -127,7 +127,7 @@ HIT_POINT element_dam::process()
     HIT_POINT get_damage = take_hit(this->player_ptr, this->aura ? DAMAGE_NOESCAPE : DAMAGE_ATTACK, this->dam, kb_str);
     this->dam = dam;
 
-    if (!this->aura && !(double_resist && this->function.has_resist(this->player_ptr) != FLAG_CAUSE_NONE))
+    if (!this->aura && !double_resist && this->function.has_resist(this->player_ptr) == FLAG_CAUSE_NONE)
         inventory_damage(this->player_ptr, *this->breaker.get(), inv);
 
     return get_damage;
