@@ -26728,3 +26728,32 @@ D:$ carries a magical sabre.
 D:$ This chairman of hell cleverly confuses people by speech. 
 D:翼から生えた二本の腕を持つ、巨大な鳥が、魔法のサーベルを携えている。
 D:この地獄の大議長は、弁舌巧みに人心を惑わす。
+
+
+#「常世ノ塔」のラスボスの1体。フルネームは「エルロア・ジ・クク」（gcc errorから来ている）
+#初登場は「まなでし！」だが、
+#このゲームでは主に「常世ノ塔」準拠で設定している
+#「魔界フロンティア！」では12代目魔王"になる予定"だったが、
+#「常世ノ塔」では大魔王になってる模様。
+#なお、火炎の飛竜は「まなでし！」はやったことがないのであしからず。
+#「魔界フロンティア！」ではココア曰く「真面目な一面もある」といった感じだったが
+#「常世ノ塔」では塔に関して一枚噛んでいそうな感じ。
+#父親が人間であることがまかフロのアスミのセリフから伺えるのでHUMAN属性も付いている。
+N:1353:『大魔王エルロア』
+E:Demon King Erloa
+G:U:B
+I:135:60d100:30:120:5
+W:88:2:0:57000:0:0
+B:PUNCH:HURT:10d10
+B:PUNCH:HURT:10d10
+B:CRUSH:SUPERHURT:15d15
+F:UNIQUE | FORCE_MAXHP | ESCORTS | ESCORT | FEMALE | DEMON | HUMAN | EVIL | 
+F:POWERFUL | SMART | BASH_DOOR | CAN_FLY | MOVE_BODY
+F:DROP_1D2 | DROP_2D2 | DROP_GREAT
+F:IM_FIRE | IM_COLD | IM_POIS | RES_DARK | RES_NETH | RES_CHAO | RES_TIME |
+F:RES_TELE | NO_CONF | NO_SLEEP
+S:1_IN_3 | S_KIN | PSY_SPEAR | BR_LITE | BA_FIRE | BA_MANA | BO_LITE | S_DEMON |
+S:SCARE | SLOW |
+D:クク家の12代目魔王。
+D:どうやらあなたの冒険を終わらせようとしているようだ。
+D:彼女の圧倒的な力には跪くしかないだろう！
