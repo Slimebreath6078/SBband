@@ -22,6 +22,9 @@ static bool grab_one_basic_flag(monster_race *r_ptr, std::string_view what)
     if (EnumClassFlagGroup<MonraceKindType>::grab_one_flag(r_ptr->race_kind_flags, r_info_race_kind_flags, what))
         return true;
 
+    if (EnumClassFlagGroup<MonraceDropType>::grab_one_flag(r_ptr->drop_flags, r_info_drop_flags, what))
+        return true;
+
     if (info_grab_one_flag(r_ptr->flags1, r_info_flags1, what))
         return true;
 

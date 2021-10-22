@@ -4,6 +4,7 @@
 #include "monster-attack/monster-attack-types.h"
 #include "monster-race/monster-aura-types.h"
 #include "monster-race/race-ability-flags.h"
+#include "monster-race/race-drop-flags.h"
 #include "monster-race/race-flags-resistance.h"
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-flags2.h"
@@ -31,3 +32,4 @@ extern const std::unordered_map<std::string_view, race_flags9> r_info_flags9;
 extern const std::unordered_map<std::string_view, MonsterResistanceType> r_info_resistance_flags;
 extern const std::unordered_map<std::string_view, MonraceKindType> r_info_race_kind_flags;
 extern const std::unordered_map<std::string_view, MonsterAuraType> r_info_aura_flags;
+extern const std::unordered_map<std::string_view, MonraceDropType> r_info_drop_flags;
