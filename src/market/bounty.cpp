@@ -300,7 +300,7 @@ void determine_daily_bounty(PlayerType *player_ptr, bool conv_old)
             continue;
         if (r_ptr->flags2 & RF2_MULTIPLY)
             continue;
-        if ((r_ptr->flags9 & (RF9_DROP_CORPSE | RF9_DROP_SKELETON)) != (RF9_DROP_CORPSE | RF9_DROP_SKELETON))
+        if ((r_ptr->flags9 & (MonraceDropType::DROP_CORPSE | MonraceDropType::DROP_SKELETON)) != (MonraceDropType::DROP_CORPSE | MonraceDropType::DROP_SKELETON))
             continue;
         if (r_ptr->rarity > 10)
             continue;
@@ -328,7 +328,7 @@ void determine_bounty_uniques(PlayerType *player_ptr)
             if (r_ptr->race_kind_flags.has_not(MonraceKindType::UNIQUE))
                 continue;
 
-            if (!(r_ptr->flags9 & (RF9_DROP_CORPSE | RF9_DROP_SKELETON)))
+            if (!(r_ptr->flags9 & (MonraceDropType::DROP_CORPSE | MonraceDropType::DROP_SKELETON)))
                 continue;
 
             if (r_ptr->rarity > 100)

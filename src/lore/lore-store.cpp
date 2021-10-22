@@ -6,8 +6,8 @@
 
 #include "lore/lore-store.h"
 #include "core/window-redrawer.h"
-#include "monster-race/race-flags1.h"
 #include "monster-race/monster-race.h"
+#include "monster-race/race-flags1.h"
 #include "monster/monster-info.h"
 #include "system/floor-type-definition.h"
 #include "system/monster-race-definition.h"
@@ -40,15 +40,15 @@ int lore_do_probe(PlayerType *player_ptr, MONRACE_IDX r_idx)
         }
     }
 
-    byte tmp_byte = (((r_ptr->flags1 & RF1_DROP_4D2) ? 8 : 0) + ((r_ptr->flags1 & RF1_DROP_3D2) ? 6 : 0) + ((r_ptr->flags1 & RF1_DROP_2D2) ? 4 : 0)
-        + ((r_ptr->flags1 & RF1_DROP_1D2) ? 2 : 0) + ((r_ptr->flags1 & RF1_DROP_90) ? 1 : 0) + ((r_ptr->flags1 & RF1_DROP_60) ? 1 : 0));
+    byte tmp_byte = (((r_ptr->flags1 & MonraceDropType::DROP_4D2) ? 8 : 0) + ((r_ptr->flags1 & MonraceDropType::DROP_3D2) ? 6 : 0) + ((r_ptr->flags1 & MonraceDropType::DROP_2D2) ? 4 : 0)
+        + ((r_ptr->flags1 & MonraceDropType::DROP_1D2) ? 2 : 0) + ((r_ptr->flags1 & MonraceDropType::DROP_90) ? 1 : 0) + ((r_ptr->flags1 & MonraceDropType::DROP_60) ? 1 : 0));
 
-    if (!(r_ptr->flags1 & RF1_ONLY_GOLD)) {
+    if (!(r_ptr->flags1 & MonraceDropType::ONLY_GOLD)) {
         if (r_ptr->r_drop_item != tmp_byte)
             n++;
         r_ptr->r_drop_item = tmp_byte;
     }
-    if (!(r_ptr->flags1 & RF1_ONLY_ITEM)) {
+    if (!(r_ptr->flags1 & MonraceDropType::ONLY_ITEM)) {
         if (r_ptr->r_drop_gold != tmp_byte)
             n++;
         r_ptr->r_drop_gold = tmp_byte;
@@ -110,10 +110,10 @@ void lore_treasure(PlayerType *player_ptr, MONSTER_IDX m_idx, ITEM_NUMBER num_it
     if (num_gold > r_ptr->r_drop_gold)
         r_ptr->r_drop_gold = num_gold;
 
-    if (r_ptr->flags1 & (RF1_DROP_GOOD))
-        r_ptr->r_flags1 |= (RF1_DROP_GOOD);
-    if (r_ptr->flags1 & (RF1_DROP_GREAT))
-        r_ptr->r_flags1 |= (RF1_DROP_GREAT);
+    if (r_ptr->flags1 & (MonraceDropType::DROP_GOOD))
+        r_ptr->r_flags1 |= (MonraceDropType::DROP_GOOD);
+    if (r_ptr->flags1 & (MonraceDropType::DROP_GREAT))
+        r_ptr->r_flags1 |= (MonraceDropType::DROP_GREAT);
     if (player_ptr->monster_race_idx == m_ptr->r_idx)
         player_ptr->window_flags |= (PW_MONSTER);
 }

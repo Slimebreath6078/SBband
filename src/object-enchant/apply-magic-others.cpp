@@ -158,9 +158,9 @@ void apply_magic_others(PlayerType *player_ptr, object_type *o_ptr, int power)
         uint32_t match = 0;
         monster_race *r_ptr;
         if (o_ptr->sval == SV_SKELETON) {
-            match = RF9_DROP_SKELETON;
+            match = MonraceDropType::DROP_SKELETON;
         } else if (o_ptr->sval == SV_CORPSE) {
-            match = RF9_DROP_CORPSE;
+            match = MonraceDropType::DROP_CORPSE;
         }
 
         get_mon_num_prep(player_ptr, item_monster_okay, nullptr);
