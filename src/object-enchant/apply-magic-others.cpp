@@ -11,6 +11,7 @@
 #include "inventory/inventory-slot-types.h"
 #include "monster-race/monster-race-hook.h"
 #include "monster-race/monster-race.h"
+#include "monster-race/race-drop-flags.h"
 #include "monster-race/race-flags9.h"
 #include "monster-race/race-indice-types.h"
 #include "monster/monster-list.h"
@@ -155,13 +156,16 @@ void apply_magic_others(PlayerType *player_ptr, object_type *o_ptr, int power)
     case ItemKindType::CORPSE: {
         PARAMETER_VALUE i = 1;
         int check;
-        uint32_t match = 0;
+        auto match = MonraceDropType::MAX;
         monster_race *r_ptr;
         if (o_ptr->sval == SV_SKELETON) {
             match = MonraceDropType::DROP_SKELETON;
         } else if (o_ptr->sval == SV_CORPSE) {
             match = MonraceDropType::DROP_CORPSE;
         }
+
+        if (match == MonraceDropType::MAX)
+            return;
 
         get_mon_num_prep(player_ptr, item_monster_okay, nullptr);
         while (true) {
@@ -170,7 +174,7 @@ void apply_magic_others(PlayerType *player_ptr, object_type *o_ptr, int power)
             check = (floor_ptr->dun_level < r_ptr->level) ? (r_ptr->level - floor_ptr->dun_level) : 0;
             if (!r_ptr->rarity)
                 continue;
-            if (!(r_ptr->flags9 & match))
+            if (r_ptr->drop_flags.has_not(match))
                 continue;
             if (randint0(check))
                 continue;
