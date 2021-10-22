@@ -34,11 +34,15 @@ static bool spell_RF4_BREATH_special_message(MONSTER_IDX r_idx, int GF_TYPE, con
         msg_format(_("%^s「ボ帝ビルカッター！！！」", "%^s shouts, 'Boty-Build cutter!!!'"), m_name);
         return true;
     }
-    if (r_idx == MON_RAOU &&GF_TYPE == GF_FORCE) {
+    if (r_idx == MON_RAOU && GF_TYPE == GF_FORCE) {
         if (one_in_(2))
             msg_format(_("%^s「北斗剛掌波！！」", "%^s says, 'Hokuto Goh-Sho-Ha!!'"), m_name);
         else
             msg_format(_("%^s「受けてみい！！天将奔烈！！！」", "%^s says, 'Tensho-Honretsu!!'"), m_name);
+        return true;
+    }
+    if (r_idx == MON_ERROR && GF_TYPE == GF_LITE) {
+        msg_format(_("%^sはレーザーを放った。", "$^s fired a death ray."), m_name);
         return true;
     }
     return false;
