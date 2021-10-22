@@ -5115,6 +5115,9 @@
     <ClInclude Include="..\..\src\load\monster\monster-loader-savefile1.h">
       <Filter>load\monster</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\monster-race\race-drop-flags.h">
+      <Filter>monster-race</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\calc\damage_calc.h">
       <Filter>calc</Filter>
     </ClInclude>
