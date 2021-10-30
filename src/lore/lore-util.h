@@ -5,6 +5,7 @@
 #include "monster-race/race-ability-flags.h"
 #include "monster-race/race-flags-resistance.h"
 #include "monster-race/race-kind-flags.h"
+#include "monster-race/race-visual-flags.h"
 #include "system/angband.h"
 #include "util/flag-group.h"
 #include <string>
@@ -35,6 +36,7 @@ typedef struct lore_type {
     EnumClassFlagGroup<MonsterAbilityType> ability_flags;
     EnumClassFlagGroup<MonraceKindType> race_kind_flags;
     EnumClassFlagGroup<MonsterAuraType> aura_flags;
+    EnumClassFlagGroup<MonraceVisualType> visual_flags;
 
     BIT_FLAGS flags7;
     bool reinforce;
