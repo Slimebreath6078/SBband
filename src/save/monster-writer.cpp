@@ -184,6 +184,7 @@ void wr_lore(MONRACE_IDX r_idx)
     wr_FlagGroup(r_ptr->r_resistance_flags, wr_byte);
     wr_FlagGroup(r_ptr->r_ability_flags, wr_byte);
     wr_FlagGroup(r_ptr->r_aura_flags, wr_byte);
+    wr_FlagGroup(r_ptr->r_race_kind_flags, wr_byte);
 
     wr_byte((byte)r_ptr->max_num);
     wr_s16b(r_ptr->floor_id);
