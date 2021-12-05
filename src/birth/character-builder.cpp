@@ -28,8 +28,10 @@
 #include "player-info/class-info.h"
 #include "player-info/race-types.h"
 #include "player/patron.h"
+#include "player/player-personality.h"
 #include "player/player-sex.h"
 #include "player/race-info-table.h"
+#include "realm/realm-names-table.h"
 #include "store/store-owners.h"
 #include "store/store.h"
 #include "system/player-type-definition.h"
@@ -41,7 +43,7 @@
  * @brief プレイヤーキャラの作成結果を日記に書く
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-static void write_birth_diary(player_type *player_ptr)
+static void write_birth_diary(PlayerType *player_ptr)
 {
     concptr indent = "                            ";
 
@@ -58,7 +60,7 @@ static void write_birth_diary(player_type *player_ptr)
     exe_write_diary(player_ptr, DIARY_DESCRIPTION, 1, buf);
     sprintf(buf, _("%s種族に%sを選択した。", "%schose %s race."), indent, race_info[enum2i(player_ptr->prace)].title);
     exe_write_diary(player_ptr, DIARY_DESCRIPTION, 1, buf);
-    sprintf(buf, _("%s職業に%sを選択した。", "%schose %s class."), indent, class_info[player_ptr->pclass].title);
+    sprintf(buf, _("%s職業に%sを選択した。", "%schose %s class."), indent, class_info[enum2i(player_ptr->pclass)].title);
     exe_write_diary(player_ptr, DIARY_DESCRIPTION, 1, buf);
     if (player_ptr->realm1) {
         sprintf(buf, _("%s魔法の領域に%s%sを選択した。", "%schose %s%s."), indent, realm_names[player_ptr->realm1],
@@ -69,10 +71,10 @@ static void write_birth_diary(player_type *player_ptr)
         sprintf(buf, _("%s元素系統に%sを選択した。", "%schose %s system."), indent, get_element_title(player_ptr->element));
         exe_write_diary(player_ptr, DIARY_DESCRIPTION, 1, buf);
     }
-    sprintf(buf, _("%s性格に%sを選択した。", "%schose %s personality."), indent, personality_info[player_ptr->pseikaku].title);
+    sprintf(buf, _("%s性格に%sを選択した。", "%schose %s personality."), indent, personality_info[player_ptr->ppersonality].title);
     exe_write_diary(player_ptr, DIARY_DESCRIPTION, 1, buf);
-    if (player_ptr->pclass == CLASS_CHAOS_WARRIOR) {
-        sprintf(buf, _("%s守護神%sと契約を交わした。", "%smade a contract with patron %s."), indent, chaos_patrons[player_ptr->chaos_patron]);
+    if (player_ptr->pclass == PlayerClassType::CHAOS_WARRIOR) {
+        sprintf(buf, _("%s守護神%sと契約を交わした。", "%smade a contract with patron %s."), indent, patron_list[player_ptr->chaos_patron].name.c_str());
         exe_write_diary(player_ptr, DIARY_DESCRIPTION, 1, buf);
     }
 }
@@ -83,7 +85,7 @@ static void write_birth_diary(player_type *player_ptr)
  * Note that we may be called with "junk" leftover in the various
  * fields, so we must be sure to clear them first.
  */
-void player_birth(player_type *player_ptr)
+void player_birth(PlayerType *player_ptr)
 {
     w_ptr->play_time = 0;
     wipe_monsters_list(player_ptr);
@@ -100,13 +102,13 @@ void player_birth(player_type *player_ptr)
 
     write_birth_diary(player_ptr);
     for (int i = 1; i < max_towns; i++) {
-        for (int j = 0; j < MAX_STORES; j++) {
-            store_init(i, j);
+        for (auto sst : STORE_SALE_TYPE_LIST) {
+            store_init(i, sst);
         }
     }
 
     seed_wilderness();
-    if (player_ptr->prace == player_race_type::BEASTMAN)
+    if (player_ptr->prace == PlayerRaceType::BEASTMAN)
         player_ptr->hack_mutation = true;
     else
         player_ptr->hack_mutation = false;

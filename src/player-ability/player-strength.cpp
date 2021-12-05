@@ -1,15 +1,23 @@
 ﻿#include "player-ability/player-strength.h"
 #include "mutation/mutation-flag-types.h"
 #include "object/object-flags.h"
+#include "player-base/player-class.h"
 #include "player-base/player-race.h"
-#include "realm/realm-types.h"
+#include "player-info/monk-data-type.h"
+#include "player-info/samurai-data-type.h"
 #include "player/player-personality.h"
 #include "player/race-info-table.h"
 #include "player/special-defense-types.h"
 #include "realm/realm-hex-numbers.h"
+#include "realm/realm-types.h"
 #include "spell-realm/spells-hex.h"
 #include "system/player-type-definition.h"
 #include "util/bit-flags-calculator.h"
+
+PlayerStrength::PlayerStrength(PlayerType *player_ptr)
+    : PlayerBasicStatistics(player_ptr)
+{
+}
 
 void PlayerStrength::set_locals()
 {
@@ -23,22 +31,12 @@ void PlayerStrength::set_locals()
 /*!
  * @brief 腕力補正計算 - 種族
  * @return 腕力補正値
- * @details
- * * 種族による腕力修正値。
- * * エントは別途レベル26,41,46到達ごとに加算(+1)
  */
 int16_t PlayerStrength::race_value()
 {
     int16_t result = PlayerBasicStatistics::race_value();
 
-    if (PlayerRace(this->player_ptr).equals(player_race_type::ENT)) {
-        if (this->player_ptr->lev > 25)
-            result++;
-        if (this->player_ptr->lev > 40)
-            result++;
-        if (this->player_ptr->lev > 45)
-            result++;
-    }
+    result += PlayerRace(this->player_ptr).additional_strength();
 
     return result;
 }
@@ -82,17 +80,18 @@ int16_t PlayerStrength::time_effect_value()
  * * 白虎の構えで加算(+2)
  * * 朱雀の構えで減算(-2)
  */
-int16_t PlayerStrength::battleform_value()
+int16_t PlayerStrength::stance_value()
 {
     int16_t result = 0;
 
-    if (any_bits(this->player_ptr->special_defense, KATA_KOUKIJIN)) {
+    PlayerClass pc(player_ptr);
+    if (pc.samurai_stance_is(SamuraiStanceType::KOUKIJIN)) {
         result += 5;
     }
 
-    if (any_bits(this->player_ptr->special_defense, KAMAE_BYAKKO)) {
+    if (pc.monk_stance_is(MonkStanceType::BYAKKO)) {
         result += 2;
-    } else if (any_bits(this->player_ptr->special_defense, KAMAE_SUZAKU)) {
+    } else if (pc.monk_stance_is(MonkStanceType::SUZAKU)) {
         result -= 2;
     }
 
@@ -112,11 +111,11 @@ int16_t PlayerStrength::mutation_value()
     int16_t result = 0;
 
     if (this->player_ptr->muta.any()) {
-        if (this->player_ptr->muta.has(MUTA::HYPER_STR)) {
+        if (this->player_ptr->muta.has(PlayerMutationType::HYPER_STR)) {
             result += 4;
         }
 
-        if (this->player_ptr->muta.has(MUTA::PUNY)) {
+        if (this->player_ptr->muta.has(PlayerMutationType::PUNY)) {
             result -= 4;
         }
     }

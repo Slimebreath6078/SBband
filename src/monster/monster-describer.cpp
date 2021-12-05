@@ -1,5 +1,6 @@
 ﻿#include "monster/monster-describer.h"
 #include "io/files-util.h"
+#include "locale/english.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-kind-flags.h"
@@ -13,10 +14,6 @@
 #include "util/quarks.h"
 #include "util/string-processor.h"
 #include "view/display-messages.h"
-#ifdef JP
-#else
-#include "locale/english.h"
-#endif
 
 /*!
  * @brief モンスターの呼称を作成する / Build a string describing a monster in some way.
@@ -24,7 +21,7 @@
  * @param m_ptr モンスターの参照ポインタ
  * @param mode 呼称オプション
  */
-void monster_desc(player_type *player_ptr, char *desc, monster_type *m_ptr, BIT_FLAGS mode)
+void monster_desc(PlayerType *player_ptr, char *desc, monster_type *m_ptr, BIT_FLAGS mode)
 {
     monster_race *r_ptr;
     r_ptr = &r_info[m_ptr->ap_r_idx];
@@ -41,7 +38,7 @@ void monster_desc(player_type *player_ptr, char *desc, monster_type *m_ptr, BIT_
             monster_race *hallu_race;
 
             do {
-                hallu_race = &r_info[randint1(max_r_idx - 1)];
+                hallu_race = &r_info[randint1(r_info.size() - 1)];
             } while (hallu_race->name.empty() || hallu_race->race_kind_flags.has(MonraceKindType::UNIQUE));
 
             strcpy(silly_name, (hallu_race->name.c_str()));
@@ -177,7 +174,7 @@ void monster_desc(player_type *player_ptr, char *desc, monster_type *m_ptr, BIT_
 #endif
     } else {
         if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) && !(player_ptr->hallucinated && !(mode & MD_IGNORE_HALLU))) {
-            if (m_ptr->mflag2.has(MFLAG2::CHAMELEON) && !(mode & MD_TRUE_NAME)) {
+            if (m_ptr->mflag2.has(MonsterConstantFlagType::CHAMELEON) && !(mode & MD_TRUE_NAME)) {
 #ifdef JP
                 char *t;
                 char buf[128];
@@ -225,7 +222,7 @@ void monster_desc(player_type *player_ptr, char *desc, monster_type *m_ptr, BIT_
         strcat(desc, _("(乗馬中)", "(riding)"));
     }
 
-    if ((mode & MD_IGNORE_HALLU) && m_ptr->mflag2.has(MFLAG2::CHAMELEON)) {
+    if ((mode & MD_IGNORE_HALLU) && m_ptr->mflag2.has(MonsterConstantFlagType::CHAMELEON)) {
         if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE)) {
             strcat(desc, _("(カメレオンの王)", "(Chameleon Lord)"));
         } else {
@@ -251,7 +248,7 @@ void monster_desc(player_type *player_ptr, char *desc, monster_type *m_ptr, BIT_
  * @details
  * Technically should attempt to treat "Beholder"'s as jelly's
  */
-void message_pain(player_type *player_ptr, MONSTER_IDX m_idx, HIT_POINT dam)
+void message_pain(PlayerType *player_ptr, MONSTER_IDX m_idx, HIT_POINT dam)
 {
     monster_type *m_ptr = &player_ptr->current_floor_ptr->m_list[m_idx];
     monster_race *r_ptr = &r_info[m_ptr->r_idx];

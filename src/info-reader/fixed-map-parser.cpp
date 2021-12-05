@@ -34,7 +34,7 @@ static concptr variant = "ZANGBAND";
  * @param fp
  * @return エラーコード
  */
-static concptr parse_fixed_map_expression(player_type *player_ptr, char **sp, char *fp)
+static concptr parse_fixed_map_expression(PlayerType *player_ptr, char **sp, char *fp)
 {
     char b1 = '[';
     char b2 = ']';
@@ -195,10 +195,10 @@ static concptr parse_fixed_map_expression(player_type *player_ptr, char **sp, ch
         sprintf(tmp, "%d", leaving_quest);
         v = tmp;
     } else if (prefix(b + 1, "QUEST_TYPE")) {
-        sprintf(tmp, "%d", quest[atoi(b + 11)].type);
+        sprintf(tmp, "%d", enum2i(quest[atoi(b + 11)].type));
         v = tmp;
     } else if (prefix(b + 1, "QUEST")) {
-        sprintf(tmp, "%d", quest[atoi(b + 6)].status);
+        sprintf(tmp, "%d", enum2i(quest[atoi(b + 6)].status));
         v = tmp;
     } else if (prefix(b + 1, "RANDOM")) {
         sprintf(tmp, "%d", (int)(w_ptr->seed_town % atoi(b + 7)));
@@ -232,7 +232,7 @@ static concptr parse_fixed_map_expression(player_type *player_ptr, char **sp, ch
  * @param xmax 詳細不明
  * @return エラーコード
  */
-parse_error_type parse_fixed_map(player_type *player_ptr, concptr name, int ymin, int xmin, int ymax, int xmax)
+parse_error_type parse_fixed_map(PlayerType *player_ptr, concptr name, int ymin, int xmin, int ymax, int xmax)
 {
     char buf[1024];
     path_build(buf, sizeof(buf), ANGBAND_DIR_EDIT, name);
@@ -257,7 +257,7 @@ parse_error_type parse_fixed_map(player_type *player_ptr, concptr name, int ymin
             char *s;
             s = buf + 2;
             concptr v = parse_fixed_map_expression(player_ptr, &s, &f);
-            bypass = (streq(v, "0") ? true : false);
+            bypass = streq(v, "0");
             continue;
         }
 

@@ -52,6 +52,7 @@
 #include "player/player-status-table.h"
 #include "racial/racial-android.h"
 #include "specific-object/torch.h"
+#include "effect/attribute-types.h"
 #include "system/floor-type-definition.h"
 #include "system/grid-type-definition.h"
 #include "system/monster-type-definition.h"
@@ -65,12 +66,12 @@
 #include "view/object-describer.h"
 #include "wizard/wizard-messages.h"
 
-ObjectThrowEntity::ObjectThrowEntity(player_type *player_ptr, object_type *q_ptr, const int delay_factor_val, const int mult, const bool boomerang, const OBJECT_IDX shuriken)
+ObjectThrowEntity::ObjectThrowEntity(PlayerType *player_ptr, object_type *q_ptr, const int delay_factor_val, const int mult, const bool boomerang, const OBJECT_IDX shuriken)
     : q_ptr(q_ptr)
     , player_ptr(player_ptr)
     , shuriken(shuriken)
     , mult(mult)
-    , msec(delay_factor_val * delay_factor_val * delay_factor_val)
+    , msec(delay_factor_val)
     , boomerang(boomerang)
 {
 }
@@ -86,7 +87,7 @@ bool ObjectThrowEntity::check_can_throw()
         return false;
     }
 
-    if (this->player_ptr->current_floor_ptr->inside_arena && !this->boomerang && (this->o_ptr->tval != TV_SPIKE)) {
+    if (this->player_ptr->current_floor_ptr->inside_arena && !this->boomerang && (this->o_ptr->tval != ItemKindType::SPIKE)) {
         msg_print(_("アリーナではアイテムを使えない！", "You're in the arena now. This is hand-to-hand!"));
         msg_print(nullptr);
         return false;
@@ -168,15 +169,15 @@ void ObjectThrowEntity::set_class_specific_throw_params()
 {
     PlayerEnergy energy(this->player_ptr);
     energy.set_player_turn_energy(100);
-    if ((this->player_ptr->pclass == CLASS_ROGUE) || (this->player_ptr->pclass == CLASS_NINJA)) {
+    if ((this->player_ptr->pclass == PlayerClassType::ROGUE) || (this->player_ptr->pclass == PlayerClassType::NINJA)) {
         energy.sub_player_turn_energy(this->player_ptr->lev);
     }
 
     this->y = this->player_ptr->y;
     this->x = this->player_ptr->x;
     handle_stuff(this->player_ptr);
-    this->shuriken = (this->player_ptr->pclass == CLASS_NINJA)
-        && ((this->q_ptr->tval == TV_SPIKE) || ((this->obj_flags.has(TR_THROW)) && (this->q_ptr->tval == TV_SWORD)));
+    this->shuriken = (this->player_ptr->pclass == PlayerClassType::NINJA)
+        && ((this->q_ptr->tval == ItemKindType::SPIKE) || ((this->obj_flags.has(TR_THROW)) && (this->q_ptr->tval == ItemKindType::SWORD)));
 }
 
 void ObjectThrowEntity::set_racial_chance()
@@ -218,7 +219,7 @@ void ObjectThrowEntity::exe_throw()
 
 void ObjectThrowEntity::display_figurine_throw()
 {
-    if ((this->q_ptr->tval != TV_FIGURINE) || this->player_ptr->current_floor_ptr->inside_arena) {
+    if ((this->q_ptr->tval != ItemKindType::FIGURINE) || this->player_ptr->current_floor_ptr->inside_arena) {
         return;
     }
 
@@ -316,7 +317,7 @@ void ObjectThrowEntity::drop_thrown_item()
         return;
     }
 
-    auto is_bold = cave_has_flag_bold(this->player_ptr->current_floor_ptr, this->y, this->x, FF::PROJECT);
+    auto is_bold = cave_has_flag_bold(this->player_ptr->current_floor_ptr, this->y, this->x, FloorFeatureType::PROJECT);
     auto drop_y = is_bold ? this->y : this->prev_y;
     auto drop_x = is_bold ? this->x : this->prev_x;
     (void)drop_near(this->player_ptr, this->q_ptr, this->corruption_possibility, drop_y, drop_x);
@@ -381,12 +382,12 @@ bool ObjectThrowEntity::check_racial_target_bold()
     this->nx[this->cur_dis] = this->x;
     mmove2(&this->ny[this->cur_dis], &this->nx[this->cur_dis], this->player_ptr->y, this->player_ptr->x, this->ty, this->tx);
     auto *floor_ptr = this->player_ptr->current_floor_ptr;
-    if (cave_has_flag_bold(floor_ptr, this->ny[this->cur_dis], this->nx[this->cur_dis], FF::PROJECT)) {
+    if (cave_has_flag_bold(floor_ptr, this->ny[this->cur_dis], this->nx[this->cur_dis], FloorFeatureType::PROJECT)) {
         return false;
     }
 
     this->hit_wall = true;
-    return (this->q_ptr->tval == TV_FIGURINE) || this->q_ptr->is_potion()
+    return (this->q_ptr->tval == ItemKindType::FIGURINE) || this->q_ptr->is_potion()
         || (floor_ptr->grid_array[this->ny[this->cur_dis]][this->nx[this->cur_dis]].m_idx == 0);
 }
 
@@ -434,7 +435,12 @@ void ObjectThrowEntity::attack_racial_power()
         this->m_ptr->hp - this->tdam, this->m_ptr->maxhp, this->m_ptr->max_maxhp);
 
     auto fear = false;
-    MonsterDamageProcessor mdp(this->player_ptr, this->g_ptr->m_idx, this->tdam, &fear);
+    AttributeFlags attribute_flags{};
+    attribute_flags.set(AttributeType::PLAYER_SHOOT);
+    if (is_active_torch(this->o_ptr))
+        attribute_flags.set(AttributeType::FIRE);
+
+    MonsterDamageProcessor mdp(this->player_ptr, this->g_ptr->m_idx, this->tdam, &fear, attribute_flags);
     if (mdp.mon_take_hit(extract_note_dies(real_r_idx(this->m_ptr)))) {
         return;
     }

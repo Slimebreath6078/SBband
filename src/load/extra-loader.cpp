@@ -17,15 +17,15 @@
  * @brief その他の情報を読み込む / Read the "extra" information
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void rd_extra(player_type *player_ptr)
+void rd_extra(PlayerType *player_ptr)
 {
-    rd_s16b(&player_ptr->riding);
+    player_ptr->riding = rd_s16b();
 
-    rd_s16b(&player_ptr->floor_id);
+    player_ptr->floor_id = rd_s16b();
 
-    rd_dummy_monsters();
-    rd_u32b(&w_ptr->play_time);
+    rd_dummy_monsters(player_ptr);
+    w_ptr->play_time = rd_u32b();
 
     rd_visited_towns(player_ptr);
-    rd_u32b(&player_ptr->count);
+    player_ptr->count = rd_u32b();
 }

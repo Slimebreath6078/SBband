@@ -32,7 +32,7 @@
  * @param mode 表示オプション
  * @return 特筆すべき情報が一つでもあった場合TRUE、一つもなく表示がキャンセルされた場合FALSEを返す。
  */
-bool screen_object(player_type *player_ptr, object_type *o_ptr, BIT_FLAGS mode)
+bool screen_object(PlayerType *player_ptr, object_type *o_ptr, BIT_FLAGS mode)
 {
     char temp[70 * 20];
     concptr info[128];
@@ -60,7 +60,7 @@ bool screen_object(player_type *player_ptr, object_type *o_ptr, BIT_FLAGS mode)
         info[i++] = _("...ただし装備していなければならない。", "...if it is being worn.");
     }
 
-    if (o_ptr->tval == TV_FIGURINE) {
+    if (o_ptr->tval == ItemKindType::FIGURINE) {
         info[i++] = _("それは投げた時ペットに変化する。", "It will transform into a pet when thrown.");
     }
 
@@ -68,11 +68,11 @@ bool screen_object(player_type *player_ptr, object_type *o_ptr, BIT_FLAGS mode)
         info[i++] = _("それを装備した者は吸血鬼になる。", "It makes you turn into a vampire permanently.");
     }
 
-    if ((o_ptr->tval == TV_SWORD) && (o_ptr->sval == SV_POISON_NEEDLE)) {
+    if ((o_ptr->tval == ItemKindType::SWORD) && (o_ptr->sval == SV_POISON_NEEDLE)) {
         info[i++] = _("それは相手を一撃で倒すことがある。", "It will attempt to instantly kill a monster.");
     }
 
-    if ((o_ptr->tval == TV_POLEARM) && (o_ptr->sval == SV_DEATH_SCYTHE)) {
+    if ((o_ptr->tval == ItemKindType::POLEARM) && (o_ptr->sval == SV_DEATH_SCYTHE)) {
         info[i++] = _("それは自分自身に攻撃が返ってくることがある。", "It causes you to strike yourself sometimes.");
         info[i++] = _("それは無敵のバリアを切り裂く。", "It always penetrates invulnerability barriers.");
     }
@@ -101,11 +101,7 @@ bool screen_object(player_type *player_ptr, object_type *o_ptr, BIT_FLAGS mode)
         info[i++] = _("それは物を強く投げることを可能にする。", "It provides great strength when you throw an item.");
     }
 
-    if (flgs.has(TR_DOWN_SAVING)) {
-        info[i++] = _("それは魔法抵抗力を下げる。", "It decreases your magic resistance.");
-    }
-
-    if (o_ptr->tval == TV_STATUE) {
+    if (o_ptr->tval == ItemKindType::STATUE) {
         monster_race *r_ptr = &r_info[o_ptr->pval];
         if (o_ptr->pval == MON_BULLGATES)
             info[i++] = _("それは部屋に飾ると恥ずかしい。", "It is shameful.");
@@ -572,6 +568,18 @@ bool screen_object(player_type *player_ptr, object_type *o_ptr, BIT_FLAGS mode)
         info[i++] = _("それは冷気のバリアを張る。", "It produces a sheath of coldness.");
     }
 
+    if (flgs.has(TR_SELF_FIRE)) {
+        info[i++] = _("それはあなたを燃やす。", "It burns you.");
+    }
+
+    if (flgs.has(TR_SELF_ELEC)) {
+        info[i++] = _("それはあなたを電撃で包む。", "It electrocutes you.");
+    }
+
+    if (flgs.has(TR_SELF_COLD)) {
+        info[i++] = _("それはあなたを凍らせる。", "It freezes you.");
+    }
+
     if (flgs.has(TR_NO_MAGIC)) {
         info[i++] = _("それは反魔法バリアを張る。", "It produces an anti-magic shell.");
     }
@@ -593,9 +601,9 @@ bool screen_object(player_type *player_ptr, object_type *o_ptr, BIT_FLAGS mode)
     }
 
     if (o_ptr->is_cursed()) {
-        if (o_ptr->curse_flags.has(TRC::PERMA_CURSE)) {
+        if (o_ptr->curse_flags.has(CurseTraitType::PERMA_CURSE)) {
             info[i++] = _("それは永遠の呪いがかけられている。", "It is permanently cursed.");
-        } else if (o_ptr->curse_flags.has(TRC::HEAVY_CURSE)) {
+        } else if (o_ptr->curse_flags.has(CurseTraitType::HEAVY_CURSE)) {
             info[i++] = _("それは強力な呪いがかけられている。", "It is heavily cursed.");
         } else {
             info[i++] = _("それは呪われている。", "It is cursed.");
@@ -608,84 +616,96 @@ bool screen_object(player_type *player_ptr, object_type *o_ptr, BIT_FLAGS mode)
         }
     }
 
-    if ((flgs.has(TR_TY_CURSE)) || o_ptr->curse_flags.has(TRC::TY_CURSE)) {
+    if ((flgs.has(TR_TY_CURSE)) || o_ptr->curse_flags.has(CurseTraitType::TY_CURSE)) {
         info[i++] = _("それは太古の禍々しい怨念が宿っている。", "It carries an ancient foul curse.");
     }
 
-    if ((flgs.has(TR_AGGRAVATE)) || o_ptr->curse_flags.has(TRC::AGGRAVATE)) {
+    if ((flgs.has(TR_AGGRAVATE)) || o_ptr->curse_flags.has(CurseTraitType::AGGRAVATE)) {
         info[i++] = _("それは付近のモンスターを怒らせる。", "It aggravates nearby creatures.");
     }
 
-    if ((flgs.has(TR_DRAIN_EXP)) || o_ptr->curse_flags.has(TRC::DRAIN_EXP)) {
+    if ((flgs.has(TR_DRAIN_EXP)) || o_ptr->curse_flags.has(CurseTraitType::DRAIN_EXP)) {
         info[i++] = _("それは経験値を吸い取る。", "It drains experience.");
     }
 
-    if (o_ptr->curse_flags.has(TRC::SLOW_REGEN)) {
+    if (o_ptr->curse_flags.has(CurseTraitType::SLOW_REGEN)) {
         info[i++] = _("それは回復力を弱める。", "It slows your regenerative powers.");
     }
 
-    if (o_ptr->curse_flags.has(TRC::ADD_L_CURSE) || flgs.has(TR_ADD_L_CURSE)) {
+    if (o_ptr->curse_flags.has(CurseTraitType::ADD_L_CURSE) || flgs.has(TR_ADD_L_CURSE)) {
         info[i++] = _("それは弱い呪いを増やす。", "It adds weak curses.");
     }
 
-    if (o_ptr->curse_flags.has(TRC::ADD_H_CURSE) || flgs.has(TR_ADD_H_CURSE)) {
+    if (o_ptr->curse_flags.has(CurseTraitType::ADD_H_CURSE) || flgs.has(TR_ADD_H_CURSE)) {
         info[i++] = _("それは強力な呪いを増やす。", "It adds heavy curses.");
     }
 
-    if ((flgs.has(TR_CALL_ANIMAL)) || o_ptr->curse_flags.has(TRC::CALL_ANIMAL)) {
+    if (o_ptr->curse_flags.has(CurseTraitType::PERSISTENT_CURSE) || flgs.has(TR_PERSISTENT_CURSE)) {
+        info[i++] = _("それは頻繁に呪いをかけなおす。", "It curses itself persistently.");
+    }
+
+    if ((flgs.has(TR_CALL_ANIMAL)) || o_ptr->curse_flags.has(CurseTraitType::CALL_ANIMAL)) {
         info[i++] = _("それは動物を呼び寄せる。", "It attracts animals.");
     }
 
-    if ((flgs.has(TR_CALL_DEMON)) || o_ptr->curse_flags.has(TRC::CALL_DEMON)) {
+    if ((flgs.has(TR_CALL_DEMON)) || o_ptr->curse_flags.has(CurseTraitType::CALL_DEMON)) {
         info[i++] = _("それは悪魔を呼び寄せる。", "It attracts demons.");
     }
 
-    if ((flgs.has(TR_CALL_DRAGON)) || o_ptr->curse_flags.has(TRC::CALL_DRAGON)) {
+    if ((flgs.has(TR_CALL_DRAGON)) || o_ptr->curse_flags.has(CurseTraitType::CALL_DRAGON)) {
         info[i++] = _("それはドラゴンを呼び寄せる。", "It attracts dragons.");
     }
 
-    if ((flgs.has(TR_CALL_UNDEAD)) || o_ptr->curse_flags.has(TRC::CALL_UNDEAD)) {
+    if ((flgs.has(TR_CALL_UNDEAD)) || o_ptr->curse_flags.has(CurseTraitType::CALL_UNDEAD)) {
         info[i++] = _("それは死霊を呼び寄せる。", "It attracts undead.");
     }
 
-    if ((flgs.has(TR_COWARDICE)) || o_ptr->curse_flags.has(TRC::COWARDICE)) {
+    if ((flgs.has(TR_COWARDICE)) || o_ptr->curse_flags.has(CurseTraitType::COWARDICE)) {
         info[i++] = _("それは恐怖感を引き起こす。", "It makes you subject to cowardice.");
     }
 
-    if (flgs.has(TR_BERS_RAGE) || o_ptr->curse_flags.has(TRC::BERS_RAGE))
+    if (flgs.has(TR_BERS_RAGE) || o_ptr->curse_flags.has(CurseTraitType::BERS_RAGE))
         info[i++] = _("それは狂戦士化の発作を引き起こす。", "It makes you subject to berserker fits.");
 
-    if ((flgs.has(TR_TELEPORT)) || o_ptr->curse_flags.has(TRC::TELEPORT)) {
+    if ((flgs.has(TR_TELEPORT)) || o_ptr->curse_flags.has(CurseTraitType::TELEPORT)) {
         info[i++] = _("それはランダムなテレポートを引き起こす。", "It induces random teleportation.");
     }
 
-    if ((flgs.has(TR_LOW_MELEE)) || o_ptr->curse_flags.has(TRC::LOW_MELEE)) {
+    if ((flgs.has(TR_LOW_MELEE)) || o_ptr->curse_flags.has(CurseTraitType::LOW_MELEE)) {
         info[i++] = _("それは攻撃を外しやすい。", "It causes you to miss blows.");
     }
 
-    if ((flgs.has(TR_LOW_AC)) || o_ptr->curse_flags.has(TRC::LOW_AC)) {
+    if ((flgs.has(TR_LOW_AC)) || o_ptr->curse_flags.has(CurseTraitType::LOW_AC)) {
         info[i++] = _("それは攻撃を受けやすい。", "It helps your enemies' blows.");
     }
 
-    if ((flgs.has(TR_HARD_SPELL)) || o_ptr->curse_flags.has(TRC::HARD_SPELL)) {
+    if (o_ptr->curse_flags.has(CurseTraitType::VUL_CURSE) || flgs.has(TR_VUL_CURSE)) {
+        info[i++] = _("それは呪いへの抵抗力を下げる。", "It decreases your resistance to curses.");
+    }
+
+    if (flgs.has(TR_DOWN_SAVING)) {
+        info[i++] = _("それは魔法抵抗力を半減させる。", "It halves your magic resistance.");
+    }
+
+    if ((flgs.has(TR_HARD_SPELL)) || o_ptr->curse_flags.has(CurseTraitType::HARD_SPELL)) {
         info[i++] = _("それは魔法を唱えにくくする。", "It encumbers you while spellcasting.");
     }
 
-    if ((flgs.has(TR_FAST_DIGEST)) || o_ptr->curse_flags.has(TRC::FAST_DIGEST)) {
+    if ((flgs.has(TR_FAST_DIGEST)) || o_ptr->curse_flags.has(CurseTraitType::FAST_DIGEST)) {
         info[i++] = _("それはあなたの新陳代謝を速くする。", "It speeds your metabolism.");
     }
 
-    if ((flgs.has(TR_DRAIN_HP)) || o_ptr->curse_flags.has(TRC::DRAIN_HP)) {
+    if ((flgs.has(TR_DRAIN_HP)) || o_ptr->curse_flags.has(CurseTraitType::DRAIN_HP)) {
         info[i++] = _("それはあなたの体力を吸い取る。", "It drains you.");
     }
 
-    if ((flgs.has(TR_DRAIN_MANA)) || o_ptr->curse_flags.has(TRC::DRAIN_MANA)) {
+    if ((flgs.has(TR_DRAIN_MANA)) || o_ptr->curse_flags.has(CurseTraitType::DRAIN_MANA)) {
         info[i++] = _("それはあなたの魔力を吸い取る。", "It drains your mana.");
     }
 
     if (mode & SCROBJ_FAKE_OBJECT) {
         switch (o_ptr->tval) {
-        case TV_RING:
+        case ItemKindType::RING:
             switch (o_ptr->sval) {
             case SV_RING_LORDLY:
                 info[i++] = _("それは幾つかのランダムな耐性を授ける。", "It provides some random resistances.");
@@ -697,7 +717,7 @@ bool screen_object(player_type *player_ptr, object_type *o_ptr, BIT_FLAGS mode)
 
             break;
 
-        case TV_AMULET:
+        case ItemKindType::AMULET:
             switch (o_ptr->sval) {
             case SV_AMULET_RESISTANCE:
                 info[i++] = _("それは毒への耐性を授ける事がある。", "It may provides resistance to poison.");
@@ -755,7 +775,7 @@ bool screen_object(player_type *player_ptr, object_type *o_ptr, BIT_FLAGS mode)
         prt("", k, 13);
     }
 
-    if ((o_ptr->tval == TV_STATUE) && (o_ptr->sval == SV_PHOTO)) {
+    if ((o_ptr->tval == ItemKindType::STATUE) && (o_ptr->sval == SV_PHOTO)) {
         monster_race *r_ptr = &r_info[o_ptr->pval];
         int namelen = strlen(r_ptr->name.c_str());
         prt(format("%s: '", r_ptr->name.c_str()), 1, 15);

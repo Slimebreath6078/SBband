@@ -25,7 +25,7 @@
  * @return 命中と判定された場合TRUEを返す
  * @note Always miss 5%, always hit 5%, otherwise random.
  */
-bool test_hit_norm(player_type *player_ptr, int chance, ARMOUR_CLASS ac, bool visible)
+bool test_hit_norm(PlayerType *player_ptr, int chance, ARMOUR_CLASS ac, bool visible)
 {
     if (!visible)
         chance = (chance + 1) / 2;
@@ -39,12 +39,12 @@ bool test_hit_norm(player_type *player_ptr, int chance, ARMOUR_CLASS ac, bool vi
  * @param ac 敵AC
  * @return 命中確率
  */
-PERCENTAGE hit_chance(player_type *player_ptr, int reli, ARMOUR_CLASS ac)
+PERCENTAGE hit_chance(PlayerType *player_ptr, int reli, ARMOUR_CLASS ac)
 {
     PERCENTAGE chance = 5, chance_left = 90;
     if (reli <= 0)
         return 5;
-    if (player_ptr->pseikaku == PERSONALITY_LAZY)
+    if (player_ptr->ppersonality == PERSONALITY_LAZY)
         chance_left = (chance_left * 19 + 9) / 20;
     chance += (100 - ((ac * 75) / reli)) * chance_left / 100;
     if (chance < 5)
@@ -63,7 +63,7 @@ PERCENTAGE hit_chance(player_type *player_ptr, int reli, ARMOUR_CLASS ac)
  * Always miss 5% of the time, Always hit 5% of the time.
  * Otherwise, match monster power against player armor.
  */
-bool check_hit_from_monster_to_player(player_type *player_ptr, int power, DEPTH level, int stun)
+bool check_hit_from_monster_to_player(PlayerType *player_ptr, int power, DEPTH level, int stun)
 {
     int k = randint0(100);
     if (stun && one_in_(2))
@@ -109,12 +109,12 @@ bool check_hit_from_monster_to_monster(int power, DEPTH level, ARMOUR_CLASS ac, 
  * @param pa_ptr 直接攻撃構造体への参照ポインタ
  * @param chance 基本命中値
  */
-static bool decide_attack_hit(player_type *player_ptr, player_attack_type *pa_ptr, int chance)
+static bool decide_attack_hit(PlayerType *player_ptr, player_attack_type *pa_ptr, int chance)
 {
     bool success_hit = false;
     object_type *o_ptr = &player_ptr->inventory_list[INVEN_MAIN_HAND + pa_ptr->hand];
     monster_race *r_ptr = &r_info[pa_ptr->m_ptr->r_idx];
-    if (((o_ptr->tval == TV_SWORD) && (o_ptr->sval == SV_POISON_NEEDLE)) || (pa_ptr->mode == HISSATSU_KYUSHO)) {
+    if (((o_ptr->tval == ItemKindType::SWORD) && (o_ptr->sval == SV_POISON_NEEDLE)) || (pa_ptr->mode == HISSATSU_KYUSHO)) {
         int n = 1;
 
         if (can_attack_with_main_hand(player_ptr) && can_attack_with_sub_hand(player_ptr))
@@ -124,7 +124,7 @@ static bool decide_attack_hit(player_type *player_ptr, player_attack_type *pa_pt
             n *= 2;
 
         success_hit = one_in_(n);
-    } else if ((player_ptr->pclass == CLASS_NINJA) && ((pa_ptr->backstab || pa_ptr->surprise_attack) && r_ptr->resistance_flags.has_not(MonsterResistanceType::RESIST_ALL)))
+    } else if ((player_ptr->pclass == PlayerClassType::NINJA) && ((pa_ptr->backstab || pa_ptr->surprise_attack) && r_ptr->resistance_flags.has_not(MonsterResistanceType::RESIST_ALL)))
         success_hit = true;
     else
         success_hit = test_hit_norm(player_ptr, chance, r_ptr->ac, pa_ptr->m_ptr->ml);
@@ -142,7 +142,7 @@ static bool decide_attack_hit(player_type *player_ptr, player_attack_type *pa_pt
  * @param chance 基本命中値
  * @return 当たればTRUE、外れればFALSE
  */
-bool process_attack_hit(player_type *player_ptr, player_attack_type *pa_ptr, int chance)
+bool process_attack_hit(PlayerType *player_ptr, player_attack_type *pa_ptr, int chance)
 {
     object_type *o_ptr = &player_ptr->inventory_list[INVEN_MAIN_HAND + pa_ptr->hand];
     if (decide_attack_hit(player_ptr, pa_ptr, chance))
@@ -151,7 +151,7 @@ bool process_attack_hit(player_type *player_ptr, player_attack_type *pa_ptr, int
     pa_ptr->backstab = false; /* Clumsy! */
     pa_ptr->surprise_attack = false; /* Clumsy! */
 
-    if ((o_ptr->tval == TV_POLEARM) && (o_ptr->sval == SV_DEATH_SCYTHE) && one_in_(3)) {
+    if ((o_ptr->tval == ItemKindType::POLEARM) && (o_ptr->sval == SV_DEATH_SCYTHE) && one_in_(3)) {
         process_death_scythe_reflection(player_ptr, pa_ptr);
     } else {
         sound(SOUND_MISS);

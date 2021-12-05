@@ -89,7 +89,7 @@ static bool select_ammo_creation_type(ammo_creation_type &type, PLAYER_LEVEL ple
  * Hook to determine if an object is contertible in an arrow/bolt
  * @return 製造を実際に行ったらTRUE、キャンセルしたらFALSEを返す
  */
-bool create_ammo(player_type *player_ptr)
+bool create_ammo(PlayerType *player_ptr)
 {
     if (cmd_limit_confused(player_ptr) || cmd_limit_blind(player_ptr))
         return false;
@@ -108,19 +108,19 @@ bool create_ammo(player_type *player_ptr)
         POSITION y = player_ptr->y + ddy[dir];
         POSITION x = player_ptr->x + ddx[dir];
         grid_type *g_ptr = &player_ptr->current_floor_ptr->grid_array[y][x];
-        if (f_info[g_ptr->get_feat_mimic()].flags.has_not(FF::CAN_DIG)) {
+        if (f_info[g_ptr->get_feat_mimic()].flags.has_not(FloorFeatureType::CAN_DIG)) {
             msg_print(_("そこには岩石がない。", "You need a pile of rubble."));
             return false;
         }
 
-        if (!g_ptr->cave_has_flag(FF::CAN_DIG) || !g_ptr->cave_has_flag(FF::HURT_ROCK)) {
+        if (!g_ptr->cave_has_flag(FloorFeatureType::CAN_DIG) || !g_ptr->cave_has_flag(FloorFeatureType::HURT_ROCK)) {
             msg_print(_("硬すぎて崩せなかった。", "You failed to make ammo."));
             return true;
         }
 
         object_type forge;
         object_type *q_ptr = &forge;
-        q_ptr->prep(lookup_kind(TV_SHOT, (OBJECT_SUBTYPE_VALUE)m_bonus(1, player_ptr->lev) + 1));
+        q_ptr->prep(lookup_kind(ItemKindType::SHOT, (OBJECT_SUBTYPE_VALUE)m_bonus(1, player_ptr->lev) + 1));
         q_ptr->number = (byte)rand_range(15, 30);
         object_aware(player_ptr, q_ptr);
         object_known(q_ptr);
@@ -133,7 +133,7 @@ bool create_ammo(player_type *player_ptr)
         if (slot >= 0)
             autopick_alter_item(player_ptr, slot, false);
 
-        cave_alter_feat(player_ptr, y, x, FF::HURT_ROCK);
+        cave_alter_feat(player_ptr, y, x, FloorFeatureType::HURT_ROCK);
         player_ptr->update |= PU_FLOW;
         return true;
     }
@@ -147,7 +147,7 @@ bool create_ammo(player_type *player_ptr)
 
         object_type forge;
         q_ptr = &forge;
-        q_ptr->prep(lookup_kind(TV_ARROW, (OBJECT_SUBTYPE_VALUE)m_bonus(1, player_ptr->lev) + 1));
+        q_ptr->prep(lookup_kind(ItemKindType::ARROW, (OBJECT_SUBTYPE_VALUE)m_bonus(1, player_ptr->lev) + 1));
         q_ptr->number = (byte)rand_range(5, 10);
         object_aware(player_ptr, q_ptr);
         object_known(q_ptr);
@@ -173,7 +173,7 @@ bool create_ammo(player_type *player_ptr)
 
         object_type forge;
         q_ptr = &forge;
-        q_ptr->prep(lookup_kind(TV_BOLT, (OBJECT_SUBTYPE_VALUE)m_bonus(1, player_ptr->lev) + 1));
+        q_ptr->prep(lookup_kind(ItemKindType::BOLT, (OBJECT_SUBTYPE_VALUE)m_bonus(1, player_ptr->lev) + 1));
         q_ptr->number = (byte)rand_range(4, 8);
         object_aware(player_ptr, q_ptr);
         object_known(q_ptr);

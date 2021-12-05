@@ -3,6 +3,7 @@
 #include "flavor/object-flavor-types.h"
 #include "flavor/tval-description-switcher.h"
 #include "game-option/text-display-options.h"
+#include "locale/english.h"
 #include "mind/mind-weaponsmith.h"
 #include "monster-race/race-kind-flags.h"
 #include "object-enchant/object-ego.h"
@@ -17,7 +18,6 @@
 #include "util/string-processor.h"
 #ifdef JP
 #else
-#include "locale/english.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
 #include "system/monster-race-definition.h"
@@ -258,8 +258,7 @@ static void describe_artifact_prefix_en(flavor_type *flavor_ptr)
     if (describe_prefix_en(flavor_ptr))
         return;
 
-    if ((flavor_ptr->known && flavor_ptr->o_ptr->is_artifact())
-        || ((flavor_ptr->o_ptr->tval == TV_CORPSE) && r_info[flavor_ptr->o_ptr->pval].race_kind_flags.has(MonraceKindType::UNIQUE))) {
+    if ((flavor_ptr->known && flavor_ptr->o_ptr->is_artifact()) || ((flavor_ptr->o_ptr->tval == ItemKindType::CORPSE) && r_info[flavor_ptr->o_ptr->pval].race_kind_flags.has(MonraceKindType::UNIQUE))) {
         flavor_ptr->t = object_desc_str(flavor_ptr->t, "The ");
         return;
     }
@@ -352,7 +351,7 @@ static void describe_inscription(flavor_type *flavor_ptr)
     }
 }
 
-void describe_named_item(player_type *player_ptr, flavor_type *flavor_ptr)
+void describe_named_item(PlayerType *player_ptr, flavor_type *flavor_ptr)
 {
     check_object_known_aware(flavor_ptr);
     switch_tval_description(flavor_ptr);

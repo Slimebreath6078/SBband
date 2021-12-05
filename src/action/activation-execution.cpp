@@ -32,7 +32,7 @@
 #include "spell-kind/spells-teleport.h"
 #include "spell-realm/spells-hex.h"
 #include "spell-realm/spells-song.h"
-#include "spell/spell-types.h"
+#include "effect/attribute-types.h"
 #include "sv-definition/sv-lite-types.h"
 #include "sv-definition/sv-ring-types.h"
 #include "system/artifact-type-definition.h"
@@ -55,18 +55,19 @@ static void decide_activation_level(ae_type *ae_ptr)
     }
 
     if (ae_ptr->o_ptr->is_random_artifact()) {
-        const activation_type *const act_ptr = find_activation_info(ae_ptr->o_ptr);
-        if (act_ptr != nullptr)
-            ae_ptr->lev = act_ptr->level;
+        auto act_ptr = find_activation_info(ae_ptr->o_ptr);
+        if (act_ptr.has_value()) {
+            ae_ptr->lev = act_ptr.value()->level;
+        }
 
         return;
     }
 
-    if (((ae_ptr->o_ptr->tval == TV_RING) || (ae_ptr->o_ptr->tval == TV_AMULET)) && ae_ptr->o_ptr->name2)
+    if (((ae_ptr->o_ptr->tval == ItemKindType::RING) || (ae_ptr->o_ptr->tval == ItemKindType::AMULET)) && ae_ptr->o_ptr->name2)
         ae_ptr->lev = e_info[ae_ptr->o_ptr->name2].level;
 }
 
-static void decide_chance_fail(player_type *player_ptr, ae_type *ae_ptr)
+static void decide_chance_fail(PlayerType *player_ptr, ae_type *ae_ptr)
 {
     ae_ptr->chance = player_ptr->skill_dev;
     if (player_ptr->confused)
@@ -85,9 +86,9 @@ static void decide_chance_fail(player_type *player_ptr, ae_type *ae_ptr)
         ae_ptr->chance = USE_DEVICE;
 }
 
-static void decide_activation_success(player_type *player_ptr, ae_type *ae_ptr)
+static void decide_activation_success(PlayerType *player_ptr, ae_type *ae_ptr)
 {
-    if (player_ptr->pclass == CLASS_BERSERKER) {
+    if (player_ptr->pclass == PlayerClassType::BERSERKER) {
         ae_ptr->success = false;
         return;
     }
@@ -113,7 +114,7 @@ static bool check_activation_success(ae_type *ae_ptr)
     return false;
 }
 
-static bool check_activation_conditions(player_type *player_ptr, ae_type *ae_ptr)
+static bool check_activation_conditions(PlayerType *player_ptr, ae_type *ae_ptr)
 {
     if (!check_activation_success(ae_ptr))
         return false;
@@ -123,7 +124,7 @@ static bool check_activation_conditions(player_type *player_ptr, ae_type *ae_ptr
         return false;
     }
 
-    if (!ae_ptr->o_ptr->xtra4 && (ae_ptr->o_ptr->tval == TV_FLASK) && ((ae_ptr->o_ptr->sval == SV_LITE_TORCH) || (ae_ptr->o_ptr->sval == SV_LITE_LANTERN))) {
+    if (!ae_ptr->o_ptr->xtra4 && (ae_ptr->o_ptr->tval == ItemKindType::FLASK) && ((ae_ptr->o_ptr->sval == SV_LITE_TORCH) || (ae_ptr->o_ptr->sval == SV_LITE_LANTERN))) {
         msg_print(_("燃料がない。", "It has no fuel."));
         PlayerEnergy(player_ptr).reset_player_turn();
         return false;
@@ -138,17 +139,19 @@ static bool check_activation_conditions(player_type *player_ptr, ae_type *ae_ptr
  * @param o_ptr 対象のオブジェクト構造体ポインタ
  * @return 発動実行の是非を返す。
  */
-static bool activate_artifact(player_type *player_ptr, object_type *o_ptr)
+static bool activate_artifact(PlayerType *player_ptr, object_type *o_ptr)
 {
     concptr name = k_info[o_ptr->k_idx].name.c_str();
-    const activation_type *const act_ptr = find_activation_info(o_ptr);
-    if (!act_ptr) {
+    auto tmp_act_ptr = find_activation_info(o_ptr);
+    if (!tmp_act_ptr.has_value()) {
         msg_print("Activation information is not found.");
         return false;
     }
 
-    if (!switch_activation(player_ptr, &o_ptr, act_ptr, name))
+    auto *act_ptr = tmp_act_ptr.value();
+    if (!switch_activation(player_ptr, &o_ptr, act_ptr, name)) {
         return false;
+    }
 
     if (act_ptr->timeout.constant >= 0) {
         o_ptr->timeout = (int16_t)act_ptr->timeout.constant;
@@ -159,16 +162,16 @@ static bool activate_artifact(player_type *player_ptr, object_type *o_ptr)
     }
 
     switch (act_ptr->index) {
-    case ACT_BR_FIRE:
-        o_ptr->timeout = ((o_ptr->tval == TV_RING) && (o_ptr->sval == SV_RING_FLAMES)) ? 200 : 250;
+    case RandomArtActType::BR_FIRE:
+        o_ptr->timeout = ((o_ptr->tval == ItemKindType::RING) && (o_ptr->sval == SV_RING_FLAMES)) ? 200 : 250;
         return true;
-    case ACT_BR_COLD:
-        o_ptr->timeout = ((o_ptr->tval == TV_RING) && (o_ptr->sval == SV_RING_ICE)) ? 200 : 250;
+    case RandomArtActType::BR_COLD:
+        o_ptr->timeout = ((o_ptr->tval == ItemKindType::RING) && (o_ptr->sval == SV_RING_ICE)) ? 200 : 250;
         return true;
-    case ACT_TERROR:
+    case RandomArtActType::TERROR:
         o_ptr->timeout = 3 * (player_ptr->lev + 10);
         return true;
-    case ACT_MURAMASA:
+    case RandomArtActType::MURAMASA:
         return true;
     default:
         msg_format("Special timeout is not implemented: %d.", act_ptr->index);
@@ -176,9 +179,9 @@ static bool activate_artifact(player_type *player_ptr, object_type *o_ptr)
     }
 }
 
-static bool activate_whistle(player_type *player_ptr, ae_type *ae_ptr)
+static bool activate_whistle(PlayerType *player_ptr, ae_type *ae_ptr)
 {
-    if (ae_ptr->o_ptr->tval != TV_WHISTLE)
+    if (ae_ptr->o_ptr->tval != ItemKindType::WHISTLE)
         return false;
 
     if (music_singing_any(player_ptr))
@@ -216,7 +219,7 @@ static bool activate_whistle(player_type *player_ptr, ae_type *ae_ptr)
  * the user hits "escape" at the "direction" prompt.
  * </pre>
  */
-void exe_activate(player_type *player_ptr, INVENTORY_IDX item)
+void exe_activate(PlayerType *player_ptr, INVENTORY_IDX item)
 {
     PlayerEnergy(player_ptr).set_player_turn_energy(100);
     ae_type tmp_ae;
@@ -232,7 +235,7 @@ void exe_activate(player_type *player_ptr, INVENTORY_IDX item)
 
     msg_print(_("始動させた...", "You activate it..."));
     sound(SOUND_ZAP);
-    if (activation_index(ae_ptr->o_ptr)) {
+    if (activation_index(ae_ptr->o_ptr) > RandomArtActType::NONE) {
         (void)activate_artifact(player_ptr, ae_ptr->o_ptr);
         player_ptr->window_flags |= PW_INVEN | PW_EQUIP;
         return;

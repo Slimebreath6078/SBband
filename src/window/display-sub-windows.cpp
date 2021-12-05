@@ -9,6 +9,7 @@
 #include "inventory/inventory-describer.h"
 #include "inventory/inventory-slot-types.h"
 #include "inventory/inventory-util.h"
+#include "locale/japanese.h"
 #include "main/sound-of-music.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
@@ -66,7 +67,7 @@ FixItemTesterSetter::~FixItemTesterSetter()
  * @brief サブウィンドウに所持品一覧を表示する / Hack -- display inventory in sub-windows
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void fix_inventory(player_type *player_ptr)
+void fix_inventory(PlayerType *player_ptr)
 {
     for (int j = 0; j < 8; j++) {
         term_type *old = Term;
@@ -126,7 +127,7 @@ static void print_monster_line(TERM_LEN x, TERM_LEN y, monster_type *m_ptr, int 
     term_addstr(-1, TERM_WHITE, " ");
     term_add_bigch(r_ptr->x_attr, r_ptr->x_char);
 
-    if (r_ptr->r_tkills && m_ptr->mflag2.has_not(MFLAG2::KAGE)) {
+    if (r_ptr->r_tkills && m_ptr->mflag2.has_not(MonsterConstantFlagType::KAGE)) {
         sprintf(buf, " %2d", (int)r_ptr->level);
     } else {
         strcpy(buf, " ??");
@@ -198,7 +199,7 @@ void print_monster_list(floor_type *floor_ptr, const std::vector<MONSTER_IDX> &m
  * @brief 出現中モンスターのリストをサブウィンドウに表示する / Hack -- display monster list in sub-windows
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void fix_monster_list(player_type *player_ptr)
+void fix_monster_list(PlayerType *player_ptr)
 {
     static std::vector<MONSTER_IDX> monster_list;
     std::once_flag once;
@@ -231,7 +232,7 @@ void fix_monster_list(player_type *player_ptr)
  * @brief 装備アイテム一覧を表示する /
  * Choice window "shadow" of the "show_equip()" function
  */
-static void display_equipment(player_type *player_ptr, const ItemTester &item_tester)
+static void display_equipment(PlayerType *player_ptr, const ItemTester &item_tester)
 {
     if (!player_ptr || !player_ptr->inventory_list)
         return;
@@ -260,13 +261,12 @@ static void display_equipment(player_type *player_ptr, const ItemTester &item_te
         term_erase(cur_col, cur_row, 255);
         term_putstr(0, cur_row, cur_col, TERM_WHITE, tmp_val);
 
-        if ((((i == INVEN_MAIN_HAND) && can_attack_with_sub_hand(player_ptr)) || ((i == INVEN_SUB_HAND) && can_attack_with_main_hand(player_ptr)))
-            && has_two_handed_weapons(player_ptr)) {
+        if ((((i == INVEN_MAIN_HAND) && can_attack_with_sub_hand(player_ptr)) || ((i == INVEN_SUB_HAND) && can_attack_with_main_hand(player_ptr))) && has_two_handed_weapons(player_ptr)) {
             strcpy(o_name, _("(武器を両手持ち)", "(wielding with two-hands)"));
             attr = TERM_WHITE;
         } else {
             describe_flavor(player_ptr, o_name, o_ptr, 0);
-            attr = tval_to_attr[o_ptr->tval % 128];
+            attr = tval_to_attr[enum2i(o_ptr->tval) % 128];
         }
 
         int n = strlen(o_name);
@@ -286,7 +286,7 @@ static void display_equipment(player_type *player_ptr, const ItemTester &item_te
         term_putstr(cur_col, cur_row, n, attr, o_name);
         if (show_weights) {
             int wgt = o_ptr->weight * o_ptr->number;
-            sprintf(tmp_val, _("%3d.%1d kg", "%3d.%1d lb"), _(lbtokg1(wgt), wgt / 10), _(lbtokg2(wgt), wgt % 10));
+            sprintf(tmp_val, _("%3d.%1d kg", "%3d.%1d lb"), _(lb_to_kg_integer(wgt), wgt / 10), _(lb_to_kg_fraction(wgt), wgt % 10));
             prt(tmp_val, cur_row, wid - (show_labels ? 28 : 9));
         }
 
@@ -305,7 +305,7 @@ static void display_equipment(player_type *player_ptr, const ItemTester &item_te
  * Hack -- display equipment in sub-windows
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void fix_equip(player_type *player_ptr)
+void fix_equip(PlayerType *player_ptr)
 {
     for (int j = 0; j < 8; j++) {
         term_type *old = Term;
@@ -326,7 +326,7 @@ void fix_equip(player_type *player_ptr)
  * @param player_ptr プレイヤーへの参照ポインタ
  * Hack -- display character in sub-windows
  */
-void fix_player(player_type *player_ptr)
+void fix_player(PlayerType *player_ptr)
 {
     for (int j = 0; j < 8; j++) {
         term_type *old = Term;
@@ -382,7 +382,7 @@ void fix_message(void)
  * @details
  * Note that the "player" symbol does NOT appear on the map.
  */
-void fix_overhead(player_type *player_ptr)
+void fix_overhead(PlayerType *player_ptr)
 {
     for (int j = 0; j < 8; j++) {
         term_type *old = Term;
@@ -409,7 +409,7 @@ void fix_overhead(player_type *player_ptr)
  * @brief 自分の周辺の地形をTermに表示する
  * @param プレイヤー情報への参照ポインタ
  */
-static void display_dungeon(player_type *player_ptr)
+static void display_dungeon(PlayerType *player_ptr)
 {
     TERM_COLOR ta = 0;
     SYMBOL_CODE tc = '\0';
@@ -446,7 +446,7 @@ static void display_dungeon(player_type *player_ptr)
  * @brief 自分の周辺のダンジョンの地形をサブウィンドウに表示する / display dungeon view around player in a sub window
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void fix_dungeon(player_type *player_ptr)
+void fix_dungeon(PlayerType *player_ptr)
 {
     for (int j = 0; j < 8; j++) {
         term_type *old = Term;
@@ -468,7 +468,7 @@ void fix_dungeon(player_type *player_ptr)
  * Hack -- display dungeon view in sub-windows
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void fix_monster(player_type *player_ptr)
+void fix_monster(PlayerType *player_ptr)
 {
     for (int j = 0; j < 8; j++) {
         term_type *old = Term;
@@ -492,7 +492,7 @@ void fix_monster(player_type *player_ptr)
  * Hack -- display object recall in sub-windows
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void fix_object(player_type *player_ptr)
+void fix_object(PlayerType *player_ptr)
 {
     for (int j = 0; j < 8; j++) {
         term_type *old = Term;
@@ -537,7 +537,7 @@ static const monster_type *monster_on_floor_items(floor_type *floor_ptr, const g
  * @param y 参照する座標グリッドのy座標
  * @param x 参照する座標グリッドのx座標
  */
-static void display_floor_item_list(player_type *player_ptr, const int y, const int x)
+static void display_floor_item_list(PlayerType *player_ptr, const int y, const int x)
 {
     // Term の行数を取得。
     TERM_LEN term_h;
@@ -570,9 +570,9 @@ static void display_floor_item_list(player_type *player_ptr, const int y, const 
         concptr fn = f_ptr->name.c_str();
         char buf[512];
 
-        if (f_ptr->flags.has(FF::STORE) || (f_ptr->flags.has(FF::BLDG) && !floor_ptr->inside_arena))
+        if (f_ptr->flags.has(FloorFeatureType::STORE) || (f_ptr->flags.has(FloorFeatureType::BLDG) && !floor_ptr->inside_arena))
             sprintf(buf, _("%sの入口", "on the entrance of %s"), fn);
-        else if (f_ptr->flags.has(FF::WALL))
+        else if (f_ptr->flags.has(FloorFeatureType::WALL))
             sprintf(buf, _("%sの中", "in %s"), fn);
         else
             sprintf(buf, _("%s", "on %s"), fn);
@@ -586,7 +586,7 @@ static void display_floor_item_list(player_type *player_ptr, const int y, const 
         object_type *const o_ptr = &floor_ptr->o_list[o_idx];
 
         // 未発見アイテムおよび金は対象外。
-        if (none_bits(o_ptr->marked, OM_FOUND) || o_ptr->tval == TV_GOLD) {
+        if (none_bits(o_ptr->marked, OM_FOUND) || o_ptr->tval == ItemKindType::GOLD) {
             continue;
         }
 
@@ -602,7 +602,7 @@ static void display_floor_item_list(player_type *player_ptr, const int y, const 
             term_addstr(-1, TERM_WHITE, _("何か奇妙な物", "something strange"));
         } else {
             describe_flavor(player_ptr, line, o_ptr, 0);
-            TERM_COLOR attr = tval_to_attr[o_ptr->tval % 128];
+            TERM_COLOR attr = tval_to_attr[enum2i(o_ptr->tval) % 128];
             term_addstr(-1, attr, line);
         }
 
@@ -613,7 +613,7 @@ static void display_floor_item_list(player_type *player_ptr, const int y, const 
 /*!
  * @brief (y,x) のアイテム一覧をサブウィンドウに表示する / display item at (y,x) in sub-windows
  */
-void fix_floor_item_list(player_type *player_ptr, const int y, const int x)
+void fix_floor_item_list(PlayerType *player_ptr, const int y, const int x)
 {
     for (int j = 0; j < 8; j++) {
         if (!angband_term[j])
@@ -637,7 +637,7 @@ void fix_floor_item_list(player_type *player_ptr, const int y, const int x)
  * @brief サブウィンドウに所持品、装備品リストの表示を行う /
  * Flip "inven" and "equip" in any sub-windows
  */
-void toggle_inventory_equipment(player_type *player_ptr)
+void toggle_inventory_equipment(PlayerType *player_ptr)
 {
     for (int j = 0; j < 8; j++) {
         if (!angband_term[j])

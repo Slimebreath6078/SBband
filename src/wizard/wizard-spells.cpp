@@ -4,8 +4,6 @@
  * @author Hourier
  */
 
-#include <vector>
-
 #include "wizard/wizard-spells.h"
 #include "blue-magic/blue-magic-checker.h"
 #include "core/asking-player.h"
@@ -19,22 +17,29 @@
 #include "monster-floor/monster-summon.h"
 #include "monster-floor/place-monster-types.h"
 #include "monster-race/race-ability-flags.h"
+#include "monster-race/monster-race.h"
 #include "mutation/mutation-processor.h"
 #include "object-enchant/object-smith.h"
+#include "player-base/player-class.h"
+#include "player-info/bluemage-data-type.h"
+#include "player-info/smith-data-type.h"
 #include "spell-kind/spells-launcher.h"
-#include "spell-kind/spells-teleport.h"
 #include "spell-kind/spells-random.h"
+#include "spell-kind/spells-teleport.h"
 #include "spell-realm/spells-chaos.h"
 #include "spell/spells-status.h"
 #include "spell/summon-types.h"
 #include "system/floor-type-definition.h"
 #include "system/player-type-definition.h"
+#include "system/monster-race-definition.h"
 #include "target/grid-selector.h"
 #include "target/target-checker.h"
 #include "target/target-getter.h"
 #include "util/enum-converter.h"
 #include "util/flag-group.h"
 #include "view/display-messages.h"
+
+#include <vector>
 
 debug_spell_command debug_spell_commands_list[SPELL_MAX] = {
     { 2, "vanish dungeon", { .spell2 = { vanish_dungeon } } },
@@ -48,7 +53,7 @@ debug_spell_command debug_spell_commands_list[SPELL_MAX] = {
  * @brief コマンド入力により任意にスペル効果を起こす / Wizard spells
  * @return 実際にテレポートを行ったらTRUEを返す
  */
-bool wiz_debug_spell(player_type *player_ptr)
+bool wiz_debug_spell(PlayerType *player_ptr)
 {
     char tmp_val[50] = "\0";
     int tmp_int;
@@ -94,7 +99,7 @@ bool wiz_debug_spell(player_type *player_ptr)
  * @brief 必ず成功するウィザードモード用次元の扉処理 / Wizard Dimension Door
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void wiz_dimension_door(player_type *player_ptr)
+void wiz_dimension_door(PlayerType *player_ptr)
 {
     POSITION x = 0, y = 0;
     if (!tgt_pt(player_ptr, &x, &y))
@@ -107,7 +112,7 @@ void wiz_dimension_door(player_type *player_ptr)
  * @brief ウィザードモード用モンスターの群れ生成 / Summon a horde of monsters
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void wiz_summon_horde(player_type *player_ptr)
+void wiz_summon_horde(PlayerType *player_ptr)
 {
     POSITION wy = player_ptr->y, wx = player_ptr->x;
     int attempts = 1000;
@@ -124,7 +129,7 @@ void wiz_summon_horde(player_type *player_ptr)
 /*!
  * @brief ウィザードモード用処理としてターゲット中の相手をテレポートバックする / Hack -- Teleport to the target
  */
-void wiz_teleport_back(player_type *player_ptr)
+void wiz_teleport_back(PlayerType *player_ptr)
 {
     if (!target_who)
         return;
@@ -136,27 +141,32 @@ void wiz_teleport_back(player_type *player_ptr)
  * @brief 青魔導師の魔法を全て習得済みにする /
  * debug command for blue mage
  */
-void wiz_learn_blue_magic_all(player_type *player_ptr)
+void wiz_learn_blue_magic_all(PlayerType *player_ptr)
 {
-    EnumClassFlagGroup<RF_ABILITY> ability_flags;
-    for (int j = 1; j < A_MAX; j++) {
-        set_rf_masks(ability_flags, i2enum<blue_magic_type>(j));
+    auto bluemage_data = PlayerClass(player_ptr).get_specific_data<bluemage_data_type>();
+    if (!bluemage_data) {
+        return;
+    }
 
-        std::vector<RF_ABILITY> spells;
-        EnumClassFlagGroup<RF_ABILITY>::get_flags(ability_flags, std::back_inserter(spells));
-        for (auto spell : spells) {
-            player_ptr->magic_num2[enum2i(spell)] = 1;
-        }
+    for (auto type : BLUE_MAGIC_TYPE_LIST) {
+        EnumClassFlagGroup<MonsterAbilityType> ability_flags;
+        set_rf_masks(ability_flags, type);
+        bluemage_data->learnt_blue_magics.set(ability_flags);
     }
 }
 
 /*!
  * @brief 鍛冶師の全てのエッセンスを最大所持量にする
  */
-void wiz_fillup_all_smith_essences(player_type *player_ptr)
+void wiz_fillup_all_smith_essences(PlayerType *player_ptr)
 {
+    auto smith_data = PlayerClass(player_ptr).get_specific_data<smith_data_type>();
+    if (!smith_data) {
+        return;
+    }
+
     for (auto essence : Smith::get_essence_list()) {
-        player_ptr->magic_num1[enum2i(essence)] = Smith::ESSENCE_AMOUNT_MAX;
+        smith_data->essences[essence] = Smith::ESSENCE_AMOUNT_MAX;
     }
 }
 
@@ -166,7 +176,7 @@ void wiz_fillup_all_smith_essences(player_type *player_ptr)
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param num 生成処理回数
  */
-void wiz_summon_random_enemy(player_type *player_ptr, int num)
+void wiz_summon_random_enemy(PlayerType *player_ptr, int num)
 {
     for (int i = 0; i < num; i++)
         (void)summon_specific(player_ptr, 0, player_ptr->y, player_ptr->x, player_ptr->current_floor_ptr->dun_level, SUMMON_NONE, PM_ALLOW_GROUP | PM_ALLOW_UNIQUE);
@@ -179,8 +189,15 @@ void wiz_summon_random_enemy(player_type *player_ptr, int num)
  * @details
  * This function is rather dangerous
  */
-void wiz_summon_specific_enemy(player_type *player_ptr, MONRACE_IDX r_idx)
+void wiz_summon_specific_enemy(PlayerType *player_ptr, MONRACE_IDX r_idx)
 {
+    if (r_idx <= 0) {
+        int val = 1;
+        if(!get_value("MonsterID", 1, r_info.size() - 1, &val)) {
+            return;
+        }
+        r_idx = static_cast<MONRACE_IDX>(val);
+    }
     (void)summon_named_creature(player_ptr, 0, player_ptr->y, player_ptr->x, r_idx, PM_ALLOW_SLEEP | PM_ALLOW_GROUP);
 }
 
@@ -191,8 +208,15 @@ void wiz_summon_specific_enemy(player_type *player_ptr, MONRACE_IDX r_idx)
  * @details
  * This function is rather dangerous
  */
-void wiz_summon_pet(player_type *player_ptr, MONRACE_IDX r_idx)
+void wiz_summon_pet(PlayerType *player_ptr, MONRACE_IDX r_idx)
 {
+    if (r_idx <= 0) {
+        int val = 1;
+        if (!get_value("MonsterID", 1, r_info.size() - 1, &val)) {
+            return;
+        }
+        r_idx = static_cast<MONRACE_IDX>(val);
+    }
     (void)summon_named_creature(player_ptr, 0, player_ptr->y, player_ptr->x, r_idx, PM_ALLOW_SLEEP | PM_ALLOW_GROUP | PM_FORCE_PET);
 }
 
@@ -202,7 +226,7 @@ void wiz_summon_pet(player_type *player_ptr, MONRACE_IDX r_idx)
  * @param effect_idx 属性ID
  * @details デフォルトは100万・GF_ARROW(射撃)。RES_ALL持ちも一撃で殺せる。
  */
-void wiz_kill_enemy(player_type *player_ptr, HIT_POINT dam, EFFECT_ID effect_idx)
+void wiz_kill_enemy(PlayerType *player_ptr, HIT_POINT dam, AttributeType effect_idx)
 {
     if (dam <= 0) {
         char tmp[80] = "";
@@ -213,20 +237,21 @@ void wiz_kill_enemy(player_type *player_ptr, HIT_POINT dam, EFFECT_ID effect_idx
 
         dam = (HIT_POINT)atoi(tmp_val);
     }
+    int max = (int)AttributeType::MAX;
+    int idx = (int)effect_idx;
 
-    if (effect_idx <= GF_NONE) {
+    if (idx <= 0) {
         char tmp[80] = "";
-        sprintf(tmp, "Effect ID (1-%d): ", MAX_GF - 1);
+        sprintf(tmp, "Effect ID (1-%d): ", max - 1);
         char tmp_val[10] = "";
         if (!get_string(tmp, tmp_val, 3))
             return;
 
-        effect_idx = (EFFECT_ID)atoi(tmp_val);
+        effect_idx = (AttributeType)atoi(tmp_val);
     }
 
-
-    if (effect_idx <= GF_NONE || effect_idx >= MAX_GF) {
-        msg_format(_("番号は1から%dの間で指定して下さい。", "ID must be between 1 to %d."), MAX_GF - 1);
+    if (idx <= 0 || idx >= max) {
+        msg_format(_("番号は1から%dの間で指定して下さい。", "ID must be between 1 to %d."), max - 1);
         return;
     }
 
@@ -243,7 +268,7 @@ void wiz_kill_enemy(player_type *player_ptr, HIT_POINT dam, EFFECT_ID effect_idx
  * @param dam ダメージ量
  * @param effect_idx 属性ID
  */
-void wiz_kill_me(player_type *player_ptr, HIT_POINT dam, EFFECT_ID effect_idx)
+void wiz_kill_me(PlayerType *player_ptr, HIT_POINT dam, AttributeType effect_idx)
 {
     if (dam <= 0) {
         char tmp[80] = "";
@@ -254,19 +279,21 @@ void wiz_kill_me(player_type *player_ptr, HIT_POINT dam, EFFECT_ID effect_idx)
 
         dam = (HIT_POINT)atoi(tmp_val);
     }
+    int max = (int)AttributeType::MAX;
+    int idx = (int)effect_idx;
 
-    if (effect_idx <= GF_NONE) {
+    if (idx <= 0) {
         char tmp[80] = "";
-        sprintf(tmp, "Effect ID (1-%d): ", MAX_GF - 1);
+        sprintf(tmp, "Effect ID (1-%d): ", max - 1);
         char tmp_val[10] = "1";
         if (!get_string(tmp, tmp_val, 3))
             return;
 
-        effect_idx = (EFFECT_ID)atoi(tmp_val);
+        effect_idx = (AttributeType)atoi(tmp_val);
     }
 
-    if (effect_idx <= GF_NONE || effect_idx >= MAX_GF) {
-        msg_format(_("番号は1から%dの間で指定して下さい。", "ID must be between 1 to %d."), MAX_GF - 1);
+    if (idx <= 0 || idx >= max) {
+        msg_format(_("番号は1から%dの間で指定して下さい。", "ID must be between 1 to %d."), max - 1);
         return;
     }
 

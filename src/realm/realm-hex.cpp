@@ -3,15 +3,6 @@
  * @date 2014/01/14
  * @author
  * 2014 Deskull rearranged comment for Doxygen.\n
- * @details
- * magic_num1\n
- * 0: Flag bits of spelling spells\n
- * 1: Flag bits of despelled spells\n
- * 2: Revange damage\n
- * magic_num2\n
- * 0: Number of spelling spells\n
- * 1: Type of revenge\n
- * 2: Turn count for revenge\n
  */
 
 #include "realm/realm-hex.h"
@@ -27,6 +18,7 @@
 #include "floor/cave.h"
 #include "floor/floor-object.h"
 #include "floor/geometry.h"
+#include "game-option/game-play-options.h"
 #include "inventory/inventory-slot-types.h"
 #include "io/input-key-requester.h"
 #include "monster-race/monster-race.h"
@@ -46,8 +38,7 @@
 #include "spell-kind/spells-sight.h"
 #include "spell-kind/spells-teleport.h"
 #include "spell-realm/spells-hex.h"
-#include "spell-realm/spells-song.h"
-#include "spell/spell-types.h"
+#include "effect/attribute-types.h"
 #include "spell/spells-execution.h"
 #include "spell/spells-status.h"
 #include "spell/technic-info-table.h"
@@ -61,7 +52,6 @@
 #include "term/screen-processor.h"
 #include "util/bit-flags-calculator.h"
 #include "view/display-messages.h"
-#include "world/world.h"
 
 #ifdef JP
 #else
@@ -76,10 +66,10 @@
 static bool item_tester_hook_weapon_except_bow(const object_type *o_ptr)
 {
     switch (o_ptr->tval) {
-    case TV_SWORD:
-    case TV_HAFTED:
-    case TV_POLEARM:
-    case TV_DIGGING:
+    case ItemKindType::SWORD:
+    case ItemKindType::HAFTED:
+    case ItemKindType::POLEARM:
+    case ItemKindType::DIGGING:
         return true;
     default:
         return false;
@@ -89,17 +79,17 @@ static bool item_tester_hook_weapon_except_bow(const object_type *o_ptr)
 /*!
  * @brief 呪術領域魔法の各処理を行う
  * @param spell 魔法ID
- * @param mode 処理内容 (SPELL_NAME / SPELL_DESC / SPELL_INFO / SPELL_CAST / SPELL_CONT / SPELL_STOP)
- * @return SPELL_NAME / SPELL_DESC / SPELL_INFO 時には文字列ポインタを返す。SPELL_CAST / SPELL_CONT / SPELL_STOP 時はnullptr文字列を返す。
+ * @param mode 処理内容 (SpellProcessType::NAME / SPELL_DESC / SpellProcessType::INFO / SpellProcessType::CAST / SPELL_CONT / SpellProcessType::STOP)
+ * @return SpellProcessType::NAME / SPELL_DESC / SpellProcessType::INFO 時には文字列ポインタを返す。SpellProcessType::CAST / SPELL_CONT / SpellProcessType::STOP 時はnullptr文字列を返す。
  */
-concptr do_hex_spell(player_type *player_ptr, spell_hex_type spell, spell_type mode)
+concptr do_hex_spell(PlayerType *player_ptr, spell_hex_type spell, SpellProcessType mode)
 {
-    auto name = mode == SPELL_NAME;
-    auto description = mode == SPELL_DESCRIPTION;
-    auto info = mode == SPELL_INFO;
-    auto cast = mode == SPELL_CAST;
-    auto continuation = mode == SPELL_CONTNUATION;
-    auto stop = mode == SPELL_STOP;
+    auto name = mode == SpellProcessType::NAME;
+    auto description = mode == SpellProcessType::DESCRIPTION;
+    auto info = mode == SpellProcessType::INFO;
+    auto cast = mode == SpellProcessType::CAST;
+    auto continuation = mode == SpellProcessType::CONTNUATION;
+    auto stop = mode == SpellProcessType::STOP;
     auto should_continue = true;
     HIT_POINT power;
     switch (spell) {
@@ -157,7 +147,7 @@ concptr do_hex_spell(player_type *player_ptr, spell_hex_type spell, spell_type m
         if (info)
             return info_damage(1, power, 0);
         if (cast || continuation) {
-            project_all_los(player_ptr, GF_POIS, randint1(power));
+            project_all_los(player_ptr, AttributeType::POIS, randint1(power));
         }
         break;
 
@@ -218,16 +208,16 @@ concptr do_hex_spell(player_type *player_ptr, spell_hex_type spell, spell_type m
             } else {
                 int curse_rank = 0;
                 msg_format(_("恐怖の暗黒オーラがあなたの%sを包み込んだ！", "A terrible black aura blasts your %s!"), o_name);
-                o_ptr->curse_flags.set(TRC::CURSED);
+                o_ptr->curse_flags.set(CurseTraitType::CURSED);
 
                 if (o_ptr->is_artifact() || o_ptr->is_ego()) {
 
                     if (one_in_(3))
-                        o_ptr->curse_flags.set(TRC::HEAVY_CURSE);
+                        o_ptr->curse_flags.set(CurseTraitType::HEAVY_CURSE);
                     if (one_in_(666)) {
-                        o_ptr->curse_flags.set(TRC::TY_CURSE);
+                        o_ptr->curse_flags.set(CurseTraitType::TY_CURSE);
                         if (one_in_(666))
-                            o_ptr->curse_flags.set(TRC::PERMA_CURSE);
+                            o_ptr->curse_flags.set(CurseTraitType::PERMA_CURSE);
 
                         o_ptr->art_flags.set(TR_AGGRAVATE);
                         o_ptr->art_flags.set(TR_VORPAL);
@@ -267,14 +257,14 @@ concptr do_hex_spell(player_type *player_ptr, spell_hex_type spell, spell_type m
         }
 
         SpellHex spell_hex(player_ptr);
-        power = MIN(200, spell_hex.get_revenge_power() * 2);
+        power = std::min(200, spell_hex.get_revenge_power() * 2);
         if (info) {
             return info_damage(0, 0, power);
         }
 
         if (cast) {
             int a = 3 - (player_ptr->pspeed - 100) / 10;
-            byte r = 3 + randint1(3) + MAX(0, MIN(3, a));
+            byte r = 3 + randint1(3) + std::max(0, std::min(3, a));
 
             if (spell_hex.get_revenge_turn() > 0) {
                 msg_print(_("すでに我慢をしている。", "You are already biding your time for vengeance."));
@@ -294,10 +284,10 @@ concptr do_hex_spell(player_type *player_ptr, spell_hex_type spell, spell_type m
             if ((spell_hex.get_revenge_turn() == 0) || (power >= 200)) {
                 msg_print(_("我慢が解かれた！", "My patience is at an end!"));
                 if (power) {
-                    project(player_ptr, 0, rad, player_ptr->y, player_ptr->x, power, GF_HELL_FIRE, (PROJECT_STOP | PROJECT_GRID | PROJECT_ITEM | PROJECT_KILL));
+                    project(player_ptr, 0, rad, player_ptr->y, player_ptr->x, power, AttributeType::HELL_FIRE, (PROJECT_STOP | PROJECT_GRID | PROJECT_ITEM | PROJECT_KILL));
                 }
 
-                if (w_ptr->wizard) {
+                if (allow_debug_options) {
                     msg_format(_("%d点のダメージを返した。", "You return %d damage."), power);
                 }
 
@@ -365,7 +355,7 @@ concptr do_hex_spell(player_type *player_ptr, spell_hex_type spell, spell_type m
         if (info)
             return info_damage(1, power, 0);
         if (cast || continuation) {
-            project_all_los(player_ptr, GF_HYPODYNAMIA, randint1(power));
+            project_all_los(player_ptr, AttributeType::HYPODYNAMIA, randint1(power));
         }
         break;
 
@@ -535,16 +525,16 @@ concptr do_hex_spell(player_type *player_ptr, spell_hex_type spell, spell_type m
             } else {
                 int curse_rank = 0;
                 msg_format(_("恐怖の暗黒オーラがあなたの%sを包み込んだ！", "A terrible black aura blasts your %s!"), o_name);
-                o_ptr->curse_flags.set(TRC::CURSED);
+                o_ptr->curse_flags.set(CurseTraitType::CURSED);
 
                 if (o_ptr->is_artifact() || o_ptr->is_ego()) {
 
                     if (one_in_(3))
-                        o_ptr->curse_flags.set(TRC::HEAVY_CURSE);
+                        o_ptr->curse_flags.set(CurseTraitType::HEAVY_CURSE);
                     if (one_in_(666)) {
-                        o_ptr->curse_flags.set(TRC::TY_CURSE);
+                        o_ptr->curse_flags.set(CurseTraitType::TY_CURSE);
                         if (one_in_(666))
-                            o_ptr->curse_flags.set(TRC::PERMA_CURSE);
+                            o_ptr->curse_flags.set(CurseTraitType::PERMA_CURSE);
 
                         o_ptr->art_flags.set(TR_AGGRAVATE);
                         o_ptr->art_flags.set(TR_RES_POIS);
@@ -585,10 +575,10 @@ concptr do_hex_spell(player_type *player_ptr, spell_hex_type spell, spell_type m
             object_type *o_ptr = &player_ptr->inventory_list[INVEN_OUTER];
 
             if ((!o_ptr->k_idx) || (!o_ptr->is_cursed())) {
-                exe_spell(player_ptr, REALM_HEX, spell, SPELL_STOP);
+                exe_spell(player_ptr, REALM_HEX, spell, SpellProcessType::STOP);
                 SpellHex spell_hex(player_ptr);
                 spell_hex.reset_casting_flag(spell);
-                if (get_singing_song_id(player_ptr) == 0)
+                if (!spell_hex.is_spelling_any())
                     set_action(player_ptr, ACTION_NONE);
             }
         }
@@ -606,7 +596,7 @@ concptr do_hex_spell(player_type *player_ptr, spell_hex_type spell, spell_type m
         if (info)
             return info_damage(1, power, 0);
         if (cast || continuation) {
-            project_all_los(player_ptr, GF_PSI_DRAIN, randint1(power));
+            project_all_los(player_ptr, AttributeType::PSI_DRAIN, randint1(power));
         }
         break;
 
@@ -672,11 +662,11 @@ concptr do_hex_spell(player_type *player_ptr, spell_hex_type spell, spell_type m
             }
 
             if (!flag) {
-                msg_format(_("%sの呪文の詠唱をやめた。", "Finish casting '%^s'."), exe_spell(player_ptr, REALM_HEX, HEX_RESTORE, SPELL_NAME));
+                msg_format(_("%sの呪文の詠唱をやめた。", "Finish casting '%^s'."), exe_spell(player_ptr, REALM_HEX, HEX_RESTORE, SpellProcessType::NAME));
                 SpellHex spell_hex(player_ptr);
                 spell_hex.reset_casting_flag(HEX_RESTORE);
-                if (spell_hex.get_casting_num() > 0) {
-                    player_ptr->action = ACTION_NONE;
+                if (!spell_hex.is_spelling_any()) {
+                    set_action(player_ptr, ACTION_NONE);
                 }
 
                 player_ptr->update |= (PU_BONUS | PU_HP | PU_MANA | PU_SPELLS);
@@ -707,19 +697,19 @@ concptr do_hex_spell(player_type *player_ptr, spell_hex_type spell, spell_type m
             auto f = object_flags(o_ptr);
 
             player_ptr->csp += (player_ptr->lev / 5) + randint1(player_ptr->lev / 5);
-            if (f.has(TR_TY_CURSE) || o_ptr->curse_flags.has(TRC::TY_CURSE))
+            if (f.has(TR_TY_CURSE) || o_ptr->curse_flags.has(CurseTraitType::TY_CURSE))
                 player_ptr->csp += randint1(5);
             if (player_ptr->csp > player_ptr->msp)
                 player_ptr->csp = player_ptr->msp;
 
-            if (o_ptr->curse_flags.has(TRC::PERMA_CURSE)) {
+            if (o_ptr->curse_flags.has(CurseTraitType::PERMA_CURSE)) {
                 /* Nothing */
-            } else if (o_ptr->curse_flags.has(TRC::HEAVY_CURSE)) {
+            } else if (o_ptr->curse_flags.has(CurseTraitType::HEAVY_CURSE)) {
                 if (one_in_(7)) {
                     msg_print(_("呪いを全て吸い取った。", "A heavy curse vanished."));
                     o_ptr->curse_flags.clear();
                 }
-            } else if (o_ptr->curse_flags.has(TRC::CURSED) && one_in_(3)) {
+            } else if (o_ptr->curse_flags.has(CurseTraitType::CURSED) && one_in_(3)) {
                 msg_print(_("呪いを全て吸い取った。", "A curse vanished."));
                 o_ptr->curse_flags.clear();
             }
@@ -840,7 +830,7 @@ concptr do_hex_spell(player_type *player_ptr, spell_hex_type spell, spell_type m
         if (cast) {
             byte r;
             int a = 3 - (player_ptr->pspeed - 100) / 10;
-            r = 1 + randint1(2) + MAX(0, MIN(3, a));
+            r = 1 + randint1(2) + std::max(0, std::min(3, a));
 
             if (spell_hex.get_revenge_turn() > 0) {
                 msg_print(_("すでに復讐は宣告済みだ。", "You've already declared your revenge."));
@@ -865,9 +855,9 @@ concptr do_hex_spell(player_type *player_ptr, spell_hex_type spell, spell_type m
                         msg_print(_("復讐の時だ！", "Time for revenge!"));
                     } while (!get_aim_dir(player_ptr, &dir));
 
-                    fire_ball(player_ptr, GF_HELL_FIRE, dir, power, 1);
+                    fire_ball(player_ptr, AttributeType::HELL_FIRE, dir, power, 1);
 
-                    if (w_ptr->wizard) {
+                    if (allow_debug_options) {
                         msg_format(_("%d点のダメージを返した。", "You return %d damage."), power);
                     }
                 } else {
@@ -880,6 +870,8 @@ concptr do_hex_spell(player_type *player_ptr, spell_hex_type spell, spell_type m
 
         break;
     }
+    case HEX_MAX:
+        break;
     }
 
     if (cast && should_continue) {

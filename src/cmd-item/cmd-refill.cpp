@@ -8,6 +8,8 @@
 #include "object-hook/hook-expendable.h"
 #include "object/item-tester-hooker.h"
 #include "object/item-use-flags.h"
+#include "player-base/player-class.h"
+#include "player-info/samurai-data-type.h"
 #include "player-status/player-energy.h"
 #include "player/attack-defense-types.h"
 #include "player/special-defense-types.h"
@@ -24,7 +26,7 @@
  * @brief ランタンに燃料を加えるコマンドのメインルーチン
  * Refill the players lamp (from the pack or floor)
  */
-static void do_cmd_refill_lamp(player_type *player_ptr)
+static void do_cmd_refill_lamp(PlayerType *player_ptr)
 {
     OBJECT_IDX item;
     object_type *o_ptr;
@@ -61,7 +63,7 @@ static void do_cmd_refill_lamp(player_type *player_ptr)
  * @brief 松明を束ねるコマンドのメインルーチン
  * Refuel the players torch (from the pack or floor)
  */
-static void do_cmd_refill_torch(player_type *player_ptr)
+static void do_cmd_refill_torch(PlayerType *player_ptr)
 {
     OBJECT_IDX item;
     object_type *o_ptr;
@@ -99,14 +101,14 @@ static void do_cmd_refill_torch(player_type *player_ptr)
  * @brief 燃料を補充するコマンドのメインルーチン
  * Refill the players lamp, or restock his torches
  */
-void do_cmd_refill(player_type *player_ptr)
+void do_cmd_refill(PlayerType *player_ptr)
 {
     object_type *o_ptr;
     o_ptr = &player_ptr->inventory_list[INVEN_LITE];
-    if (player_ptr->special_defense & KATA_MUSOU)
-        set_action(player_ptr, ACTION_NONE);
 
-    if (o_ptr->tval != TV_LITE)
+    PlayerClass(player_ptr).break_samurai_stance({ SamuraiStanceType::MUSOU });
+
+    if (o_ptr->tval != ItemKindType::LITE)
         msg_print(_("光源を装備していない。", "You are not wielding a light."));
     else if (o_ptr->sval == SV_LITE_LANTERN)
         do_cmd_refill_lamp(player_ptr);

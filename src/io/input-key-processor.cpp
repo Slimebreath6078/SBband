@@ -74,7 +74,10 @@
 #include "mind/mind-sniper.h"
 #include "mind/mind-weaponsmith.h"
 #include "mind/snipe-types.h"
+#include "player-base/player-class.h"
 #include "player-info/class-info.h"
+#include "player-info/samurai-data-type.h"
+#include "player-info/sniper-data-type.h"
 #include "player-status/player-energy.h"
 #include "player/attack-defense-types.h"
 #include "player/digestion-processor.h"
@@ -94,44 +97,15 @@
 #include "world/world.h"
 
 /*!
- * @brief ウィザードモードへの導入処理
- * / Verify use of "wizard" mode
- * @param player_ptr プレイヤーへの参照ポインタ
- * @return 実際にウィザードモードへ移行したらTRUEを返す。
- */
-bool enter_wizard_mode(player_type *player_ptr)
-{
-    if (!w_ptr->noscore) {
-        if (!allow_debug_opts) {
-            msg_print(_("ウィザードモードは許可されていません。 ", "Wizard mode is not permitted."));
-            return false;
-        }
-
-        msg_print(_("ウィザードモードはデバッグと実験のためのモードです。 ", "Wizard mode is for debugging and experimenting."));
-        msg_print(_("一度ウィザードモードに入るとスコアは記録されません。", "The game will not be scored if you enter wizard mode."));
-        msg_print(nullptr);
-        if (!get_check(_("本当にウィザードモードに入りたいのですか? ", "Are you sure you want to enter wizard mode? "))) {
-            return false;
-        }
-
-        exe_write_diary(
-            player_ptr, DIARY_DESCRIPTION, 0, _("ウィザードモードに突入してスコアを残せなくなった。", "gave up recording score to enter wizard mode."));
-        w_ptr->noscore |= 0x0002;
-    }
-
-    return true;
-}
-
-/*!
  * @brief デバッグコマンドへの導入処理
  * / Verify use of "debug" commands
  * @param player_ptr プレイヤーへの参照ポインタ
  * @return 実際にデバッグコマンドへ移行したらTRUEを返す。
  */
-static bool enter_debug_mode(player_type *player_ptr)
+static bool enter_debug_mode(PlayerType *player_ptr)
 {
     if (!w_ptr->noscore) {
-        if (!allow_debug_opts) {
+        if (!allow_debug_options) {
             msg_print(_("デバッグコマンドは許可されていません。 ", "Use of debug command is not permitted."));
             return false;
         }
@@ -156,13 +130,15 @@ static bool enter_debug_mode(player_type *player_ptr)
  * / Parse and execute the current command Give "Warning" on illegal commands.
  * @todo Make some "blocks"
  */
-void process_command(player_type *player_ptr)
+void process_command(PlayerType *player_ptr)
 {
     COMMAND_CODE old_now_message = now_message;
     repeat_check();
     now_message = 0;
-    if ((player_ptr->pclass == CLASS_SNIPER) && (player_ptr->concent))
-        player_ptr->reset_concent = true;
+    auto sniper_data = PlayerClass(player_ptr).get_specific_data<sniper_data_type>();
+    if (sniper_data && sniper_data->concent > 0) {
+        sniper_data->reset_concent = true;
+    }
 
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
     switch (command_cmd) {
@@ -171,19 +147,6 @@ void process_command(player_type *player_ptr)
     case '\r':
     case '\n': {
         /* Ignore */
-        break;
-    }
-    case KTRL('W'): {
-        if (w_ptr->wizard) {
-            w_ptr->wizard = false;
-            msg_print(_("ウィザードモード解除。", "Wizard mode off."));
-        } else if (enter_wizard_mode(player_ptr)) {
-            w_ptr->wizard = true;
-            msg_print(_("ウィザードモード突入。", "Wizard mode on."));
-        }
-
-        player_ptr->update |= (PU_MONSTERS);
-        player_ptr->redraw |= (PR_TITLE);
         break;
     }
     case KTRL('A'): {
@@ -344,11 +307,11 @@ void process_command(player_type *player_ptr)
         break;
     }
     case 'G': {
-        if (player_ptr->pclass == CLASS_SORCERER || player_ptr->pclass == CLASS_RED_MAGE || player_ptr->pclass == CLASS_ELEMENTALIST)
+        if (player_ptr->pclass == PlayerClassType::SORCERER || player_ptr->pclass == PlayerClassType::RED_MAGE || player_ptr->pclass == PlayerClassType::ELEMENTALIST)
             msg_print(_("呪文を学習する必要はない！", "You don't have to learn spells!"));
-        else if (player_ptr->pclass == CLASS_SAMURAI)
+        else if (player_ptr->pclass == PlayerClassType::SAMURAI)
             do_cmd_gain_hissatsu(player_ptr);
-        else if (player_ptr->pclass == CLASS_MAGIC_EATER)
+        else if (player_ptr->pclass == PlayerClassType::MAGIC_EATER)
             import_magic_device(player_ptr);
         else
             do_cmd_study(player_ptr);
@@ -356,16 +319,16 @@ void process_command(player_type *player_ptr)
         break;
     }
     case 'b': {
-        if ((player_ptr->pclass == CLASS_MINDCRAFTER) || (player_ptr->pclass == CLASS_BERSERKER) || (player_ptr->pclass == CLASS_NINJA)
-            || (player_ptr->pclass == CLASS_MIRROR_MASTER))
+        if ((player_ptr->pclass == PlayerClassType::MINDCRAFTER) || (player_ptr->pclass == PlayerClassType::BERSERKER) || (player_ptr->pclass == PlayerClassType::NINJA)
+            || (player_ptr->pclass == PlayerClassType::MIRROR_MASTER))
             do_cmd_mind_browse(player_ptr);
-        else if (player_ptr->pclass == CLASS_ELEMENTALIST)
+        else if (player_ptr->pclass == PlayerClassType::ELEMENTALIST)
             do_cmd_element_browse(player_ptr);
-        else if (player_ptr->pclass == CLASS_SMITH)
+        else if (player_ptr->pclass == PlayerClassType::SMITH)
             do_cmd_kaji(player_ptr, true);
-        else if (player_ptr->pclass == CLASS_MAGIC_EATER)
+        else if (player_ptr->pclass == PlayerClassType::MAGIC_EATER)
             do_cmd_magic_eater(player_ptr, true, false);
-        else if (player_ptr->pclass == CLASS_SNIPER)
+        else if (player_ptr->pclass == PlayerClassType::SNIPER)
             do_cmd_snipe_browse(player_ptr);
         else
             do_cmd_browse(player_ptr);
@@ -377,41 +340,41 @@ void process_command(player_type *player_ptr)
             break;
         }
 
-        if ((player_ptr->pclass == CLASS_WARRIOR) || (player_ptr->pclass == CLASS_ARCHER) || (player_ptr->pclass == CLASS_CAVALRY)) {
+        if ((player_ptr->pclass == PlayerClassType::WARRIOR) || (player_ptr->pclass == PlayerClassType::ARCHER) || (player_ptr->pclass == PlayerClassType::CAVALRY)) {
             msg_print(_("呪文を唱えられない！", "You cannot cast spells!"));
             break;
         }
 
-        if (floor_ptr->dun_level && d_info[player_ptr->dungeon_idx].flags.has(DF::NO_MAGIC) && (player_ptr->pclass != CLASS_BERSERKER)
-            && (player_ptr->pclass != CLASS_SMITH)) {
+        if (floor_ptr->dun_level && d_info[player_ptr->dungeon_idx].flags.has(DungeonFeatureType::NO_MAGIC) && (player_ptr->pclass != PlayerClassType::BERSERKER)
+            && (player_ptr->pclass != PlayerClassType::SMITH)) {
             msg_print(_("ダンジョンが魔法を吸収した！", "The dungeon absorbs all attempted magic!"));
             msg_print(nullptr);
             break;
         }
 
-        if (player_ptr->anti_magic && (player_ptr->pclass != CLASS_BERSERKER) && (player_ptr->pclass != CLASS_SMITH)) {
+        if (player_ptr->anti_magic && (player_ptr->pclass != PlayerClassType::BERSERKER) && (player_ptr->pclass != PlayerClassType::SMITH)) {
             concptr which_power = _("魔法", "magic");
             switch (player_ptr->pclass) {
-            case CLASS_MINDCRAFTER:
+            case PlayerClassType::MINDCRAFTER:
                 which_power = _("超能力", "psionic powers");
                 break;
-            case CLASS_IMITATOR:
+            case PlayerClassType::IMITATOR:
                 which_power = _("ものまね", "imitation");
                 break;
-            case CLASS_SAMURAI:
+            case PlayerClassType::SAMURAI:
                 which_power = _("必殺剣", "hissatsu");
                 break;
-            case CLASS_MIRROR_MASTER:
+            case PlayerClassType::MIRROR_MASTER:
                 which_power = _("鏡魔法", "mirror magic");
                 break;
-            case CLASS_NINJA:
+            case PlayerClassType::NINJA:
                 which_power = _("忍術", "ninjutsu");
                 break;
-            case CLASS_ELEMENTALIST:
+            case PlayerClassType::ELEMENTALIST:
                 which_power = _("元素魔法", "magic");
                 break;
             default:
-                if (mp_ptr->spell_book == TV_LIFE_BOOK)
+                if (mp_ptr->spell_book == ItemKindType::LIFE_BOOK)
                     which_power = _("祈り", "prayer");
                 break;
             }
@@ -421,28 +384,28 @@ void process_command(player_type *player_ptr)
             break;
         }
 
-        if (is_shero(player_ptr) && (player_ptr->pclass != CLASS_BERSERKER)) {
+        if (is_shero(player_ptr) && (player_ptr->pclass != PlayerClassType::BERSERKER)) {
             msg_format(_("狂戦士化していて頭が回らない！", "You cannot think directly!"));
             PlayerEnergy(player_ptr).reset_player_turn();
             break;
         }
 
-        if ((player_ptr->pclass == CLASS_MINDCRAFTER) || (player_ptr->pclass == CLASS_BERSERKER) || (player_ptr->pclass == CLASS_NINJA)
-            || (player_ptr->pclass == CLASS_MIRROR_MASTER))
+        if ((player_ptr->pclass == PlayerClassType::MINDCRAFTER) || (player_ptr->pclass == PlayerClassType::BERSERKER) || (player_ptr->pclass == PlayerClassType::NINJA)
+            || (player_ptr->pclass == PlayerClassType::MIRROR_MASTER))
             do_cmd_mind(player_ptr);
-        else if (player_ptr->pclass == CLASS_ELEMENTALIST)
+        else if (player_ptr->pclass == PlayerClassType::ELEMENTALIST)
             do_cmd_element(player_ptr);
-        else if (player_ptr->pclass == CLASS_IMITATOR)
+        else if (player_ptr->pclass == PlayerClassType::IMITATOR)
             do_cmd_mane(player_ptr, false);
-        else if (player_ptr->pclass == CLASS_MAGIC_EATER)
+        else if (player_ptr->pclass == PlayerClassType::MAGIC_EATER)
             do_cmd_magic_eater(player_ptr, false, false);
-        else if (player_ptr->pclass == CLASS_SAMURAI)
+        else if (player_ptr->pclass == PlayerClassType::SAMURAI)
             do_cmd_hissatsu(player_ptr);
-        else if (player_ptr->pclass == CLASS_BLUE_MAGE)
+        else if (player_ptr->pclass == PlayerClassType::BLUE_MAGE)
             do_cmd_cast_learned(player_ptr);
-        else if (player_ptr->pclass == CLASS_SMITH)
+        else if (player_ptr->pclass == PlayerClassType::SMITH)
             do_cmd_kaji(player_ptr, false);
-        else if (player_ptr->pclass == CLASS_SNIPER)
+        else if (player_ptr->pclass == PlayerClassType::SNIPER)
             do_cmd_snipe(player_ptr);
         else
             (void)do_cmd_cast(player_ptr);
@@ -574,7 +537,7 @@ void process_command(player_type *player_ptr)
     }
     case '=': {
         do_cmd_options(player_ptr);
-        (void)combine_and_reorder_home(player_ptr, STORE_HOME);
+        (void)combine_and_reorder_home(player_ptr, StoreSaleType::HOME);
         do_cmd_redraw(player_ptr);
         break;
     }
@@ -651,9 +614,7 @@ void process_command(player_type *player_ptr)
     case '`': {
         if (!player_ptr->wild_mode)
             do_cmd_travel(player_ptr);
-        if (player_ptr->special_defense & KATA_MUSOU) {
-            set_action(player_ptr, ACTION_NONE);
-        }
+        PlayerClass(player_ptr).break_samurai_stance({ SamuraiStanceType::MUSOU });
 
         break;
     }

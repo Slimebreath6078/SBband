@@ -10,6 +10,7 @@
 #include "flavor/flavor-describer.h"
 #include "flavor/object-flavor-types.h"
 #include "flavor/object-flavor.h"
+#include "game-option/game-play-options.h"
 #include "game-option/special-options.h"
 #include "inventory/inventory-slot-types.h"
 #include "io-dump/dump-util.h"
@@ -30,7 +31,6 @@
 #include "util/int-char-converter.h"
 #include "util/sort.h"
 #include "view/display-messages.h"
-#include "world/world.h"
 
 #include <numeric>
 
@@ -39,7 +39,7 @@
  * @param player_ptr プレイヤーへの参照ポインタ
  * @todo okay = 既知のアーティファクト？ と思われるが確証がない分かりやすい変数名へ変更求む＆万が一未知である旨の配列なら負論理なのでゴソッと差し替えるべき
  */
-void do_cmd_knowledge_artifacts(player_type *player_ptr)
+void do_cmd_knowledge_artifacts(PlayerType *player_ptr)
 {
     FILE *fff = nullptr;
     GAME_TEXT file_name[FILE_NAME_SIZE];
@@ -128,13 +128,13 @@ void do_cmd_knowledge_artifacts(player_type *player_ptr)
 static KIND_OBJECT_IDX collect_objects(int grp_cur, KIND_OBJECT_IDX object_idx[], BIT_FLAGS8 mode)
 {
     KIND_OBJECT_IDX object_cnt = 0;
-    byte group_tval = object_group_tval[grp_cur];
+    auto group_tval = object_group_tval[grp_cur];
     for (const auto &k_ref : k_info) {
         if (k_ref.name.empty())
             continue;
 
         if (!(mode & 0x02)) {
-            if (!w_ptr->wizard) {
+            if (!allow_debug_options) {
                 if (!k_ref.flavor)
                     continue;
                 if (!k_ref.aware)
@@ -146,8 +146,8 @@ static KIND_OBJECT_IDX collect_objects(int grp_cur, KIND_OBJECT_IDX object_idx[]
                 continue;
         }
 
-        if (TV_LIFE_BOOK == group_tval) {
-            if (TV_LIFE_BOOK <= k_ref.tval && k_ref.tval <= TV_HEX_BOOK) {
+        if (group_tval == ItemKindType::LIFE_BOOK) {
+            if (ItemKindType::LIFE_BOOK <= k_ref.tval && k_ref.tval <= ItemKindType::HEX_BOOK) {
                 object_idx[object_cnt++] = k_ref.idx;
             } else
                 continue;
@@ -194,10 +194,10 @@ static void display_object_list(int col, int row, int per_page, IDX object_idx[]
 
         c_prt(attr, o_name, row + i, col);
         if (per_page == 1) {
-            c_prt(attr, format("%02x/%02x", flavor_k_ptr->x_attr, flavor_k_ptr->x_char), row + i, (w_ptr->wizard || visual_only) ? 64 : 68);
+            c_prt(attr, format("%02x/%02x", flavor_k_ptr->x_attr, flavor_k_ptr->x_char), row + i, (allow_debug_options || visual_only) ? 64 : 68);
         }
 
-        if (w_ptr->wizard || visual_only) {
+        if (allow_debug_options || visual_only) {
             c_prt(attr, format("%d", k_idx), row + i, 70);
         }
 
@@ -215,7 +215,7 @@ static void display_object_list(int col, int row, int per_page, IDX object_idx[]
 /*
  * Describe fake object
  */
-static void desc_obj_fake(player_type *player_ptr, KIND_OBJECT_IDX k_idx)
+static void desc_obj_fake(PlayerType *player_ptr, KIND_OBJECT_IDX k_idx)
 {
     object_type *o_ptr;
     object_type object_type_body;
@@ -236,7 +236,7 @@ static void desc_obj_fake(player_type *player_ptr, KIND_OBJECT_IDX k_idx)
 /**
  * @brief Display known objects
  */
-void do_cmd_knowledge_objects(player_type *player_ptr, bool *need_redraw, bool visual_only, KIND_OBJECT_IDX direct_k_idx)
+void do_cmd_knowledge_objects(PlayerType *player_ptr, bool *need_redraw, bool visual_only, KIND_OBJECT_IDX direct_k_idx)
 {
     KIND_OBJECT_IDX object_old, object_top;
     KIND_OBJECT_IDX grp_idx[100];
@@ -308,7 +308,7 @@ void do_cmd_knowledge_objects(player_type *player_ptr, bool *need_redraw, bool v
             if (direct_k_idx < 0)
                 prt("グループ", 4, 0);
             prt("名前", 4, max + 3);
-            if (w_ptr->wizard || visual_only)
+            if (allow_debug_options || visual_only)
                 prt("Idx", 4, 70);
             prt("文字", 4, 74);
 #else
@@ -316,7 +316,7 @@ void do_cmd_knowledge_objects(player_type *player_ptr, bool *need_redraw, bool v
             if (direct_k_idx < 0)
                 prt("Group", 4, 0);
             prt("Name", 4, max + 3);
-            if (w_ptr->wizard || visual_only)
+            if (allow_debug_options || visual_only)
                 prt("Idx", 4, 70);
             prt("Sym", 4, 75);
 #endif
@@ -340,16 +340,22 @@ void do_cmd_knowledge_objects(player_type *player_ptr, bool *need_redraw, bool v
             if (grp_cur >= grp_top + browser_rows)
                 grp_top = grp_cur - browser_rows + 1;
 
-            display_group_list(0, 6, max, browser_rows, grp_idx, object_group_text, grp_cur, grp_top);
+            std::vector<concptr> tmp_texts;
+            for (auto &text : object_group_text) {
+                tmp_texts.push_back(text);
+            }
+
+            display_group_list(0, 6, max, browser_rows, grp_idx, tmp_texts.data(), grp_cur, grp_top);
             if (old_grp_cur != grp_cur) {
                 old_grp_cur = grp_cur;
                 object_cnt = collect_objects(grp_idx[grp_cur], object_idx.data(), mode);
             }
 
             while (object_cur < object_top)
-                object_top = MAX(0, object_top - browser_rows / 2);
+                object_top = std::max<short>(0, object_top - browser_rows / 2);
+
             while (object_cur >= object_top + browser_rows)
-                object_top = MIN(object_cnt - browser_rows, object_top + browser_rows / 2);
+                object_top = std::min<short>(object_cnt - browser_rows, object_top + browser_rows / 2);
         }
 
         if (!visual_list) {

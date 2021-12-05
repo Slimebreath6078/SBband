@@ -31,7 +31,7 @@
 #include "spell-kind/spells-random.h"
 #include "spell-kind/spells-sight.h"
 #include "spell-kind/spells-teleport.h"
-#include "spell/spell-types.h"
+#include "effect/attribute-types.h"
 #include "spell/summon-types.h"
 #include "status/bad-status-setter.h"
 #include "status/base-status.h"
@@ -41,7 +41,8 @@
 #include "system/monster-type-definition.h"
 #include "system/player-type-definition.h"
 #include "target/projection-path-calculator.h"
-#include "util/bit-flags-calculator.h"
+#include "timed-effect/player-cut.h"
+#include "timed-effect/timed-effects.h"
 #include "view/display-messages.h"
 #include "world/world.h"
 
@@ -58,71 +59,71 @@ static int16_t normal_traps[MAX_NORMAL_TRAPS];
  * Note that disarming a trap on a chest also removes the lock.
  * </pre>
  */
-const int chest_traps[64] = {
-    0, /* 0 == empty */
-    (CHEST_POISON),
-    (CHEST_LOSE_STR),
-    (CHEST_LOSE_CON),
-    (CHEST_LOSE_STR),
-    (CHEST_LOSE_CON), /* 5 == best small wooden */
-    0,
-    (CHEST_ALARM),
-    (CHEST_ALARM),
-    (CHEST_LOSE_STR),
-    (CHEST_LOSE_CON),
-    (CHEST_POISON),
-    (CHEST_SCATTER),
-    (CHEST_LOSE_STR | CHEST_LOSE_CON),
-    (CHEST_LOSE_STR | CHEST_LOSE_CON),
-    (CHEST_SUMMON), /* 15 == best large wooden */
-    0,
-    (CHEST_ALARM),
-    (CHEST_SCATTER),
-    (CHEST_PARALYZE),
-    (CHEST_LOSE_STR | CHEST_LOSE_CON),
-    (CHEST_SUMMON),
-    (CHEST_PARALYZE),
-    (CHEST_LOSE_STR),
-    (CHEST_LOSE_CON),
-    (CHEST_EXPLODE), /* 25 == best small iron */
-    0,
-    (CHEST_E_SUMMON),
-    (CHEST_POISON | CHEST_LOSE_CON),
-    (CHEST_LOSE_STR | CHEST_LOSE_CON),
-    (CHEST_EXPLODE | CHEST_SUMMON),
-    (CHEST_BIRD_STORM),
-    (CHEST_POISON | CHEST_SUMMON),
-    (CHEST_E_SUMMON | CHEST_ALARM),
-    (CHEST_EXPLODE),
-    (CHEST_EXPLODE | CHEST_SUMMON), /* 35 == best large iron */
-    0,
-    (CHEST_SUMMON | CHEST_ALARM),
-    (CHEST_EXPLODE),
-    (CHEST_EXPLODE | CHEST_SUMMON),
-    (CHEST_EXPLODE | CHEST_SUMMON),
-    (CHEST_POISON | CHEST_PARALYZE),
-    (CHEST_EXPLODE),
-    (CHEST_BIRD_STORM),
-    (CHEST_EXPLODE | CHEST_E_SUMMON | CHEST_ALARM),
-    (CHEST_H_SUMMON), /* 45 == best small steel */
-    0,
-    (CHEST_EXPLODE | CHEST_SUMMON | CHEST_ALARM),
-    (CHEST_BIRD_STORM),
-    (CHEST_RUNES_OF_EVIL),
-    (CHEST_EXPLODE | CHEST_SUMMON | CHEST_ALARM),
-    (CHEST_BIRD_STORM | CHEST_ALARM),
-    (CHEST_H_SUMMON | CHEST_ALARM),
-    (CHEST_RUNES_OF_EVIL),
-    (CHEST_H_SUMMON | CHEST_SCATTER | CHEST_ALARM),
-    (CHEST_RUNES_OF_EVIL | CHEST_EXPLODE), /* 55 == best large steel */
-    (CHEST_EXPLODE | CHEST_SUMMON),
-    (CHEST_EXPLODE | CHEST_SUMMON),
-    (CHEST_EXPLODE | CHEST_SUMMON),
-    (CHEST_EXPLODE | CHEST_SUMMON),
-    (CHEST_EXPLODE | CHEST_SUMMON),
-    (CHEST_EXPLODE | CHEST_SUMMON),
-    (CHEST_EXPLODE | CHEST_SUMMON),
-    (CHEST_EXPLODE | CHEST_SUMMON),
+const std::vector<EnumClassFlagGroup<ChestTrapType>> chest_traps = {
+    { }, /* empty */
+    { ChestTrapType::POISON },
+    { ChestTrapType::LOSE_STR },
+    { ChestTrapType::LOSE_CON },
+    { ChestTrapType::LOSE_STR },
+    { ChestTrapType::LOSE_CON }, /* 5 == best small wooden */
+    { },
+    { ChestTrapType::ALARM },
+    { ChestTrapType::ALARM },
+    { ChestTrapType::LOSE_STR },
+    { ChestTrapType::LOSE_CON },
+    { ChestTrapType::POISON },
+    { ChestTrapType::SCATTER },
+    { ChestTrapType::LOSE_STR, ChestTrapType::LOSE_CON },
+    { ChestTrapType::LOSE_STR, ChestTrapType::LOSE_CON },
+    { ChestTrapType::SUMMON }, /* 15 == best large wooden */
+    { },
+    { ChestTrapType::ALARM },
+    { ChestTrapType::SCATTER },
+    { ChestTrapType::PARALYZE },
+    { ChestTrapType::LOSE_STR, ChestTrapType::LOSE_CON },
+    { ChestTrapType::SUMMON },
+    { ChestTrapType::PARALYZE },
+    { ChestTrapType::LOSE_STR },
+    { ChestTrapType::LOSE_CON },
+    { ChestTrapType::EXPLODE }, /* 25 == best small iron */
+    { },
+    { ChestTrapType::E_SUMMON },
+    { ChestTrapType::POISON, ChestTrapType::LOSE_CON },
+    { ChestTrapType::LOSE_STR, ChestTrapType::LOSE_CON },
+    { ChestTrapType::EXPLODE, ChestTrapType::SUMMON },
+    { ChestTrapType::BIRD_STORM },
+    { ChestTrapType::POISON, ChestTrapType::SUMMON },
+    { ChestTrapType::E_SUMMON, ChestTrapType::ALARM },
+    { ChestTrapType::EXPLODE },
+    { ChestTrapType::EXPLODE, ChestTrapType::SUMMON }, /* 35 == best large iron */
+    { },
+    { ChestTrapType::SUMMON, ChestTrapType::ALARM },
+    { ChestTrapType::EXPLODE },
+    { ChestTrapType::EXPLODE, ChestTrapType::SUMMON },
+    { ChestTrapType::EXPLODE, ChestTrapType::SUMMON },
+    { ChestTrapType::POISON, ChestTrapType::PARALYZE },
+    { ChestTrapType::EXPLODE },
+    { ChestTrapType::BIRD_STORM },
+    { ChestTrapType::EXPLODE, ChestTrapType::E_SUMMON, ChestTrapType::ALARM },
+    { ChestTrapType::H_SUMMON }, /* 45 == best small steel */
+    { },
+    { ChestTrapType::EXPLODE, ChestTrapType::SUMMON, ChestTrapType::ALARM },
+    { ChestTrapType::BIRD_STORM },
+    { ChestTrapType::RUNES_OF_EVIL },
+    { ChestTrapType::EXPLODE, ChestTrapType::SUMMON, ChestTrapType::ALARM },
+    { ChestTrapType::BIRD_STORM, ChestTrapType::ALARM },
+    { ChestTrapType::H_SUMMON, ChestTrapType::ALARM },
+    { ChestTrapType::RUNES_OF_EVIL },
+    { ChestTrapType::H_SUMMON, ChestTrapType::SCATTER, ChestTrapType::ALARM },
+    { ChestTrapType::RUNES_OF_EVIL, ChestTrapType::EXPLODE }, /* 55 == best large steel */
+    { ChestTrapType::EXPLODE, ChestTrapType::SUMMON },
+    { ChestTrapType::EXPLODE, ChestTrapType::SUMMON },
+    { ChestTrapType::EXPLODE, ChestTrapType::SUMMON },
+    { ChestTrapType::EXPLODE, ChestTrapType::SUMMON },
+    { ChestTrapType::EXPLODE, ChestTrapType::SUMMON },
+    { ChestTrapType::EXPLODE, ChestTrapType::SUMMON },
+    { ChestTrapType::EXPLODE, ChestTrapType::SUMMON },
+    { ChestTrapType::EXPLODE, ChestTrapType::SUMMON },
 };
 
 /*!
@@ -162,7 +163,7 @@ void init_normal_traps(void)
  * Actually, it is not this routine, but the "trap instantiation"\n
  * code, which should also check for "trap doors" on quest levels.\n
  */
-FEAT_IDX choose_random_trap(player_type *player_ptr)
+FEAT_IDX choose_random_trap(PlayerType *player_ptr)
 {
     FEAT_IDX feat;
 
@@ -173,7 +174,7 @@ FEAT_IDX choose_random_trap(player_type *player_ptr)
         feat = normal_traps[randint0(MAX_NORMAL_TRAPS)];
 
         /* Accept non-trapdoors */
-        if (f_info[feat].flags.has_not(FF::MORE))
+        if (f_info[feat].flags.has_not(FloorFeatureType::MORE))
             break;
 
         /* Hack -- no trap doors on special levels */
@@ -197,13 +198,13 @@ FEAT_IDX choose_random_trap(player_type *player_ptr)
  * @param y 秘匿したいマスのY座標
  * @param x 秘匿したいマスのX座標
  */
-void disclose_grid(player_type *player_ptr, POSITION y, POSITION x)
+void disclose_grid(PlayerType *player_ptr, POSITION y, POSITION x)
 {
     grid_type *g_ptr = &player_ptr->current_floor_ptr->grid_array[y][x];
 
-    if (g_ptr->cave_has_flag(FF::SECRET)) {
+    if (g_ptr->cave_has_flag(FloorFeatureType::SECRET)) {
         /* No longer hidden */
-        cave_alter_feat(player_ptr, y, x, FF::SECRET);
+        cave_alter_feat(player_ptr, y, x, FloorFeatureType::SECRET);
     } else if (g_ptr->mimic) {
         /* No longer hidden */
         g_ptr->mimic = 0;
@@ -223,7 +224,7 @@ void disclose_grid(player_type *player_ptr, POSITION y, POSITION x)
  * when they are "discovered" (by detecting them or setting them off),\n
  * the trap is "instantiated" as a visible, "typed", trap.\n
  */
-void place_trap(player_type *player_ptr, POSITION y, POSITION x)
+void place_trap(PlayerType *player_ptr, POSITION y, POSITION x)
 {
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
     grid_type *g_ptr = &floor_ptr->grid_array[y][x];
@@ -250,7 +251,7 @@ void place_trap(player_type *player_ptr, POSITION y, POSITION x)
  * Always miss 5% of the time, Always hit 5% of the time.
  * Otherwise, match trap power against player armor.
  */
-static int check_hit_from_monster_to_player(player_type *player_ptr, int power)
+static int check_hit_from_monster_to_player(PlayerType *player_ptr, int power)
 {
     int k;
     ARMOUR_CLASS ac;
@@ -262,7 +263,7 @@ static int check_hit_from_monster_to_player(player_type *player_ptr, int power)
     if (k < 10)
         return (k < 5);
 
-    if (player_ptr->pseikaku == PERSONALITY_LAZY)
+    if (player_ptr->ppersonality == PERSONALITY_LAZY)
         if (one_in_(20))
             return true;
 
@@ -285,7 +286,7 @@ static int check_hit_from_monster_to_player(player_type *player_ptr, int power)
  * @brief 落とし穴系トラップの判定とプレイヤーの被害処理
  * @param trap_feat_type トラップの種別ID
  */
-static void hit_trap_pit(player_type *player_ptr, enum trap_type trap_feat_type)
+static void hit_trap_pit(PlayerType *player_ptr, enum trap_type trap_feat_type)
 {
     HIT_POINT dam;
     concptr trap_name = "";
@@ -322,7 +323,7 @@ static void hit_trap_pit(player_type *player_ptr, enum trap_type trap_feat_type)
     msg_format(_("%sが刺さった！", "You are impaled on %s!"), spike_name);
     dam = dam * 2;
     BadStatusSetter bss(player_ptr);
-    (void)bss.cut(player_ptr->cut + randint1(dam));
+    (void)bss.mod_cut(randint1(dam));
     if (trap_feat_type != TRAP_POISON_PIT) {
         take_hit(player_ptr, DAMAGE_NOESCAPE, dam, trap_name);
         return;
@@ -335,7 +336,7 @@ static void hit_trap_pit(player_type *player_ptr, enum trap_type trap_feat_type)
     }
 
     dam = dam * 2;
-    (void)bss.poison(player_ptr->poisoned + randint1(dam));
+    (void)bss.mod_poison(randint1(dam));
     take_hit(player_ptr, DAMAGE_NOESCAPE, dam, trap_name);
 }
 
@@ -343,7 +344,7 @@ static void hit_trap_pit(player_type *player_ptr, enum trap_type trap_feat_type)
  * @brief ダーツ系トラップ（通常ダメージ）の判定とプレイヤーの被害処理
  * @return ダーツが命中した場合TRUEを返す
  */
-static bool hit_trap_dart(player_type *player_ptr)
+static bool hit_trap_dart(PlayerType *player_ptr)
 {
     bool hit = false;
 
@@ -363,7 +364,7 @@ static bool hit_trap_dart(player_type *player_ptr)
  * @brief ダーツ系トラップ（通常ダメージ＋能力値減少）の判定とプレイヤーの被害処理
  * @param stat 低下する能力値ID
  */
-static void hit_trap_lose_stat(player_type *player_ptr, int stat)
+static void hit_trap_lose_stat(PlayerType *player_ptr, int stat)
 {
     if (hit_trap_dart(player_ptr)) {
         do_dec_stat(player_ptr, stat);
@@ -373,10 +374,10 @@ static void hit_trap_lose_stat(player_type *player_ptr, int stat)
 /*!
  * @brief ダーツ系トラップ（通常ダメージ＋減速）の判定とプレイヤーの被害処理
  */
-static void hit_trap_slow(player_type *player_ptr)
+static void hit_trap_slow(PlayerType *player_ptr)
 {
     if (hit_trap_dart(player_ptr)) {
-        (void)BadStatusSetter(player_ptr).slowness(player_ptr->slow + randint0(20) + 20, false);
+        (void)BadStatusSetter(player_ptr).mod_slowness(randint0(20) + 20, false);
     }
 }
 
@@ -386,18 +387,18 @@ static void hit_trap_slow(player_type *player_ptr)
  * @param break_trap 作動後のトラップ破壊が確定しているならばTRUE
  * @todo cmd-save.h への依存あり。コールバックで何とかしたい
  */
-void hit_trap(player_type *player_ptr, bool break_trap)
+void hit_trap(PlayerType *player_ptr, bool break_trap)
 {
     int i, num, dam;
     POSITION x = player_ptr->x, y = player_ptr->y;
     grid_type *g_ptr = &player_ptr->current_floor_ptr->grid_array[y][x];
     feature_type *f_ptr = &f_info[g_ptr->feat];
-    enum trap_type trap_feat_type = f_ptr->flags.has(FF::TRAP) ? (enum trap_type)f_ptr->subtype : NOT_TRAP;
+    enum trap_type trap_feat_type = f_ptr->flags.has(FloorFeatureType::TRAP) ? (enum trap_type)f_ptr->subtype : NOT_TRAP;
     concptr name = _("トラップ", "a trap");
 
     disturb(player_ptr, false, true);
 
-    cave_alter_feat(player_ptr, y, x, FF::HIT_TRAP);
+    cave_alter_feat(player_ptr, y, x, FloorFeatureType::HIT_TRAP);
 
     /* Analyze */
     switch (trap_feat_type) {
@@ -497,14 +498,14 @@ void hit_trap(player_type *player_ptr, bool break_trap)
     case TRAP_BLIND:
         msg_print(_("黒いガスに包み込まれた！", "A black gas surrounds you!"));
         if (has_resist_blind(player_ptr) == 0) {
-            (void)BadStatusSetter(player_ptr).blindness(player_ptr->blind + (TIME_EFFECT)randint0(50) + 25);
+            (void)BadStatusSetter(player_ptr).mod_blindness(randint0(50) + 25);
         }
 
         break;
     case TRAP_CONFUSE: {
         msg_print(_("きらめくガスに包み込まれた！", "A gas of scintillating colors surrounds you!"));
         if (has_resist_conf(player_ptr) == 0) {
-            (void)BadStatusSetter(player_ptr).confusion(player_ptr->confused + (TIME_EFFECT)randint0(20) + 10);
+            (void)BadStatusSetter(player_ptr).mod_confusion(randint0(20) + 10);
         }
 
         break;
@@ -513,7 +514,7 @@ void hit_trap(player_type *player_ptr, bool break_trap)
     case TRAP_POISON: {
         msg_print(_("刺激的な緑色のガスに包み込まれた！", "A pungent green gas surrounds you!"));
         if (has_resist_pois(player_ptr) == 0) {
-            (void)BadStatusSetter(player_ptr).poison(player_ptr->poisoned + (TIME_EFFECT)randint0(20) + 10);
+            (void)BadStatusSetter(player_ptr).mod_poison(randint0(20) + 10);
         }
 
         break;
@@ -531,14 +532,14 @@ void hit_trap(player_type *player_ptr, bool break_trap)
             sanity_blast(player_ptr, nullptr, false);
         }
 
-        (void)BadStatusSetter(player_ptr).paralysis(player_ptr->paralyzed + randint0(10) + 5);
+        (void)BadStatusSetter(player_ptr).mod_paralysis(randint0(10) + 5);
         break;
     }
 
     case TRAP_TRAPS: {
         msg_print(_("まばゆい閃光が走った！", "There is a bright flash of light!"));
         /* Make some new traps */
-        project(player_ptr, 0, 1, y, x, 0, GF_MAKE_TRAP, PROJECT_HIDE | PROJECT_JUMP | PROJECT_GRID);
+        project(player_ptr, 0, 1, y, x, 0, AttributeType::MAKE_TRAP, PROJECT_HIDE | PROJECT_JUMP | PROJECT_GRID);
 
         break;
     }
@@ -553,9 +554,9 @@ void hit_trap(player_type *player_ptr, bool break_trap)
 
     case TRAP_OPEN: {
         msg_print(_("大音響と共にまわりの壁が崩れた！", "Suddenly, surrounding walls are opened!"));
-        (void)project(player_ptr, 0, 3, y, x, 0, GF_DISINTEGRATE, PROJECT_GRID | PROJECT_HIDE);
-        (void)project(player_ptr, 0, 3, y, x - 4, 0, GF_DISINTEGRATE, PROJECT_GRID | PROJECT_HIDE);
-        (void)project(player_ptr, 0, 3, y, x + 4, 0, GF_DISINTEGRATE, PROJECT_GRID | PROJECT_HIDE);
+        (void)project(player_ptr, 0, 3, y, x, 0, AttributeType::DISINTEGRATE, PROJECT_GRID | PROJECT_HIDE);
+        (void)project(player_ptr, 0, 3, y, x - 4, 0, AttributeType::DISINTEGRATE, PROJECT_GRID | PROJECT_HIDE);
+        (void)project(player_ptr, 0, 3, y, x + 4, 0, AttributeType::DISINTEGRATE, PROJECT_GRID | PROJECT_HIDE);
         aggravate_monsters(player_ptr, 0);
 
         break;
@@ -570,7 +571,7 @@ void hit_trap(player_type *player_ptr, bool break_trap)
 
         /* Summon Demons and Angels */
         for (lev = player_ptr->current_floor_ptr->dun_level; lev >= 20; lev -= 1 + lev / 16) {
-            num = levs[MIN(lev / 10, 9)];
+            num = levs[std::min(lev / 10, 9)];
             for (i = 0; i < num; i++) {
                 POSITION x1 = rand_spread(x, 7);
                 POSITION y1 = rand_spread(y, 5);
@@ -608,7 +609,7 @@ void hit_trap(player_type *player_ptr, bool break_trap)
         msg_print(_("突然壁から水が溢れ出した！ピラニアがいる！", "Suddenly, the room is filled with water with piranhas!"));
 
         /* Water fills room */
-        fire_ball_hide(player_ptr, GF_WATER_FLOW, 0, 1, 10);
+        fire_ball_hide(player_ptr, AttributeType::WATER_FLOW, 0, 1, 10);
 
         /* Summon Piranhas */
         num = 1 + player_ptr->current_floor_ptr->dun_level / 20;
@@ -623,7 +624,7 @@ void hit_trap(player_type *player_ptr, bool break_trap)
     }
 
     if (break_trap && is_trap(player_ptr, g_ptr->feat)) {
-        cave_alter_feat(player_ptr, y, x, FF::DISARM);
+        cave_alter_feat(player_ptr, y, x, FloorFeatureType::DISARM);
         msg_print(_("トラップを粉砕した。", "You destroyed the trap."));
     }
 }

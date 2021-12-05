@@ -35,7 +35,7 @@
  * the "TERM_XTRA_REACT" hook before redrawing the windows.
  * </pre>
  */
-void do_cmd_redraw(player_type *player_ptr)
+void do_cmd_redraw(PlayerType *player_ptr)
 {
     term_xtra(TERM_XTRA_REACT, 0);
 
@@ -53,7 +53,7 @@ void do_cmd_redraw(player_type *player_ptr)
 
     update_playtime();
     handle_stuff(player_ptr);
-    if (player_ptr->prace == player_race_type::ANDROID)
+    if (player_ptr->prace == PlayerRaceType::ANDROID)
         calc_android_exp(player_ptr);
 
     term_type *old = Term;
@@ -71,7 +71,7 @@ void do_cmd_redraw(player_type *player_ptr)
 /*!
  * @brief プレイヤーのステータス表示
  */
-void do_cmd_player_status(player_type *player_ptr)
+void do_cmd_player_status(PlayerType *player_ptr)
 {
     int mode = 0;
     char tmp[160];
@@ -231,28 +231,28 @@ void do_cmd_messages(int num_now)
         case SKEY_UP:
         case '\n':
         case '\r':
-            i = MIN(i + 1, n - num_lines);
+            i = std::min(i + 1, n - num_lines);
             break;
         case '+':
-            i = MIN(i + 10, n - num_lines);
+            i = std::min(i + 10, n - num_lines);
             break;
         case 'p':
         case KTRL('P'):
         case ' ':
         case SKEY_PGUP:
-            i = MIN(i + num_lines, n - num_lines);
+            i = std::min(i + num_lines, n - num_lines);
             break;
         case 'n':
         case KTRL('N'):
         case SKEY_PGDOWN:
-            i = MAX(0, i - num_lines);
+            i = std::max(0, i - num_lines);
             break;
         case '-':
-            i = MAX(0, i - 10);
+            i = std::max(0, i - 10);
             break;
         case '2':
         case SKEY_DOWN:
-            i = MAX(0, i - 1);
+            i = std::max(0, i - 1);
             break;
         }
 

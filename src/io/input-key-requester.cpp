@@ -46,7 +46,7 @@ int16_t command_new; /* Command chaining from inven/equip view */
  */
 static char request_command_buffer[256];
 
-static char inkey_from_menu(player_type *player_ptr)
+static char inkey_from_menu(PlayerType *player_ptr)
 {
     char cmd;
     int basey, basex;
@@ -95,8 +95,10 @@ static char inkey_from_menu(player_type *player_ptr)
                     break;
                 case MENU_WILD:
                     if (!floor_ptr->dun_level && !floor_ptr->inside_arena && !floor_ptr->inside_quest) {
-                        if ((byte)player_ptr->wild_mode == special_menu_info[hoge].jouken_naiyou)
+                        auto can_do_in_wilderness = enum2i(special_menu_info[hoge].jouken_naiyou) > 0;
+                        if (player_ptr->wild_mode == can_do_in_wilderness) {
                             menu_name = special_menu_info[hoge].name;
+                        }
                     }
                     break;
                 default:
@@ -187,7 +189,7 @@ static char inkey_from_menu(player_type *player_ptr)
  *
  * Note that "player_ptr->command_new" may not work any more.
  */
-void request_command(player_type *player_ptr, int shopping)
+void request_command(PlayerType *player_ptr, int shopping)
 {
     int16_t cmd;
     int mode;

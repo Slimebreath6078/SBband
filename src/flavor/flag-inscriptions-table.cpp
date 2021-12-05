@@ -39,7 +39,7 @@ std::vector<flag_insc_table> flag_insc_immune = {
 /*! オブジェクトの特性表示記号テーブルの定義(弱点) */
 std::vector<flag_insc_table> flag_insc_vuln = {
     { N("酸", "Ac"), TR_VUL_ACID, TR_IM_ACID }, { N("電", "El"), TR_VUL_ELEC, TR_IM_ELEC }, { N("火", "Fi"), TR_VUL_FIRE, TR_IM_FIRE }, { N("冷", "Co"), TR_VUL_COLD, TR_IM_COLD },
-    { N("閃", "Li"), TR_VUL_LITE, -1 }
+    { N("閃", "Li"), TR_VUL_LITE, -1 }, { N("呪", "Cu"), TR_VUL_CURSE, -1 }
 };
 
 /*! オブジェクトの特性表示記号テーブルの定義(耐性) */
@@ -60,6 +60,7 @@ std::vector<flag_insc_table> flag_insc_misc = {
     { N("闇", "Dl"), TR_LITE_M2, -1 }, { N("闇", "Dl"), TR_LITE_M3, -1 }, { N("警", "Wr"), TR_WARNING, -1 }, { N("倍", "Xm"), TR_XTRA_MIGHT, -1 },
     { N("射", "Xs"), TR_XTRA_SHOTS, -1 }, { N("瞬", "Te"), TR_TELEPORT, -1 }, { N("怒", "Ag"), TR_AGGRAVATE, -1 }, { N("祝", "Bs"), TR_BLESSED, -1 },
     { N("忌", "Ty"), TR_TY_CURSE, -1 }, { N("呪", "C-"), TR_ADD_L_CURSE, -1 }, { N("詛", "C+"), TR_ADD_H_CURSE, -1 },
+    { N("焼", "F"), TR_SELF_FIRE, -1 }, { N("凍", "Co"), TR_SELF_COLD, -1 }, { N("電", "E"), TR_SELF_ELEC, -1 },
 };
 
 /*! オブジェクトの特性表示記号テーブルの定義(オーラ) */

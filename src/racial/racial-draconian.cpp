@@ -2,115 +2,115 @@
 #include "mind/mind-elementalist.h"
 #include "player/player-status.h"
 #include "spell-kind/spells-launcher.h"
-#include "spell/spell-types.h"
+#include "effect/attribute-types.h"
 #include "system/player-type-definition.h"
 #include "target/target-getter.h"
 #include "view/display-messages.h"
 
-static void decide_breath_kind(player_type *player_ptr, int *breath_type, concptr *breath_type_description)
+static void decide_breath_kind(PlayerType *player_ptr, AttributeType *breath_type, concptr *breath_type_description)
 {
     if (randint1(100) >= player_ptr->lev)
         return;
 
     switch (player_ptr->pclass) {
-    case CLASS_WARRIOR:
-    case CLASS_BERSERKER:
-    case CLASS_RANGER:
-    case CLASS_TOURIST:
-    case CLASS_IMITATOR:
-    case CLASS_ARCHER:
-    case CLASS_SMITH:
+    case PlayerClassType::WARRIOR:
+    case PlayerClassType::BERSERKER:
+    case PlayerClassType::RANGER:
+    case PlayerClassType::TOURIST:
+    case PlayerClassType::IMITATOR:
+    case PlayerClassType::ARCHER:
+    case PlayerClassType::SMITH:
         if (one_in_(3)) {
-            *breath_type = GF_MISSILE;
+            *breath_type = AttributeType::MISSILE;
             *breath_type_description = _("エレメント", "the elements");
         } else {
-            *breath_type = GF_SHARDS;
+            *breath_type = AttributeType::SHARDS;
             *breath_type_description = _("破片", "shards");
         }
 
         break;
-    case CLASS_MAGE:
-    case CLASS_WARRIOR_MAGE:
-    case CLASS_HIGH_MAGE:
-    case CLASS_SORCERER:
-    case CLASS_MAGIC_EATER:
-    case CLASS_RED_MAGE:
-    case CLASS_BLUE_MAGE:
-    case CLASS_MIRROR_MASTER:
+    case PlayerClassType::MAGE:
+    case PlayerClassType::WARRIOR_MAGE:
+    case PlayerClassType::HIGH_MAGE:
+    case PlayerClassType::SORCERER:
+    case PlayerClassType::MAGIC_EATER:
+    case PlayerClassType::RED_MAGE:
+    case PlayerClassType::BLUE_MAGE:
+    case PlayerClassType::MIRROR_MASTER:
         if (one_in_(3)) {
-            *breath_type = GF_MANA;
+            *breath_type = AttributeType::MANA;
             *breath_type_description = _("魔力", "mana");
         } else {
-            *breath_type = GF_DISENCHANT;
+            *breath_type = AttributeType::DISENCHANT;
             *breath_type_description = _("劣化", "disenchantment");
         }
 
         break;
-    case CLASS_CHAOS_WARRIOR:
+    case PlayerClassType::CHAOS_WARRIOR:
         if (!one_in_(3)) {
-            *breath_type = GF_CONFUSION;
+            *breath_type = AttributeType::CONFUSION;
             *breath_type_description = _("混乱", "confusion");
         } else {
-            *breath_type = GF_CHAOS;
+            *breath_type = AttributeType::CHAOS;
             *breath_type_description = _("カオス", "chaos");
         }
 
         break;
-    case CLASS_MONK:
-    case CLASS_SAMURAI:
-    case CLASS_FORCETRAINER:
+    case PlayerClassType::MONK:
+    case PlayerClassType::SAMURAI:
+    case PlayerClassType::FORCETRAINER:
         if (!one_in_(3)) {
-            *breath_type = GF_CONFUSION;
+            *breath_type = AttributeType::CONFUSION;
             *breath_type_description = _("混乱", "confusion");
         } else {
-            *breath_type = GF_SOUND;
+            *breath_type = AttributeType::SOUND;
             *breath_type_description = _("轟音", "sound");
         }
 
         break;
-    case CLASS_MINDCRAFTER:
+    case PlayerClassType::MINDCRAFTER:
         if (!one_in_(3)) {
-            *breath_type = GF_CONFUSION;
+            *breath_type = AttributeType::CONFUSION;
             *breath_type_description = _("混乱", "confusion");
         } else {
-            *breath_type = GF_PSI;
+            *breath_type = AttributeType::PSI;
             *breath_type_description = _("精神エネルギー", "mental energy");
         }
 
         break;
-    case CLASS_PRIEST:
-    case CLASS_PALADIN:
+    case PlayerClassType::PRIEST:
+    case PlayerClassType::PALADIN:
         if (one_in_(3)) {
-            *breath_type = GF_HELL_FIRE;
+            *breath_type = AttributeType::HELL_FIRE;
             *breath_type_description = _("地獄の劫火", "hellfire");
         } else {
-            *breath_type = GF_HOLY_FIRE;
+            *breath_type = AttributeType::HOLY_FIRE;
             *breath_type_description = _("聖なる炎", "holy fire");
         }
 
         break;
-    case CLASS_ROGUE:
-    case CLASS_NINJA:
+    case PlayerClassType::ROGUE:
+    case PlayerClassType::NINJA:
         if (one_in_(3)) {
-            *breath_type = GF_DARK;
+            *breath_type = AttributeType::DARK;
             *breath_type_description = _("暗黒", "darkness");
         } else {
-            *breath_type = GF_POIS;
+            *breath_type = AttributeType::POIS;
             *breath_type_description = _("毒", "poison");
         }
 
         break;
-    case CLASS_BARD:
+    case PlayerClassType::BARD:
         if (!one_in_(3)) {
-            *breath_type = GF_SOUND;
+            *breath_type = AttributeType::SOUND;
             *breath_type_description = _("轟音", "sound");
         } else {
-            *breath_type = GF_CONFUSION;
+            *breath_type = AttributeType::CONFUSION;
             *breath_type_description = _("混乱", "confusion");
         }
 
         break;
-    case CLASS_ELEMENTALIST:
+    case PlayerClassType::ELEMENTALIST:
         *breath_type = get_element_type(player_ptr->element, 0);
         *breath_type_description = get_element_name(player_ptr->element, 0);
         break;
@@ -119,10 +119,10 @@ static void decide_breath_kind(player_type *player_ptr, int *breath_type, concpt
     }
 }
 
-bool draconian_breath(player_type *player_ptr)
+bool draconian_breath(PlayerType *player_ptr)
 {
-    int breath_type = (one_in_(3) ? GF_COLD : GF_FIRE);
-    concptr breath_type_description = ((breath_type == GF_COLD) ? _("冷気", "cold") : _("炎", "fire"));
+    AttributeType breath_type = (one_in_(3) ? AttributeType::COLD : AttributeType::FIRE);
+    concptr breath_type_description = ((breath_type == AttributeType::COLD) ? _("冷気", "cold") : _("炎", "fire"));
     DIRECTION dir;
     if (!get_aim_dir(player_ptr, &dir))
         return false;

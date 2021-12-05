@@ -9,6 +9,7 @@
 #include "artifact/random-art-activation.h"
 #include "artifact/random-art-bias-types.h"
 #include "artifact/random-art-characteristics.h"
+#include "artifact/random-art-effects.h"
 #include "artifact/random-art-misc.h"
 #include "artifact/random-art-pval-investor.h"
 #include "artifact/random-art-resistance.h"
@@ -18,6 +19,7 @@
 #include "core/window-redrawer.h"
 #include "flavor/object-flavor.h"
 #include "game-option/cheat-types.h"
+#include "game-option/game-play-options.h"
 #include "object-enchant/special-object-flags.h"
 #include "object-enchant/tr-types.h"
 #include "object-hook/hook-armor.h"
@@ -36,7 +38,6 @@
 #include "view/display-messages.h"
 #include "wizard/artifact-bias-table.h"
 #include "wizard/wizard-messages.h"
-#include "world/world.h"
 
 static bool weakening_artifact(object_type *o_ptr)
 {
@@ -72,87 +73,87 @@ static bool weakening_artifact(object_type *o_ptr)
     return false;
 }
 
-static void set_artifact_bias(player_type *player_ptr, object_type *o_ptr, int *warrior_artifact_bias)
+static void set_artifact_bias(PlayerType *player_ptr, object_type *o_ptr, int *warrior_artifact_bias)
 {
     switch (player_ptr->pclass) {
-    case CLASS_WARRIOR:
-    case CLASS_BERSERKER:
-    case CLASS_ARCHER:
-    case CLASS_SAMURAI:
-    case CLASS_CAVALRY:
-    case CLASS_SMITH:
+    case PlayerClassType::WARRIOR:
+    case PlayerClassType::BERSERKER:
+    case PlayerClassType::ARCHER:
+    case PlayerClassType::SAMURAI:
+    case PlayerClassType::CAVALRY:
+    case PlayerClassType::SMITH:
         o_ptr->artifact_bias = BIAS_WARRIOR;
         break;
-    case CLASS_MAGE:
-    case CLASS_HIGH_MAGE:
-    case CLASS_SORCERER:
-    case CLASS_MAGIC_EATER:
-    case CLASS_BLUE_MAGE:
+    case PlayerClassType::MAGE:
+    case PlayerClassType::HIGH_MAGE:
+    case PlayerClassType::SORCERER:
+    case PlayerClassType::MAGIC_EATER:
+    case PlayerClassType::BLUE_MAGE:
         o_ptr->artifact_bias = BIAS_MAGE;
         break;
-    case CLASS_PRIEST:
+    case PlayerClassType::PRIEST:
         o_ptr->artifact_bias = BIAS_PRIESTLY;
         break;
-    case CLASS_ROGUE:
-    case CLASS_NINJA:
+    case PlayerClassType::ROGUE:
+    case PlayerClassType::NINJA:
         o_ptr->artifact_bias = BIAS_ROGUE;
         *warrior_artifact_bias = 25;
         break;
-    case CLASS_RANGER:
-    case CLASS_SNIPER:
+    case PlayerClassType::RANGER:
+    case PlayerClassType::SNIPER:
         o_ptr->artifact_bias = BIAS_RANGER;
         *warrior_artifact_bias = 30;
         break;
-    case CLASS_PALADIN:
+    case PlayerClassType::PALADIN:
         o_ptr->artifact_bias = BIAS_PRIESTLY;
         *warrior_artifact_bias = 40;
         break;
-    case CLASS_WARRIOR_MAGE:
-    case CLASS_RED_MAGE:
+    case PlayerClassType::WARRIOR_MAGE:
+    case PlayerClassType::RED_MAGE:
         o_ptr->artifact_bias = BIAS_MAGE;
         *warrior_artifact_bias = 40;
         break;
-    case CLASS_CHAOS_WARRIOR:
+    case PlayerClassType::CHAOS_WARRIOR:
         o_ptr->artifact_bias = BIAS_CHAOS;
         *warrior_artifact_bias = 40;
         break;
-    case CLASS_MONK:
-    case CLASS_FORCETRAINER:
+    case PlayerClassType::MONK:
+    case PlayerClassType::FORCETRAINER:
         o_ptr->artifact_bias = BIAS_PRIESTLY;
         break;
-    case CLASS_MINDCRAFTER:
-    case CLASS_BARD:
+    case PlayerClassType::MINDCRAFTER:
+    case PlayerClassType::BARD:
         if (randint1(5) > 2)
             o_ptr->artifact_bias = BIAS_PRIESTLY;
         break;
-    case CLASS_TOURIST:
+    case PlayerClassType::TOURIST:
         if (randint1(5) > 2)
             o_ptr->artifact_bias = BIAS_WARRIOR;
         break;
-    case CLASS_IMITATOR:
+    case PlayerClassType::IMITATOR:
         if (randint1(2) > 1)
             o_ptr->artifact_bias = BIAS_RANGER;
         break;
-    case CLASS_BEASTMASTER:
+    case PlayerClassType::BEASTMASTER:
         o_ptr->artifact_bias = BIAS_CHR;
         *warrior_artifact_bias = 50;
         break;
-    case CLASS_MIRROR_MASTER:
+    case PlayerClassType::MIRROR_MASTER:
         if (randint1(4) > 1)
             o_ptr->artifact_bias = BIAS_MAGE;
         else
             o_ptr->artifact_bias = BIAS_ROGUE;
         break;
-    case CLASS_ELEMENTALIST:
+    case PlayerClassType::ELEMENTALIST:
         o_ptr->artifact_bias = one_in_(2) ? BIAS_MAGE : BIAS_INT;
         break;
 
-    case MAX_CLASS:
+    case PlayerClassType::MAX:
         break;
     }
 }
 
-static void decide_warrior_bias(player_type *player_ptr, object_type *o_ptr, const bool a_scroll)
+static void decide_warrior_bias(PlayerType *player_ptr, object_type *o_ptr, const bool a_scroll)
 {
     int warrior_artifact_bias = 0;
     if (a_scroll && one_in_(4))
@@ -167,7 +168,7 @@ static bool decide_random_art_cursed(const bool a_scroll, object_type *o_ptr)
     if (!a_scroll && one_in_(A_CURSED))
         return true;
 
-    if (((o_ptr->tval == TV_AMULET) || (o_ptr->tval == TV_RING)) && o_ptr->is_cursed())
+    if (((o_ptr->tval == ItemKindType::AMULET) || (o_ptr->tval == ItemKindType::RING)) && o_ptr->is_cursed())
         return true;
 
     return false;
@@ -188,7 +189,7 @@ static int decide_random_art_power(const bool a_cursed)
     return powers;
 }
 
-static void invest_powers(player_type *player_ptr, object_type *o_ptr, int *powers, bool *has_pval, const bool a_cursed)
+static void invest_powers(PlayerType *player_ptr, object_type *o_ptr, int *powers, bool *has_pval, const bool a_cursed)
 {
     int max_type = o_ptr->is_weapon_ammo() ? 7 : 5;
     while ((*powers)--) {
@@ -200,7 +201,7 @@ static void invest_powers(player_type *player_ptr, object_type *o_ptr, int *powe
             break;
         case 3:
         case 4:
-            if (one_in_(2) && o_ptr->is_weapon_ammo() && (o_ptr->tval != TV_BOW)) {
+            if (one_in_(2) && o_ptr->is_weapon_ammo() && (o_ptr->tval != ItemKindType::BOW)) {
                 if (a_cursed && !one_in_(13))
                     break;
                 if (one_in_(13)) {
@@ -222,7 +223,7 @@ static void invest_powers(player_type *player_ptr, object_type *o_ptr, int *powe
             random_slay(o_ptr);
             break;
         default:
-            if (w_ptr->wizard)
+            if (allow_debug_options)
                 msg_print("Switch error in become_random_artifact!");
 
             (*powers)++;
@@ -234,7 +235,7 @@ static void strengthen_pval(object_type *o_ptr)
 {
     if (o_ptr->art_flags.has(TR_BLOWS)) {
         o_ptr->pval = randint1(2);
-        if ((o_ptr->tval == TV_SWORD) && (o_ptr->sval == SV_HAYABUSA))
+        if ((o_ptr->tval == ItemKindType::SWORD) && (o_ptr->sval == SV_HAYABUSA))
             o_ptr->pval++;
     } else {
         do {
@@ -296,7 +297,7 @@ static void invest_negative_modified_value(object_type *o_ptr)
 
 static void reset_flags_poison_needle(object_type *o_ptr)
 {
-    if ((o_ptr->tval != TV_SWORD) || (o_ptr->sval != SV_POISON_NEEDLE))
+    if ((o_ptr->tval != ItemKindType::SWORD) || (o_ptr->sval != SV_POISON_NEEDLE))
         return;
 
     o_ptr->to_h = 0;
@@ -348,7 +349,7 @@ static int decide_random_art_power_level(object_type *o_ptr, const bool a_cursed
     return 3;
 }
 
-static void name_unnatural_random_artifact(player_type *player_ptr, object_type *o_ptr, const bool a_scroll, const int power_level, GAME_TEXT *new_name)
+static void name_unnatural_random_artifact(PlayerType *player_ptr, object_type *o_ptr, const bool a_scroll, const int power_level, GAME_TEXT *new_name)
 {
     if (!a_scroll) {
         get_random_name(o_ptr, new_name, o_ptr->is_armour(), power_level);
@@ -376,7 +377,7 @@ static void name_unnatural_random_artifact(player_type *player_ptr, object_type 
 }
 
 static void generate_unnatural_random_artifact(
-    player_type *player_ptr, object_type *o_ptr, const bool a_scroll, const int power_level, const int max_powers, const int total_flags)
+    PlayerType *player_ptr, object_type *o_ptr, const bool a_scroll, const int power_level, const int max_powers, const int total_flags)
 {
     GAME_TEXT new_name[1024];
     strcpy(new_name, "");
@@ -396,7 +397,7 @@ static void generate_unnatural_random_artifact(
  * @param a_scroll アーティファクト生成の巻物上の処理。呪いのアーティファクトが生成対象外となる。
  * @return 常にTRUE(1)を返す
  */
-bool become_random_artifact(player_type *player_ptr, object_type *o_ptr, bool a_scroll)
+bool become_random_artifact(PlayerType *player_ptr, object_type *o_ptr, bool a_scroll)
 {
     o_ptr->artifact_bias = 0;
     o_ptr->name1 = 0;
@@ -424,12 +425,12 @@ bool become_random_artifact(player_type *player_ptr, object_type *o_ptr, bool a_
         curse_artifact(player_ptr, o_ptr);
 
     if (!a_cursed && one_in_(o_ptr->is_armour() ? ACTIVATION_CHANCE * 2 : ACTIVATION_CHANCE)) {
-        o_ptr->xtra2 = 0;
+        o_ptr->activation_id = RandomArtActType::NONE;
         give_activation_power(o_ptr);
     }
 
     invest_negative_modified_value(o_ptr);
-    if (((o_ptr->artifact_bias == BIAS_MAGE) || (o_ptr->artifact_bias == BIAS_INT)) && (o_ptr->tval == TV_GLOVES))
+    if (((o_ptr->artifact_bias == BIAS_MAGE) || (o_ptr->artifact_bias == BIAS_INT)) && (o_ptr->tval == ItemKindType::GLOVES))
         o_ptr->art_flags.set(TR_FREE_ACT);
 
     reset_flags_poison_needle(o_ptr);

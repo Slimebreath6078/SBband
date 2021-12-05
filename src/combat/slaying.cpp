@@ -16,6 +16,7 @@
 #include "realm/realm-hex-numbers.h"
 #include "specific-object/torch.h"
 #include "spell-realm/spells-hex.h"
+#include "effect/attribute-types.h"
 #include "system/monster-race-definition.h"
 #include "system/monster-type-definition.h"
 #include "system/object-type-definition.h"
@@ -30,7 +31,7 @@
  * @param m_ptr 目標モンスターの構造体参照ポインタ
  * @return スレイング加味後の倍率(/10倍)
  */
-MULTIPLY mult_slaying(player_type *player_ptr, MULTIPLY mult, const TrFlags &flgs, monster_type *m_ptr)
+MULTIPLY mult_slaying(PlayerType *player_ptr, MULTIPLY mult, const TrFlags &flgs, monster_type *m_ptr)
 {
     static const struct slay_table_t {
         tr_type slay_flag;
@@ -150,7 +151,7 @@ MULTIPLY mult_slaying(player_type *player_ptr, MULTIPLY mult, const TrFlags &flg
             r_ptr->r_race_kind_flags.set(p->affect_race_flag);
         }
 
-        mult = MAX(mult, p->slay_mult);
+        mult = std::max(mult, p->slay_mult);
     }
 
     return mult;
@@ -164,7 +165,7 @@ MULTIPLY mult_slaying(player_type *player_ptr, MULTIPLY mult, const TrFlags &flg
  * @param m_ptr 目標モンスターの構造体参照ポインタ
  * @return スレイング加味後の倍率(/10倍)
  */
-MULTIPLY mult_brand(player_type *player_ptr, MULTIPLY mult, const TrFlags &flgs, monster_type *m_ptr)
+MULTIPLY mult_brand(PlayerType *player_ptr, MULTIPLY mult, const TrFlags &flgs, monster_type *m_ptr)
 {
     static const struct brand_table_t {
         tr_type brand_flag;
@@ -200,11 +201,11 @@ MULTIPLY mult_brand(player_type *player_ptr, MULTIPLY mult, const TrFlags &flgs,
                 r_ptr->resistance_flags.set(p->hurt_flag);
             }
 
-            mult = MAX(mult, 50);
+            mult = std::max<short>(mult, 50);
             continue;
         }
 
-        mult = MAX(mult, 25);
+        mult = std::max<short>(mult, 25);
     }
 
     return mult;
@@ -226,7 +227,7 @@ MULTIPLY mult_brand(player_type *player_ptr, MULTIPLY mult, const TrFlags &flgs,
  * Note that most brands and slays are x3, except Slay Animal (x2),\n
  * Slay Evil (x2), and Kill dragon (x5).\n
  */
-HIT_POINT calc_attack_damage_with_slay(player_type *player_ptr, object_type *o_ptr, HIT_POINT tdam, monster_type *m_ptr, combat_options mode, bool thrown)
+HIT_POINT calc_attack_damage_with_slay(PlayerType *player_ptr, object_type *o_ptr, HIT_POINT tdam, monster_type *m_ptr, combat_options mode, bool thrown)
 {
     auto flgs = object_flags(o_ptr);
     torch_flags(o_ptr, flgs); /* torches has secret flags */
@@ -249,23 +250,23 @@ HIT_POINT calc_attack_damage_with_slay(player_type *player_ptr, object_type *o_p
 
     MULTIPLY mult = 10;
     switch (o_ptr->tval) {
-    case TV_SHOT:
-    case TV_ARROW:
-    case TV_BOLT:
-    case TV_HAFTED:
-    case TV_POLEARM:
-    case TV_SWORD:
-    case TV_DIGGING:
-    case TV_LITE: {
+    case ItemKindType::SHOT:
+    case ItemKindType::ARROW:
+    case ItemKindType::BOLT:
+    case ItemKindType::HAFTED:
+    case ItemKindType::POLEARM:
+    case ItemKindType::SWORD:
+    case ItemKindType::DIGGING:
+    case ItemKindType::LITE: {
         mult = mult_slaying(player_ptr, mult, flgs, m_ptr);
 
         mult = mult_brand(player_ptr, mult, flgs, m_ptr);
 
-        if (player_ptr->pclass == CLASS_SAMURAI) {
+        if (player_ptr->pclass == PlayerClassType::SAMURAI) {
             mult = mult_hissatsu(player_ptr, mult, flgs, m_ptr, mode);
         }
 
-        if ((player_ptr->pclass != CLASS_SAMURAI) && (flgs.has(TR_FORCE_WEAPON)) && (player_ptr->csp > (o_ptr->dd * o_ptr->ds / 5))) {
+        if ((player_ptr->pclass != PlayerClassType::SAMURAI) && (flgs.has(TR_FORCE_WEAPON)) && (player_ptr->csp > (o_ptr->dd * o_ptr->ds / 5))) {
             player_ptr->csp -= (1 + (o_ptr->dd * o_ptr->ds / 5));
             player_ptr->redraw |= (PR_MANA);
             mult = mult * 3 / 2 + 20;
@@ -283,4 +284,75 @@ HIT_POINT calc_attack_damage_with_slay(player_type *player_ptr, object_type *o_p
     if (mult > 150)
         mult = 150;
     return (tdam * mult / 10);
+}
+
+AttributeFlags melee_attribute(PlayerType *player_ptr, object_type *o_ptr, combat_options mode)
+{
+    AttributeFlags attribute_flags{};
+    attribute_flags.set(AttributeType::PLAYER_MELEE);
+
+    if (player_ptr->pclass == PlayerClassType::SAMURAI) {
+        static const struct samurai_convert_table_t {
+            combat_options hissatsu_type;
+            AttributeType attribute;
+        } samurai_convert_table[] = {
+            { HISSATSU_FIRE, AttributeType::FIRE },
+            { HISSATSU_COLD, AttributeType::COLD },
+            { HISSATSU_ELEC, AttributeType::ELEC },
+            { HISSATSU_POISON, AttributeType::POIS },
+            { HISSATSU_HAGAN, AttributeType::KILL_WALL },
+        };
+
+        for (size_t i = 0; i < sizeof(samurai_convert_table) / sizeof(samurai_convert_table[0]); ++i) {
+            const struct samurai_convert_table_t *p = &samurai_convert_table[i];
+
+            if (mode == p->hissatsu_type)
+                attribute_flags.set(p->attribute);
+        }
+    }
+
+    auto flgs = object_flags(o_ptr);
+
+    if (player_ptr->special_attack & (ATTACK_ACID))
+        flgs.set(TR_BRAND_ACID);
+    if (player_ptr->special_attack & (ATTACK_COLD))
+        flgs.set(TR_BRAND_COLD);
+    if (player_ptr->special_attack & (ATTACK_ELEC))
+        flgs.set(TR_BRAND_ELEC);
+    if (player_ptr->special_attack & (ATTACK_FIRE))
+        flgs.set(TR_BRAND_FIRE);
+    if (player_ptr->special_attack & (ATTACK_POIS))
+        flgs.set(TR_BRAND_POIS);
+
+    if (SpellHex(player_ptr).is_spelling_specific(HEX_RUNESWORD))
+        flgs.set(TR_SLAY_GOOD);
+    
+    static const struct brand_convert_table_t {
+        tr_type brand_type;
+        AttributeType attribute;
+    } brand_convert_table[] = {
+        { TR_BRAND_ACID, AttributeType::ACID },
+        { TR_BRAND_FIRE, AttributeType::FIRE },
+        { TR_BRAND_ELEC, AttributeType::ELEC },
+        { TR_BRAND_COLD, AttributeType::COLD },
+        { TR_BRAND_POIS, AttributeType::POIS },
+        { TR_SLAY_GOOD, AttributeType::HELL_FIRE },
+        { TR_KILL_GOOD, AttributeType::HELL_FIRE },
+        { TR_SLAY_EVIL, AttributeType::HOLY_FIRE },
+        { TR_KILL_EVIL, AttributeType::HOLY_FIRE },
+    };
+
+    for (size_t i = 0; i < sizeof(brand_convert_table) / sizeof(brand_convert_table[0]); ++i) {
+        const struct brand_convert_table_t *p = &brand_convert_table[i];
+
+        if (flgs.has(p->brand_type))
+            attribute_flags.set(p->attribute);
+    }
+
+    
+    if ((flgs.has(TR_FORCE_WEAPON)) && (player_ptr->csp > (o_ptr->dd * o_ptr->ds / 5))) {
+        attribute_flags.set(AttributeType::MANA);
+    }
+
+    return attribute_flags;
 }

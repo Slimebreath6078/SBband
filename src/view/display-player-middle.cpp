@@ -7,7 +7,9 @@
 #include "monster/monster-status.h"
 #include "object-enchant/special-object-flags.h"
 #include "perception/object-perception.h"
+#include "player-base/player-class.h"
 #include "player-info/equipment-info.h"
+#include "player-info/monk-data-type.h"
 #include "player-info/race-types.h"
 #include "player-status/player-hand-types.h"
 #include "player/attack-defense-types.h"
@@ -31,7 +33,7 @@
  * @param hand 武器の装備部位ID
  * @param hand_entry 項目ID
  */
-static void display_player_melee_bonus(player_type *player_ptr, int hand, int hand_entry)
+static void display_player_melee_bonus(PlayerType *player_ptr, int hand, int hand_entry)
 {
     HIT_PROB show_tohit = player_ptr->dis_to_h[hand];
     HIT_POINT show_todam = player_ptr->dis_to_d[hand];
@@ -59,29 +61,26 @@ static void display_player_melee_bonus(player_type *player_ptr, int hand, int ha
  * @brief 右手に比べて左手の表示ルーチンが複雑なので分離
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-static void display_sub_hand(player_type *player_ptr)
+static void display_sub_hand(PlayerType *player_ptr)
 {
     if (can_attack_with_sub_hand(player_ptr)) {
         display_player_melee_bonus(player_ptr, 1, left_hander ? ENTRY_RIGHT_HAND2 : ENTRY_LEFT_HAND2);
         return;
     }
 
-    if ((player_ptr->pclass != CLASS_MONK) || ((empty_hands(player_ptr, true) & EMPTY_HAND_MAIN) == 0))
+    if ((player_ptr->pclass != PlayerClassType::MONK) || ((empty_hands(player_ptr, true) & EMPTY_HAND_MAIN) == 0))
         return;
 
-    if ((player_ptr->special_defense & KAMAE_MASK) == 0) {
+    PlayerClass pc(player_ptr);
+    if (pc.monk_stance_is(MonkStanceType::NONE)) {
         display_player_one_line(ENTRY_POSTURE, _("構えなし", "none"), TERM_YELLOW);
         return;
     }
 
-    int kamae_num;
-    for (kamae_num = 0; kamae_num < MAX_KAMAE; kamae_num++) {
-        if ((player_ptr->special_defense >> kamae_num) & KAMAE_GENBU)
-            break;
-    }
+    uint stance_num = enum2i(pc.get_monk_stance()) - 1;
 
-    if (kamae_num < MAX_KAMAE) {
-        display_player_one_line(ENTRY_POSTURE, format(_("%sの構え", "%s form"), monk_stances[kamae_num].desc), TERM_YELLOW);
+    if (stance_num < monk_stances.size()) {
+        display_player_one_line(ENTRY_POSTURE, format(_("%sの構え", "%s form"), monk_stances[stance_num].desc), TERM_YELLOW);
     }
 }
 
@@ -89,7 +88,7 @@ static void display_sub_hand(player_type *player_ptr)
  * @brief 武器による命中率とダメージの補正を表示する
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-static void display_hit_damage(player_type *player_ptr)
+static void display_hit_damage(PlayerType *player_ptr)
 {
     object_type *o_ptr = &player_ptr->inventory_list[INVEN_BOW];
     HIT_PROB show_tohit = player_ptr->dis_to_h_b;
@@ -100,9 +99,9 @@ static void display_hit_damage(player_type *player_ptr)
         show_todam += o_ptr->to_d;
 
     if ((o_ptr->sval == SV_LIGHT_XBOW) || (o_ptr->sval == SV_HEAVY_XBOW))
-        show_tohit += player_ptr->weapon_exp[0][o_ptr->sval] / 400;
+        show_tohit += player_ptr->weapon_exp[o_ptr->tval][o_ptr->sval] / 400;
     else
-        show_tohit += (player_ptr->weapon_exp[0][o_ptr->sval] - (WEAPON_EXP_MASTER / 2)) / 200;
+        show_tohit += (player_ptr->weapon_exp[o_ptr->tval][o_ptr->sval] - (PlayerSkill::weapon_exp_at(PlayerSkillRank::MASTER) / 2)) / 200;
 
     show_tohit += player_ptr->skill_thb / BTH_PLUS_ADJ;
 
@@ -113,7 +112,7 @@ static void display_hit_damage(player_type *player_ptr)
  * @brief 射撃武器倍率を表示する
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-static void display_shoot_magnification(player_type *player_ptr)
+static void display_shoot_magnification(PlayerType *player_ptr)
 {
     int tmul = 0;
     if (player_ptr->inventory_list[INVEN_BOW].k_idx) {
@@ -132,7 +131,7 @@ static void display_shoot_magnification(player_type *player_ptr)
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param base_speed プレイヤーの速度
  */
-static TERM_COLOR decide_speed_color(player_type *player_ptr, const int base_speed)
+static TERM_COLOR decide_speed_color(PlayerType *player_ptr, const int base_speed)
 {
     TERM_COLOR attr;
     if (base_speed > 0) {
@@ -160,7 +159,7 @@ static TERM_COLOR decide_speed_color(player_type *player_ptr, const int base_spe
  * @param player_ptr プレイヤーへの参照ポインタ
  * @return プレイヤーの速度
  */
-static int calc_temporary_speed(player_type *player_ptr)
+static int calc_temporary_speed(PlayerType *player_ptr)
 {
     int tmp_speed = 0;
     if (!player_ptr->riding) {
@@ -187,7 +186,7 @@ static int calc_temporary_speed(player_type *player_ptr)
  * @param base_speed プレイヤーの素の速度
  * @param tmp_speed アイテム等で一時的に変化した速度量
  */
-static void display_player_speed(player_type *player_ptr, TERM_COLOR attr, int base_speed, int tmp_speed)
+static void display_player_speed(PlayerType *player_ptr, TERM_COLOR attr, int base_speed, int tmp_speed)
 {
     char buf[160];
     if (tmp_speed) {
@@ -219,22 +218,22 @@ static void display_player_speed(player_type *player_ptr, TERM_COLOR attr, int b
  * @brief プレイヤーの現在経験値・最大経験値・次のレベルまでに必要な経験値を表示する
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-static void display_player_exp(player_type *player_ptr)
+static void display_player_exp(PlayerType *player_ptr)
 {
-    int e = (player_ptr->prace == player_race_type::ANDROID) ? ENTRY_EXP_ANDR : ENTRY_CUR_EXP;
+    int e = (player_ptr->prace == PlayerRaceType::ANDROID) ? ENTRY_EXP_ANDR : ENTRY_CUR_EXP;
     if (player_ptr->exp >= player_ptr->max_exp)
         display_player_one_line(e, format("%ld", player_ptr->exp), TERM_L_GREEN);
     else
         display_player_one_line(e, format("%ld", player_ptr->exp), TERM_YELLOW);
 
-    if (player_ptr->prace != player_race_type::ANDROID)
+    if (player_ptr->prace != PlayerRaceType::ANDROID)
         display_player_one_line(ENTRY_MAX_EXP, format("%ld", player_ptr->max_exp), TERM_L_GREEN);
 
-    e = (player_ptr->prace == player_race_type::ANDROID) ? ENTRY_EXP_TO_ADV_ANDR : ENTRY_EXP_TO_ADV;
+    e = (player_ptr->prace == PlayerRaceType::ANDROID) ? ENTRY_EXP_TO_ADV_ANDR : ENTRY_EXP_TO_ADV;
 
     if (player_ptr->lev >= PY_MAX_LEVEL)
         display_player_one_line(e, "*****", TERM_L_GREEN);
-    else if (player_ptr->prace == player_race_type::ANDROID)
+    else if (player_ptr->prace == PlayerRaceType::ANDROID)
         display_player_one_line(e, format("%ld", (int32_t)(player_exp_a[player_ptr->lev - 1] * player_ptr->expfact / 100L)), TERM_L_GREEN);
     else
         display_player_one_line(e, format("%ld", (int32_t)(player_exp[player_ptr->lev - 1] * player_ptr->expfact / 100L)), TERM_L_GREEN);
@@ -244,7 +243,7 @@ static void display_player_exp(player_type *player_ptr)
  * @brief ゲーム内の経過時間を表示する
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-static void display_playtime_in_game(player_type *player_ptr)
+static void display_playtime_in_game(PlayerType *player_ptr)
 {
     int day, hour, min;
     extract_day_hour_min(player_ptr, &day, &hour, &min);
@@ -290,7 +289,7 @@ static void display_real_playtime(void)
  * @param player_ptr プレイヤーへの参照ポインタ
  * Prints the following information on the screen.
  */
-void display_player_middle(player_type *player_ptr)
+void display_player_middle(PlayerType *player_ptr)
 {
     if (can_attack_with_main_hand(player_ptr))
         display_player_melee_bonus(player_ptr, 0, left_hander ? ENTRY_LEFT_HAND1 : ENTRY_RIGHT_HAND1);

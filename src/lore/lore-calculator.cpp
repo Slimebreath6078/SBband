@@ -59,7 +59,7 @@ bool know_armour(MONRACE_IDX r_idx, const bool know_everything)
     DEPTH level = r_ptr->level;
     MONSTER_NUMBER kills = r_ptr->r_tkills;
 
-    bool known = (r_ptr->r_cast_spell == MAX_UCHAR) ? true : false;
+    bool known = r_ptr->r_cast_spell == MAX_UCHAR;
 
     if (know_everything || known)
         return true;
@@ -112,7 +112,7 @@ bool know_damage(MONRACE_IDX r_idx, int i)
  * @param SPELL_NUM 呪文番号
  * @param msg 表示する文字列
  */
-void set_damage(player_type *player_ptr, lore_type *lore_ptr, RF_ABILITY ms_type, concptr msg)
+void set_damage(PlayerType *player_ptr, lore_type *lore_ptr, MonsterAbilityType ms_type, concptr msg)
 {
     MONRACE_IDX r_idx = lore_ptr->r_idx;
     int base_damage = monspell_race_damage(player_ptr, ms_type, r_idx, BASE_DAM);
@@ -136,9 +136,7 @@ void set_drop_flags(lore_type *lore_ptr)
     if (!lore_ptr->know_everything)
         return;
 
-    lore_ptr->drop_gold = lore_ptr->drop_item = (((lore_ptr->r_ptr->flags1 & RF1_DROP_4D2) ? 8 : 0) + ((lore_ptr->r_ptr->flags1 & RF1_DROP_3D2) ? 6 : 0)
-        + ((lore_ptr->r_ptr->flags1 & RF1_DROP_2D2) ? 4 : 0) + ((lore_ptr->r_ptr->flags1 & RF1_DROP_1D2) ? 2 : 0)
-        + ((lore_ptr->r_ptr->flags1 & RF1_DROP_90) ? 1 : 0) + ((lore_ptr->r_ptr->flags1 & RF1_DROP_60) ? 1 : 0));
+    lore_ptr->drop_gold = lore_ptr->drop_item = (((lore_ptr->r_ptr->flags1 & RF1_DROP_4D2) ? 8 : 0) + ((lore_ptr->r_ptr->flags1 & RF1_DROP_3D2) ? 6 : 0) + ((lore_ptr->r_ptr->flags1 & RF1_DROP_2D2) ? 4 : 0) + ((lore_ptr->r_ptr->flags1 & RF1_DROP_1D2) ? 2 : 0) + ((lore_ptr->r_ptr->flags1 & RF1_DROP_90) ? 1 : 0) + ((lore_ptr->r_ptr->flags1 & RF1_DROP_60) ? 1 : 0));
 
     if (lore_ptr->r_ptr->flags1 & RF1_ONLY_GOLD)
         lore_ptr->drop_item = 0;
@@ -151,4 +149,5 @@ void set_drop_flags(lore_type *lore_ptr)
     lore_ptr->flags3 = lore_ptr->r_ptr->flags3;
     lore_ptr->ability_flags = lore_ptr->r_ptr->ability_flags;
     lore_ptr->resistance_flags = lore_ptr->r_ptr->resistance_flags;
+    lore_ptr->aura_flags = lore_ptr->r_ptr->aura_flags;
 }

@@ -92,7 +92,7 @@ static void interpret_race_select_key_move(char c, int *cs)
     }
 }
 
-static bool select_race(player_type *player_ptr, char *sym, int *k)
+static bool select_race(PlayerType *player_ptr, char *sym, int *k)
 {
     char cur[80];
     sprintf(cur, "%c%c%s", '*', p2, _("ランダム", "Random"));
@@ -153,7 +153,7 @@ static bool select_race(player_type *player_ptr, char *sym, int *k)
 /*!
  * @brief プレイヤーの種族選択を行う / Player race
  */
-bool get_player_race(player_type *player_ptr)
+bool get_player_race(PlayerType *player_ptr)
 {
     clear_from(10);
     put_str(
@@ -166,7 +166,7 @@ bool get_player_race(player_type *player_ptr)
     if (!select_race(player_ptr, sym, &k))
         return false;
 
-    player_ptr->prace = i2enum<player_race_type>(k);
+    player_ptr->prace = i2enum<PlayerRaceType>(k);
     rp_ptr = &race_info[k];
     c_put_str(TERM_L_BLUE, rp_ptr->title, 4, 15);
     return true;

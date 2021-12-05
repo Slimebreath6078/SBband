@@ -30,18 +30,18 @@ static bool precalc_ugarcade(int town_hgt, int town_wid, int n, std::vector<ugbl
 
     for (i = 0; i < n; i++) {
         cur_ugbldg = &ugbldg[i];
-        (void)WIPE(cur_ugbldg, ugbldg_type);
+        *cur_ugbldg = {};
         do {
             center_y = rand_range(2, town_hgt - 3);
             center_x = rand_range(2, town_wid - 3);
             tmp = center_y - randint1(max_bldg_hgt);
-            cur_ugbldg->y0 = MAX(tmp, 1);
+            cur_ugbldg->y0 = std::max(tmp, 1);
             tmp = center_x - randint1(max_bldg_wid);
-            cur_ugbldg->x0 = MAX(tmp, 1);
+            cur_ugbldg->x0 = std::max(tmp, 1);
             tmp = center_y + randint1(max_bldg_hgt);
-            cur_ugbldg->y1 = MIN(tmp, town_hgt - 2);
+            cur_ugbldg->y1 = std::min(tmp, town_hgt - 2);
             tmp = center_x + randint1(max_bldg_wid);
-            cur_ugbldg->x1 = MIN(tmp, town_wid - 2);
+            cur_ugbldg->x1 = std::min(tmp, town_wid - 2);
             for (abort = false, y = cur_ugbldg->y0; (y <= cur_ugbldg->y1) && !abort; y++) {
                 for (x = cur_ugbldg->x0; x <= cur_ugbldg->x1; x++) {
                     if (ugarcade_used[y][x]) {
@@ -68,7 +68,7 @@ static bool precalc_ugarcade(int town_hgt, int town_wid, int n, std::vector<ugbl
 }
 
 /* Create a new floor room with optional light */
-static void generate_room_floor(player_type *player_ptr, POSITION y1, POSITION x1, POSITION y2, POSITION x2, int light)
+static void generate_room_floor(PlayerType *player_ptr, POSITION y1, POSITION x1, POSITION y2, POSITION x2, int light)
 {
     grid_type *g_ptr;
     for (POSITION y = y1; y <= y2; y++) {
@@ -82,7 +82,7 @@ static void generate_room_floor(player_type *player_ptr, POSITION y1, POSITION x
     }
 }
 
-static void generate_fill_perm_bold(player_type *player_ptr, POSITION y1, POSITION x1, POSITION y2, POSITION x2)
+static void generate_fill_perm_bold(PlayerType *player_ptr, POSITION y1, POSITION x1, POSITION y2, POSITION x2)
 {
     for (POSITION y = y1; y <= y2; y++)
         for (POSITION x = x1; x <= x2; x++)
@@ -99,7 +99,7 @@ static void generate_fill_perm_bold(player_type *player_ptr, POSITION y1, POSITI
  * @note
  * Note: ltcy and ltcx indicate "left top corner".
  */
-static void build_stores(player_type *player_ptr, POSITION ltcy, POSITION ltcx, int stores[], int n, const std::vector<ugbldg_type>& ugbldg)
+static void build_stores(PlayerType *player_ptr, POSITION ltcy, POSITION ltcx, StoreSaleType stores[], int n, const std::vector<ugbldg_type>& ugbldg)
 {
     int i;
     POSITION y, x;
@@ -143,7 +143,7 @@ static void build_stores(player_type *player_ptr, POSITION ltcy, POSITION ltcx, 
 
         if (auto it = std::find_if(f_info.begin(), f_info.end(),
                 [subtype = stores[i]](const feature_type &f_ref) {
-                    return f_ref.flags.has(FF::STORE) && (f_ref.subtype == subtype);
+                    return f_ref.flags.has(FloorFeatureType::STORE) && (i2enum<StoreSaleType>(static_cast<int>(f_ref.subtype)) == subtype);
                 });
             it != f_info.end()) {
             cave_set_feat(player_ptr, ltcy + y, ltcx + x, (*it).idx);
@@ -165,17 +165,17 @@ static void build_stores(player_type *player_ptr, POSITION ltcy, POSITION ltcx, 
  * This function does NOT do anything about the owners of the stores,\n
  * nor the contents thereof.  It only handles the physical layout.\n
  */
-bool build_type16(player_type *player_ptr, dun_data_type *dd_ptr)
+bool build_type16(PlayerType *player_ptr, dun_data_type *dd_ptr)
 {
-    int stores[] = {
-        STORE_GENERAL,
-        STORE_ARMOURY,
-        STORE_WEAPON,
-        STORE_TEMPLE,
-        STORE_ALCHEMIST,
-        STORE_MAGIC,
-        STORE_BLACK,
-        STORE_BOOK,
+    StoreSaleType stores[] = {
+        StoreSaleType::GENERAL,
+        StoreSaleType::ARMOURY,
+        StoreSaleType::WEAPON,
+        StoreSaleType::TEMPLE,
+        StoreSaleType::ALCHEMIST,
+        StoreSaleType::MAGIC,
+        StoreSaleType::BLACK,
+        StoreSaleType::BOOK,
     };
     int n = sizeof stores / sizeof(int);
     POSITION y1, x1, yval, xval;

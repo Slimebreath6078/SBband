@@ -21,7 +21,7 @@
  * @brief 日記のタイトル表記と内容出力
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-static void display_diary(player_type *player_ptr)
+static void display_diary(PlayerType *player_ptr)
 {
     char diary_title[256];
     GAME_TEXT file_name[MAX_NLEN];
@@ -30,8 +30,8 @@ static void display_diary(player_type *player_ptr)
     sprintf(file_name, _("playrecord-%s.txt", "playrec-%s.txt"), savefile_base);
     path_build(buf, sizeof(buf), ANGBAND_DIR_USER, file_name);
 
-    if (player_ptr->pclass == CLASS_WARRIOR || player_ptr->pclass == CLASS_MONK || player_ptr->pclass == CLASS_SAMURAI
-        || player_ptr->pclass == CLASS_BERSERKER)
+    if (player_ptr->pclass == PlayerClassType::WARRIOR || player_ptr->pclass == PlayerClassType::MONK || player_ptr->pclass == PlayerClassType::SAMURAI
+        || player_ptr->pclass == PlayerClassType::BERSERKER)
         strcpy(tmp, subtitle[randint0(MAX_SUBTITLE - 1)]);
     else if (PlayerClass(player_ptr).is_wizard())
         strcpy(tmp, subtitle[randint0(MAX_SUBTITLE - 1) + 1]);
@@ -50,7 +50,7 @@ static void display_diary(player_type *player_ptr)
 /*!
  * @brief 日記に任意の内容を表記するコマンドのメインルーチン /
  */
-static void add_diary_note(player_type *player_ptr)
+static void add_diary_note(PlayerType *player_ptr)
 {
     char tmp[80] = "\0";
     char bunshou[80] = "\0";
@@ -63,7 +63,7 @@ static void add_diary_note(player_type *player_ptr)
 /*!
  * @brief 最後に取得したアイテムの情報を日記に追加するメインルーチン /
  */
-static void do_cmd_last_get(player_type *player_ptr)
+static void do_cmd_last_get(PlayerType *player_ptr)
 {
     if (record_o_name[0] == '\0')
         return;
@@ -110,7 +110,7 @@ static void do_cmd_erase_diary(void)
  * @brief 日記コマンド
  * @param crerature_ptr プレイヤーへの参照ポインタ
  */
-void do_cmd_diary(player_type *player_ptr)
+void do_cmd_diary(PlayerType *player_ptr)
 {
     screen_save();
     while (true) {

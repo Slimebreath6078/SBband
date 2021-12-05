@@ -73,9 +73,9 @@ static concptr attr_to_text(monster_race *r_ptr)
     return _("変な色の", "Icky");
 }
 
-spoiler_output_status spoil_mon_desc(concptr fname, std::function<bool(const monster_race *)> filter_monster)
+SpoilerOutputResultType spoil_mon_desc(concptr fname, std::function<bool(const monster_race *)> filter_monster)
 {
-    player_type dummy;
+    PlayerType dummy;
     uint16_t why = 2;
     char buf[1024];
     char nam[MAX_MONSTER_NAME + 10]; // ユニークには[U] が付くので少し伸ばす
@@ -88,7 +88,7 @@ spoiler_output_status spoil_mon_desc(concptr fname, std::function<bool(const mon
     path_build(buf, sizeof(buf), ANGBAND_DIR_USER, fname);
     spoiler_file = angband_fopen(buf, "w");
     if (!spoiler_file) {
-        return spoiler_output_status::SPOILER_OUTPUT_FAIL_FOPEN;
+        return SpoilerOutputResultType::SPOILER_OUTPUT_FAIL_FOPEN;
     }
 
     char title[200];
@@ -160,8 +160,8 @@ spoiler_output_status spoil_mon_desc(concptr fname, std::function<bool(const mon
     }
 
     fprintf(spoiler_file, "\n");
-    return ferror(spoiler_file) || angband_fclose(spoiler_file) ? spoiler_output_status::SPOILER_OUTPUT_FAIL_FCLOSE
-                                                                : spoiler_output_status::SPOILER_OUTPUT_SUCCESS;
+    return ferror(spoiler_file) || angband_fclose(spoiler_file) ? SpoilerOutputResultType::SPOILER_OUTPUT_FAIL_FCLOSE
+                                                                : SpoilerOutputResultType::SPOILER_OUTPUT_SUCCESS;
 }
 
 /*!
@@ -181,14 +181,14 @@ static void roff_func(TERM_COLOR attr, concptr str)
  * Create a spoiler file for monsters (-SHAWN-)
  * @param fname ファイル名
  */
-spoiler_output_status spoil_mon_info(concptr fname)
+SpoilerOutputResultType spoil_mon_info(concptr fname)
 {
-    player_type dummy;
+    PlayerType dummy;
     char buf[1024];
     path_build(buf, sizeof(buf), ANGBAND_DIR_USER, fname);
     spoiler_file = angband_fopen(buf, "w");
     if (!spoiler_file) {
-        return spoiler_output_status::SPOILER_OUTPUT_FAIL_FOPEN;
+        return SpoilerOutputResultType::SPOILER_OUTPUT_FAIL_FOPEN;
     }
 
     char title[200];
@@ -249,6 +249,6 @@ spoiler_output_status spoil_mon_info(concptr fname)
         spoil_out(nullptr);
     }
 
-    return ferror(spoiler_file) || angband_fclose(spoiler_file) ? spoiler_output_status::SPOILER_OUTPUT_FAIL_FCLOSE
-                                                                : spoiler_output_status::SPOILER_OUTPUT_SUCCESS;
+    return ferror(spoiler_file) || angband_fclose(spoiler_file) ? SpoilerOutputResultType::SPOILER_OUTPUT_FAIL_FCLOSE
+                                                                : SpoilerOutputResultType::SPOILER_OUTPUT_SUCCESS;
 }

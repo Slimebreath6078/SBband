@@ -93,7 +93,7 @@
 #include "wizard/wizard-special-process.h"
 #include "world/world.h"
 
-static void restore_windows(player_type *player_ptr)
+static void restore_windows(PlayerType *player_ptr)
 {
     player_ptr->hack_mutation = false;
     w_ptr->character_icky_depth = 1;
@@ -106,7 +106,7 @@ static void restore_windows(player_type *player_ptr)
     (void)term_set_cursor(0);
 }
 
-static void init_random_seed(player_type *player_ptr, bool new_game)
+static void init_random_seed(PlayerType *player_ptr, bool new_game)
 {
     bool init_random_seed = false;
     if (!w_ptr->character_loaded) {
@@ -124,7 +124,7 @@ static void init_random_seed(player_type *player_ptr, bool new_game)
         Rand_state_init();
 }
 
-static void init_world_floor_info(player_type *player_ptr)
+static void init_world_floor_info(PlayerType *player_ptr)
 {
     w_ptr->character_dungeon = false;
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
@@ -150,7 +150,7 @@ static void init_world_floor_info(player_type *player_ptr)
  * 1.0.9 以前はセーブ前に player_ptr->riding = -1 としていたので、再設定が必要だった。
  * もう不要だが、以前のセーブファイルとの互換のために残しておく。
  */
-static void restore_world_floor_info(player_type *player_ptr)
+static void restore_world_floor_info(PlayerType *player_ptr)
 {
     write_level = false;
     exe_write_diary(player_ptr, DIARY_GAMESTART, 1, _("                            ----ゲーム再開----", "                            --- Restarted Game ---"));
@@ -167,7 +167,7 @@ static void restore_world_floor_info(player_type *player_ptr)
     }
 }
 
-static void reset_world_info(player_type *player_ptr)
+static void reset_world_info(PlayerType *player_ptr)
 {
     w_ptr->creating_savefile = false;
     player_ptr->teleport_town = false;
@@ -179,7 +179,7 @@ static void reset_world_info(player_type *player_ptr)
     record_o_name[0] = '\0';
 }
 
-static void generate_wilderness(player_type *player_ptr)
+static void generate_wilderness(PlayerType *player_ptr)
 {
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
     if ((floor_ptr->dun_level == 0) && floor_ptr->inside_quest)
@@ -191,7 +191,7 @@ static void generate_wilderness(player_type *player_ptr)
     select_floor_music(player_ptr);
 }
 
-static void change_floor_if_error(player_type *player_ptr)
+static void change_floor_if_error(PlayerType *player_ptr)
 {
     if (!w_ptr->character_dungeon) {
         change_floor(player_ptr);
@@ -212,19 +212,20 @@ static void change_floor_if_error(player_type *player_ptr)
     player_ptr->panic_save = 0;
 }
 
-static void generate_world(player_type *player_ptr, bool new_game)
+static void generate_world(PlayerType *player_ptr, bool new_game)
 {
     reset_world_info(player_ptr);
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
     panel_row_min = floor_ptr->height;
     panel_col_min = floor_ptr->width;
 
-    if (player_ptr->pclass != CLASS_SORCERER) {
-        if (player_ptr->pseikaku == PERSONALITY_SEXY)
-            s_info[player_ptr->pclass].w_max[TV_HAFTED - TV_WEAPON_BEGIN][SV_WHIP] = WEAPON_EXP_MASTER;
-        if (player_ptr->prace == player_race_type::MERFOLK) {
-            s_info[player_ptr->pclass].w_max[TV_POLEARM - TV_WEAPON_BEGIN][SV_TRIDENT] = WEAPON_EXP_MASTER;
-            s_info[player_ptr->pclass].w_max[TV_POLEARM - TV_WEAPON_BEGIN][SV_TRIFURCATE_SPEAR] = WEAPON_EXP_MASTER;
+    if (player_ptr->pclass != PlayerClassType::SORCERER) {
+        auto pclass = enum2i(player_ptr->pclass);
+        if (player_ptr->ppersonality == PERSONALITY_SEXY)
+            s_info[pclass].w_max[ItemKindType::HAFTED][SV_WHIP] = PlayerSkill::weapon_exp_at(PlayerSkillRank::MASTER);
+        if (player_ptr->prace == PlayerRaceType::MERFOLK) {
+            s_info[pclass].w_max[ItemKindType::POLEARM][SV_TRIDENT] = PlayerSkill::weapon_exp_at(PlayerSkillRank::MASTER);
+            s_info[pclass].w_max[ItemKindType::POLEARM][SV_TRIFURCATE_SPEAR] = PlayerSkill::weapon_exp_at(PlayerSkillRank::MASTER);
         }
     }
 
@@ -244,7 +245,7 @@ static void generate_world(player_type *player_ptr, bool new_game)
     exe_write_diary(player_ptr, DIARY_DESCRIPTION, 0, buf);
 }
 
-static void init_io(player_type *player_ptr)
+static void init_io(PlayerType *player_ptr)
 {
     term_xtra(TERM_XTRA_REACT, 0);
     player_ptr->window_flags = PW_ALL;
@@ -256,12 +257,12 @@ static void init_io(player_type *player_ptr)
         rogue_like_commands = true;
 }
 
-static void init_riding_pet(player_type *player_ptr, bool new_game)
+static void init_riding_pet(PlayerType *player_ptr, bool new_game)
 {
-    if (!new_game || ((player_ptr->pclass != CLASS_CAVALRY) && (player_ptr->pclass != CLASS_BEASTMASTER)))
+    if (!new_game || ((player_ptr->pclass != PlayerClassType::CAVALRY) && (player_ptr->pclass != PlayerClassType::BEASTMASTER)))
         return;
 
-    MONRACE_IDX pet_r_idx = ((player_ptr->pclass == CLASS_CAVALRY) ? MON_HORSE : MON_YASE_HORSE);
+    MONRACE_IDX pet_r_idx = ((player_ptr->pclass == PlayerClassType::CAVALRY) ? MON_HORSE : MON_YASE_HORSE);
     monster_race *r_ptr = &r_info[pet_r_idx];
     place_monster_aux(player_ptr, 0, player_ptr->y, player_ptr->x - 1, pet_r_idx, (PM_FORCE_PET | PM_NO_KAGE));
     monster_type *m_ptr = &player_ptr->current_floor_ptr->m_list[hack_m_idx_ii];
@@ -273,15 +274,16 @@ static void init_riding_pet(player_type *player_ptr, bool new_game)
     m_ptr->energy_need = ENERGY_NEED() + ENERGY_NEED();
 }
 
-static void decide_arena_death(player_type *player_ptr)
+static void decide_arena_death(PlayerType *player_ptr)
 {
     if (!player_ptr->playing || !player_ptr->is_dead)
         return;
 
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
     if (!floor_ptr->inside_arena) {
-        if ((w_ptr->wizard || cheat_live) && !get_check(_("死にますか? ", "Die? ")))
+        if (cheat_live && !get_check(_("死にますか? ", "Die? "))) {
             cheat_death(player_ptr);
+        }
 
         return;
     }
@@ -301,7 +303,7 @@ static void decide_arena_death(player_type *player_ptr)
     leave_floor(player_ptr);
 }
 
-static void process_game_turn(player_type *player_ptr)
+static void process_game_turn(PlayerType *player_ptr)
 {
     bool load_game = true;
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
@@ -342,7 +344,7 @@ static void process_game_turn(player_type *player_ptr)
  * savefile, we will commit suicide, if necessary, to allow the
  * player to start a new game.
  */
-void play_game(player_type *player_ptr, bool new_game, bool browsing_movie)
+void play_game(PlayerType *player_ptr, bool new_game, bool browsing_movie)
 {
     if (browsing_movie) {
         reset_visuals(player_ptr);
@@ -373,12 +375,12 @@ void play_game(player_type *player_ptr, bool new_game, bool browsing_movie)
     if (player_ptr->chp < 0 && !cheat_immortal)
         player_ptr->is_dead = true;
 
-    if (player_ptr->prace == player_race_type::ANDROID)
+    if (player_ptr->prace == PlayerRaceType::ANDROID)
         calc_android_exp(player_ptr);
 
     init_riding_pet(player_ptr, new_game);
-    (void)combine_and_reorder_home(player_ptr, STORE_HOME);
-    (void)combine_and_reorder_home(player_ptr, STORE_MUSEUM);
+    (void)combine_and_reorder_home(player_ptr, StoreSaleType::HOME);
+    (void)combine_and_reorder_home(player_ptr, StoreSaleType::MUSEUM);
     select_floor_music(player_ptr);
     process_game_turn(player_ptr);
     close_game(player_ptr);

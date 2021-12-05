@@ -1439,12 +1439,6 @@
     <ClCompile Include="..\..\src\load\load-util.cpp">
       <Filter>load</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\load\item-loader.cpp">
-      <Filter>load</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\load\monster-loader.cpp">
-      <Filter>load</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\load\load-zangband.cpp">
       <Filter>load</Filter>
     </ClCompile>
@@ -2327,6 +2321,15 @@
     </ClCompile>
     <ClCompile Include="..\..\src\monster-race\race-resistance-mask.cpp">
       <Filter>monster-race</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\load\item\item-loader-base.cpp">
+      <Filter>load\item</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\load\item\item-loader-factory.cpp">
+      <Filter>load\item</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\load\monster\monster-loader-factory.cpp">
+      <Filter>load\monster</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -4025,15 +4028,6 @@
     <ClInclude Include="..\..\src\load\load-util.h">
       <Filter>load</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\load\item-loader.h">
-      <Filter>load</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\load\savedata-flag-types.h">
-      <Filter>load</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\load\monster-loader.h">
-      <Filter>load</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\load\load-zangband.h">
       <Filter>load</Filter>
     </ClInclude>
@@ -5016,6 +5010,30 @@
     <ClInclude Include="..\..\src\monster-race\race-kind-flags.h">
       <Filter>monster-race</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\load\item\item-loader-base.h">
+      <Filter>load\item</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\load\item\item-loader-factory.h">
+      <Filter>load\item</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\load\item\item-loader-version-types.h">
+      <Filter>load\item</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\load\monster\monster-loader-base.h">
+      <Filter>load\monster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\load\monster\monster-loader-factory.h">
+      <Filter>load\monster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\load\monster\monster-loader-version-types.h">
+      <Filter>load\monster</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\save\item-flag-types-savefile10.h">
+      <Filter>save</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\save\monster-flag-types-savefile10.h">
+      <Filter>save</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\wall.bmp" />
@@ -5237,6 +5255,12 @@
     </Filter>
     <Filter Include="timed-effect">
       <UniqueIdentifier>{b8bc7698-db79-4c82-8008-3f6e3f1763e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="load\item">
+      <UniqueIdentifier>{edb31947-5bcb-4da3-97ad-86d866819fe4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="load\monster">
+      <UniqueIdentifier>{3b09ea3f-35db-4082-86a9-cbc42a15a33a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

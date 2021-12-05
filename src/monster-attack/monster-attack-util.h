@@ -6,7 +6,7 @@
 
 /* MONster-Attack-Player、地図のMAPと紛らわしいのでmonapとした */
 struct monster_type;
-struct object_type;;
+struct object_type;
 typedef struct monap_type {
 #ifdef JP
     int abbreviate; // 2回目以降の省略表現フラグ.
@@ -17,7 +17,7 @@ typedef struct monap_type {
     int do_cut;
     int do_stun;
     bool touched;
-    rbm_type method;
+    RaceBlowMethodType method;
     bool explode;
     DEPTH rlev;
     GAME_TEXT m_name[MAX_NLEN];
@@ -27,7 +27,7 @@ typedef struct monap_type {
     object_type *o_ptr;
     bool obvious;
     HIT_POINT damage;
-    rbe_type effect;
+    RaceBlowEffectType effect;
     bool blinked;
     GAME_TEXT o_name[MAX_NLEN];
     HIT_POINT get_damage;
@@ -37,5 +37,5 @@ typedef struct monap_type {
     bool fear;
 } monap_type;
 
-struct player_type;
-monap_type *initialize_monap_type(player_type *player_ptr, monap_type *monap_ptr, MONSTER_IDX m_idx);
+class PlayerType;
+monap_type *initialize_monap_type(PlayerType *player_ptr, monap_type *monap_ptr, MONSTER_IDX m_idx);

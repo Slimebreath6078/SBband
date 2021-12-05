@@ -23,7 +23,7 @@
  * @return 召喚条件が一致するならtrue
  * @details
  */
-bool check_summon_specific(player_type *player_ptr, MONRACE_IDX summoner_idx, MONRACE_IDX r_idx)
+bool check_summon_specific(PlayerType *player_ptr, MONRACE_IDX summoner_idx, MONRACE_IDX r_idx)
 {
     monster_race *r_ptr = &r_info[r_idx];
     bool is_match = false;
@@ -86,7 +86,7 @@ bool check_summon_specific(player_type *player_ptr, MONRACE_IDX summoner_idx, MO
         is_match = (r_ptr->d_char == 'g');
         break;
     case SUMMON_CYBER:
-        is_match = (r_ptr->d_char == 'U') && r_ptr->ability_flags.has(RF_ABILITY::ROCKET);
+        is_match = (r_ptr->d_char == 'U') && r_ptr->ability_flags.has(MonsterAbilityType::ROCKET);
         break;
     case SUMMON_KIN: {
         SYMBOL_CODE summon_kin_type = summoner_idx > 0 ? r_info[summoner_idx].d_char : get_summon_symbol_from_player(player_ptr);
@@ -100,9 +100,7 @@ bool check_summon_specific(player_type *player_ptr, MONRACE_IDX summoner_idx, MO
         is_match = r_ptr->race_kind_flags.has(MonraceKindType::ANIMAL);
         break;
     case SUMMON_ANIMAL_RANGER:
-        is_match = (r_ptr->race_kind_flags.has(MonraceKindType::ANIMAL) && (angband_strchr("abcflqrwBCHIJKMRS", r_ptr->d_char)) && r_ptr->race_kind_flags.has_not(MonraceKindType::DRAGON))
-            && r_ptr->race_kind_flags.has_not(MonraceKindType::EVIL) && r_ptr->race_kind_flags.has_not(MonraceKindType::UNDEAD) && r_ptr->race_kind_flags.has_not(MonraceKindType::DEMON) && !(r_ptr->flags2 & (RF2_MULTIPLY))
-            && r_ptr->ability_flags.none();
+        is_match = (r_ptr->race_kind_flags.has(MonraceKindType::ANIMAL) && (angband_strchr("abcflqrwBCHIJKMRS", r_ptr->d_char)) && r_ptr->race_kind_flags.has_not(MonraceKindType::DRAGON)) && r_ptr->race_kind_flags.has_not(MonraceKindType::EVIL) && r_ptr->race_kind_flags.has_not(MonraceKindType::UNDEAD) && r_ptr->race_kind_flags.has_not(MonraceKindType::DEMON) && !(r_ptr->flags2 & (RF2_MULTIPLY)) && r_ptr->ability_flags.none();
         break;
     case SUMMON_SMALL_MOAI:
         is_match = r_idx == MON_SMALL_MOAI;
@@ -139,13 +137,13 @@ bool check_summon_specific(player_type *player_ptr, MONRACE_IDX summoner_idx, MO
         break;
     case SUMMON_KAMIKAZE:
         for (int i = 0; i < 4; i++)
-            if (r_ptr->blow[i].method == RBM_EXPLODE)
+            if (r_ptr->blow[i].method == RaceBlowMethodType::EXPLODE)
                 is_match = true;
 
         break;
     case SUMMON_KAMIKAZE_LIVING:
         for (int i = 0; i < 4; i++)
-            if (r_ptr->blow[i].method == RBM_EXPLODE)
+            if (r_ptr->blow[i].method == RaceBlowMethodType::EXPLODE)
                 is_match = true;
 
         is_match &= monster_living(r_idx);
@@ -158,11 +156,10 @@ bool check_summon_specific(player_type *player_ptr, MONRACE_IDX summoner_idx, MO
         break;
     case SUMMON_GUARDIANS:
         is_match = (r_ptr->flags7 & RF7_GUARDIAN) != 0;
-        is_match &= r_ptr->level <= MAX(player_ptr->current_floor_ptr->dun_level, 100);
+        is_match &= r_ptr->level <= std::max(player_ptr->current_floor_ptr->dun_level, 100);
         break;
     case SUMMON_KNIGHTS:
-        is_match = ((r_idx == MON_NOV_PALADIN) || (r_idx == MON_NOV_PALADIN_G) || (r_idx == MON_PALADIN) || (r_idx == MON_W_KNIGHT)
-            || (r_idx == MON_ULTRA_PALADIN) || (r_idx == MON_KNI_TEMPLAR));
+        is_match = ((r_idx == MON_NOV_PALADIN) || (r_idx == MON_NOV_PALADIN_G) || (r_idx == MON_PALADIN) || (r_idx == MON_W_KNIGHT) || (r_idx == MON_ULTRA_PALADIN) || (r_idx == MON_KNI_TEMPLAR));
         break;
     case SUMMON_EAGLES:
         is_match = (r_ptr->d_char == 'B') && ((r_ptr->flags8 & RF8_WILD_MOUNTAIN) != 0) && ((r_ptr->flags8 & RF8_WILD_ONLY) != 0);

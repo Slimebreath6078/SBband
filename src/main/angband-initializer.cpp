@@ -208,7 +208,7 @@ static void put_title(void)
  * @param no_term TRUEならゲーム画面無しの状態で初期化を行う。
  *                コマンドラインからスポイラーの出力のみを行う時の使用を想定する。
  */
-void init_angband(player_type *player_ptr, bool no_term)
+void init_angband(PlayerType *player_ptr, bool no_term)
 {
     char buf[1024];
     path_build(buf, sizeof(buf), ANGBAND_DIR_FILE, _("news_j.txt", "news.txt"));
@@ -307,28 +307,20 @@ void init_angband(player_type *player_ptr, bool no_term)
         quit(_("荒野を初期化できません", "Cannot initialize wilderness"));
 
     init_note(_("[配列を初期化しています... (街)]", "[Initializing arrays... (towns)]"));
-    if (init_towns())
-        quit(_("街を初期化できません", "Cannot initialize towns"));
+    init_towns();
 
     init_note(_("[配列を初期化しています... (建物)]", "[Initializing arrays... (buildings)]"));
-    if (init_buildings())
-        quit(_("建物を初期化できません", "Cannot initialize buildings"));
+    init_buildings();
 
     init_note(_("[配列を初期化しています... (クエスト)]", "[Initializing arrays... (quests)]"));
-    if (init_quests())
-        quit(_("クエストを初期化できません", "Cannot initialize quests"));
-
+    init_quests();
     if (init_v_info())
         quit(_("vault 初期化不能", "Cannot initialize vaults"));
 
     init_note(_("[データの初期化中... (その他)]", "[Initializing arrays... (other)]"));
-    if (init_other(player_ptr))
-        quit(_("その他のデータ初期化不能", "Cannot initialize other stuff"));
-
+    init_other(player_ptr);
     init_note(_("[データの初期化中... (アロケーション)]", "[Initializing arrays... (alloc)]"));
-    if (init_alloc())
-        quit(_("アロケーション・スタッフ初期化不能", "Cannot initialize alloc stuff"));
-
+    init_alloc();
     init_note(_("[ユーザー設定ファイルを初期化しています...]", "[Initializing user pref files...]"));
     strcpy(buf, "pref.prf");
     process_pref_file(player_ptr, buf);

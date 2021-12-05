@@ -55,6 +55,8 @@
 #include "system/monster-type-definition.h"
 #include "system/object-type-definition.h"
 #include "system/player-type-definition.h"
+#include "timed-effect/player-cut.h"
+#include "timed-effect/timed-effects.h"
 #include "util/bit-flags-calculator.h"
 #include "view/display-messages.h"
 #include "wizard/wizard-messages.h"
@@ -64,7 +66,7 @@
  * @brief プレイヤーの攻撃情報を初期化する(コンストラクタ以外の分)
  */
 static player_attack_type *initialize_player_attack_type(
-    player_attack_type *pa_ptr, player_type *player_ptr, POSITION y, POSITION x, int16_t hand, combat_options mode, bool *fear, bool *mdeath)
+    player_attack_type *pa_ptr, PlayerType *player_ptr, POSITION y, POSITION x, int16_t hand, combat_options mode, bool *fear, bool *mdeath)
 {
     auto floor_ptr = player_ptr->current_floor_ptr;
     auto g_ptr = &floor_ptr->grid_array[y][x];
@@ -89,16 +91,16 @@ static player_attack_type *initialize_player_attack_type(
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param pa_ptr 直接攻撃構造体への参照ポインタ
  */
-static void attack_classify(player_type *player_ptr, player_attack_type *pa_ptr)
+static void attack_classify(PlayerType *player_ptr, player_attack_type *pa_ptr)
 {
     switch (player_ptr->pclass) {
-    case CLASS_ROGUE:
-    case CLASS_NINJA:
+    case PlayerClassType::ROGUE:
+    case PlayerClassType::NINJA:
         process_surprise_attack(player_ptr, pa_ptr);
         return;
-    case CLASS_MONK:
-    case CLASS_FORCETRAINER:
-    case CLASS_BERSERKER:
+    case PlayerClassType::MONK:
+    case PlayerClassType::FORCETRAINER:
+    case PlayerClassType::BERSERKER:
         if ((empty_hands(player_ptr, true) & EMPTY_HAND_MAIN) && !player_ptr->riding)
             pa_ptr->monk_attack = true;
         return;
@@ -112,23 +114,13 @@ static void attack_classify(player_type *player_ptr, player_attack_type *pa_ptr)
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param pa_ptr 直接攻撃構造体への参照ポインタ
  */
-static void get_bare_knuckle_exp(player_type *player_ptr, player_attack_type *pa_ptr)
+static void get_bare_knuckle_exp(PlayerType *player_ptr, player_attack_type *pa_ptr)
 {
     monster_race *r_ptr = &r_info[pa_ptr->m_ptr->r_idx];
-    if ((r_ptr->level + 10) <= player_ptr->lev || (player_ptr->skill_exp[SKILL_MARTIAL_ARTS] >= s_info[player_ptr->pclass].s_max[SKILL_MARTIAL_ARTS]))
+    if ((r_ptr->level + 10) <= player_ptr->lev)
         return;
 
-    if (player_ptr->skill_exp[SKILL_MARTIAL_ARTS] < WEAPON_EXP_BEGINNER)
-        player_ptr->skill_exp[SKILL_MARTIAL_ARTS] += 40;
-    else if ((player_ptr->skill_exp[SKILL_MARTIAL_ARTS] < WEAPON_EXP_SKILLED))
-        player_ptr->skill_exp[SKILL_MARTIAL_ARTS] += 5;
-    else if ((player_ptr->skill_exp[SKILL_MARTIAL_ARTS] < WEAPON_EXP_EXPERT) && (player_ptr->lev > 19))
-        player_ptr->skill_exp[SKILL_MARTIAL_ARTS] += 1;
-    else if ((player_ptr->lev > 34))
-        if (one_in_(3))
-            player_ptr->skill_exp[SKILL_MARTIAL_ARTS] += 1;
-
-    player_ptr->update |= (PU_BONUS);
+    PlayerSkill(player_ptr).gain_martial_arts_skill_exp();
 }
 
 /*!
@@ -136,26 +128,11 @@ static void get_bare_knuckle_exp(player_type *player_ptr, player_attack_type *pa
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param pa_ptr 直接攻撃構造体への参照ポインタ
  */
-static void get_weapon_exp(player_type *player_ptr, player_attack_type *pa_ptr)
+static void get_weapon_exp(PlayerType *player_ptr, player_attack_type *pa_ptr)
 {
-    int tval = player_ptr->inventory_list[INVEN_MAIN_HAND + pa_ptr->hand].tval - TV_WEAPON_BEGIN;
-    OBJECT_SUBTYPE_VALUE sval = player_ptr->inventory_list[INVEN_MAIN_HAND + pa_ptr->hand].sval;
-    int now_exp = player_ptr->weapon_exp[tval][sval];
-    if (now_exp >= s_info[player_ptr->pclass].w_max[tval][sval])
-        return;
+    auto *o_ptr = &player_ptr->inventory_list[INVEN_MAIN_HAND + pa_ptr->hand];
 
-    SUB_EXP amount = 0;
-    if (now_exp < WEAPON_EXP_BEGINNER)
-        amount = 80;
-    else if (now_exp < WEAPON_EXP_SKILLED)
-        amount = 10;
-    else if ((now_exp < WEAPON_EXP_EXPERT) && (player_ptr->lev > 19))
-        amount = 1;
-    else if ((player_ptr->lev > 34) && one_in_(2))
-        amount = 1;
-
-    player_ptr->weapon_exp[tval][sval] += amount;
-    player_ptr->update |= (PU_BONUS);
+    PlayerSkill(player_ptr).gain_melee_weapon_exp(o_ptr);
 }
 
 /*!
@@ -163,7 +140,7 @@ static void get_weapon_exp(player_type *player_ptr, player_attack_type *pa_ptr)
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param pa_ptr 直接攻撃構造体への参照ポインタ
  */
-static void get_attack_exp(player_type *player_ptr, player_attack_type *pa_ptr)
+static void get_attack_exp(PlayerType *player_ptr, player_attack_type *pa_ptr)
 {
     monster_race *r_ptr = &r_info[pa_ptr->m_ptr->r_idx];
     object_type *o_ptr = &player_ptr->inventory_list[INVEN_MAIN_HAND + pa_ptr->hand];
@@ -184,7 +161,7 @@ static void get_attack_exp(player_type *player_ptr, player_attack_type *pa_ptr)
  * @param pa_ptr 直接攻撃構造体への参照ポインタ
  * @details 毒針は確定で1回
  */
-static void calc_num_blow(player_type *player_ptr, player_attack_type *pa_ptr)
+static void calc_num_blow(PlayerType *player_ptr, player_attack_type *pa_ptr)
 {
     if ((pa_ptr->mode == HISSATSU_KYUSHO) || (pa_ptr->mode == HISSATSU_MINEUCHI) || (pa_ptr->mode == HISSATSU_3DAN) || (pa_ptr->mode == HISSATSU_IAI))
         pa_ptr->num_blow = 1;
@@ -194,7 +171,7 @@ static void calc_num_blow(player_type *player_ptr, player_attack_type *pa_ptr)
         pa_ptr->num_blow = player_ptr->num_blow[pa_ptr->hand];
 
     object_type *o_ptr = &player_ptr->inventory_list[INVEN_MAIN_HAND + pa_ptr->hand];
-    if ((o_ptr->tval == TV_SWORD) && (o_ptr->sval == SV_POISON_NEEDLE))
+    if ((o_ptr->tval == ItemKindType::SWORD) && (o_ptr->sval == SV_POISON_NEEDLE))
         pa_ptr->num_blow = 1;
 }
 
@@ -207,7 +184,7 @@ static void calc_num_blow(player_type *player_ptr, player_attack_type *pa_ptr)
  * 吸血20%、地震0.12%、混乱26.892%、テレポート・アウェイ1.494%、変身1.494% /
  * Vampiric 20%, Quake 0.12%, Confusion 26.892%, Teleport away 1.494% and Polymorph 1.494%
  */
-static chaotic_effect select_chaotic_effect(player_type *player_ptr, player_attack_type *pa_ptr)
+static chaotic_effect select_chaotic_effect(PlayerType *player_ptr, player_attack_type *pa_ptr)
 {
     if (pa_ptr->flags.has_not(TR_CHAOTIC) || one_in_(2))
         return CE_NONE;
@@ -233,27 +210,27 @@ static chaotic_effect select_chaotic_effect(player_type *player_ptr, player_atta
  * @param pa_ptr プレイヤー攻撃情報への参照ポインタ
  * @return 魔術属性効果
  */
-static MagicalBrandEffect select_magical_brand_effect(player_type *player_ptr, player_attack_type *pa_ptr)
+static MagicalBrandEffectType select_magical_brand_effect(PlayerType *player_ptr, player_attack_type *pa_ptr)
 {
     if (pa_ptr->flags.has_not(TR_BRAND_MAGIC))
-        return MagicalBrandEffect::NONE;
+        return MagicalBrandEffectType::NONE;
 
     if (one_in_(10))
         chg_virtue(player_ptr, V_CHANCE, 1);
 
     if (one_in_(5))
-        return MagicalBrandEffect::STUN;
+        return MagicalBrandEffectType::STUN;
 
     if (one_in_(5))
-        return MagicalBrandEffect::SCARE;
+        return MagicalBrandEffectType::SCARE;
 
     if (one_in_(10))
-        return MagicalBrandEffect::DISPELL;
+        return MagicalBrandEffectType::DISPELL;
 
     if (one_in_(16))
-        return MagicalBrandEffect::PROBE;
+        return MagicalBrandEffectType::PROBE;
 
-    return MagicalBrandEffect::EXTRA;
+    return MagicalBrandEffectType::EXTRA;
 }
 
 /*!
@@ -264,9 +241,9 @@ static MagicalBrandEffect select_magical_brand_effect(player_type *player_ptr, p
 static DICE_NUMBER magical_brand_extra_dice(player_attack_type *pa_ptr)
 {
     switch (pa_ptr->magical_effect) {
-    case MagicalBrandEffect::NONE:
+    case MagicalBrandEffectType::NONE:
         return 0;
-    case MagicalBrandEffect::EXTRA:
+    case MagicalBrandEffectType::EXTRA:
         return 1;
     default:
         return 2;
@@ -282,7 +259,7 @@ static DICE_NUMBER magical_brand_extra_dice(player_attack_type *pa_ptr)
  * 打撃に使用する武器または武器以外の装備品が地震を起こすなら、
  * ダメージ量が50より多いか1/7で地震を起こす
  */
-static bool does_equip_cause_earthquake(player_type *player_ptr, player_attack_type *pa_ptr)
+static bool does_equip_cause_earthquake(PlayerType *player_ptr, player_attack_type *pa_ptr)
 {
     if (!player_ptr->earthquake)
         return false;
@@ -332,7 +309,7 @@ static bool does_weapon_has_flag(BIT_FLAGS &attacker_flags, player_attack_type *
  * @param vorpal_chance ヴォーパル倍率上昇の機会値
  * @return 攻撃の結果、地震を起こすことになったらTRUE、それ以外はFALSE
  */
-static void process_weapon_attack(player_type *player_ptr, player_attack_type *pa_ptr, bool *do_quake, const bool vorpal_cut, const int vorpal_chance)
+static void process_weapon_attack(PlayerType *player_ptr, player_attack_type *pa_ptr, bool *do_quake, const bool vorpal_cut, const int vorpal_chance)
 {
     object_type *o_ptr = &player_ptr->inventory_list[INVEN_MAIN_HAND + pa_ptr->hand];
     auto dd = o_ptr->dd + player_ptr->to_dd[pa_ptr->hand] + magical_brand_extra_dice(pa_ptr);
@@ -344,7 +321,7 @@ static void process_weapon_attack(player_type *player_ptr, player_attack_type *p
         *do_quake = true;
 
     auto do_impact = does_weapon_has_flag(player_ptr->impact, pa_ptr);
-    if ((!(o_ptr->tval == TV_SWORD) || !(o_ptr->sval == SV_POISON_NEEDLE)) && !(pa_ptr->mode == HISSATSU_KYUSHO))
+    if ((!(o_ptr->tval == ItemKindType::SWORD) || !(o_ptr->sval == SV_POISON_NEEDLE)) && !(pa_ptr->mode == HISSATSU_KYUSHO))
         pa_ptr->attack_damage
             = critical_norm(player_ptr, o_ptr->weight, o_ptr->to_h, pa_ptr->attack_damage, player_ptr->to_h[pa_ptr->hand], pa_ptr->mode, do_impact);
 
@@ -363,7 +340,7 @@ static void process_weapon_attack(player_type *player_ptr, player_attack_type *p
  * @param vorpal_change ヴォーパル倍率上昇の機会値
  * @details 取り敢えず素手と仮定し1とする.
  */
-static void calc_attack_damage(player_type *player_ptr, player_attack_type *pa_ptr, bool *do_quake, const bool vorpal_cut, const int vorpal_chance)
+static void calc_attack_damage(PlayerType *player_ptr, player_attack_type *pa_ptr, bool *do_quake, const bool vorpal_cut, const int vorpal_chance)
 {
     object_type *o_ptr = &player_ptr->inventory_list[INVEN_MAIN_HAND + pa_ptr->hand];
     pa_ptr->attack_damage = 1;
@@ -382,7 +359,7 @@ static void calc_attack_damage(player_type *player_ptr, player_attack_type *pa_p
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param pa_ptr 直接攻撃構造体への参照ポインタ
  */
-static void apply_damage_bonus(player_type *player_ptr, player_attack_type *pa_ptr)
+static void apply_damage_bonus(PlayerType *player_ptr, player_attack_type *pa_ptr)
 {
     pa_ptr->attack_damage += player_ptr->to_d[pa_ptr->hand];
     pa_ptr->drain_result += player_ptr->to_d[pa_ptr->hand];
@@ -393,7 +370,8 @@ static void apply_damage_bonus(player_type *player_ptr, player_attack_type *pa_p
     if ((pa_ptr->mode == HISSATSU_SEKIRYUKA) && !monster_living(pa_ptr->m_ptr->r_idx))
         pa_ptr->attack_damage = 0;
 
-    if ((pa_ptr->mode == HISSATSU_SEKIRYUKA) && !player_ptr->cut)
+    auto is_cut = player_ptr->effects()->cut()->is_cut();
+    if ((pa_ptr->mode == HISSATSU_SEKIRYUKA) && !is_cut)
         pa_ptr->attack_damage /= 2;
 }
 
@@ -435,14 +413,14 @@ static void apply_damage_negative_effect(player_attack_type *pa_ptr, bool is_zan
  * @param pa_ptr 直接攻撃構造体への参照ポインタ
  * @return 死んだらTRUE、生きていたらFALSE
  */
-static bool check_fear_death(player_type *player_ptr, player_attack_type *pa_ptr, const int num, const bool is_lowlevel)
+static bool check_fear_death(PlayerType *player_ptr, player_attack_type *pa_ptr, const int num, const bool is_lowlevel)
 {
-    MonsterDamageProcessor mdp(player_ptr, pa_ptr->m_idx, pa_ptr->attack_damage, pa_ptr->fear);
+    MonsterDamageProcessor mdp(player_ptr, pa_ptr->m_idx, pa_ptr->attack_damage, pa_ptr->fear, pa_ptr->attribute_flags);
     if (!mdp.mon_take_hit(nullptr))
         return false;
 
     *(pa_ptr->mdeath) = true;
-    if ((player_ptr->pclass == CLASS_BERSERKER) && player_ptr->energy_use) {
+    if ((player_ptr->pclass == PlayerClassType::BERSERKER) && player_ptr->energy_use) {
         PlayerEnergy energy(player_ptr);
         if (can_attack_with_main_hand(player_ptr) && can_attack_with_sub_hand(player_ptr)) {
             ENERGY energy_use;
@@ -475,7 +453,7 @@ static bool check_fear_death(player_type *player_ptr, player_attack_type *pa_ptr
  * @param is_ej_nullified 蜘蛛相手ならばTRUE
  */
 static void apply_actual_attack(
-    player_type *player_ptr, player_attack_type *pa_ptr, bool *do_quake, const bool is_zantetsu_nullified, const bool is_ej_nullified)
+    PlayerType *player_ptr, player_attack_type *pa_ptr, bool *do_quake, const bool is_zantetsu_nullified, const bool is_ej_nullified)
 {
     object_type *o_ptr = &player_ptr->inventory_list[INVEN_MAIN_HAND + pa_ptr->hand];
     int vorpal_chance = ((o_ptr->name1 == ART_VORPAL_BLADE) || (o_ptr->name1 == ART_CHAINSWORD)) ? 2 : 4;
@@ -488,7 +466,6 @@ static void apply_actual_attack(
     pa_ptr->magical_effect = select_magical_brand_effect(player_ptr, pa_ptr);
     decide_blood_sucking(player_ptr, pa_ptr);
 
-    // process_monk_attackの中でplayer_type->magic_num1[0] を書き換えているので、ここでis_spelling_specific() の判定をしないとダメ.
     bool vorpal_cut = (pa_ptr->flags.has(TR_VORPAL) || SpellHex(player_ptr).is_spelling_specific(HEX_RUNESWORD)) && (randint1(vorpal_chance * 3 / 2) == 1)
         && !is_zantetsu_nullified;
     calc_attack_damage(player_ptr, pa_ptr, do_quake, vorpal_cut, vorpal_chance);
@@ -497,7 +474,7 @@ static void apply_actual_attack(
     mineuchi(player_ptr, pa_ptr);
 
     pa_ptr->attack_damage = mon_damage_mod(player_ptr, pa_ptr->m_ptr, pa_ptr->attack_damage,
-        (bool)(((o_ptr->tval == TV_POLEARM) && (o_ptr->sval == SV_DEATH_SCYTHE)) || ((player_ptr->pclass == CLASS_BERSERKER) && one_in_(2))));
+        ((o_ptr->tval == ItemKindType::POLEARM) && (o_ptr->sval == SV_DEATH_SCYTHE)) || ((player_ptr->pclass == PlayerClassType::BERSERKER) && one_in_(2)));
     critical_attack(player_ptr, pa_ptr);
     msg_format_wizard(player_ptr, CHEAT_MONSTER, _("%dのダメージを与えた。(残りHP %d/%d(%d))", "You do %d damage. (left HP %d/%d(%d))"),
         pa_ptr->attack_damage, pa_ptr->m_ptr->hp - pa_ptr->attack_damage, pa_ptr->m_ptr->maxhp, pa_ptr->m_ptr->max_maxhp);
@@ -511,7 +488,7 @@ static void apply_actual_attack(
  * @param y モンスターのY座標
  * @param x モンスターのX座標
  */
-static void cause_earthquake(player_type *player_ptr, player_attack_type *pa_ptr, const bool do_quake, const POSITION y, const POSITION x)
+static void cause_earthquake(PlayerType *player_ptr, player_attack_type *pa_ptr, const bool do_quake, const POSITION y, const POSITION x)
 {
     if (!do_quake)
         return;
@@ -533,7 +510,7 @@ static void cause_earthquake(player_type *player_ptr, player_attack_type *pa_ptr
  * @details
  * If no "weapon" is available, then "punch" the monster one time.
  */
-void exe_player_attack_to_monster(player_type *player_ptr, POSITION y, POSITION x, bool *fear, bool *mdeath, int16_t hand, combat_options mode)
+void exe_player_attack_to_monster(PlayerType *player_ptr, POSITION y, POSITION x, bool *fear, bool *mdeath, int16_t hand, combat_options mode)
 {
     bool do_quake = false;
     bool drain_msg = true;
@@ -563,6 +540,7 @@ void exe_player_attack_to_monster(player_type *player_ptr, POSITION y, POSITION 
         if (!process_attack_hit(player_ptr, pa_ptr, chance))
             continue;
 
+        pa_ptr->attribute_flags = melee_attribute(player_ptr, o_ptr, pa_ptr->mode);
         apply_actual_attack(player_ptr, pa_ptr, &do_quake, is_zantetsu_nullified, is_ej_nullified);
         calc_drain(pa_ptr);
         if (check_fear_death(player_ptr, pa_ptr, num, is_lowlevel))
@@ -594,7 +572,7 @@ void exe_player_attack_to_monster(player_type *player_ptr, POSITION y, POSITION 
  * @brief 皆殺し(全方向攻撃)処理
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void massacre(player_type *player_ptr)
+void massacre(PlayerType *player_ptr)
 {
     grid_type *g_ptr;
     monster_type *m_ptr;
@@ -603,7 +581,7 @@ void massacre(player_type *player_ptr)
         POSITION x = player_ptr->x + ddx_ddd[dir];
         g_ptr = &player_ptr->current_floor_ptr->grid_array[y][x];
         m_ptr = &player_ptr->current_floor_ptr->m_list[g_ptr->m_idx];
-        if (g_ptr->m_idx && (m_ptr->ml || cave_has_flag_bold(player_ptr->current_floor_ptr, y, x, FF::PROJECT)))
+        if (g_ptr->m_idx && (m_ptr->ml || cave_has_flag_bold(player_ptr->current_floor_ptr, y, x, FloorFeatureType::PROJECT)))
             do_cmd_attack(player_ptr, y, x, HISSATSU_NONE);
     }
 }

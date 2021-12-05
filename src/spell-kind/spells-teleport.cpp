@@ -9,10 +9,12 @@
 #include "core/asking-player.h"
 #include "core/player-update-types.h"
 #include "core/speed-table.h"
+#include "effect/attribute-types.h"
 #include "effect/effect-characteristics.h"
 #include "floor/cave.h"
 #include "floor/geometry.h"
 #include "floor/line-of-sight.h"
+#include "game-option/game-play-options.h"
 #include "grid/grid.h"
 #include "inventory/inventory-slot-types.h"
 #include "main/sound-definitions-table.h"
@@ -31,7 +33,6 @@
 #include "player/player-move.h"
 #include "player/player-status.h"
 #include "spell-kind/spells-launcher.h"
-#include "spell/spell-types.h"
 #include "system/floor-type-definition.h"
 #include "system/grid-type-definition.h"
 #include "system/monster-race-definition.h"
@@ -50,7 +51,7 @@
  * @param dir 方向(5ならばグローバル変数 target_col/target_row の座標を目標にする)
  * @return 作用が実際にあった場合TRUEを返す
  */
-bool teleport_swap(player_type *player_ptr, DIRECTION dir)
+bool teleport_swap(PlayerType *player_ptr, DIRECTION dir)
 {
     POSITION tx, ty;
     if ((dir == 5) && target_okay(player_ptr)) {
@@ -104,10 +105,10 @@ bool teleport_swap(player_type *player_ptr, DIRECTION dir)
  * @param distance 移動距離
  * @return 作用が実際にあった場合TRUEを返す
  */
-bool teleport_monster(player_type *player_ptr, DIRECTION dir, int distance)
+bool teleport_monster(PlayerType *player_ptr, DIRECTION dir, int distance)
 {
     BIT_FLAGS flg = PROJECT_BEAM | PROJECT_KILL;
-    return (project_hook(player_ptr, GF_AWAY_ALL, dir, distance, flg));
+    return (project_hook(player_ptr, AttributeType::AWAY_ALL, dir, distance, flg));
 }
 
 /*!
@@ -122,7 +123,7 @@ bool teleport_monster(player_type *player_ptr, DIRECTION dir, int distance)
  * Attempt to move the monster at least "dis/2" grids away.
  * But allow variation to prevent infinite loops.
  */
-bool teleport_away(player_type *player_ptr, MONSTER_IDX m_idx, POSITION dis, teleport_flags mode)
+bool teleport_away(PlayerType *player_ptr, MONSTER_IDX m_idx, POSITION dis, teleport_flags mode)
 {
     monster_type *m_ptr = &player_ptr->current_floor_ptr->m_list[m_idx];
     if (!monster_is_valid(m_ptr))
@@ -199,7 +200,7 @@ bool teleport_away(player_type *player_ptr, MONSTER_IDX m_idx, POSITION dis, tel
  * @param power テレポート成功確率
  * @param mode オプション
  */
-void teleport_monster_to(player_type *player_ptr, MONSTER_IDX m_idx, POSITION ty, POSITION tx, int power, teleport_flags mode)
+void teleport_monster_to(PlayerType *player_ptr, MONSTER_IDX m_idx, POSITION ty, POSITION tx, int power, teleport_flags mode)
 {
     monster_type *m_ptr = &player_ptr->current_floor_ptr->m_list[m_idx];
     if (!m_ptr->r_idx)
@@ -284,7 +285,7 @@ void teleport_monster_to(player_type *player_ptr, MONSTER_IDX m_idx, POSITION ty
  * of candidates has equal possibility to be choosen as a destination.
  * </pre>
  */
-bool teleport_player_aux(player_type *player_ptr, POSITION dis, bool is_quantum_effect, teleport_flags mode)
+bool teleport_player_aux(PlayerType *player_ptr, POSITION dis, bool is_quantum_effect, teleport_flags mode)
 {
     if (player_ptr->wild_mode)
         return false;
@@ -300,10 +301,10 @@ bool teleport_player_aux(player_type *player_ptr, POSITION dis, bool is_quantum_
     if (dis > MAX_TELEPORT_DISTANCE)
         dis = MAX_TELEPORT_DISTANCE;
 
-    int left = MAX(1, player_ptr->x - dis);
-    int right = MIN(player_ptr->current_floor_ptr->width - 2, player_ptr->x + dis);
-    int top = MAX(1, player_ptr->y - dis);
-    int bottom = MIN(player_ptr->current_floor_ptr->height - 2, player_ptr->y + dis);
+    int left = std::max(1, player_ptr->x - dis);
+    int right = std::min(player_ptr->current_floor_ptr->width - 2, player_ptr->x + dis);
+    int top = std::max(1, player_ptr->y - dis);
+    int bottom = std::min(player_ptr->current_floor_ptr->height - 2, player_ptr->y + dis);
     int total_candidates = 0;
     for (POSITION y = top; y <= bottom; y++) {
         for (POSITION x = left; x <= right; x++) {
@@ -372,7 +373,7 @@ bool teleport_player_aux(player_type *player_ptr, POSITION dis, bool is_quantum_
  * @param dis 基本移動距離
  * @param mode オプション
  */
-void teleport_player(player_type *player_ptr, POSITION dis, BIT_FLAGS mode)
+void teleport_player(PlayerType *player_ptr, POSITION dis, BIT_FLAGS mode)
 {
     const POSITION oy = player_ptr->y;
     const POSITION ox = player_ptr->x;
@@ -388,7 +389,7 @@ void teleport_player(player_type *player_ptr, POSITION dis, BIT_FLAGS mode)
                 monster_type *m_ptr = &player_ptr->current_floor_ptr->m_list[tmp_m_idx];
                 monster_race *r_ptr = &r_info[m_ptr->r_idx];
 
-                bool can_follow = r_ptr->ability_flags.has(RF_ABILITY::TPORT);
+                bool can_follow = r_ptr->ability_flags.has(MonsterAbilityType::TPORT);
                 can_follow &= r_ptr->resistance_flags.has_not(MonsterResistanceType::RESIST_TELEPORT);
                 can_follow &= monster_csleep_remaining(m_ptr) == 0;
                 if (can_follow) {
@@ -406,7 +407,7 @@ void teleport_player(player_type *player_ptr, POSITION dis, BIT_FLAGS mode)
  * @param dis テレポート距離
  * @param is_quantum_effect 量子的効果によるテレポートアウェイならばTRUE
  */
-void teleport_player_away(MONSTER_IDX m_idx, player_type *player_ptr, POSITION dis, bool is_quantum_effect)
+void teleport_player_away(MONSTER_IDX m_idx, PlayerType *player_ptr, POSITION dis, bool is_quantum_effect)
 {
     if (player_ptr->phase_out)
         return;
@@ -431,7 +432,7 @@ void teleport_player_away(MONSTER_IDX m_idx, player_type *player_ptr, POSITION d
             monster_type *m_ptr = &player_ptr->current_floor_ptr->m_list[tmp_m_idx];
             monster_race *r_ptr = &r_info[m_ptr->r_idx];
 
-            bool can_follow = r_ptr->ability_flags.has(RF_ABILITY::TPORT);
+            bool can_follow = r_ptr->ability_flags.has(MonsterAbilityType::TPORT);
             can_follow &= r_ptr->resistance_flags.has_not(MonsterResistanceType::RESIST_TELEPORT);
             can_follow &= monster_csleep_remaining(m_ptr) == 0;
             if (can_follow) {
@@ -454,7 +455,7 @@ void teleport_player_away(MONSTER_IDX m_idx, player_type *player_ptr, POSITION d
  * This function allows teleporting into vaults (!)
  * </pre>
  */
-void teleport_player_to(player_type *player_ptr, POSITION ny, POSITION nx, teleport_flags mode)
+void teleport_player_to(PlayerType *player_ptr, POSITION ny, POSITION nx, teleport_flags mode)
 {
     if (player_ptr->anti_tele && !(mode & TELEPORT_NONMAGICAL)) {
         msg_print(_("不思議な力がテレポートを防いだ！", "A mysterious force prevents you from teleporting!"));
@@ -472,10 +473,9 @@ void teleport_player_to(player_type *player_ptr, POSITION ny, POSITION nx, telep
                 break;
         }
 
-        bool is_anywhere = w_ptr->wizard;
+        bool is_anywhere = allow_debug_options;
         is_anywhere &= (mode & TELEPORT_PASSIVE) == 0;
-        is_anywhere
-            &= (player_ptr->current_floor_ptr->grid_array[y][x].m_idx > 0) || player_ptr->current_floor_ptr->grid_array[y][x].m_idx == player_ptr->riding;
+        is_anywhere &= (player_ptr->current_floor_ptr->grid_array[y][x].m_idx > 0) || player_ptr->current_floor_ptr->grid_array[y][x].m_idx == player_ptr->riding;
         if (is_anywhere)
             break;
 
@@ -492,7 +492,7 @@ void teleport_player_to(player_type *player_ptr, POSITION ny, POSITION nx, telep
     (void)move_player_effect(player_ptr, y, x, MPE_FORGET_FLOW | MPE_HANDLE_STUFF | MPE_DONT_PICKUP);
 }
 
-void teleport_away_followable(player_type *player_ptr, MONSTER_IDX m_idx)
+void teleport_away_followable(PlayerType *player_ptr, MONSTER_IDX m_idx)
 {
     monster_type *m_ptr = &player_ptr->current_floor_ptr->m_list[m_idx];
     POSITION oldfy = m_ptr->fy;
@@ -511,7 +511,7 @@ void teleport_away_followable(player_type *player_ptr, MONSTER_IDX m_idx)
         return;
 
     bool follow = false;
-    if (player_ptr->muta.has(MUTA::VTELEPORT) || (player_ptr->pclass == CLASS_IMITATOR))
+    if (player_ptr->muta.has(PlayerMutationType::VTELEPORT) || (player_ptr->pclass == PlayerClassType::IMITATOR))
         follow = true;
     else {
         object_type *o_ptr;
@@ -552,14 +552,13 @@ void teleport_away_followable(player_type *player_ptr, MONSTER_IDX m_idx)
  * @param y テレポート先のY座標
  * @return 目標に指定通りテレポートできたならばTRUEを返す
  */
-bool exe_dimension_door(player_type *player_ptr, POSITION x, POSITION y)
+bool exe_dimension_door(PlayerType *player_ptr, POSITION x, POSITION y)
 {
     PLAYER_LEVEL plev = player_ptr->lev;
 
     player_ptr->energy_need += (int16_t)((int32_t)(60 - plev) * ENERGY_NEED() / 100L);
 
-    if (!cave_player_teleportable_bold(player_ptr, y, x, TELEPORT_SPONTANEOUS) || (distance(y, x, player_ptr->y, player_ptr->x) > plev / 2 + 10)
-        || (!randint0(plev / 10 + 10))) {
+    if (!cave_player_teleportable_bold(player_ptr, y, x, TELEPORT_SPONTANEOUS) || (distance(y, x, player_ptr->y, player_ptr->x) > plev / 2 + 10) || (!randint0(plev / 10 + 10))) {
         player_ptr->energy_need += (int16_t)((int32_t)(60 - plev) * ENERGY_NEED() / 100L);
         teleport_player(player_ptr, (plev + 2) * 2, TELEPORT_PASSIVE);
         return false;
@@ -575,7 +574,7 @@ bool exe_dimension_door(player_type *player_ptr, POSITION x, POSITION y)
  * Dimension Door
  * @return ターンを消費した場合TRUEを返す
  */
-bool dimension_door(player_type *player_ptr)
+bool dimension_door(PlayerType *player_ptr)
 {
     DEPTH x = 0, y = 0;
     if (!tgt_pt(player_ptr, &x, &y))

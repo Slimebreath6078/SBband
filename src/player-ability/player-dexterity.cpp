@@ -1,8 +1,11 @@
 ﻿#include "player-ability/player-dexterity.h"
 #include "mutation/mutation-flag-types.h"
 #include "object/object-flags.h"
+#include "player-base/player-class.h"
 #include "player-base/player-race.h"
 #include "player-info/class-info.h"
+#include "player-info/monk-data-type.h"
+#include "player-info/samurai-data-type.h"
 #include "player/player-personality.h"
 #include "player/race-info-table.h"
 #include "player/special-defense-types.h"
@@ -10,6 +13,11 @@
 #include "spell-realm/spells-hex.h"
 #include "system/player-type-definition.h"
 #include "util/bit-flags-calculator.h"
+
+PlayerDexterity::PlayerDexterity(PlayerType* player_ptr)
+    : PlayerBasicStatistics(player_ptr)
+{
+}
 
 void PlayerDexterity::set_locals()
 {
@@ -23,22 +31,12 @@ void PlayerDexterity::set_locals()
 /*!
  * @brief 器用さ補正計算 - 種族
  * @return 器用さ補正値
- * @details
- * * 種族による器用さ修正値。
- * * エントは別途レベル26,41,46到達ごとに減算(-1)
  */
 int16_t PlayerDexterity::race_value()
 {
     int16_t result = PlayerBasicStatistics::race_value();
 
-    if (PlayerRace(this->player_ptr).equals(player_race_type::ENT)) {
-        if (this->player_ptr->lev > 25)
-            result--;
-        if (this->player_ptr->lev > 40)
-            result--;
-        if (this->player_ptr->lev > 45)
-            result--;
-    }
+    result += PlayerRace(this->player_ptr).additional_dexterity();
 
     return result;
 }
@@ -73,19 +71,20 @@ int16_t PlayerDexterity::time_effect_value()
  * * 玄武の構えで減算(-2)
  * * 朱雀の構えで加算(+2)
  */
-int16_t PlayerDexterity::battleform_value()
+int16_t PlayerDexterity::stance_value()
 {
     int16_t result = 0;
 
-    if (any_bits(this->player_ptr->special_defense, KATA_KOUKIJIN)) {
+    PlayerClass pc(player_ptr);
+    if (pc.samurai_stance_is(SamuraiStanceType::KOUKIJIN)) {
         result += 5;
     }
 
-    if (any_bits(this->player_ptr->special_defense, KAMAE_BYAKKO)) {
+    if (pc.monk_stance_is(MonkStanceType::BYAKKO)) {
         result += 2;
-    } else if (any_bits(this->player_ptr->special_defense, KAMAE_GENBU)) {
+    } else if (pc.monk_stance_is(MonkStanceType::GENBU)) {
         result -= 2;
-    } else if (any_bits(this->player_ptr->special_defense, KAMAE_SUZAKU)) {
+    } else if (pc.monk_stance_is(MonkStanceType::SUZAKU)) {
         result += 2;
     }
 
@@ -105,15 +104,15 @@ int16_t PlayerDexterity::mutation_value()
 {
     int16_t result = 0;
 
-    if (this->player_ptr->muta.has(MUTA::IRON_SKIN)) {
+    if (this->player_ptr->muta.has(PlayerMutationType::IRON_SKIN)) {
         result -= 1;
     }
 
-    if (this->player_ptr->muta.has(MUTA::LIMBER)) {
+    if (this->player_ptr->muta.has(PlayerMutationType::LIMBER)) {
         result += 3;
     }
 
-    if (this->player_ptr->muta.has(MUTA::ARTHRITIS)) {
+    if (this->player_ptr->muta.has(PlayerMutationType::ARTHRITIS)) {
         result -= 3;
     }
 

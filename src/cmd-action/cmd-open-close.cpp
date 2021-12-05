@@ -12,6 +12,8 @@
 #include "inventory/inventory-object.h"
 #include "inventory/inventory-slot-types.h"
 #include "io/input-key-requester.h"
+#include "player-base/player-class.h"
+#include "player-info/samurai-data-type.h"
 #include "player-status/player-energy.h"
 #include "player/attack-defense-types.h"
 #include "player/special-defense-types.h"
@@ -37,7 +39,7 @@
  * @details
  * Assume there is no monster blocking the destination
  */
-static bool exe_open_chest(player_type *player_ptr, POSITION y, POSITION x, OBJECT_IDX o_idx)
+static bool exe_open_chest(PlayerType *player_ptr, POSITION y, POSITION x, OBJECT_IDX o_idx)
 {
     bool flag = true;
     bool more = false;
@@ -70,8 +72,9 @@ static bool exe_open_chest(player_type *player_ptr, POSITION y, POSITION x, OBJE
     }
 
     if (flag) {
-        chest_trap(player_ptr, y, x, o_idx);
-        chest_death(player_ptr, false, y, x, o_idx);
+        Chest chest(player_ptr);
+        chest.chest_trap(y, x, o_idx);
+        chest.chest_death(false, y, x, o_idx);
     }
 
     return more;
@@ -83,7 +86,7 @@ static bool exe_open_chest(player_type *player_ptr, POSITION y, POSITION x, OBJE
  * @details
  * Unlocking a locked door/chest is worth one experience point.
  */
-void do_cmd_open(player_type *player_ptr)
+void do_cmd_open(PlayerType *player_ptr)
 {
     POSITION y, x;
     DIRECTION dir;
@@ -92,8 +95,7 @@ void do_cmd_open(player_type *player_ptr)
     if (player_ptr->wild_mode)
         return;
 
-    if (player_ptr->special_defense & KATA_MUSOU)
-        set_action(player_ptr, ACTION_NONE);
+    PlayerClass(player_ptr).break_samurai_stance({ SamuraiStanceType::MUSOU });
 
     if (easy_open) {
         int num_doors = count_dt(player_ptr, &y, &x, is_closed_door, false);
@@ -119,7 +121,7 @@ void do_cmd_open(player_type *player_ptr)
         g_ptr = &player_ptr->current_floor_ptr->grid_array[y][x];
         feat = g_ptr->get_feat_mimic();
         o_idx = chest_check(player_ptr->current_floor_ptr, y, x, false);
-        if (f_info[feat].flags.has_not(FF::OPEN) && !o_idx) {
+        if (f_info[feat].flags.has_not(FloorFeatureType::OPEN) && !o_idx) {
             msg_print(_("そこには開けるものが見当たらない。", "You see nothing there to open."));
         } else if (g_ptr->m_idx && player_ptr->riding != g_ptr->m_idx) {
             PlayerEnergy(player_ptr).set_player_turn_energy(100);
@@ -142,7 +144,7 @@ void do_cmd_open(player_type *player_ptr)
  * @details
  * Unlocking a locked door/chest is worth one experience point.
  */
-void do_cmd_close(player_type *player_ptr)
+void do_cmd_close(PlayerType *player_ptr)
 {
     POSITION y, x;
     DIRECTION dir;
@@ -150,8 +152,7 @@ void do_cmd_close(player_type *player_ptr)
     if (player_ptr->wild_mode)
         return;
 
-    if (player_ptr->special_defense & KATA_MUSOU)
-        set_action(player_ptr, ACTION_NONE);
+    PlayerClass(player_ptr).break_samurai_stance({ SamuraiStanceType::MUSOU });
 
     if (easy_open && (count_dt(player_ptr, &y, &x, is_open, false) == 1))
         command_dir = coords_to_dir(player_ptr, y, x);
@@ -169,7 +170,7 @@ void do_cmd_close(player_type *player_ptr)
         x = player_ptr->x + ddx[dir];
         g_ptr = &player_ptr->current_floor_ptr->grid_array[y][x];
         feat = g_ptr->get_feat_mimic();
-        if (f_info[feat].flags.has_not(FF::CLOSE)) {
+        if (f_info[feat].flags.has_not(FloorFeatureType::CLOSE)) {
             msg_print(_("そこには閉じるものが見当たらない。", "You see nothing there to close."));
         } else if (g_ptr->m_idx) {
             PlayerEnergy(player_ptr).set_player_turn_energy(100);
@@ -188,7 +189,7 @@ void do_cmd_close(player_type *player_ptr)
  * @brief 箱、床のトラップ解除処理双方の統合メインルーチン /
  * Disarms a trap, or chest
  */
-void do_cmd_disarm(player_type *player_ptr)
+void do_cmd_disarm(PlayerType *player_ptr)
 {
     POSITION y, x;
     DIRECTION dir;
@@ -197,8 +198,7 @@ void do_cmd_disarm(player_type *player_ptr)
     if (player_ptr->wild_mode)
         return;
 
-    if (player_ptr->special_defense & KATA_MUSOU)
-        set_action(player_ptr, ACTION_NONE);
+    PlayerClass(player_ptr).break_samurai_stance({ SamuraiStanceType::MUSOU });
 
     if (easy_disarm) {
         int num_traps = count_dt(player_ptr, &y, &x, is_trap, true);
@@ -257,7 +257,7 @@ void do_cmd_disarm(player_type *player_ptr)
  * Creatures can also open or bash doors, see elsewhere.
  * </pre>
  */
-void do_cmd_bash(player_type *player_ptr)
+void do_cmd_bash(PlayerType *player_ptr)
 {
     POSITION y, x;
     DIRECTION dir;
@@ -266,8 +266,7 @@ void do_cmd_bash(player_type *player_ptr)
     if (player_ptr->wild_mode)
         return;
 
-    if (player_ptr->special_defense & KATA_MUSOU)
-        set_action(player_ptr, ACTION_NONE);
+    PlayerClass(player_ptr).break_samurai_stance({ SamuraiStanceType::MUSOU });
 
     if (command_arg) {
         command_rep = command_arg - 1;
@@ -281,7 +280,7 @@ void do_cmd_bash(player_type *player_ptr)
         x = player_ptr->x + ddx[dir];
         g_ptr = &player_ptr->current_floor_ptr->grid_array[y][x];
         feat = g_ptr->get_feat_mimic();
-        if (f_info[feat].flags.has_not(FF::BASH)) {
+        if (f_info[feat].flags.has_not(FloorFeatureType::BASH)) {
             msg_print(_("そこには体当たりするものが見当たらない。", "You see nothing there to bash."));
         } else if (g_ptr->m_idx) {
             PlayerEnergy(player_ptr).set_player_turn_energy(100);
@@ -307,14 +306,14 @@ void do_cmd_bash(player_type *player_ptr)
  * Let user choose a pile of spikes, perhaps?
  * </pre>
  */
-static bool get_spike(player_type *player_ptr, INVENTORY_IDX *ip)
+static bool get_spike(PlayerType *player_ptr, INVENTORY_IDX *ip)
 {
     for (INVENTORY_IDX i = 0; i < INVEN_PACK; i++) {
         object_type *o_ptr = &player_ptr->inventory_list[i];
         if (!o_ptr->k_idx)
             continue;
 
-        if (o_ptr->tval == TV_SPIKE) {
+        if (o_ptr->tval == ItemKindType::SPIKE) {
             *ip = i;
             return true;
         }
@@ -332,14 +331,13 @@ static bool get_spike(player_type *player_ptr, INVENTORY_IDX *ip)
  * This command may NOT be repeated
  * </pre>
  */
-void do_cmd_spike(player_type *player_ptr)
+void do_cmd_spike(PlayerType *player_ptr)
 {
     DIRECTION dir;
     if (player_ptr->wild_mode)
         return;
 
-    if (player_ptr->special_defense & KATA_MUSOU)
-        set_action(player_ptr, ACTION_NONE);
+    PlayerClass(player_ptr).break_samurai_stance({ SamuraiStanceType::MUSOU });
 
     if (!get_rep_dir(player_ptr, &dir, false))
         return;
@@ -350,7 +348,7 @@ void do_cmd_spike(player_type *player_ptr)
     g_ptr = &player_ptr->current_floor_ptr->grid_array[y][x];
     FEAT_IDX feat = g_ptr->get_feat_mimic();
     INVENTORY_IDX item;
-    if (f_info[feat].flags.has_not(FF::SPIKE)) {
+    if (f_info[feat].flags.has_not(FloorFeatureType::SPIKE)) {
         msg_print(_("そこにはくさびを打てるものが見当たらない。", "You see nothing there to spike."));
     } else if (!get_spike(player_ptr, &item)) {
         msg_print(_("くさびを持っていない！", "You have no spikes!"));
@@ -361,7 +359,7 @@ void do_cmd_spike(player_type *player_ptr)
     } else {
         PlayerEnergy(player_ptr).set_player_turn_energy(100);
         msg_format(_("%sにくさびを打ち込んだ。", "You jam the %s with a spike."), f_info[feat].name.c_str());
-        cave_alter_feat(player_ptr, y, x, FF::SPIKE);
+        cave_alter_feat(player_ptr, y, x, FloorFeatureType::SPIKE);
         vary_item(player_ptr, item, -1);
     }
 }

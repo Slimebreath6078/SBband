@@ -10,6 +10,9 @@
 #include "main/sound-definitions-table.h"
 #include "main/sound-of-music.h"
 #include "object-enchant/trc-types.h"
+#include "player-base/player-class.h"
+#include "player-info/monk-data-type.h"
+#include "player-info/samurai-data-type.h"
 #include "player/player-damage.h"
 #include "player/player-status.h"
 #include "player/special-defense-types.h"
@@ -22,7 +25,7 @@
  * @brief 10ゲームターンが進行するごとにプレイヤーの腹を減らす
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void starve_player(player_type *player_ptr)
+void starve_player(PlayerType *player_ptr)
 {
     if (player_ptr->phase_out)
         return;
@@ -33,9 +36,10 @@ void starve_player(player_type *player_ptr)
         int digestion = SPEED_TO_ENERGY(player_ptr->pspeed);
         if (player_ptr->regenerate)
             digestion += 20;
-        if (player_ptr->special_defense & (KAMAE_MASK | KATA_MASK))
+        PlayerClass pc(player_ptr);
+        if (!pc.monk_stance_is(MonkStanceType::NONE) || !pc.samurai_stance_is(SamuraiStanceType::NONE))
             digestion += 20;
-        if (player_ptr->cursed.has(TRC::FAST_DIGEST))
+        if (player_ptr->cursed.has(CurseTraitType::FAST_DIGEST))
             digestion += 30;
 
         if (player_ptr->slow_digest)
@@ -55,7 +59,7 @@ void starve_player(player_type *player_ptr)
     if (!player_ptr->paralyzed && (randint0(100) < 10)) {
         msg_print(_("あまりにも空腹で気絶してしまった。", "You faint from the lack of food."));
         disturb(player_ptr, true, true);
-        (void)BadStatusSetter(player_ptr).paralysis(player_ptr->paralyzed + 1 + randint0(5));
+        (void)BadStatusSetter(player_ptr).mod_paralysis(1 + randint0(5));
     }
 
     if (player_ptr->food < PY_FOOD_STARVE) {
@@ -91,7 +95,7 @@ void starve_player(player_type *player_ptr)
  * game turns, or 500/(100/5) = 25 player turns (if nothing else is
  * affecting the player speed).\n
  */
-bool set_food(player_type *player_ptr, TIME_EFFECT v)
+bool set_food(PlayerType *player_ptr, TIME_EFFECT v)
 {
     int old_aux, new_aux;
 

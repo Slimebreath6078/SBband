@@ -16,16 +16,17 @@
 
 #include <optional>
 
-enum class SmithEffect : int16_t;
-enum random_art_activation_type : uint8_t;
+enum class ItemKindType : short;
+enum class SmithEffectType : int16_t;
+enum class RandomArtActType : short;
 
-struct player_type;
+class PlayerType;
 typedef struct object_type {
     KIND_OBJECT_IDX k_idx{}; /*!< Kind index (zero if "dead") */
     POSITION iy{}; /*!< Y-position on map, or zero */
     POSITION ix{}; /*!< X-position on map, or zero */
     IDX stack_idx{}; /*!< このアイテムを含むアイテムリスト内の位置(降順) */
-    tval_type tval{}; /*!< Item type (from kind) */
+    ItemKindType tval{}; /*!< Item type (from kind) */
 
     OBJECT_SUBTYPE_VALUE sval{}; /*!< Item sub-type (from kind) */
     PARAMETER_VALUE pval{}; /*!< Item extra-parameter */
@@ -36,13 +37,13 @@ typedef struct object_type {
     EGO_IDX name2{}; /*!< Ego-Item type, if any */
 
     XTRA8 xtra1{}; /*!< Extra info type (now unused) */
-    XTRA16 xtra2{}; /*!< エゴ/アーティファクトの発動ID / Extra info activation index */
+    RandomArtActType activation_id{}; /*!< エゴ/アーティファクトの発動ID / Extra info activation index */
     XTRA8 xtra3{}; /*!< 複数の使用用途 捕らえたモンスターの速度 / Extra info */
     XTRA16 xtra4{}; /*!< 複数の使用用途 光源の残り寿命、あるいは捕らえたモンスターの現HP / Extra info fuel or captured monster's current HP */
     XTRA16 xtra5{}; /*!< 複数の使用用途 捕らえたモンスターの最大HP / Extra info captured monster's max HP */
 
-    std::optional<SmithEffect> smith_effect; //!< 鍛冶で付与された効果
-    std::optional<random_art_activation_type> smith_act_idx; //!< 鍛冶で付与された発動効果のID
+    std::optional<SmithEffectType> smith_effect; //!< 鍛冶で付与された効果
+    std::optional<RandomArtActType> smith_act_idx; //!< 鍛冶で付与された発動効果のID
 
     HIT_PROB to_h{}; /*!< Plusses to hit */
     HIT_POINT to_d{}; /*!< Plusses to damage */
@@ -59,7 +60,7 @@ typedef struct object_type {
     byte feeling{}; /*!< Game generated inscription number (eg, pseudo-id) */
 
     TrFlags art_flags{}; /*!< Extra Flags for ego and artifacts */
-    EnumClassFlagGroup<TRC> curse_flags{}; /*!< Flags for curse */
+    EnumClassFlagGroup<CurseTraitType> curse_flags{}; /*!< Flags for curse */
     MONSTER_IDX held_m_idx{}; /*!< アイテムを所持しているモンスターID (いないなら 0) / Monster holding us (if any) */
     int artifact_bias{}; /*!< ランダムアーティファクト生成時のバイアスID */
 

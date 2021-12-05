@@ -3,12 +3,12 @@
 #include "monster-attack/monster-attack-effect.h"
 #include "monster-attack/monster-attack-types.h"
 #include "system/angband.h"
-#include "spell/spell-types.h"
+#include "effect/attribute-types.h"
 
 /* monster-attack-monster type*/
 struct monster_type;
 typedef struct mam_type {
-    int effect_type;
+    int attribute;
     MONRACE_IDX m_idx;
     MONRACE_IDX t_idx;
     monster_type *m_ptr;
@@ -21,12 +21,12 @@ typedef struct mam_type {
     bool see_either;
     POSITION y_saver;
     POSITION x_saver;
-    rbm_type method;
+    RaceBlowMethodType method;
     bool explode;
     bool touched;
     concptr act;
-    spells_type pt;
-    rbe_type effect;
+    AttributeType pt;
+    RaceBlowEffectType effect;
     ARMOUR_CLASS ac;
     DEPTH rlev;
     bool blinked;
@@ -40,5 +40,5 @@ typedef struct mam_type {
     bool dead;
 } mam_type;
 
-struct player_type;
-mam_type *initialize_mam_type(player_type *player_ptr, mam_type *mam_ptr, MONRACE_IDX m_idx, MONRACE_IDX t_idx);
+class PlayerType;
+mam_type *initialize_mam_type(PlayerType *player_ptr, mam_type *mam_ptr, MONRACE_IDX m_idx, MONRACE_IDX t_idx);

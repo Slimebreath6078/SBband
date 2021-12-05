@@ -2,5 +2,17 @@
 
 #include "system/angband.h"
 
-struct player_type;
-void exe_read(player_type *player_ptr, INVENTORY_IDX item, bool known);
+class PlayerType;
+class ObjectReadEntity {
+public:
+    ObjectReadEntity(PlayerType *player_ptr, INVENTORY_IDX item);
+    virtual ~ObjectReadEntity() = default;
+
+    void execute(bool known);
+
+private:
+    PlayerType *player_ptr;
+    INVENTORY_IDX item;
+
+    bool check_can_read();
+};

@@ -131,8 +131,8 @@ static void invest_misc_hit_dice(object_type *o_ptr)
     o_ptr->art_flags.set(TR_SHOW_MODS);
     HIT_PROB bonus_h = 4 + (HIT_PROB)randint1(11);
     HIT_POINT bonus_d = 4 + (HIT_POINT)randint1(11);
-    if ((o_ptr->tval != TV_SWORD) && (o_ptr->tval != TV_POLEARM) && (o_ptr->tval != TV_HAFTED) && (o_ptr->tval != TV_DIGGING) && (o_ptr->tval != TV_GLOVES)
-        && (o_ptr->tval != TV_RING)) {
+    if ((o_ptr->tval != ItemKindType::SWORD) && (o_ptr->tval != ItemKindType::POLEARM) && (o_ptr->tval != ItemKindType::HAFTED) && (o_ptr->tval != ItemKindType::DIGGING) && (o_ptr->tval != ItemKindType::GLOVES)
+        && (o_ptr->tval != ItemKindType::RING)) {
         bonus_h /= 2;
         bonus_d /= 2;
     }
@@ -246,7 +246,7 @@ static void invest_misc_weak_esps(object_type *o_ptr)
  * @attention オブジェクトのtval、svalに依存したハードコーディング処理がある。
  * @param o_ptr 対象のオブジェクト構造体ポインタ
  */
-void random_misc(player_type *player_ptr, object_type *o_ptr)
+void random_misc(PlayerType *player_ptr, object_type *o_ptr)
 {
     if (switch_misc_bias(o_ptr))
         return;

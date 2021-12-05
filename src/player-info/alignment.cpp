@@ -17,7 +17,7 @@
 #include "system/player-type-definition.h"
 #include "util/bit-flags-calculator.h"
 
-PlayerAlignment::PlayerAlignment(player_type *player_ptr)
+PlayerAlignment::PlayerAlignment(PlayerType *player_ptr)
 {
     this->player_ptr = player_ptr;
 }
@@ -73,10 +73,10 @@ void PlayerAlignment::update_alignment()
         }
     } else {
         switch (player_ptr->prace) {
-        case player_race_type::ARCHON:
+        case PlayerRaceType::ARCHON:
             this->bias_good_alignment(200);
             break;
-        case player_race_type::BALROG:
+        case PlayerRaceType::BALROG:
             this->bias_evil_alignment(200);
             break;
 

@@ -27,7 +27,7 @@
  *
  * This function now returns "TRUE" if vision is "blocked" by grid (y,x).
  */
-static bool update_view_aux(player_type *player_ptr, POSITION y, POSITION x, POSITION y1, POSITION x1, POSITION y2, POSITION x2)
+static bool update_view_aux(PlayerType *player_ptr, POSITION y, POSITION x, POSITION y1, POSITION x1, POSITION y2, POSITION x2)
 {
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
     grid_type *g1_c_ptr;
@@ -96,7 +96,7 @@ static bool update_view_aux(player_type *player_ptr, POSITION y, POSITION x, POS
  *  4c1: Each side aborts as soon as possible
  *  4c2: Each side tells the next strip how far it has to check
  */
-void update_view(player_type *player_ptr)
+void update_view(PlayerType *player_ptr)
 {
     // 前回プレイヤーから見えていた座標たちを格納する配列。
     std::vector<Pos2D> points;
@@ -221,7 +221,7 @@ void update_view(player_type *player_ptr)
         xpn = x + n;
         xmn = x - n;
         if (ypn < y_max) {
-            m = MIN(z, y_max - ypn);
+            m = std::min(z, y_max - ypn);
             if ((xpn <= x_max) && (n < se)) {
                 for (k = n, d = 1; d <= m; d++) {
                     if (update_view_aux(player_ptr, ypn + d, xpn, ypn + d - 1, xpn - 1, ypn + d - 1, xpn)) {
@@ -248,7 +248,7 @@ void update_view(player_type *player_ptr)
         }
 
         if (ymn > 0) {
-            m = MIN(z, ymn);
+            m = std::min(z, ymn);
             if ((xpn <= x_max) && (n < ne)) {
                 for (k = n, d = 1; d <= m; d++) {
                     if (update_view_aux(player_ptr, ymn - d, xpn, ymn - d + 1, xpn - 1, ymn - d + 1, xpn)) {
@@ -275,7 +275,7 @@ void update_view(player_type *player_ptr)
         }
 
         if (xpn < x_max) {
-            m = MIN(z, x_max - xpn);
+            m = std::min(z, x_max - xpn);
             if ((ypn <= x_max) && (n < es)) {
                 for (k = n, d = 1; d <= m; d++) {
                     if (update_view_aux(player_ptr, ypn, xpn + d, ypn - 1, xpn + d - 1, ypn, xpn + d - 1)) {
@@ -302,7 +302,7 @@ void update_view(player_type *player_ptr)
         }
 
         if (xmn > 0) {
-            m = MIN(z, xmn);
+            m = std::min(z, xmn);
             if ((ypn <= y_max) && (n < ws)) {
                 for (k = n, d = 1; d <= m; d++) {
                     if (update_view_aux(player_ptr, ypn, xmn - d, ypn - 1, xmn - d + 1, ypn, xmn - d + 1)) {

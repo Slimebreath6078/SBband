@@ -18,12 +18,13 @@
  * the save-file only writes "cur_num" to the savefile.
  * "max_num" is always "1" (if that artifact "exists")
  */
-typedef struct artifact_type {
+enum class RandomArtActType : short;
+struct artifact_type {
     ARTIFACT_IDX idx{};
 
     std::string name; /*!< アーティファクト名(headerオフセット参照) / Name (offset) */
     std::string text; /*!< アーティファクト解説(headerオフセット参照) / Text (offset) */
-	tval_type tval{};		/*!< ベースアイテム大項目ID / Artifact type */
+	ItemKindType tval{};		/*!< ベースアイテム大項目ID / Artifact type */
 	OBJECT_SUBTYPE_VALUE sval{};	/*!< ベースアイテム小項目ID / Artifact sub type */
 	PARAMETER_VALUE pval{};	/*!< pval修正値 / Artifact extra info */
 	HIT_PROB to_h{};			/*!< 命中ボーナス値 /  Bonus to hit */
@@ -35,14 +36,13 @@ typedef struct artifact_type {
 	WEIGHT weight{};		/*!< 重量 / Weight */
 	PRICE cost{};			/*!< 基本価格 / Artifact "cost" */
 	TrFlags flags{};       /*! アイテムフラグ / Artifact Flags */
-	EnumClassFlagGroup<TRG> gen_flags;	/*! アイテム生成フラグ / flags for generate */
+	EnumClassFlagGroup<ItemGenerationTraitType> gen_flags;	/*! アイテム生成フラグ / flags for generate */
 	DEPTH level{};		/*! 基本生成階 / Artifact level */
 	RARITY rarity{};		/*! レアリティ / Artifact rarity */
 	byte cur_num{};		/*! 現在の生成数 / Number created (0 or 1) */
 	byte max_num{};		/*! (未使用)最大生成数 / Unused (should be "1") */
 	FLOOR_IDX floor_id{};      /*! アイテムを落としたフロアのID / Leaved on this location last time */
-	byte act_idx{};		/*! 発動能力ID / Activative ability index */
-} artifact_type;
+    RandomArtActType act_idx{}; /*! 発動能力ID / Activative ability index */
+};
 
 extern std::vector<artifact_type> a_info;
-extern ARTIFACT_IDX max_a_idx;

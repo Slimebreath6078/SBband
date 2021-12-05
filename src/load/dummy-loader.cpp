@@ -1,7 +1,7 @@
 ﻿#include "load/dummy-loader.h"
 #include "load/angband-version-comparer.h"
 #include "load/load-util.h"
-#include "load/monster-loader.h"
+#include "load/monster/monster-loader-factory.h"
 #include "system/floor-type-definition.h"
 #include "system/monster-type-definition.h"
 #include "system/player-type-definition.h"
@@ -13,12 +13,8 @@
  */
 void rd_dummy1(void)
 {
-    int16_t tmp16s;
-    rd_s16b(&tmp16s);
-    for (int i = 0; i < tmp16s; i++) {
-        int16_t tmp16s2;
-        rd_s16b(&tmp16s2);
-    }
+    auto tmp16s = rd_s16b();
+    strip_bytes(2 * tmp16s);
 }
 
 /*!
@@ -28,10 +24,7 @@ void rd_dummy1(void)
  */
 void rd_dummy2(void)
 {
-    byte tmp8u;
-    for (int i = 0; i < 48; i++)
-        rd_byte(&tmp8u);
-
+    strip_bytes(48);
     strip_bytes(12);
 }
 
@@ -40,13 +33,13 @@ void rd_dummy2(void)
  * @param player_ptr プレイヤーへの参照ポインタ
  * @details もはや何に使われていたのか不明
  */
-void rd_dummy_monsters()
+void rd_dummy_monsters(PlayerType *player_ptr)
 {
-    int16_t tmp16s;
-    rd_s16b(&tmp16s);
+    auto tmp16s = rd_s16b();
+    monster_type dummy_mon;
+    auto monster_loader = MonsterLoaderFactory::create_loader(player_ptr);
     for (int i = 0; i < tmp16s; i++) {
-        monster_type dummy_mon;
-        rd_monster(&dummy_mon);
+        monster_loader->rd_monster(&dummy_mon);
     }
 }
 
@@ -64,9 +57,6 @@ void rd_ghost(void)
 
 void rd_dummy3(void)
 {
-    uint16_t tmp16u;
-    rd_u16b(&tmp16u);
-
-    byte tmp8u;
-    rd_byte(&tmp8u);
+    strip_bytes(2);
+    strip_bytes(1);
 }

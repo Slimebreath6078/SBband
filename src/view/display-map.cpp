@@ -41,7 +41,7 @@ char image_monster_hack[MAX_IMAGE_MONSTER_HACK] = "abcdefghijklmnopqrstuvwxyzABC
 static void image_object(TERM_COLOR *ap, SYMBOL_CODE *cp)
 {
     if (use_graphics) {
-        object_kind *k_ptr = &k_info[randint1(max_k_idx - 1)];
+        object_kind *k_ptr = &k_info[randint1(k_info.size() - 1)];
         *cp = k_ptr->x_char;
         *ap = k_ptr->x_attr;
         return;
@@ -60,7 +60,7 @@ static void image_object(TERM_COLOR *ap, SYMBOL_CODE *cp)
 static void image_monster(TERM_COLOR *ap, SYMBOL_CODE *cp)
 {
     if (use_graphics) {
-        monster_race *r_ptr = &r_info[randint1(max_r_idx - 1)];
+        monster_race *r_ptr = &r_info[randint1(r_info.size() - 1)];
         *cp = r_ptr->x_char;
         *ap = r_ptr->x_attr;
         return;
@@ -104,10 +104,10 @@ static bool is_revealed_wall(floor_type *floor_ptr, feature_type *f_ptr, POSITIO
             return true;
     }
 
-    if (f_ptr->flags.has_not(FF::WALL) || f_ptr->flags.has(FF::HAS_GOLD))
+    if (f_ptr->flags.has_not(FloorFeatureType::WALL) || f_ptr->flags.has(FloorFeatureType::HAS_GOLD))
         return true;
 
-    if (in_bounds(floor_ptr, y, x) && f_ptr->flags.has(FF::PERMANENT))
+    if (in_bounds(floor_ptr, y, x) && f_ptr->flags.has(FloorFeatureType::PERMANENT))
         return true;
 
     int n = 0;
@@ -121,7 +121,7 @@ static bool is_revealed_wall(floor_type *floor_ptr, feature_type *f_ptr, POSITIO
 
         FEAT_IDX f_idx = floor_ptr->grid_array[dy][dx].feat;
         feature_type *n_ptr = &f_info[f_idx];
-        if (n_ptr->flags.has(FF::WALL))
+        if (n_ptr->flags.has(FloorFeatureType::WALL))
             n++;
     }
 
@@ -138,7 +138,7 @@ static bool is_revealed_wall(floor_type *floor_ptr, feature_type *f_ptr, POSITIO
  * @param tap 文字色属性(タイル)
  * @param tcp 文字種属性(タイル)
  */
-void map_info(player_type *player_ptr, POSITION y, POSITION x, TERM_COLOR *ap, SYMBOL_CODE *cp, TERM_COLOR *tap, SYMBOL_CODE *tcp)
+void map_info(PlayerType *player_ptr, POSITION y, POSITION x, TERM_COLOR *ap, SYMBOL_CODE *cp, TERM_COLOR *tap, SYMBOL_CODE *tcp)
 {
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
     grid_type *g_ptr = &floor_ptr->grid_array[y][x];
@@ -146,7 +146,7 @@ void map_info(player_type *player_ptr, POSITION y, POSITION x, TERM_COLOR *ap, S
     feature_type *f_ptr = &f_info[feat];
     TERM_COLOR a;
     SYMBOL_CODE c;
-    if (f_ptr->flags.has_not(FF::REMEMBER)) {
+    if (f_ptr->flags.has_not(FloorFeatureType::REMEMBER)) {
         auto is_visible = any_bits(g_ptr->info, (CAVE_MARK | CAVE_LITE | CAVE_MNLT));
         auto is_glowing = match_bits(g_ptr->info, CAVE_GLOW | CAVE_MNDK, CAVE_GLOW);
         auto can_view = g_ptr->is_view() && (is_glowing || player_ptr->see_nocto);
@@ -195,7 +195,7 @@ void map_info(player_type *player_ptr, POSITION y, POSITION x, TERM_COLOR *ap, S
                     c = f_ptr->x_char[F_LIT_DARK];
                 }
             } else if (darkened_grid(player_ptr, g_ptr) && !player_ptr->blind) {
-                if (f_ptr->flags.has_all_of({FF::LOS, FF::PROJECT})) {
+                if (f_ptr->flags.has_all_of({FloorFeatureType::LOS, FloorFeatureType::PROJECT})) {
                     feat = (view_unsafe_grids && (g_ptr->info & CAVE_UNSAFE)) ? feat_undetected : feat_none;
                     f_ptr = &f_info[feat];
                     a = f_ptr->x_attr[F_LIT_STANDARD];
@@ -220,7 +220,7 @@ void map_info(player_type *player_ptr, POSITION y, POSITION x, TERM_COLOR *ap, S
                     } else if ((g_ptr->info & (CAVE_GLOW | CAVE_MNDK)) != CAVE_GLOW) {
                         a = f_ptr->x_attr[F_LIT_DARK];
                         c = f_ptr->x_char[F_LIT_DARK];
-                    } else if (f_ptr->flags.has_not(FF::LOS) && !check_local_illumination(player_ptr, y, x)) {
+                    } else if (f_ptr->flags.has_not(FloorFeatureType::LOS) && !check_local_illumination(player_ptr, y, x)) {
                         a = f_ptr->x_attr[F_LIT_DARK];
                         c = f_ptr->x_char[F_LIT_DARK];
                     }
@@ -357,7 +357,7 @@ void map_info(player_type *player_ptr, POSITION y, POSITION x, TERM_COLOR *ap, S
 
     if (r_ptr->flags1 & RF1_SHAPECHANGER) {
         if (use_graphics) {
-            monster_race *tmp_r_ptr = &r_info[randint1(max_r_idx - 1)];
+            monster_race *tmp_r_ptr = &r_info[randint1(r_info.size() - 1)];
             *cp = tmp_r_ptr->x_char;
             *ap = tmp_r_ptr->x_attr;
         } else {

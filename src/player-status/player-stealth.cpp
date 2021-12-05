@@ -1,6 +1,7 @@
 ﻿#include "player-status/player-stealth.h"
 #include "mind/mind-ninja.h"
 #include "mutation/mutation-flag-types.h"
+#include "player-base/player-race.h"
 #include "player-info/class-info.h"
 #include "player-info/equipment-info.h"
 #include "player-info/mimic-info-table.h"
@@ -16,6 +17,11 @@
 #include "util/bit-flags-calculator.h"
 #include "util/enum-converter.h"
 
+PlayerStealth::PlayerStealth(PlayerType* player_ptr)
+    : PlayerStatusBase(player_ptr)
+{
+}
+
 /*!
  * @brief 隠密能力計算 - 種族
  * @return 隠密能力の増分
@@ -24,14 +30,7 @@
  */
 int16_t PlayerStealth::race_value()
 {
-    const player_race_info *tmp_rp_ptr;
-
-    if (this->player_ptr->mimic_form)
-        tmp_rp_ptr = &mimic_info[this->player_ptr->mimic_form];
-    else
-        tmp_rp_ptr = &race_info[enum2i(this->player_ptr->prace)];
-
-    return tmp_rp_ptr->r_stl;
+    return PlayerRace(this->player_ptr).get_info()->r_stl;
 }
 
 /*!
@@ -42,7 +41,7 @@ int16_t PlayerStealth::race_value()
  */
 int16_t PlayerStealth::personality_value()
 {
-    const player_personality *a_ptr = &personality_info[this->player_ptr->pseikaku];
+    const player_personality *a_ptr = &personality_info[this->player_ptr->ppersonality];
     return a_ptr->a_stl;
 }
 
@@ -54,7 +53,7 @@ int16_t PlayerStealth::personality_value()
  */
 int16_t PlayerStealth::class_base_value()
 {
-    const player_class_info *c_ptr = &class_info[this->player_ptr->pclass];
+    const player_class_info *c_ptr = &class_info[enum2i(this->player_ptr->pclass)];
     return c_ptr->c_stl + (c_ptr->x_stl * this->player_ptr->lev / 10);
 }
 
@@ -69,7 +68,7 @@ int16_t PlayerStealth::class_value()
 {
     ACTION_SKILL_POWER result = 0;
 
-    if (this->player_ptr->pclass == CLASS_NINJA) {
+    if (this->player_ptr->pclass == PlayerClassType::NINJA) {
         if (heavy_armor(this->player_ptr)) {
             result -= (this->player_ptr->lev) / 10;
         } else if ((!this->player_ptr->inventory_list[INVEN_MAIN_HAND].k_idx || can_attack_with_main_hand(this->player_ptr))
@@ -92,10 +91,10 @@ int16_t PlayerStealth::mutation_value()
 {
     int16_t result = 0;
     const auto &muta = this->player_ptr->muta;
-    if (muta.has(MUTA::XTRA_NOIS)) {
+    if (muta.has(PlayerMutationType::XTRA_NOIS)) {
         result -= 3;
     }
-    if (muta.has(MUTA::MOTION)) {
+    if (muta.has(PlayerMutationType::MOTION)) {
         result += 1;
     }
     return result;
@@ -144,7 +143,7 @@ bool PlayerStealth::is_aggravated_s_fairy()
 int16_t PlayerStealth::set_exception_value(int16_t value)
 {
     if (this->is_aggravated_s_fairy()) {
-        value = MIN(value - 3, (value + 2) / 2);
+        value = std::min<int16_t>(value - 3, (value + 2) / 2);
     }
     return value;
 }

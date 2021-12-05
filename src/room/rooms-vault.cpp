@@ -42,11 +42,6 @@
 std::vector<vault_type> v_info;
 
 /*
- * Maximum number of vaults in v_info.txt
- */
-int16_t max_v_idx;
-
-/*
  * This function creates a random vault that looks like a collection of bubbles.
  * It works by getting a set of coordinates that represent the center of each
  * bubble.  The entire room is made by seeing which bubble center is closest. If
@@ -57,7 +52,7 @@ int16_t max_v_idx;
  * Note: If two centers are on the same point then this algorithm will create a
  *       blank bubble filled with walls. - This is prevented from happening.
  */
-static void build_bubble_vault(player_type *player_ptr, POSITION x0, POSITION y0, POSITION xsize, POSITION ysize)
+static void build_bubble_vault(PlayerType *player_ptr, POSITION x0, POSITION y0, POSITION xsize, POSITION ysize)
 {
 #define BUBBLENUM 10 /* number of bubbles */
 
@@ -174,7 +169,7 @@ static void build_bubble_vault(player_type *player_ptr, POSITION x0, POSITION y0
 }
 
 /* Create a random vault that looks like a collection of overlapping rooms */
-static void build_room_vault(player_type *player_ptr, POSITION x0, POSITION y0, POSITION xsize, POSITION ysize)
+static void build_room_vault(PlayerType *player_ptr, POSITION x0, POSITION y0, POSITION xsize, POSITION ysize)
 {
     POSITION x1, x2, y1, y2, xhsize, yhsize;
     int i;
@@ -219,7 +214,7 @@ static void build_room_vault(player_type *player_ptr, POSITION x0, POSITION y0, 
 }
 
 /* Create a random vault out of a fractal grid */
-static void build_cave_vault(player_type *player_ptr, POSITION x0, POSITION y0, POSITION xsiz, POSITION ysiz)
+static void build_cave_vault(PlayerType *player_ptr, POSITION x0, POSITION y0, POSITION xsiz, POSITION ysiz)
 {
     int grd, roug, cutoff;
     bool done, light, room;
@@ -317,7 +312,7 @@ static void coord_trans(POSITION *x, POSITION *y, POSITION xoffset, POSITION yof
  * @param transno 変換ID
  */
 static void build_vault(
-    player_type *player_ptr, POSITION yval, POSITION xval, POSITION ymax, POSITION xmax, concptr data, POSITION xoffset, POSITION yoffset, int transno)
+    PlayerType *player_ptr, POSITION yval, POSITION xval, POSITION ymax, POSITION xmax, concptr data, POSITION xoffset, POSITION yoffset, int transno)
 {
     POSITION dx, dy, x, y, i, j;
     concptr t;
@@ -431,7 +426,7 @@ static void build_vault(
                 /* Black market in a dungeon */
             case 'S':
                 set_cave_feat(floor_ptr, y, x, feat_black_market);
-                store_init(NO_TOWN, STORE_BLACK);
+                store_init(NO_TOWN, StoreSaleType::BLACK);
                 break;
 
                 /* The Pattern */
@@ -606,7 +601,7 @@ static void build_vault(
 /*!
  * @brief タイプ7の部屋…v_info.txtより小型vaultを生成する / Type 7 -- simple vaults (see "v_info.txt")
  */
-bool build_type7(player_type *player_ptr, dun_data_type *dd_ptr)
+bool build_type7(PlayerType *player_ptr, dun_data_type *dd_ptr)
 {
     vault_type *v_ptr = nullptr;
     int dummy;
@@ -618,7 +613,7 @@ bool build_type7(player_type *player_ptr, dun_data_type *dd_ptr)
     /* Pick a lesser vault */
     for (dummy = 0; dummy < SAFE_MAX_ATTEMPTS; dummy++) {
         /* Access a random vault record */
-        v_ptr = &v_info[randint0(max_v_idx)];
+        v_ptr = &v_info[randint0(v_info.size())];
 
         /* Accept the first lesser vault */
         if (v_ptr->typ == 7)
@@ -674,7 +669,7 @@ bool build_type7(player_type *player_ptr, dun_data_type *dd_ptr)
 /*!
  * @brief タイプ8の部屋…v_info.txtより大型vaultを生成する / Type 8 -- greater vaults (see "v_info.txt")
  */
-bool build_type8(player_type *player_ptr, dun_data_type *dd_ptr)
+bool build_type8(PlayerType *player_ptr, dun_data_type *dd_ptr)
 {
     vault_type *v_ptr;
     int dummy;
@@ -686,7 +681,7 @@ bool build_type8(player_type *player_ptr, dun_data_type *dd_ptr)
     /* Pick a greater vault */
     for (dummy = 0; dummy < SAFE_MAX_ATTEMPTS; dummy++) {
         /* Access a random vault record */
-        v_ptr = &v_info[randint0(max_v_idx)];
+        v_ptr = &v_info[randint0(v_info.size())];
 
         /* Accept the first greater vault */
         if (v_ptr->typ == 8)
@@ -750,7 +745,7 @@ bool build_type8(player_type *player_ptr, dun_data_type *dd_ptr)
  * This is made by two concentric "crypts" with perpendicular
  * walls creating the cross-hairs.
  */
-static void build_target_vault(player_type *player_ptr, POSITION x0, POSITION y0, POSITION xsize, POSITION ysize)
+static void build_target_vault(PlayerType *player_ptr, POSITION x0, POSITION y0, POSITION xsize, POSITION ysize)
 {
     POSITION rad, x, y;
 
@@ -854,7 +849,7 @@ static void build_target_vault(player_type *player_ptr, POSITION x0, POSITION y0
  *
  * Miniture rooms are then scattered across the vault.
  */
-static void build_elemental_vault(player_type *player_ptr, POSITION x0, POSITION y0, POSITION xsiz, POSITION ysiz)
+static void build_elemental_vault(PlayerType *player_ptr, POSITION x0, POSITION y0, POSITION xsiz, POSITION ysiz)
 {
     int grd, roug;
     int c1, c2, c3;
@@ -933,7 +928,7 @@ static void build_elemental_vault(player_type *player_ptr, POSITION x0, POSITION
  * The vault has two entrances on opposite sides to guarantee
  * a way to get in even if the vault abuts a side of the dungeon.
  */
-static void build_mini_c_vault(player_type *player_ptr, POSITION x0, POSITION y0, POSITION xsize, POSITION ysize)
+static void build_mini_c_vault(PlayerType *player_ptr, POSITION x0, POSITION y0, POSITION xsize, POSITION ysize)
 {
     POSITION dy, dx;
     POSITION y1, x1, y2, x2, y, x, total;
@@ -1044,7 +1039,7 @@ static void build_mini_c_vault(player_type *player_ptr, POSITION x0, POSITION y0
  *
  *This makes a vault that looks like a castle/ city in the dungeon.
  */
-static void build_castle_vault(player_type *player_ptr, POSITION x0, POSITION y0, POSITION xsize, POSITION ysize)
+static void build_castle_vault(PlayerType *player_ptr, POSITION x0, POSITION y0, POSITION xsize, POSITION ysize)
 {
     POSITION dy, dx;
     POSITION y1, x1, y2, x2;
@@ -1082,7 +1077,7 @@ static void build_castle_vault(player_type *player_ptr, POSITION x0, POSITION y0
  * @brief タイプ10の部屋…ランダム生成vault / Type 10 -- Random vaults
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-bool build_type10(player_type *player_ptr, dun_data_type *dd_ptr)
+bool build_type10(PlayerType *player_ptr, dun_data_type *dd_ptr)
 {
     POSITION y0, x0, xsize, ysize, vtype;
 
@@ -1098,7 +1093,7 @@ bool build_type10(player_type *player_ptr, dun_data_type *dd_ptr)
     /* Select type of vault */
     do {
         vtype = randint1(15);
-    } while (d_info[floor_ptr->dungeon_idx].flags.has(DF::NO_CAVE) && ((vtype == 1) || (vtype == 3) || (vtype == 8) || (vtype == 9) || (vtype == 11)));
+    } while (d_info[floor_ptr->dungeon_idx].flags.has(DungeonFeatureType::NO_CAVE) && ((vtype == 1) || (vtype == 3) || (vtype == 8) || (vtype == 9) || (vtype == 11)));
 
     switch (vtype) {
         /* Build an appropriate room */
@@ -1144,7 +1139,7 @@ bool build_type10(player_type *player_ptr, dun_data_type *dd_ptr)
 /*!
  * @brief タイプ17の部屋…v_info.txtより固定特殊部屋を生成する / Type 17 -- fixed special room (see "v_info.txt")
  */
-bool build_type17(player_type *player_ptr, dun_data_type *dd_ptr)
+bool build_type17(PlayerType *player_ptr, dun_data_type *dd_ptr)
 {
     vault_type *v_ptr = nullptr;
     int dummy;
@@ -1156,7 +1151,7 @@ bool build_type17(player_type *player_ptr, dun_data_type *dd_ptr)
     /* Pick a lesser vault */
     for (dummy = 0; dummy < SAFE_MAX_ATTEMPTS; dummy++) {
         /* Access a random vault record */
-        v_ptr = &v_info[randint0(max_v_idx)];
+        v_ptr = &v_info[randint0(v_info.size())];
 
         /* Accept the special fix room. */
         if (v_ptr->typ == 17)

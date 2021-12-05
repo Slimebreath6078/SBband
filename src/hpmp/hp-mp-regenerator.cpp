@@ -7,6 +7,9 @@
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags2.h"
 #include "monster/monster-status.h"
+#include "player-base/player-class.h"
+#include "player-info/magic-eater-data-type.h"
+#include "player-info/samurai-data-type.h"
 #include "player/attack-defense-types.h"
 #include "player/player-status-table.h"
 #include "player/special-defense-types.h"
@@ -23,9 +26,9 @@ int wild_regen = 20;
  * @brief プレイヤーのHP自然回復処理 / Regenerate hit points -RAK-
  * @param percent 回復比率
  */
-void regenhp(player_type *player_ptr, int percent)
+void regenhp(PlayerType *player_ptr, int percent)
 {
-    if (player_ptr->special_defense & KATA_KOUKIJIN)
+    if (PlayerClass(player_ptr).samurai_stance_is(SamuraiStanceType::KOUKIJIN))
         return;
     if (player_ptr->action == ACTION_HAYAGAKE)
         return;
@@ -58,7 +61,7 @@ void regenhp(player_type *player_ptr, int percent)
  * @param upkeep_factor ペット維持によるMPコスト量
  * @param regen_amount 回復量
  */
-void regenmana(player_type *player_ptr, MANA_POINT upkeep_factor, MANA_POINT regen_amount)
+void regenmana(PlayerType *player_ptr, MANA_POINT upkeep_factor, MANA_POINT regen_amount)
 {
     MANA_POINT old_csp = player_ptr->csp;
     int32_t regen_rate = regen_amount * 100 - upkeep_factor * PY_REGEN_NORMAL;
@@ -111,48 +114,49 @@ void regenmana(player_type *player_ptr, MANA_POINT upkeep_factor, MANA_POINT reg
 }
 
 /*!
- * @brief プレイヤーのMP自然回復処理 / Regenerate magic regen_amount: PY_REGEN_NORMAL * 2 (if resting) * 2 (if having regenarate)
+ * @brief 取り込んだ魔道具の自然回復処理 / Regenerate magic regen_amount: PY_REGEN_NORMAL * 2 (if resting) * 2 (if having regenarate)
  * @param regen_amount 回復量
  */
-void regenmagic(player_type *player_ptr, int regen_amount)
+void regenmagic(PlayerType *player_ptr, int regen_amount)
 {
-    MANA_POINT new_mana;
-    int dev = 30;
-    int mult = (dev + adj_mag_mana[player_ptr->stat_index[A_INT]]); /* x1 to x2 speed bonus for recharging */
+    auto magic_eater_data = PlayerClass(player_ptr).get_specific_data<magic_eater_data_type>();
+    if (!magic_eater_data) {
+        return;
+    }
 
-    for (int i = 0; i < EATER_EXT * 2; i++) {
-        if (!player_ptr->magic_num2[i])
+    const int dev = 30;
+    const int mult = (dev + adj_mag_mana[player_ptr->stat_index[A_INT]]); /* x1 to x2 speed bonus for recharging */
+
+    for (auto tval : { ItemKindType::STAFF, ItemKindType::WAND }) {
+        for (auto &item : magic_eater_data->get_item_group(tval)) {
+            const int maximum_charge = item.count * EATER_CHARGE;
+            if (item.count == 0 || item.charge == maximum_charge) {
+                continue;
+            }
+
+            /* Increase remaining charge number like float value */
+            auto new_mana = (regen_amount * mult * (item.count + 13)) / (dev * 8);
+            item.charge += new_mana;
+
+            /* Check maximum charge */
+            item.charge = std::min(item.charge, maximum_charge);
+        }
+    }
+
+    for (auto &item : magic_eater_data->get_item_group(ItemKindType::ROD)) {
+        if (item.count == 0 || item.charge == 0) {
             continue;
-        if (player_ptr->magic_num1[i] == ((long)player_ptr->magic_num2[i] << 16))
-            continue;
-
-        /* Increase remaining charge number like float value */
-        new_mana = (regen_amount * mult * ((long)player_ptr->magic_num2[i] + 13)) / (dev * 8);
-        player_ptr->magic_num1[i] += new_mana;
-
-        /* Check maximum charge */
-        if (player_ptr->magic_num1[i] > (player_ptr->magic_num2[i] << 16)) {
-            player_ptr->magic_num1[i] = ((long)player_ptr->magic_num2[i] << 16);
         }
 
-        wild_regen = 20;
-    }
-
-    for (int i = EATER_EXT * 2; i < EATER_EXT * 3; i++) {
-        if (!player_ptr->magic_num1[i])
-            continue;
-        if (!player_ptr->magic_num2[i])
-            continue;
-
         /* Decrease remaining period for charging */
-        new_mana = (regen_amount * mult * ((long)player_ptr->magic_num2[i] + 10) * EATER_ROD_CHARGE) / (dev * 16 * PY_REGEN_NORMAL);
-        player_ptr->magic_num1[i] -= new_mana;
+        auto new_mana = (regen_amount * mult * (item.count + 10) * EATER_ROD_CHARGE) / (dev * 16 * PY_REGEN_NORMAL);
+        item.charge -= new_mana;
 
         /* Check minimum remaining period for charging */
-        if (player_ptr->magic_num1[i] < 0)
-            player_ptr->magic_num1[i] = 0;
-        wild_regen = 20;
+        item.charge = std::max(item.charge, 0);
     }
+
+    wild_regen = 20;
 }
 
 /*!
@@ -160,7 +164,7 @@ void regenmagic(player_type *player_ptr, int regen_amount)
  * @param player_ptr プレイヤーへの参照ポインタ
  * @note Should probably be done during monster turns.
  */
-void regenerate_monsters(player_type *player_ptr)
+void regenerate_monsters(PlayerType *player_ptr)
 {
     for (int i = 1; i < player_ptr->current_floor_ptr->m_max; i++) {
         monster_type *m_ptr = &player_ptr->current_floor_ptr->m_list[i];
@@ -195,7 +199,7 @@ void regenerate_monsters(player_type *player_ptr)
  * @param player_ptr プレイヤーへの参照ポインタ
  * @note Should probably be done during monster turns.
  */
-void regenerate_captured_monsters(player_type *player_ptr)
+void regenerate_captured_monsters(PlayerType *player_ptr)
 {
     bool heal = false;
     for (int i = 0; i < INVEN_TOTAL; i++) {
@@ -203,7 +207,7 @@ void regenerate_captured_monsters(player_type *player_ptr)
         object_type *o_ptr = &player_ptr->inventory_list[i];
         if (!o_ptr->k_idx)
             continue;
-        if (o_ptr->tval != TV_CAPTURE)
+        if (o_ptr->tval != ItemKindType::CAPTURE)
             continue;
         if (!o_ptr->pval)
             continue;

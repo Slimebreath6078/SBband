@@ -43,7 +43,7 @@
  * @param player_ptr プレイヤーへの参照ポインタ
  * @return 各種賞金首のいずれかでも換金が行われたか否か。
  */
-bool exchange_cash(player_type *player_ptr)
+bool exchange_cash(PlayerType *player_ptr)
 {
     bool change = false;
     GAME_TEXT o_name[MAX_NLEN];
@@ -51,7 +51,7 @@ bool exchange_cash(player_type *player_ptr)
 
     for (INVENTORY_IDX i = 0; i <= INVEN_SUB_HAND; i++) {
         o_ptr = &player_ptr->inventory_list[i];
-        if ((o_ptr->tval == TV_CAPTURE) && (o_ptr->pval == MON_TSUCHINOKO)) {
+        if ((o_ptr->tval == ItemKindType::CAPTURE) && (o_ptr->pval == MON_TSUCHINOKO)) {
             char buf[MAX_NLEN + 32];
             describe_flavor(player_ptr, o_name, o_ptr, 0);
             sprintf(buf, _("%s を換金しますか？", "Convert %s into money? "), o_name);
@@ -68,7 +68,7 @@ bool exchange_cash(player_type *player_ptr)
 
     for (INVENTORY_IDX i = 0; i < INVEN_PACK; i++) {
         o_ptr = &player_ptr->inventory_list[i];
-        if ((o_ptr->tval == TV_CORPSE) && (o_ptr->sval == SV_CORPSE) && (o_ptr->pval == MON_TSUCHINOKO)) {
+        if ((o_ptr->tval == ItemKindType::CORPSE) && (o_ptr->sval == SV_CORPSE) && (o_ptr->pval == MON_TSUCHINOKO)) {
             char buf[MAX_NLEN + 32];
             describe_flavor(player_ptr, o_name, o_ptr, 0);
             sprintf(buf, _("%s を換金しますか？", "Convert %s into money? "), o_name);
@@ -85,7 +85,7 @@ bool exchange_cash(player_type *player_ptr)
 
     for (INVENTORY_IDX i = 0; i < INVEN_PACK; i++) {
         o_ptr = &player_ptr->inventory_list[i];
-        if ((o_ptr->tval == TV_CORPSE) && (o_ptr->sval == SV_SKELETON) && (o_ptr->pval == MON_TSUCHINOKO)) {
+        if ((o_ptr->tval == ItemKindType::CORPSE) && (o_ptr->sval == SV_SKELETON) && (o_ptr->pval == MON_TSUCHINOKO)) {
             char buf[MAX_NLEN + 32];
             describe_flavor(player_ptr, o_name, o_ptr, 0);
             sprintf(buf, _("%s を換金しますか？", "Convert %s into money? "), o_name);
@@ -102,7 +102,7 @@ bool exchange_cash(player_type *player_ptr)
 
     for (INVENTORY_IDX i = 0; i < INVEN_PACK; i++) {
         o_ptr = &player_ptr->inventory_list[i];
-        if ((o_ptr->tval == TV_CORPSE) && (o_ptr->sval == SV_CORPSE)
+        if ((o_ptr->tval == ItemKindType::CORPSE) && (o_ptr->sval == SV_CORPSE)
             && (streq(r_info[o_ptr->pval].name.c_str(), r_info[w_ptr->today_mon].name.c_str()))) {
             char buf[MAX_NLEN + 32];
             describe_flavor(player_ptr, o_name, o_ptr, 0);
@@ -122,7 +122,7 @@ bool exchange_cash(player_type *player_ptr)
     for (INVENTORY_IDX i = 0; i < INVEN_PACK; i++) {
         o_ptr = &player_ptr->inventory_list[i];
 
-        if ((o_ptr->tval == TV_CORPSE) && (o_ptr->sval == SV_SKELETON)
+        if ((o_ptr->tval == ItemKindType::CORPSE) && (o_ptr->sval == SV_SKELETON)
             && (streq(r_info[o_ptr->pval].name.c_str(), r_info[w_ptr->today_mon].name.c_str()))) {
             char buf[MAX_NLEN + 32];
             describe_flavor(player_ptr, o_name, o_ptr, 0);
@@ -141,7 +141,7 @@ bool exchange_cash(player_type *player_ptr)
     for (int j = 0; j < MAX_BOUNTY; j++) {
         for (INVENTORY_IDX i = INVEN_PACK - 1; i >= 0; i--) {
             o_ptr = &player_ptr->inventory_list[i];
-            if ((o_ptr->tval != TV_CORPSE) || (o_ptr->pval != w_ptr->bounty_r_idx[j]))
+            if ((o_ptr->tval != ItemKindType::CORPSE) || (o_ptr->pval != w_ptr->bounty_r_idx[j]))
                 continue;
 
             char buf[MAX_NLEN + 20];
@@ -198,7 +198,7 @@ bool exchange_cash(player_type *player_ptr)
  * @brief 本日の賞金首情報を表示する。
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void today_target(player_type *player_ptr)
+void today_target(PlayerType *player_ptr)
 {
     char buf[160];
     monster_race *r_ptr = &r_info[w_ptr->today_mon];
@@ -266,10 +266,10 @@ void show_bounty(void)
 
 /*!
  * @brief 今日の賞金首を確定する / Determine today's bounty monster
- * @param player_type プレイヤーへの参照ポインタ
+ * @param PlayerType プレイヤーへの参照ポインタ
  * @note conv_old is used if loaded 0.0.3 or older save file
  */
-void determine_daily_bounty(player_type *player_ptr, bool conv_old)
+void determine_daily_bounty(PlayerType *player_ptr, bool conv_old)
 {
     int max_dl = 3;
     if (!conv_old) {
@@ -280,13 +280,13 @@ void determine_daily_bounty(player_type *player_ptr, bool conv_old)
                 max_dl = max_dlv[d_ref.idx];
         }
     } else {
-        max_dl = MAX(max_dlv[DUNGEON_ANGBAND], 3);
+        max_dl = std::max(max_dlv[DUNGEON_ANGBAND], 3);
     }
 
     get_mon_num_prep_bounty(player_ptr);
 
     while (true) {
-        w_ptr->today_mon = get_mon_num(player_ptr, MIN(max_dl / 2, 40), max_dl, GMN_ARENA);
+        w_ptr->today_mon = get_mon_num(player_ptr, std::min(max_dl / 2, 40), max_dl, GMN_ARENA);
         monster_race *r_ptr;
         r_ptr = &r_info[w_ptr->today_mon];
 
@@ -315,7 +315,7 @@ void determine_daily_bounty(player_type *player_ptr, bool conv_old)
  * @brief 賞金首となるユニークを確定する / Determine bounty uniques
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void determine_bounty_uniques(player_type *player_ptr)
+void determine_bounty_uniques(PlayerType *player_ptr)
 {
     get_mon_num_prep_bounty(player_ptr);
 

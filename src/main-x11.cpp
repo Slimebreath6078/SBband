@@ -108,6 +108,7 @@
 #include "util/bit-flags-calculator.h"
 #include "util/int-char-converter.h"
 #include "util/string-processor.h"
+#include <algorithm>
 
 /*
  * Available graphic modes
@@ -554,7 +555,7 @@ static errr Infowin_prepare(Window xid)
 static errr Infowin_init_data(Window dad, int x, int y, int w, int h, int b, Pixell fg, Pixell bg)
 {
     Window xid;
-    (void)WIPE(Infowin, infowin);
+    *Infowin = {};
     if (dad == None)
         dad = Metadpy->root;
 
@@ -720,7 +721,7 @@ static errr Infoclr_init_data(Pixell fg, Pixell bg, int op, int stip)
     gc = XCreateGC(Metadpy->dpy, Metadpy->root, gc_mask, &gcv);
 #endif
 
-    (void)WIPE(iclr, infoclr);
+    *iclr = {};
 
 #ifndef USE_XFT
     iclr->gc = gc;
@@ -856,7 +857,7 @@ static void Infofnt_init_data(concptr name)
     if (!info)
         quit_fmt("Failed to find font:\"%s\"", name);
 
-    (void)WIPE(Infofnt, infofnt);
+    *Infofnt = {};
     if (Infofnt_prepare(info)) {
 #ifdef USE_XFT
         XftFontClose(Metadpy->dpy, info);
@@ -1182,10 +1183,10 @@ static void square_to_pixel(int *const x, int *const y, const int ox, const int 
  */
 static void sort_co_ord(co_ord *min, co_ord *max, const co_ord *b, const co_ord *a)
 {
-    min->x = MIN(a->x, b->x);
-    min->y = MIN(a->y, b->y);
-    max->x = MAX(a->x, b->x);
-    max->y = MAX(a->y, b->y);
+    min->x = std::min(a->x, b->x);
+    min->y = std::min(a->y, b->y);
+    max->x = std::max(a->x, b->x);
+    max->y = std::max(a->y, b->y);
 }
 
 /*

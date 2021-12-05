@@ -1,7 +1,15 @@
 ﻿#include "window/main-window-stat-poster.h"
+#include "game-option/game-play-options.h"
 #include "io/input-key-requester.h"
 #include "mind/stances-table.h"
 #include "monster/monster-status.h"
+#include "player-base/player-class.h"
+#include "player-info/bluemage-data-type.h"
+#include "player-info/mane-data-type.h"
+#include "player-info/monk-data-type.h"
+#include "player-info/ninja-data-type.h"
+#include "player-info/samurai-data-type.h"
+#include "player-info/sniper-data-type.h"
 #include "player/attack-defense-types.h"
 #include "player/digestion-processor.h"
 #include "player/player-status-table.h"
@@ -15,11 +23,11 @@
 #include "system/player-type-definition.h"
 #include "term/screen-processor.h"
 #include "term/term-color-types.h"
+#include "timed-effect/player-cut.h"
 #include "timed-effect/player-stun.h"
 #include "timed-effect/timed-effects.h"
-#include "window/main-window-row-column.h"
 #include "view/status-bars-table.h"
-#include "world/world.h"
+#include "window/main-window-row-column.h"
 
 /*!
  * @brief 32ビット変数配列の指定位置のビットフラグを1にする。
@@ -38,7 +46,7 @@
  * @brief プレイヤー能力値を描画する / Print character stat in given row, column
  * @param stat 描画するステータスのID
  */
-void print_stat(player_type *player_ptr, int stat)
+void print_stat(PlayerType *player_ptr, int stat)
 {
     GAME_TEXT tmp[32];
     if (player_ptr->stat_cur[stat] < player_ptr->stat_max[stat]) {
@@ -65,52 +73,23 @@ void print_stat(player_type *player_ptr, int stat)
 /*!
  * @brief プレイヤーの負傷状態を表示する
  */
-void print_cut(player_type *player_ptr)
+void print_cut(PlayerType *player_ptr)
 {
-    int c = player_ptr->cut;
-    if (c > 1000) {
-        c_put_str(TERM_L_RED, _("致命傷      ", "Mortal wound"), ROW_CUT, COL_CUT);
+    auto player_cut = player_ptr->effects()->cut();
+    if (!player_cut->is_cut()) {
+        put_str("            ", ROW_CUT, COL_CUT);
         return;
     }
 
-    if (c > 200) {
-        c_put_str(TERM_RED, _("ひどい深手  ", "Deep gash   "), ROW_CUT, COL_CUT);
-        return;
-    }
-
-    if (c > 100) {
-        c_put_str(TERM_RED, _("重傷        ", "Severe cut  "), ROW_CUT, COL_CUT);
-        return;
-    }
-
-    if (c > 50) {
-        c_put_str(TERM_ORANGE, _("大変な傷    ", "Nasty cut   "), ROW_CUT, COL_CUT);
-        return;
-    }
-
-    if (c > 25) {
-        c_put_str(TERM_ORANGE, _("ひどい傷    ", "Bad cut     "), ROW_CUT, COL_CUT);
-        return;
-    }
-
-    if (c > 10) {
-        c_put_str(TERM_YELLOW, _("軽傷        ", "Light cut   "), ROW_CUT, COL_CUT);
-        return;
-    }
-
-    if (c) {
-        c_put_str(TERM_YELLOW, _("かすり傷    ", "Graze       "), ROW_CUT, COL_CUT);
-        return;
-    }
-
-    put_str("            ", ROW_CUT, COL_CUT);
+    auto [color, stat] = player_cut->get_expr();
+    c_put_str(color, stat.data(), ROW_CUT, COL_CUT);
 }
 
 /*!
  * @brief プレイヤーの朦朧状態を表示する
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void print_stun(player_type *player_ptr)
+void print_stun(PlayerType *player_ptr)
 {
     auto player_stun = player_ptr->effects()->stun();
     if (!player_stun->is_stunned()) {
@@ -126,9 +105,9 @@ void print_stun(player_type *player_ptr)
  * @brief プレイヤーの空腹状態を表示する / Prints status of hunger
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void print_hunger(player_type *player_ptr)
+void print_hunger(PlayerType *player_ptr)
 {
-    if (w_ptr->wizard && player_ptr->current_floor_ptr->inside_arena)
+    if (allow_debug_options && player_ptr->current_floor_ptr->inside_arena)
         return;
 
     if (player_ptr->food < PY_FOOD_FAINT) {
@@ -167,7 +146,7 @@ void print_hunger(player_type *player_ptr)
  * This function was a major bottleneck when resting, so a lot of
  * the text formatting code was optimized in place below.
  */
-void print_state(player_type *player_ptr)
+void print_state(PlayerType *player_ptr)
 {
     TERM_COLOR attr = TERM_WHITE;
     GAME_TEXT text[16];
@@ -201,7 +180,8 @@ void print_state(player_type *player_ptr)
 
     case ACTION_LEARN: {
         strcpy(text, _("学習", "lear"));
-        if (player_ptr->new_mane)
+        auto bluemage_data = PlayerClass(player_ptr).get_specific_data<bluemage_data_type>();
+        if (bluemage_data->new_magic_learned)
             attr = TERM_L_RED;
         break;
     }
@@ -209,36 +189,34 @@ void print_state(player_type *player_ptr)
         strcpy(text, _("釣り", "fish"));
         break;
     }
-    case ACTION_KAMAE: {
-        int i;
-        for (i = 0; i < MAX_KAMAE; i++)
-            if (player_ptr->special_defense & (KAMAE_GENBU << i))
+    case ACTION_MONK_STANCE: {
+        if (auto stance = PlayerClass(player_ptr).get_monk_stance();
+            stance != MonkStanceType::NONE) {
+            switch (stance) {
+            case MonkStanceType::GENBU:
+                attr = TERM_GREEN;
                 break;
-        switch (i) {
-        case 0:
-            attr = TERM_GREEN;
-            break;
-        case 1:
-            attr = TERM_WHITE;
-            break;
-        case 2:
-            attr = TERM_L_BLUE;
-            break;
-        case 3:
-            attr = TERM_L_RED;
-            break;
+            case MonkStanceType::BYAKKO:
+                attr = TERM_WHITE;
+                break;
+            case MonkStanceType::SEIRYU:
+                attr = TERM_L_BLUE;
+                break;
+            case MonkStanceType::SUZAKU:
+                attr = TERM_L_RED;
+                break;
+            default:
+                break;
+            }
+            strcpy(text, monk_stances[enum2i(stance) - 1].desc);
         }
-
-        strcpy(text, monk_stances[i].desc);
         break;
     }
-    case ACTION_KATA: {
-        int i;
-        for (i = 0; i < MAX_KATA; i++)
-            if (player_ptr->special_defense & (KATA_IAI << i))
-                break;
-
-        strcpy(text, samurai_stances[i].desc);
+    case ACTION_SAMURAI_STANCE: {
+        if (auto stance = PlayerClass(player_ptr).get_samurai_stance();
+            stance != SamuraiStanceType::NONE) {
+            strcpy(text, samurai_stances[enum2i(stance) - 1].desc);
+        }
         break;
     }
     case ACTION_SING: {
@@ -266,7 +244,7 @@ void print_state(player_type *player_ptr)
  * @brief プレイヤーの行動速度を表示する / Prints the speed_value of a character.			-CJS-
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void print_speed(player_type *player_ptr)
+void print_speed(PlayerType *player_ptr)
 {
     TERM_LEN wid, hgt;
     term_get_size(&wid, &hgt);
@@ -323,7 +301,7 @@ void print_speed(player_type *player_ptr)
  * @brief プレイヤーの呪文学習可能状態を表示する
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void print_study(player_type *player_ptr)
+void print_study(PlayerType *player_ptr)
 {
     TERM_LEN wid, hgt;
     term_get_size(&wid, &hgt);
@@ -341,22 +319,24 @@ void print_study(player_type *player_ptr)
  * @brief プレイヤーのものまね可能状態を表示する
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void print_imitation(player_type *player_ptr)
+void print_imitation(PlayerType *player_ptr)
 {
     TERM_LEN wid, hgt;
     term_get_size(&wid, &hgt);
     TERM_LEN col_study = wid + COL_STUDY;
     TERM_LEN row_study = hgt + ROW_STUDY;
 
-    if (player_ptr->pclass != CLASS_IMITATOR)
+    if (player_ptr->pclass != PlayerClassType::IMITATOR)
         return;
 
-    if (player_ptr->mane_num == 0) {
+    auto mane_data = PlayerClass(player_ptr).get_specific_data<mane_data_type>();
+
+    if (mane_data->mane_list.size() == 0) {
         put_str("    ", row_study, col_study);
         return;
     }
 
-    TERM_COLOR attr = player_ptr->new_mane ? TERM_L_RED : TERM_WHITE;
+    TERM_COLOR attr = mane_data->new_mane ? TERM_L_RED : TERM_WHITE;
     c_put_str(attr, _("まね", "Imit"), row_study, col_study);
 }
 
@@ -365,7 +345,7 @@ void print_imitation(player_type *player_ptr)
  * @param player_ptr プレイヤーへの参照ポインタ
  * @bar_flags 表示可否を決めるためのフラグ群
  */
-static void add_hex_status_flags(player_type *player_ptr, BIT_FLAGS *bar_flags)
+static void add_hex_status_flags(PlayerType *player_ptr, BIT_FLAGS *bar_flags)
 {
     if (player_ptr->realm1 != REALM_HEX) {
         return;
@@ -453,7 +433,7 @@ static void add_hex_status_flags(player_type *player_ptr, BIT_FLAGS *bar_flags)
 /*!
  * @brief 下部に状態表示を行う / Show status bar
  */
-void print_status(player_type *player_ptr)
+void print_status(PlayerType *player_ptr)
 {
     TERM_LEN wid, hgt;
     term_get_size(&wid, &hgt);
@@ -486,8 +466,8 @@ void print_status(player_type *player_ptr)
     if (player_ptr->tim_invis)
         ADD_BAR_FLAG(BAR_SENSEUNSEEN);
 
-    if (player_ptr->concent >= CONCENT_RADAR_THRESHOLD)
-    {
+    auto sniper_data = PlayerClass(player_ptr).get_specific_data<sniper_data_type>();
+    if (sniper_data && (sniper_data->concent >= CONCENT_RADAR_THRESHOLD)) {
         ADD_BAR_FLAG(BAR_SENSEUNSEEN);
         ADD_BAR_FLAG(BAR_NIGHTSIGHT);
     }
@@ -534,7 +514,8 @@ void print_status(player_type *player_ptr)
     if (player_ptr->shield)
         ADD_BAR_FLAG(BAR_STONESKIN);
 
-    if (player_ptr->special_defense & NINJA_KAWARIMI)
+    auto ninja_data = PlayerClass(player_ptr).get_specific_data<ninja_data_type>();
+    if (ninja_data && ninja_data->kawarimi)
         ADD_BAR_FLAG(BAR_KAWARIMI);
 
     if (player_ptr->special_defense & DEFENSE_ACID)
@@ -603,7 +584,7 @@ void print_status(player_type *player_ptr)
         ADD_BAR_FLAG(BAR_ATTKACID);
     if (player_ptr->special_attack & ATTACK_POIS)
         ADD_BAR_FLAG(BAR_ATTKPOIS);
-    if (player_ptr->special_defense & NINJA_S_STEALTH)
+    if (ninja_data && ninja_data->s_stealth)
         ADD_BAR_FLAG(BAR_SUPERSTEALTH);
 
     if (player_ptr->tim_sh_fire)
@@ -671,7 +652,7 @@ void print_status(player_type *player_ptr)
  * @brief プレイヤーのステータスを一括表示する（下部分） / Display extra info (mostly below map)
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void print_frame_extra(player_type *player_ptr)
+void print_frame_extra(PlayerType *player_ptr)
 {
     print_cut(player_ptr);
     print_stun(player_ptr);

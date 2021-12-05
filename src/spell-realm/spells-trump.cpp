@@ -26,7 +26,7 @@
  * @brief トランプ領域の「シャッフル」の効果をランダムに決めて処理する。
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void cast_shuffle(player_type *player_ptr)
+void cast_shuffle(PlayerType *player_ptr)
 {
     PLAYER_LEVEL plev = player_ptr->lev;
     DIRECTION dir;
@@ -34,7 +34,7 @@ void cast_shuffle(player_type *player_ptr)
     int vir = virtue_number(player_ptr, V_CHANCE);
     int i;
 
-    if ((player_ptr->pclass == CLASS_ROGUE) || (player_ptr->pclass == CLASS_HIGH_MAGE) || (player_ptr->pclass == CLASS_SORCERER))
+    if ((player_ptr->pclass == PlayerClassType::ROGUE) || (player_ptr->pclass == PlayerClassType::HIGH_MAGE) || (player_ptr->pclass == PlayerClassType::SORCERER))
         die = (randint1(110)) + plev / 5;
     else
         die = randint1(120);
@@ -95,7 +95,7 @@ void cast_shuffle(player_type *player_ptr)
     if (die < 30) {
         msg_print(_("奇妙なモンスターの絵だ。", "It's the picture of a strange monster."));
         trump_summoning(player_ptr, 1, false, player_ptr->y, player_ptr->x, (floor_ptr->dun_level * 3 / 2),
-            i2enum<summon_type>(SUMMON_UNIQUE + randint1(6)), PM_ALLOW_GROUP | PM_ALLOW_UNIQUE);
+            SUMMON_UNIQUE + randint1(6), PM_ALLOW_GROUP | PM_ALLOW_UNIQUE);
         return;
     }
 
@@ -181,7 +181,7 @@ void cast_shuffle(player_type *player_ptr)
         msg_print(_("《恋人》だ。", "It's the Lovers."));
 
         if (get_aim_dir(player_ptr, &dir)) {
-            charm_monster(player_ptr, dir, MIN(player_ptr->lev, 20));
+            charm_monster(player_ptr, dir, std::min<short>(player_ptr->lev, 20));
         }
 
         return;
@@ -220,7 +220,7 @@ void cast_shuffle(player_type *player_ptr)
     gain_exp(player_ptr, ee);
 }
 
-void become_living_trump(player_type *player_ptr)
+void become_living_trump(PlayerType *player_ptr)
 {
     /* 1/7 Teleport control and 6/7 Random teleportation (uncontrolled) */
     MUTATION_IDX mutation = one_in_(7) ? 12 : 77;

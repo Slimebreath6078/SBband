@@ -39,7 +39,7 @@
  * Future versions may restrict the ability to target "trappers"
  * and "mimics", but the semantics is a little bit weird.
  */
-bool target_able(player_type *player_ptr, MONSTER_IDX m_idx)
+bool target_able(PlayerType *player_ptr, MONSTER_IDX m_idx)
 {
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
     monster_type *m_ptr = &floor_ptr->m_list[m_idx];
@@ -64,7 +64,7 @@ bool target_able(player_type *player_ptr, MONSTER_IDX m_idx)
 /*
  * Determine if a given location is "interesting"
  */
-static bool target_set_accept(player_type *player_ptr, POSITION y, POSITION x)
+static bool target_set_accept(PlayerType *player_ptr, POSITION y, POSITION x)
 {
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
     if (!(in_bounds(floor_ptr, y, x)))
@@ -95,7 +95,7 @@ static bool target_set_accept(player_type *player_ptr, POSITION y, POSITION x)
         if (g_ptr->is_object())
             return true;
 
-        if (f_info[g_ptr->get_feat_mimic()].flags.has(FF::NOTICE))
+        if (f_info[g_ptr->get_feat_mimic()].flags.has(FloorFeatureType::NOTICE))
             return true;
     }
 
@@ -111,14 +111,14 @@ static bool target_set_accept(player_type *player_ptr, POSITION y, POSITION x)
  *
  * ys, xs は処理開始時にクリアされる。
  */
-void target_set_prepare(player_type *player_ptr, std::vector<POSITION> &ys, std::vector<POSITION> &xs, const BIT_FLAGS mode)
+void target_set_prepare(PlayerType *player_ptr, std::vector<POSITION> &ys, std::vector<POSITION> &xs, const BIT_FLAGS mode)
 {
     POSITION min_hgt, max_hgt, min_wid, max_wid;
     if (mode & TARGET_KILL) {
-        min_hgt = MAX((player_ptr->y - get_max_range(player_ptr)), 0);
-        max_hgt = MIN((player_ptr->y + get_max_range(player_ptr)), player_ptr->current_floor_ptr->height - 1);
-        min_wid = MAX((player_ptr->x - get_max_range(player_ptr)), 0);
-        max_wid = MIN((player_ptr->x + get_max_range(player_ptr)), player_ptr->current_floor_ptr->width - 1);
+        min_hgt = std::max((player_ptr->y - get_max_range(player_ptr)), 0);
+        max_hgt = std::min((player_ptr->y + get_max_range(player_ptr)), player_ptr->current_floor_ptr->height - 1);
+        min_wid = std::max((player_ptr->x - get_max_range(player_ptr)), 0);
+        max_wid = std::min((player_ptr->x + get_max_range(player_ptr)), player_ptr->current_floor_ptr->width - 1);
     } else {
         min_hgt = panel_row_min;
         max_hgt = panel_row_max;
@@ -163,7 +163,7 @@ void target_set_prepare(player_type *player_ptr, std::vector<POSITION> &ys, std:
     std::swap(xs[0], xs[1]);
 }
 
-void target_sensing_monsters_prepare(player_type *player_ptr, std::vector<MONSTER_IDX> &monster_list)
+void target_sensing_monsters_prepare(PlayerType *player_ptr, std::vector<MONSTER_IDX> &monster_list)
 {
     monster_list.clear();
 
@@ -177,7 +177,7 @@ void target_sensing_monsters_prepare(player_type *player_ptr, std::vector<MONSTE
             continue;
 
         // 感知魔法/スキルやESPで感知していない擬態モンスターはモンスター一覧に表示しない
-        if (is_mimicry(m_ptr) && m_ptr->mflag2.has_none_of({ MFLAG2::MARK, MFLAG2::SHOW }) && m_ptr->mflag.has_not(MFLAG::ESP))
+        if (is_mimicry(m_ptr) && m_ptr->mflag2.has_none_of({ MonsterConstantFlagType::MARK, MonsterConstantFlagType::SHOW }) && m_ptr->mflag.has_not(MonsterTemporaryFlagType::ESP))
             continue;
 
         monster_list.push_back(i);
@@ -194,8 +194,8 @@ void target_sensing_monsters_prepare(player_type *player_ptr, std::vector<MONSTE
             return ap_r_ptr1->race_kind_flags.has(MonraceKindType::UNIQUE);
 
         /* Shadowers first (あやしい影) */
-        if (m_ptr1->mflag2.has(MFLAG2::KAGE) != m_ptr2->mflag2.has(MFLAG2::KAGE))
-            return m_ptr1->mflag2.has(MFLAG2::KAGE);
+        if (m_ptr1->mflag2.has(MonsterConstantFlagType::KAGE) != m_ptr2->mflag2.has(MonsterConstantFlagType::KAGE))
+            return m_ptr1->mflag2.has(MonsterConstantFlagType::KAGE);
 
         /* Unknown monsters first */
         if ((ap_r_ptr1->r_tkills == 0) != (ap_r_ptr2->r_tkills == 0))

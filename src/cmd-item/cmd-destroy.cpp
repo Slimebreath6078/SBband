@@ -20,6 +20,8 @@
 #include "object/item-use-flags.h"
 #include "object/object-stack.h"
 #include "object/object-value.h"
+#include "player-base/player-class.h"
+#include "player-info/samurai-data-type.h"
 #include "player-status/player-energy.h"
 #include "player/attack-defense-types.h"
 #include "player/special-defense-types.h"
@@ -52,7 +54,7 @@ static destroy_type *initialize_destroy_type(destroy_type *destroy_ptr, object_t
     return destroy_ptr;
 }
 
-static bool check_destory_item(player_type *player_ptr, destroy_type *destroy_ptr)
+static bool check_destory_item(PlayerType *player_ptr, destroy_type *destroy_ptr)
 {
     if (destroy_ptr->force || (!confirm_destroy && (object_value(destroy_ptr->o_ptr) <= 0)))
         return true;
@@ -83,7 +85,7 @@ static bool check_destory_item(player_type *player_ptr, destroy_type *destroy_pt
     }
 }
 
-static bool select_destroying_item(player_type *player_ptr, destroy_type *destroy_ptr)
+static bool select_destroying_item(PlayerType *player_ptr, destroy_type *destroy_ptr)
 {
     concptr q = _("どのアイテムを壊しますか? ", "Destroy which item? ");
     concptr s = _("壊せるアイテムを持っていない。", "You have nothing to destroy.");
@@ -107,15 +109,15 @@ static bool select_destroying_item(player_type *player_ptr, destroy_type *destro
  * @param destory_ptr アイテム破壊構造体への参照ポインタ
  * return 魔法書の破壊によって経験値が入るならばTRUE
  */
-static bool decide_magic_book_exp(player_type *player_ptr, destroy_type *destroy_ptr)
+static bool decide_magic_book_exp(PlayerType *player_ptr, destroy_type *destroy_ptr)
 {
-    if (player_ptr->prace == player_race_type::ANDROID)
+    if (player_ptr->prace == PlayerRaceType::ANDROID)
         return false;
 
-    if ((player_ptr->pclass == CLASS_WARRIOR) || (player_ptr->pclass == CLASS_BERSERKER))
+    if ((player_ptr->pclass == PlayerClassType::WARRIOR) || (player_ptr->pclass == PlayerClassType::BERSERKER))
         return true;
 
-    if (player_ptr->pclass != CLASS_PALADIN)
+    if (player_ptr->pclass != PlayerClassType::PALADIN)
         return false;
 
     bool gain_expr = false;
@@ -130,7 +132,7 @@ static bool decide_magic_book_exp(player_type *player_ptr, destroy_type *destroy
     return gain_expr;
 }
 
-static void gain_exp_by_destroying_magic_book(player_type *player_ptr, destroy_type *destroy_ptr)
+static void gain_exp_by_destroying_magic_book(PlayerType *player_ptr, destroy_type *destroy_ptr)
 {
     bool gain_expr = decide_magic_book_exp(player_ptr, destroy_ptr);
     if (!gain_expr || (player_ptr->exp >= PY_MAX_EXP))
@@ -150,16 +152,16 @@ static void gain_exp_by_destroying_magic_book(player_type *player_ptr, destroy_t
     gain_exp(player_ptr, tester_exp * destroy_ptr->amt);
 }
 
-static void process_destroy_magic_book(player_type *player_ptr, destroy_type *destroy_ptr)
+static void process_destroy_magic_book(PlayerType *player_ptr, destroy_type *destroy_ptr)
 {
     if (!item_tester_high_level_book(destroy_ptr->q_ptr))
         return;
 
     gain_exp_by_destroying_magic_book(player_ptr, destroy_ptr);
-    if (item_tester_high_level_book(destroy_ptr->q_ptr) && destroy_ptr->q_ptr->tval == TV_LIFE_BOOK) {
+    if (item_tester_high_level_book(destroy_ptr->q_ptr) && destroy_ptr->q_ptr->tval == ItemKindType::LIFE_BOOK) {
         chg_virtue(player_ptr, V_UNLIFE, 1);
         chg_virtue(player_ptr, V_VITALITY, -1);
-    } else if (item_tester_high_level_book(destroy_ptr->q_ptr) && destroy_ptr->q_ptr->tval == TV_DEATH_BOOK) {
+    } else if (item_tester_high_level_book(destroy_ptr->q_ptr) && destroy_ptr->q_ptr->tval == ItemKindType::DEATH_BOOK) {
         chg_virtue(player_ptr, V_UNLIFE, -1);
         chg_virtue(player_ptr, V_VITALITY, 1);
     }
@@ -173,7 +175,7 @@ static void process_destroy_magic_book(player_type *player_ptr, destroy_type *de
         chg_virtue(player_ptr, V_SACRIFICE, 1);
 }
 
-static void exe_destroy_item(player_type *player_ptr, destroy_type *destroy_ptr)
+static void exe_destroy_item(PlayerType *player_ptr, destroy_type *destroy_ptr)
 {
     destroy_ptr->q_ptr->copy_from(destroy_ptr->o_ptr);
     msg_format(_("%sを壊した。", "You destroy %s."), destroy_ptr->o_name);
@@ -192,10 +194,9 @@ static void exe_destroy_item(player_type *player_ptr, destroy_type *destroy_ptr)
  * @brief アイテムを破壊するコマンドのメインルーチン / Destroy an item
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void do_cmd_destroy(player_type *player_ptr)
+void do_cmd_destroy(PlayerType *player_ptr)
 {
-    if (player_ptr->special_defense & KATA_MUSOU)
-        set_action(player_ptr, ACTION_NONE);
+    PlayerClass(player_ptr).break_samurai_stance({ SamuraiStanceType::MUSOU });
 
     object_type forge;
     destroy_type tmp_destroy;

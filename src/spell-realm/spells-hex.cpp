@@ -7,6 +7,8 @@
 #include "effect/effect-processor.h"
 #include "monster-attack/monster-attack-util.h"
 #include "monster-race/monster-race.h"
+#include "player-base/player-class.h"
+#include "player-info/spell-hex-data-type.h"
 #include "player/attack-defense-types.h"
 #include "player/player-skill.h"
 #include "realm/realm-hex-numbers.h"
@@ -14,7 +16,7 @@
 #include "spell-realm/spells-crusade.h"
 #include "spell-realm/spells-song.h"
 #include "spell/spell-info.h"
-#include "spell/spell-types.h"
+#include "effect/attribute-types.h"
 #include "spell/spells-execution.h"
 #include "spell/technic-info-table.h"
 #include "status/action-setter.h"
@@ -33,27 +35,27 @@
 #include "monster/monster-description-types.h"
 #endif
 
-#include <bitset>
+#include <iterator>
 
 /*!< 呪術の最大詠唱数 */
 constexpr int MAX_KEEP = 4;
 
-SpellHex::SpellHex(player_type *player_ptr)
+SpellHex::SpellHex(PlayerType *player_ptr)
     : player_ptr(player_ptr)
+    , spell_hex_data(PlayerClass(player_ptr).get_specific_data<spell_hex_data_type>())
 {
-    constexpr int max_realm_spells = 32;
-    for (auto spell = 0; spell < max_realm_spells; spell++) {
-        if (this->is_spelling_specific(spell)) {
-            this->casting_spells.push_back(spell);
-        }
+    if (!this->spell_hex_data) {
+        return;
     }
+
+    HexSpellFlagGroup::get_flags(this->spell_hex_data->casting_spells, std::back_inserter(this->casting_spells));
 
     if (this->casting_spells.size() > MAX_KEEP) {
         throw("Invalid numbers of hex magics keep!");
     }
 }
 
-SpellHex::SpellHex(player_type *player_ptr, monap_type *monap_ptr)
+SpellHex::SpellHex(PlayerType *player_ptr, monap_type *monap_ptr)
     : player_ptr(player_ptr)
     , monap_ptr(monap_ptr)
 {
@@ -65,10 +67,10 @@ SpellHex::SpellHex(player_type *player_ptr, monap_type *monap_ptr)
 void SpellHex::stop_all_spells()
 {
     for (auto spell : this->casting_spells) {
-        exe_spell(this->player_ptr, REALM_HEX, spell, SPELL_STOP);
+        exe_spell(this->player_ptr, REALM_HEX, spell, SpellProcessType::STOP);
     }
 
-    this->player_ptr->magic_num1[0] = 0;
+    this->spell_hex_data->casting_spells.clear();
     if (this->player_ptr->action == ACTION_SPELL) {
         set_action(this->player_ptr, ACTION_NONE);
     }
@@ -106,7 +108,7 @@ bool SpellHex::stop_spells_with_selection()
     screen_load();
     if (is_selected) {
         auto n = this->casting_spells[A2I(choice)];
-        exe_spell(this->player_ptr, REALM_HEX, n, SPELL_STOP);
+        exe_spell(this->player_ptr, REALM_HEX, n, SpellProcessType::STOP);
         this->reset_casting_flag(i2enum<spell_hex_type>(n));
     }
 
@@ -159,7 +161,7 @@ void SpellHex::display_casting_spells_list()
     prt(_("     名前", "     Name"), y, x + 5);
     for (auto spell : this->casting_spells) {
         term_erase(x, y + n + 1, 255);
-        auto spell_result = exe_spell(this->player_ptr, REALM_HEX, spell, SPELL_NAME);
+        auto spell_result = exe_spell(this->player_ptr, REALM_HEX, spell, SpellProcessType::NAME);
         put_str(format("%c)  %s", I2A(n), spell_result), y + n + 1, x + 2);
         n++;
     }
@@ -170,11 +172,11 @@ void SpellHex::display_casting_spells_list()
  */
 void SpellHex::decrease_mana()
 {
-    if (this->player_ptr->realm1 != REALM_HEX) {
+    if (!this->spell_hex_data) {
         return;
     }
 
-    if (!this->is_spelling_any() && !this->player_ptr->magic_num1[1]) {
+    if (this->spell_hex_data->casting_spells.none() && this->spell_hex_data->interrupting_spells.none()) {
         return;
     }
 
@@ -190,7 +192,7 @@ void SpellHex::decrease_mana()
 
     this->gain_exp();
     for (auto spell : this->casting_spells) {
-        exe_spell(this->player_ptr, REALM_HEX, spell, SPELL_CONTNUATION);
+        exe_spell(this->player_ptr, REALM_HEX, spell, SpellProcessType::CONTNUATION);
     }
 }
 
@@ -230,12 +232,12 @@ bool SpellHex::process_mana_cost(const bool need_restart)
 
 bool SpellHex::check_restart()
 {
-    if (this->player_ptr->magic_num1[1] == 0) {
+    if (this->spell_hex_data->interrupting_spells.none()) {
         return false;
     }
 
-    this->player_ptr->magic_num1[0] = this->player_ptr->magic_num1[1];
-    this->player_ptr->magic_num1[1] = 0;
+    this->spell_hex_data->casting_spells = this->spell_hex_data->interrupting_spells;
+    this->spell_hex_data->interrupting_spells.clear();
     return true;
 }
 
@@ -252,76 +254,13 @@ int SpellHex::calc_need_mana()
 
 void SpellHex::gain_exp()
 {
+    PlayerSkill ps(player_ptr);
     for (auto spell : this->casting_spells) {
         if (!this->is_spelling_specific(spell)) {
             continue;
         }
 
-        if (this->player_ptr->spell_exp[spell] < SPELL_EXP_BEGINNER) {
-            this->player_ptr->spell_exp[spell] += 5;
-            continue;
-        }
-
-        if (this->gain_exp_skilled(spell)) {
-            continue;
-        }
-
-        if (this->gain_exp_expert(spell)) {
-            continue;
-        }
-
-        this->gain_exp_master(spell);
-    }
-}
-
-bool SpellHex::gain_exp_skilled(const int spell)
-{
-    if (this->player_ptr->spell_exp[spell] >= SPELL_EXP_SKILLED) {
-        return false;
-    }
-
-    auto *floor_ptr = this->player_ptr->current_floor_ptr;
-    auto gain_condition = one_in_(2);
-    gain_condition &= floor_ptr->dun_level > 4;
-    gain_condition &= (floor_ptr->dun_level + 10) > this->player_ptr->lev;
-    if (gain_condition) {
-        this->player_ptr->spell_exp[spell]++;
-    }
-
-    return true;
-}
-
-bool SpellHex::gain_exp_expert(const int spell)
-{
-    if (this->player_ptr->spell_exp[spell] >= SPELL_EXP_EXPERT) {
-        return false;
-    }
-
-    const auto *s_ptr = &technic_info[REALM_HEX - MIN_TECHNIC][spell];
-    auto *floor_ptr = this->player_ptr->current_floor_ptr;
-    auto gain_condition = one_in_(5);
-    gain_condition &= (floor_ptr->dun_level + 5) > this->player_ptr->lev;
-    gain_condition &= (floor_ptr->dun_level + 5) > s_ptr->slevel;
-    if (gain_condition) {
-        this->player_ptr->spell_exp[spell]++;
-    }
-
-    return true;
-}
-
-void SpellHex::gain_exp_master(const int spell)
-{
-    if (this->player_ptr->spell_exp[spell] >= SPELL_EXP_MASTER) {
-        return;
-    }
-
-    const auto *s_ptr = &technic_info[REALM_HEX - MIN_TECHNIC][spell];
-    auto *floor_ptr = this->player_ptr->current_floor_ptr;
-    auto gain_condition = one_in_(5);
-    gain_condition &= (floor_ptr->dun_level + 5) > this->player_ptr->lev;
-    gain_condition &= floor_ptr->dun_level > s_ptr->slevel;
-    if (gain_condition) {
-        this->player_ptr->spell_exp[spell]++;
+        ps.gain_continuous_spell_skill_exp(REALM_HEX, spell);
     }
 }
 
@@ -332,7 +271,7 @@ void SpellHex::gain_exp_master(const int spell)
 bool SpellHex::is_casting_full_capacity() const
 {
     auto k_max = (this->player_ptr->lev / 15) + 1;
-    k_max = MIN(k_max, MAX_KEEP);
+    k_max = std::min(k_max, MAX_KEEP);
     return this->get_casting_num() >= k_max;
 }
 
@@ -341,16 +280,16 @@ bool SpellHex::is_casting_full_capacity() const
  */
 void SpellHex::continue_revenge()
 {
-    if ((this->player_ptr->realm1 != REALM_HEX) || (this->get_revenge_turn() == 0)) {
+    if (!this->spell_hex_data || (this->get_revenge_turn() == 0)) {
         return;
     }
 
     switch (this->get_revenge_type()) {
     case SpellHexRevengeType::PATIENCE:
-        exe_spell(this->player_ptr, REALM_HEX, HEX_PATIENCE, SPELL_CONTNUATION);
+        exe_spell(this->player_ptr, REALM_HEX, HEX_PATIENCE, SpellProcessType::CONTNUATION);
         return;
     case SpellHexRevengeType::REVENGE:
-        exe_spell(this->player_ptr, REALM_HEX, HEX_REVENGE, SPELL_CONTNUATION);
+        exe_spell(this->player_ptr, REALM_HEX, HEX_REVENGE, SpellProcessType::CONTNUATION);
         return;
     default:
         return;
@@ -363,7 +302,7 @@ void SpellHex::continue_revenge()
  */
 void SpellHex::store_vengeful_damage(HIT_POINT dam)
 {
-    if ((this->player_ptr->realm1 != REALM_HEX) || (this->get_revenge_turn() == 0)) {
+    if (!this->spell_hex_data || (this->get_revenge_turn() == 0)) {
         return;
     }
 
@@ -385,13 +324,18 @@ bool SpellHex::check_hex_barrier(MONSTER_IDX m_idx, spell_hex_type type) const
 
 bool SpellHex::is_spelling_specific(int hex) const
 {
-    auto check = static_cast<uint32_t>(this->player_ptr->magic_num1[0]);
-    return (this->player_ptr->realm1 == REALM_HEX) && any_bits(check, 1U << hex);
+    return this->spell_hex_data && this->spell_hex_data->casting_spells.has(i2enum<spell_hex_type>(hex));
 }
 
 bool SpellHex::is_spelling_any() const
 {
-    return (this->player_ptr->realm1 == REALM_HEX) && (this->get_casting_num() > 0);
+    return this->spell_hex_data && (this->get_casting_num() > 0);
+}
+
+void SpellHex::interrupt_spelling()
+{
+    this->spell_hex_data->interrupting_spells = this->spell_hex_data->casting_spells;
+    this->spell_hex_data->casting_spells.clear();
 }
 
 /*!
@@ -419,7 +363,7 @@ void SpellHex::eyes_on_eyes()
 #endif
     const auto y = this->monap_ptr->m_ptr->fy;
     const auto x = this->monap_ptr->m_ptr->fx;
-    project(this->player_ptr, 0, 0, y, x, this->monap_ptr->get_damage, GF_MISSILE, PROJECT_KILL);
+    project(this->player_ptr, 0, 0, y, x, this->monap_ptr->get_damage, AttributeType::MISSILE, PROJECT_KILL);
     if (this->player_ptr->tim_eyeeye) {
         set_tim_eyeeye(this->player_ptr, this->player_ptr->tim_eyeeye - 5, true);
     }
@@ -445,40 +389,36 @@ void SpellHex::thief_teleport()
 
 void SpellHex::set_casting_flag(spell_hex_type type)
 {
-    auto value = static_cast<uint>(this->player_ptr->magic_num1[0]);
-    set_bits(value, 1U << type);
-    this->player_ptr->magic_num1[0] = value;
+    this->spell_hex_data->casting_spells.set(type);
 }
 
 void SpellHex::reset_casting_flag(spell_hex_type type)
 {
-    auto value = static_cast<uint>(this->player_ptr->magic_num1[0]);
-    reset_bits(value, 1U << type);
-    this->player_ptr->magic_num1[0] = value;
+    this->spell_hex_data->casting_spells.reset(type);
 }
 
 int32_t SpellHex::get_casting_num() const
 {
-    return std::bitset<32>(this->player_ptr->magic_num1[0]).count();
+    return this->spell_hex_data->casting_spells.count();
 }
 
 int32_t SpellHex::get_revenge_power() const
 {
-    return this->player_ptr->magic_num1[2];
+    return this->spell_hex_data->revenge_power;
 }
 
 void SpellHex::set_revenge_power(int32_t power, bool substitution)
 {
     if (substitution) {
-        this->player_ptr->magic_num1[2] = power;
+        this->spell_hex_data->revenge_power = power;
     } else {
-        this->player_ptr->magic_num1[2] += power;
+        this->spell_hex_data->revenge_power += power;
     }
 }
 
 byte SpellHex::get_revenge_turn() const
 {
-    return this->player_ptr->magic_num2[2];
+    return this->spell_hex_data->revenge_turn;
 }
 
 /*!
@@ -489,18 +429,18 @@ byte SpellHex::get_revenge_turn() const
 void SpellHex::set_revenge_turn(byte turn, bool substitution)
 {
     if (substitution) {
-        this->player_ptr->magic_num2[2] = turn;
+        this->spell_hex_data->revenge_turn = turn;
     } else {
-        this->player_ptr->magic_num2[2] -= turn;
+        this->spell_hex_data->revenge_turn -= turn;
     }
 }
 
 SpellHexRevengeType SpellHex::get_revenge_type() const
 {
-    return i2enum<SpellHexRevengeType>(this->player_ptr->magic_num2[1]);
+    return this->spell_hex_data->revenge_type;
 }
 
 void SpellHex::set_revenge_type(SpellHexRevengeType type)
 {
-    this->player_ptr->magic_num2[1] = enum2i(type);
+    this->spell_hex_data->revenge_type = type;
 }

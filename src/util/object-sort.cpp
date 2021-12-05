@@ -21,7 +21,7 @@
  * @param j_ptr 比較対象オブジェクトの構造体参照ポインタ2
  * @return o_ptrの方が上位ならばTRUEを返す。
  */
-bool object_sort_comp(player_type *player_ptr, object_type *o_ptr, int32_t o_value, object_type *j_ptr)
+bool object_sort_comp(PlayerType *player_ptr, object_type *o_ptr, int32_t o_value, object_type *j_ptr)
 {
     int o_type, j_type;
     if (!j_ptr->k_idx)
@@ -81,26 +81,26 @@ bool object_sort_comp(player_type *player_ptr, object_type *o_ptr, int32_t o_val
         return false;
 
     switch (o_ptr->tval) {
-    case TV_FIGURINE:
-    case TV_STATUE:
-    case TV_CORPSE:
-    case TV_CAPTURE:
+    case ItemKindType::FIGURINE:
+    case ItemKindType::STATUE:
+    case ItemKindType::CORPSE:
+    case ItemKindType::CAPTURE:
         if (r_info[o_ptr->pval].level < r_info[j_ptr->pval].level)
             return true;
         if ((r_info[o_ptr->pval].level == r_info[j_ptr->pval].level) && (o_ptr->pval < j_ptr->pval))
             return true;
         return false;
 
-    case TV_SHOT:
-    case TV_ARROW:
-    case TV_BOLT:
+    case ItemKindType::SHOT:
+    case ItemKindType::ARROW:
+    case ItemKindType::BOLT:
         if (o_ptr->to_h + o_ptr->to_d < j_ptr->to_h + j_ptr->to_d)
             return true;
         if (o_ptr->to_h + o_ptr->to_d > j_ptr->to_h + j_ptr->to_d)
             return false;
         break;
 
-    case TV_ROD:
+    case ItemKindType::ROD:
         if (o_ptr->pval < j_ptr->pval)
             return true;
         if (o_ptr->pval > j_ptr->pval)

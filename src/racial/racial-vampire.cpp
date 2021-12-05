@@ -12,9 +12,9 @@
 #include "target/target-getter.h"
 #include "view/display-messages.h"
 
-bool vampirism(player_type *player_ptr)
+bool vampirism(PlayerType *player_ptr)
 {
-    if (d_info[player_ptr->dungeon_idx].flags.has(DF::NO_MELEE)) {
+    if (d_info[player_ptr->dungeon_idx].flags.has(DungeonFeatureType::NO_MELEE)) {
         msg_print(_("なぜか攻撃することができない。", "Something prevents you from attacking."));
         return false;
     }
@@ -50,7 +50,7 @@ bool vampirism(player_type *player_ptr)
     /* A Food ration gives 5000 food points (by contrast) */
     /* Don't ever get more than "Full" this way */
     /* But if we ARE Gorged,  it won't cure us */
-    dummy = player_ptr->food + MIN(5000, 100 * dummy);
+    dummy = player_ptr->food + std::min(5000, 100 * dummy);
     if (player_ptr->food < PY_FOOD_MAX) /* Not gorged already */
         (void)set_food(player_ptr, dummy >= PY_FOOD_MAX ? PY_FOOD_MAX - 1 : dummy);
 

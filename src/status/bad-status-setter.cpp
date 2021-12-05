@@ -9,6 +9,8 @@
 #include "mind/mind-sniper.h"
 #include "player-base/player-class.h"
 #include "player-base/player-race.h"
+#include "player-info/bluemage-data-type.h"
+#include "player-info/monk-data-type.h"
 #include "player/attack-defense-types.h"
 #include "player/player-status-flags.h"
 #include "player/player-status.h"
@@ -17,12 +19,13 @@
 #include "status/base-status.h"
 #include "status/buff-setter.h"
 #include "system/player-type-definition.h"
+#include "timed-effect/player-cut.h"
 #include "timed-effect/player-stun.h"
 #include "timed-effect/timed-effects.h"
 #include "view/display-messages.h"
 #include <algorithm>
 
-BadStatusSetter::BadStatusSetter(player_type *player_ptr)
+BadStatusSetter::BadStatusSetter(PlayerType *player_ptr)
     : player_ptr(player_ptr)
 {
 }
@@ -47,7 +50,7 @@ bool BadStatusSetter::blindness(const TIME_EFFECT tmp_v)
 
     if (v > 0) {
         if (!this->player_ptr->blind) {
-            if (this->player_ptr->prace == player_race_type::ANDROID) {
+            if (this->player_ptr->prace == PlayerRaceType::ANDROID) {
                 msg_print(_("センサーをやられた！", "The sensor broke!"));
             } else {
                 msg_print(_("目が見えなくなってしまった！", "You are blind!"));
@@ -58,7 +61,7 @@ bool BadStatusSetter::blindness(const TIME_EFFECT tmp_v)
         }
     } else {
         if (this->player_ptr->blind) {
-            if (this->player_ptr->prace == player_race_type::ANDROID) {
+            if (this->player_ptr->prace == PlayerRaceType::ANDROID) {
                 msg_print(_("センサーが復旧した。", "The sensor has been restored."));
             } else {
                 msg_print(_("やっと目が見えるようになった。", "You can see again."));
@@ -85,6 +88,11 @@ bool BadStatusSetter::blindness(const TIME_EFFECT tmp_v)
     return true;
 }
 
+bool BadStatusSetter::mod_blindness(const TIME_EFFECT tmp_v)
+{
+    return this->blindness(this->player_ptr->blind + tmp_v);
+}
+
 /*!
  * @brief 混乱の継続時間をセットする / Set "confused", notice observable changes
  * @param v 継続時間
@@ -104,30 +112,25 @@ bool BadStatusSetter::confusion(const TIME_EFFECT tmp_v)
 
             if (this->player_ptr->action == ACTION_LEARN) {
                 msg_print(_("学習が続けられない！", "You cannot continue learning!"));
-                this->player_ptr->new_mane = false;
+                auto bluemage_data = PlayerClass(player_ptr).get_specific_data<bluemage_data_type>();
+                bluemage_data->new_magic_learned = false;
 
                 this->player_ptr->redraw |= PR_STATE;
                 this->player_ptr->action = ACTION_NONE;
             }
-            if (this->player_ptr->action == ACTION_KAMAE) {
+            if (this->player_ptr->action == ACTION_MONK_STANCE) {
                 msg_print(_("構えがとけた。", "You lose your stance."));
-                this->player_ptr->special_defense &= ~(KAMAE_MASK);
+                PlayerClass(player_ptr).set_monk_stance(MonkStanceType::NONE);
                 this->player_ptr->update |= PU_BONUS;
                 this->player_ptr->redraw |= PR_STATE;
                 this->player_ptr->action = ACTION_NONE;
-            } else if (this->player_ptr->action == ACTION_KATA) {
+            } else if (this->player_ptr->action == ACTION_SAMURAI_STANCE) {
                 msg_print(_("型が崩れた。", "You lose your stance."));
-                this->player_ptr->special_defense &= ~(KATA_MASK);
-                this->player_ptr->update |= PU_BONUS;
-                this->player_ptr->update |= PU_MONSTERS;
-                this->player_ptr->redraw |= PR_STATE;
-                this->player_ptr->redraw |= PR_STATUS;
-                this->player_ptr->action = ACTION_NONE;
+                PlayerClass(player_ptr).lose_balance();
             }
 
             /* Sniper */
-            if (this->player_ptr->concent)
-                reset_concentration(this->player_ptr, true);
+            reset_concentration(this->player_ptr, true);
 
             SpellHex spell_hex(this->player_ptr);
             if (spell_hex.is_spelling_any()) {
@@ -158,6 +161,11 @@ bool BadStatusSetter::confusion(const TIME_EFFECT tmp_v)
 
     handle_stuff(this->player_ptr);
     return true;
+}
+
+bool BadStatusSetter::mod_confusion(const TIME_EFFECT tmp_v)
+{
+    return this->confusion(this->player_ptr->confused + tmp_v);
 }
 
 /*!
@@ -199,6 +207,11 @@ bool BadStatusSetter::poison(const TIME_EFFECT tmp_v)
     return true;
 }
 
+bool BadStatusSetter::mod_poison(const TIME_EFFECT tmp_v)
+{
+    return this->poison(this->player_ptr->poisoned + tmp_v);
+}
+
 /*!
  * @brief 恐怖の継続時間をセットする / Set "afraid", notice observable changes
  * @param v 継続時間
@@ -215,14 +228,8 @@ bool BadStatusSetter::afraidness(const TIME_EFFECT tmp_v)
     if (v > 0) {
         if (!this->player_ptr->afraid) {
             msg_print(_("何もかも恐くなってきた！", "You are terrified!"));
-            if (this->player_ptr->special_defense & KATA_MASK) {
+            if (PlayerClass(this->player_ptr).lose_balance()) {
                 msg_print(_("型が崩れた。", "You lose your stance."));
-                this->player_ptr->special_defense &= ~(KATA_MASK);
-                this->player_ptr->update |= PU_BONUS;
-                this->player_ptr->update |= PU_MONSTERS;
-                this->player_ptr->redraw |= PR_STATE;
-                this->player_ptr->redraw |= PR_STATUS;
-                this->player_ptr->action = ACTION_NONE;
             }
 
             notice = true;
@@ -250,6 +257,11 @@ bool BadStatusSetter::afraidness(const TIME_EFFECT tmp_v)
     return true;
 }
 
+bool BadStatusSetter::mod_afraidness(const TIME_EFFECT tmp_v)
+{
+    return this->afraidness(this->player_ptr->afraid + tmp_v);
+}
+
 /*!
  * @brief 麻痺の継続時間をセットする / Set "paralyzed", notice observable changes
  * @param v 継続時間
@@ -266,9 +278,7 @@ bool BadStatusSetter::paralysis(const TIME_EFFECT tmp_v)
     if (v > 0) {
         if (!this->player_ptr->paralyzed) {
             msg_print(_("体が麻痺してしまった！", "You are paralyzed!"));
-            if (this->player_ptr->concent) {
-                reset_concentration(this->player_ptr, true);
-            }
+            reset_concentration(this->player_ptr, true);
 
             SpellHex spell_hex(this->player_ptr);
             if (spell_hex.is_spelling_any()) {
@@ -300,6 +310,11 @@ bool BadStatusSetter::paralysis(const TIME_EFFECT tmp_v)
     return true;
 }
 
+bool BadStatusSetter::mod_paralysis(const TIME_EFFECT tmp_v)
+{
+    return this->paralysis(this->player_ptr->paralyzed + tmp_v);
+}
+
 /*!
  * @brief 幻覚の継続時間をセットする / Set "image", notice observable changes
  * @param v 継続時間
@@ -322,9 +337,7 @@ bool BadStatusSetter::hallucination(const TIME_EFFECT tmp_v)
         set_tsuyoshi(this->player_ptr, 0, true);
         if (!this->player_ptr->hallucinated) {
             msg_print(_("ワーオ！何もかも虹色に見える！", "Oh, wow! Everything looks so cosmic now!"));
-            if (this->player_ptr->concent) {
-                reset_concentration(this->player_ptr, true);
-            }
+            reset_concentration(this->player_ptr, true);
 
             this->player_ptr->counter = false;
             notice = true;
@@ -351,6 +364,11 @@ bool BadStatusSetter::hallucination(const TIME_EFFECT tmp_v)
     this->player_ptr->window_flags |= PW_OVERHEAD | PW_DUNGEON;
     handle_stuff(this->player_ptr);
     return true;
+}
+
+bool BadStatusSetter::mod_hallucination(const TIME_EFFECT tmp_v)
+{
+    return this->hallucination(this->player_ptr->hallucinated + tmp_v);
 }
 
 /*!
@@ -397,6 +415,11 @@ bool BadStatusSetter::slowness(const TIME_EFFECT tmp_v, bool do_dec)
     return true;
 }
 
+bool BadStatusSetter::mod_slowness(const TIME_EFFECT tmp_v, bool do_dec)
+{
+    return this->slowness(this->player_ptr->slow + tmp_v, do_dec);
+}
+
 /*!
  * @brief 朦朧の継続時間をセットする / Set "stun", notice observable changes
  * @param v 継続時間
@@ -406,70 +429,17 @@ bool BadStatusSetter::slowness(const TIME_EFFECT tmp_v, bool do_dec)
  */
 bool BadStatusSetter::stun(const TIME_EFFECT tmp_v)
 {
-    auto notice = false;
     auto v = std::clamp<short>(tmp_v, 0, 10000);
     if (this->player_ptr->is_dead) {
         return false;
     }
 
-    if (PlayerRace(this->player_ptr).equals(player_race_type::GOLEM) || PlayerClass(this->player_ptr).can_resist_stun()) {
+    if (PlayerRace(this->player_ptr).has_stun_immunity() || PlayerClass(this->player_ptr).has_stun_immunity()) {
         v = 0;
     }
 
-    auto player_stun = this->player_ptr->effects()->stun();
-    auto old_aux = player_stun->get_rank();
-    auto new_aux = PlayerStun::get_rank(v);
-    if (new_aux > old_aux) {
-        auto stun_mes = PlayerStun::get_stun_mes(new_aux);
-        msg_print(stun_mes.data());
-        if (randint1(1000) < v || one_in_(16)) {
-            msg_print(_("割れるような頭痛がする。", "A vicious blow hits your head."));
-            if (one_in_(3)) {
-                if (!has_sustain_int(this->player_ptr))
-                    (void)do_dec_stat(this->player_ptr, A_INT);
-                if (!has_sustain_wis(this->player_ptr))
-                    (void)do_dec_stat(this->player_ptr, A_WIS);
-            } else if (one_in_(2)) {
-                if (!has_sustain_int(this->player_ptr))
-                    (void)do_dec_stat(this->player_ptr, A_INT);
-            } else {
-                if (!has_sustain_wis(this->player_ptr))
-                    (void)do_dec_stat(this->player_ptr, A_WIS);
-            }
-        }
-
-        if (this->player_ptr->special_defense & KATA_MASK) {
-            msg_print(_("型が崩れた。", "You lose your stance."));
-            this->player_ptr->special_defense &= ~(KATA_MASK);
-            this->player_ptr->update |= PU_BONUS;
-            this->player_ptr->update |= PU_MONSTERS;
-            this->player_ptr->redraw |= PR_STATE;
-            this->player_ptr->redraw |= PR_STATUS;
-            this->player_ptr->action = ACTION_NONE;
-        }
-
-        if (this->player_ptr->concent) {
-            reset_concentration(this->player_ptr, true);
-        }
-
-        SpellHex spell_hex(this->player_ptr);
-        if (spell_hex.is_spelling_any()) {
-            (void)spell_hex.stop_all_spells();
-        }
-
-        notice = true;
-    } else if (new_aux < old_aux) {
-        if (new_aux == PlayerStunRank::NONE) {
-            msg_print(_("やっと朦朧状態から回復した。", "You are no longer stunned."));
-            if (disturb_state) {
-                disturb(this->player_ptr, false, false);
-            }
-        }
-
-        notice = true;
-    }
-
-    player_stun->set(v);
+    auto notice = this->process_stun_effect(v);
+    this->player_ptr->effects()->stun()->set(v);
     if (!notice) {
         return false;
     }
@@ -484,6 +454,11 @@ bool BadStatusSetter::stun(const TIME_EFFECT tmp_v)
     return true;
 }
 
+bool BadStatusSetter::mod_stun(const TIME_EFFECT tmp_v)
+{
+    return this->stun(this->player_ptr->effects()->stun()->current() + tmp_v);
+}
+
 /*!
  * @brief 出血の継続時間をセットする / Set "cut", notice observable changes
  * @param v 継続時間
@@ -493,102 +468,17 @@ bool BadStatusSetter::stun(const TIME_EFFECT tmp_v)
  */
 bool BadStatusSetter::cut(const TIME_EFFECT tmp_v)
 {
-    int old_aux, new_aux;
-    auto notice = false;
     auto v = std::clamp<short>(tmp_v, 0, 10000);
     if (this->player_ptr->is_dead) {
         return false;
     }
 
-    if ((this->player_ptr->prace == player_race_type::GOLEM || this->player_ptr->prace == player_race_type::SKELETON || this->player_ptr->prace == player_race_type::SPECTRE
-            || (this->player_ptr->prace == player_race_type::ZOMBIE && this->player_ptr->lev > 11))
-        && !this->player_ptr->mimic_form) {
+    if (PlayerRace(this->player_ptr).has_cut_immunity()) {
         v = 0;
     }
 
-    if (this->player_ptr->cut > 1000) {
-        old_aux = 7;
-    } else if (this->player_ptr->cut > 200) {
-        old_aux = 6;
-    } else if (this->player_ptr->cut > 100) {
-        old_aux = 5;
-    } else if (this->player_ptr->cut > 50) {
-        old_aux = 4;
-    } else if (this->player_ptr->cut > 25) {
-        old_aux = 3;
-    } else if (this->player_ptr->cut > 10) {
-        old_aux = 2;
-    } else if (this->player_ptr->cut > 0) {
-        old_aux = 1;
-    } else {
-        old_aux = 0;
-    }
-
-    if (v > 1000) {
-        new_aux = 7;
-    } else if (v > 200) {
-        new_aux = 6;
-    } else if (v > 100) {
-        new_aux = 5;
-    } else if (v > 50) {
-        new_aux = 4;
-    } else if (v > 25) {
-        new_aux = 3;
-    } else if (v > 10) {
-        new_aux = 2;
-    } else if (v > 0) {
-        new_aux = 1;
-    } else {
-        new_aux = 0;
-    }
-
-    if (new_aux > old_aux) {
-        switch (new_aux) {
-        case 1:
-            msg_print(_("かすり傷を負ってしまった。", "You have been given a graze."));
-            break;
-        case 2:
-            msg_print(_("軽い傷を負ってしまった。", "You have been given a light cut."));
-            break;
-        case 3:
-            msg_print(_("ひどい傷を負ってしまった。", "You have been given a bad cut."));
-            break;
-        case 4:
-            msg_print(_("大変な傷を負ってしまった。", "You have been given a nasty cut."));
-            break;
-        case 5:
-            msg_print(_("重大な傷を負ってしまった。", "You have been given a severe cut."));
-            break;
-        case 6:
-            msg_print(_("ひどい深手を負ってしまった。", "You have been given a deep gash."));
-            break;
-        case 7:
-            msg_print(_("致命的な傷を負ってしまった。", "You have been given a mortal wound."));
-            break;
-        }
-
-        notice = true;
-        if (randint1(1000) < v || one_in_(16)) {
-            if (!has_sustain_chr(this->player_ptr)) {
-                msg_print(_("ひどい傷跡が残ってしまった。", "You have been horribly scarred."));
-                do_dec_stat(this->player_ptr, A_CHR);
-            }
-        }
-    } else if (new_aux < old_aux) {
-        if (new_aux == 0) {
-            auto blood_stop_mes = this->player_ptr->prace == player_race_type::ANDROID
-                ? _("怪我が直った", "leaking fluid")
-                : _("出血が止まった", "bleeding");
-            msg_format(_("やっと%s。", "You are no longer %s."), blood_stop_mes);
-            if (disturb_state) {
-                disturb(this->player_ptr, false, false);
-            }
-        }
-
-        notice = true;
-    }
-
-    this->player_ptr->cut = v;
+    auto notice = this->process_cut_effect(v);
+    this->player_ptr->effects()->cut()->set(v);
     if (!notice) {
         return false;
     }
@@ -601,4 +491,146 @@ bool BadStatusSetter::cut(const TIME_EFFECT tmp_v)
     this->player_ptr->redraw |= PR_CUT;
     handle_stuff(this->player_ptr);
     return true;
+}
+
+bool BadStatusSetter::mod_cut(const TIME_EFFECT tmp_v)
+{
+    return this->cut(this->player_ptr->effects()->cut()->current() + tmp_v);
+}
+
+bool BadStatusSetter::process_stun_effect(const short v)
+{
+    auto old_rank = this->player_ptr->effects()->stun()->get_rank();
+    auto new_rank = PlayerStun::get_rank(v);
+    if (new_rank > old_rank) {
+        this->process_stun_status(new_rank, v);
+        return true;
+    }
+    
+    if (new_rank < old_rank) {
+        this->clear_head();
+        return true;
+    }
+
+    return false;
+}
+
+void BadStatusSetter::process_stun_status(const PlayerStunRank new_rank, const short v)
+{
+    auto stun_mes = PlayerStun::get_stun_mes(new_rank);
+    msg_print(stun_mes.data());
+    this->decrease_int_wis(v);
+    if (PlayerClass(this->player_ptr).lose_balance()) {
+        msg_print(_("型が崩れた。", "You lose your stance."));
+    }
+
+    reset_concentration(this->player_ptr, true);
+
+    SpellHex spell_hex(this->player_ptr);
+    if (spell_hex.is_spelling_any()) {
+        (void)spell_hex.stop_all_spells();
+    }
+}
+
+void BadStatusSetter::clear_head()
+{
+    if (this->player_ptr->effects()->stun()->is_stunned()) {
+        return;
+    }
+
+    msg_print(_("やっと朦朧状態から回復した。", "You are no longer stunned."));
+    if (disturb_state) {
+        disturb(this->player_ptr, false, false);
+    }
+}
+
+/*!
+ * @todo 後で知能と賢さが両方減る確率を減らす.
+ */
+void BadStatusSetter::decrease_int_wis(const short v)
+{
+    if ((v <= randint1(1000)) && !one_in_(16)) {
+        return;
+    }
+
+    msg_print(_("割れるような頭痛がする。", "A vicious blow hits your head."));
+    auto rand = randint0(5);
+    switch (rand) {
+    case 0:
+        if (has_sustain_int(this->player_ptr) == 0) {
+            (void)do_dec_stat(this->player_ptr, A_INT);
+        }
+
+        if (has_sustain_wis(this->player_ptr) == 0) {
+            (void)do_dec_stat(this->player_ptr, A_WIS);
+        }
+
+        return;
+    case 1:
+    case 2:
+        if (has_sustain_int(this->player_ptr) == 0) {
+            (void)do_dec_stat(this->player_ptr, A_INT);
+        }
+        
+        return;
+    case 3:
+    case 4:
+        if (has_sustain_wis(this->player_ptr) == 0) {
+            (void)do_dec_stat(this->player_ptr, A_WIS);
+        }
+
+        return;
+    default:
+        throw("Invalid random number is specified!");
+    }
+}
+
+bool BadStatusSetter::process_cut_effect(const short v)
+{
+    auto player_cut = this->player_ptr->effects()->cut();
+    auto old_rank = player_cut->get_rank();
+    auto new_rank = player_cut->get_rank(v);
+    if (new_rank > old_rank) {
+        this->decrease_charisma(new_rank, v);
+        return true;
+    }
+
+    if (new_rank < old_rank) {
+        this->stop_blooding(new_rank);
+        return true;
+    }
+
+    return false;
+}
+
+void BadStatusSetter::decrease_charisma(const PlayerCutRank new_rank, const short v)
+{
+    auto player_cut = this->player_ptr->effects()->cut();
+    auto cut_mes = player_cut->get_cut_mes(new_rank);
+    msg_print(cut_mes.data());
+    if (v <= randint1(1000) && !one_in_(16)) {
+        return;
+    }
+
+    if (has_sustain_chr(this->player_ptr)) {
+        return;
+    }
+
+    msg_print(_("ひどい傷跡が残ってしまった。", "You have been horribly scarred."));
+    do_dec_stat(this->player_ptr, A_CHR);
+}
+
+void BadStatusSetter::stop_blooding(const PlayerCutRank new_rank)
+{
+    if (new_rank >= PlayerCutRank::GRAZING) {
+        return;
+    }
+
+    auto blood_stop_mes = PlayerRace(this->player_ptr).equals(PlayerRaceType::ANDROID)
+        ? _("怪我が直った", "leaking fluid")
+        : _("出血が止まった", "bleeding");
+    msg_format(_("やっと%s。", "You are no longer %s."), blood_stop_mes);
+    if (disturb_state) {
+        disturb(this->player_ptr, false, false);
+    }
 }

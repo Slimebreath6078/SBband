@@ -2,8 +2,8 @@
 
 #include "mutation/mutation-flag-types.h"
 #include "object-enchant/trc-types.h"
-#include "object/tval-types.h"
 #include "player-ability/player-ability-types.h"
+#include "player-info/class-specific-data.h"
 #include "player-info/class-types.h"
 #include "player-info/race-types.h"
 #include "player/player-personality-types.h"
@@ -12,17 +12,21 @@
 #include "system/system-variables.h"
 #include "util/flag-group.h"
 
-#define MAX_SKILLS 10
-#define MAX_MANE 16
+#include <array>
+#include <map>
 
-enum class RF_ABILITY;
+enum class ItemKindType : short;
+enum class PlayerSkillKindType;
+enum class MonsterAbilityType;
 
 struct floor_type;
 struct object_type;
 class TimedEffects;
-struct player_type {
+class PlayerType {
 public:
-    player_type();
+    PlayerType();
+    bool is_true_winner() const;
+
     int player_uid{};
     int player_euid{};
     int player_egid{};
@@ -32,13 +36,12 @@ public:
     POSITION oldpx{}; /* Previous player location -KMW- */
 
     player_sex psex{}; /* Sex index */
-    player_race_type prace{}; /* Race index */
-    player_class_type pclass{}; /* Class index */
-    player_personality_type pseikaku{}; /* Seikaku index */
+    PlayerRaceType prace{}; /* Race index */
+    PlayerClassType pclass{}; /* Class index */
+    player_personality_type ppersonality{}; /* Personality index */
     int16_t realm1{}; /* First magic realm */
     int16_t realm2{}; /* Second magic realm */
     int16_t element{}; //!< 元素使い領域番号 / Elementalist system index
-    player_personality_type oops{}; /* Unused */
 
     DICE_SID hitdie{}; /* Hit dice (sides) */
     uint16_t expfact{}; /* Experience factor
@@ -97,8 +100,7 @@ public:
     TIME_EFFECT afraid{}; /* Timed -- Fear */
     TIME_EFFECT hallucinated{}; /* Timed -- Hallucination */
     TIME_EFFECT poisoned{}; /* Timed -- Poisoned */
-    TIME_EFFECT cut{}; /* Timed -- Cut */
-    
+
     TIME_EFFECT protevil{}; /* Timed -- Protection */
     TIME_EFFECT invuln{}; /* Timed -- Invulnerable */
     TIME_EFFECT ult_res{}; /* Timed -- Ultimate Resistance */
@@ -132,7 +134,7 @@ public:
     TIME_EFFECT magicdef{};
     TIME_EFFECT tim_res_nether{}; /* Timed -- Nether resistance */
     TIME_EFFECT tim_res_time{}; /* Timed -- Time resistance */
-    int16_t mimic_form{}; // @todo 後でplayer_race_typeに差し替える.
+    int16_t mimic_form{}; // @todo 後でPlayerRaceTypeに差し替える.
     TIME_EFFECT tim_mimic{};
     TIME_EFFECT tim_sh_fire{};
     TIME_EFFECT tim_sh_holy{};
@@ -151,7 +153,7 @@ public:
 
     int16_t chaos_patron{};
 
-    EnumClassFlagGroup<MUTA> muta{}; /*!< 突然変異 / mutations */
+    EnumClassFlagGroup<PlayerMutationType> muta{}; /*!< 突然変異 / mutations */
 
     int16_t virtues[8]{};
     int16_t vir_types[8]{};
@@ -186,21 +188,10 @@ public:
     SPELL_IDX spell_order[64]{}; /* order spells learned/remembered/forgotten */
 
     SUB_EXP spell_exp[64]{}; /* Proficiency of spells */
-    SUB_EXP weapon_exp[5][64]{}; /* Proficiency of weapons */
-    SUB_EXP skill_exp[MAX_SKILLS]{}; /* Proficiency of misc. skill */
+    std::map<ItemKindType, std::array<SUB_EXP, 64>> weapon_exp{}; /* Proficiency of weapons */
+    std::map<PlayerSkillKindType, SUB_EXP> skill_exp{}; /* Proficiency of misc. skill */
 
-    // @todo uint32_tで定義したいが可能か？
-    int32_t magic_num1[MAX_SPELLS]{}; /*!< Array for non-spellbook type magic */
-    byte magic_num2[MAX_SPELLS]{}; /*!< 魔道具術師の取り込み済魔道具使用回数 / Flags for non-spellbook type magics */
-
-    RF_ABILITY mane_spell[MAX_MANE]{};
-    HIT_POINT mane_dam[MAX_MANE]{};
-    int16_t mane_num{};
-    bool new_mane{};
-
-#define CONCENT_RADAR_THRESHOLD 2
-#define CONCENT_TELE_THRESHOLD 5
-    int16_t concent{}; /* Sniper's concentration level */
+    ClassSpecificData class_specific_data;
 
     HIT_POINT player_hp[PY_MAX_LEVEL]{};
     char died_from[MAX_MONSTER_NAME]{}; /* What killed the player */
@@ -215,8 +206,6 @@ public:
     bool ambush_flag{};
     BIT_FLAGS change_floor_mode{}; /*!<フロア移行処理に関するフラグ / Mode flags for changing floor */
 
-    bool reset_concent{}; /* Concentration reset flag */
-
     MONSTER_IDX riding{}; /* Riding on a monster of this index */
 
 #define KNOW_STAT 0x01
@@ -224,7 +213,7 @@ public:
     BIT_FLAGS8 knowledge{}; /* Knowledge about yourself */
     BIT_FLAGS visit{}; /* Visited towns */
 
-    player_race_type start_race{}; /* Race at birth */
+    PlayerRaceType start_race{}; /* Race at birth */
     BIT_FLAGS old_race1{}; /* Record of race changes */
     BIT_FLAGS old_race2{}; /* Record of race changes */
     int16_t old_realm{}; /* Record of realm changes */
@@ -330,8 +319,8 @@ public:
     BIT_FLAGS anti_magic{}; /* Anti-magic */
     BIT_FLAGS anti_tele{}; /* Prevent teleportation */
 
-    EnumClassFlagGroup<TRC> cursed{}; /* Player is cursed */
-    EnumClassFlagGroup<TRCS> cursed_special{}; /* Player is special type cursed */
+    EnumClassFlagGroup<CurseTraitType> cursed{}; /* Player is cursed */
+    EnumClassFlagGroup<CurseSpecialTraitType> cursed_special{}; /* Player is special type cursed */
 
     bool can_swim{}; /* No damage falling */
     BIT_FLAGS levitation{}; /* No damage falling */
@@ -414,7 +403,7 @@ public:
     int16_t num_fire{}; /* Number of shots */
 
     byte tval_xtra{}; /* (Unused)Correct xtra tval */
-    tval_type tval_ammo{}; /* Correct ammo tval */
+    ItemKindType tval_ammo{}; /* Correct ammo tval */
 
     int16_t pspeed{}; /*!< 現在の速度 / Current speed */
 
@@ -431,4 +420,4 @@ private:
     std::shared_ptr<TimedEffects> timed_effects;
 };
 
-extern player_type *p_ptr;
+extern PlayerType *p_ptr;

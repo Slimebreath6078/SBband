@@ -1,6 +1,8 @@
 ﻿#pragma once
 
 #include "system/angband.h"
+#include <string>
+#include <vector>
 
 #define MAX_PATRON 16 /*!< カオスパトロンの最大定義数 / The number of "patrons" available (for Chaos Warriors) */
 
@@ -44,8 +46,31 @@ enum patron_reward {
     REW_SER_MONS = 36, /*!< カオスパトロンからの報酬: モンスターの下僕下賜 */
 };
 
-extern const concptr chaos_patrons[MAX_PATRON];
+class PlayerType;
+enum player_ability_type : int;
 
-struct player_type;
-void gain_level_reward(player_type *player_ptr, int chosen_reward);
-void admire_from_patron(player_type *player_ptr);
+/*!
+ * @brief パトロン情報の定義
+ */
+class Patron {
+public:
+    std::string name; //!< パトロン名
+#ifdef JP
+    std::string ename; //!< PatronName
+    Patron(const char *name, const char *ename, std::vector<patron_reward> reward_table, const player_ability_type boost_stat);
+#else
+    Patron(const char *name, std::vector<patron_reward> reward_table, const player_ability_type boost_stat);
+#endif
+    virtual ~Patron() = default;
+
+    // @note C4458 クラスメンバーの隠蔽 への対応として末尾に「_」を付ける.
+    void gain_level_reward(PlayerType *player_ptr_, int chosen_reward);
+    void admire(PlayerType *player_ptr_);
+
+private:
+    PlayerType *player_ptr = nullptr; //!< プレイヤー参照ポインタ
+    std::vector<patron_reward> reward_table; //!< 報酬テーブル
+    player_ability_type boost_stat; //!< 強化能力値傾向
+};
+
+extern std::vector<Patron> patron_list;

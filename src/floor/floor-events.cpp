@@ -44,7 +44,7 @@
 #include "view/display-messages.h"
 #include "world/world.h"
 
-void day_break(player_type *player_ptr)
+void day_break(PlayerType *player_ptr)
 {
     msg_print(_("夜が明けた。", "The sun has risen."));
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
@@ -64,11 +64,11 @@ void day_break(player_type *player_ptr)
     player_ptr->update |= PU_MONSTERS | PU_MON_LITE;
     player_ptr->redraw |= PR_MAP;
     player_ptr->window_flags |= PW_OVERHEAD | PW_DUNGEON;
-    if (((player_ptr->special_defense & NINJA_S_STEALTH) != 0) && ((floor_ptr->grid_array[player_ptr->y][player_ptr->x].info & CAVE_GLOW) != 0))
+    if ((floor_ptr->grid_array[player_ptr->y][player_ptr->x].info & CAVE_GLOW) != 0)
         set_superstealth(player_ptr, false);
 }
 
-void night_falls(player_type *player_ptr)
+void night_falls(PlayerType *player_ptr)
 {
     msg_print(_("日が沈んだ。", "The sun has fallen."));
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
@@ -77,11 +77,11 @@ void night_falls(player_type *player_ptr)
             for (POSITION x = 0; x < floor_ptr->width; x++) {
                 grid_type *g_ptr = &floor_ptr->grid_array[y][x];
                 feature_type *f_ptr = &f_info[g_ptr->get_feat_mimic()];
-                if (g_ptr->is_mirror() || f_ptr->flags.has(FF::QUEST_ENTER) || f_ptr->flags.has(FF::ENTRANCE))
+                if (g_ptr->is_mirror() || f_ptr->flags.has(FloorFeatureType::QUEST_ENTER) || f_ptr->flags.has(FloorFeatureType::ENTRANCE))
                     continue;
 
                 g_ptr->info &= ~(CAVE_GLOW);
-                if (f_ptr->flags.has_not(FF::REMEMBER)) {
+                if (f_ptr->flags.has_not(FloorFeatureType::REMEMBER)) {
                     g_ptr->info &= ~(CAVE_MARK);
                     note_spot(player_ptr, y, x);
                 }
@@ -95,7 +95,7 @@ void night_falls(player_type *player_ptr)
     player_ptr->redraw |= PR_MAP;
     player_ptr->window_flags |= PW_OVERHEAD | PW_DUNGEON;
 
-    if (((player_ptr->special_defense & NINJA_S_STEALTH) != 0) && ((floor_ptr->grid_array[player_ptr->y][player_ptr->x].info & CAVE_GLOW) != 0))
+    if ((floor_ptr->grid_array[player_ptr->y][player_ptr->x].info & CAVE_GLOW) != 0)
         set_superstealth(player_ptr, false);
 }
 
@@ -112,7 +112,7 @@ static int rating_boost(int delta)
  * / Examine all monsters and unidentified objects, and get the feeling of current dungeon floor
  * @return 算出されたダンジョンの雰囲気ランク
  */
-static byte get_dungeon_feeling(player_type *player_ptr)
+static byte get_dungeon_feeling(PlayerType *player_ptr)
 {
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
     if (!floor_ptr->dun_level)
@@ -171,28 +171,28 @@ static byte get_dungeon_feeling(player_type *player_ptr)
                 return 1;
         }
 
-        if (o_ptr->tval == TV_DRAG_ARMOR)
+        if (o_ptr->tval == ItemKindType::DRAG_ARMOR)
             delta += 30 * base;
 
-        if (o_ptr->tval == TV_SHIELD && o_ptr->sval == SV_DRAGON_SHIELD)
+        if (o_ptr->tval == ItemKindType::SHIELD && o_ptr->sval == SV_DRAGON_SHIELD)
             delta += 5 * base;
 
-        if (o_ptr->tval == TV_GLOVES && o_ptr->sval == SV_SET_OF_DRAGON_GLOVES)
+        if (o_ptr->tval == ItemKindType::GLOVES && o_ptr->sval == SV_SET_OF_DRAGON_GLOVES)
             delta += 5 * base;
 
-        if (o_ptr->tval == TV_BOOTS && o_ptr->sval == SV_PAIR_OF_DRAGON_GREAVE)
+        if (o_ptr->tval == ItemKindType::BOOTS && o_ptr->sval == SV_PAIR_OF_DRAGON_GREAVE)
             delta += 5 * base;
 
-        if (o_ptr->tval == TV_HELM && o_ptr->sval == SV_DRAGON_HELM)
+        if (o_ptr->tval == ItemKindType::HELM && o_ptr->sval == SV_DRAGON_HELM)
             delta += 5 * base;
 
-        if (o_ptr->tval == TV_RING && o_ptr->sval == SV_RING_SPEED && !o_ptr->is_cursed())
+        if (o_ptr->tval == ItemKindType::RING && o_ptr->sval == SV_RING_SPEED && !o_ptr->is_cursed())
             delta += 25 * base;
 
-        if (o_ptr->tval == TV_RING && o_ptr->sval == SV_RING_LORDLY && !o_ptr->is_cursed())
+        if (o_ptr->tval == ItemKindType::RING && o_ptr->sval == SV_RING_LORDLY && !o_ptr->is_cursed())
             delta += 15 * base;
 
-        if (o_ptr->tval == TV_AMULET && o_ptr->sval == SV_AMULET_THE_MAGI && !o_ptr->is_cursed())
+        if (o_ptr->tval == ItemKindType::AMULET && o_ptr->sval == SV_AMULET_THE_MAGI && !o_ptr->is_cursed())
             delta += 15 * base;
 
         if (!o_ptr->is_cursed() && !o_ptr->is_broken() && k_ptr->level > floor_ptr->dun_level)
@@ -232,7 +232,7 @@ static byte get_dungeon_feeling(player_type *player_ptr)
  * @brief ダンジョンの雰囲気を更新し、変化があった場合メッセージを表示する
  * / Update dungeon feeling, and announce it if changed
  */
-void update_dungeon_feeling(player_type *player_ptr)
+void update_dungeon_feeling(PlayerType *player_ptr)
 {
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
     if (!floor_ptr->dun_level)
@@ -241,13 +241,13 @@ void update_dungeon_feeling(player_type *player_ptr)
     if (player_ptr->phase_out)
         return;
 
-    int delay = MAX(10, 150 - player_ptr->skill_fos) * (150 - floor_ptr->dun_level) * TURNS_PER_TICK / 100;
+    int delay = std::max(10, 150 - player_ptr->skill_fos) * (150 - floor_ptr->dun_level) * TURNS_PER_TICK / 100;
     if (w_ptr->game_turn < player_ptr->feeling_turn + delay && !cheat_xtra)
         return;
 
-    int quest_num = quest_number(player_ptr, floor_ptr->dun_level);
-    if (quest_num
-        && (is_fixed_quest_idx(quest_num) && !((quest_num == QUEST_OBERON) || (quest_num == QUEST_SERPENT) || !(quest[quest_num].flags & QUEST_FLAG_PRESET))))
+    auto quest_num = quest_number(player_ptr, floor_ptr->dun_level);
+    if ((quest_num > 0)
+        && (quest_type::is_fixed(quest_num) && !((quest_num == QUEST_OBERON) || (quest_num == QUEST_SERPENT) || !(quest[quest_num].flags & QUEST_FLAG_PRESET))))
         return;
 
     byte new_feeling = get_dungeon_feeling(player_ptr);
@@ -266,9 +266,9 @@ void update_dungeon_feeling(player_type *player_ptr)
 /*
  * Glow deep lava and building entrances in the floor
  */
-void glow_deep_lava_and_bldg(player_type *player_ptr)
+void glow_deep_lava_and_bldg(PlayerType *player_ptr)
 {
-    if (d_info[player_ptr->dungeon_idx].flags.has(DF::DARKNESS))
+    if (d_info[player_ptr->dungeon_idx].flags.has(DungeonFeatureType::DARKNESS))
         return;
 
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
@@ -276,7 +276,7 @@ void glow_deep_lava_and_bldg(player_type *player_ptr)
         for (POSITION x = 0; x < floor_ptr->width; x++) {
             grid_type *g_ptr;
             g_ptr = &floor_ptr->grid_array[y][x];
-            if (f_info[g_ptr->get_feat_mimic()].flags.has_not(FF::GLOW))
+            if (f_info[g_ptr->get_feat_mimic()].flags.has_not(FloorFeatureType::GLOW))
                 continue;
 
             for (DIRECTION i = 0; i < 9; i++) {

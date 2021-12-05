@@ -6,8 +6,7 @@
 
 #include "system/angband.h"
 
-struct player_type;
-errr init_quests(void);
-errr init_other(player_type *player_ptr);
-errr init_object_alloc(void);
-errr init_alloc(void);
+class PlayerType;
+void init_quests(void);
+void init_other(PlayerType *player_ptr);
+void init_alloc(void);

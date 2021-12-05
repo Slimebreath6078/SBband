@@ -7,6 +7,7 @@
 #include "io/interpret-pref-file.h"
 #include "birth/character-builder.h"
 #include "cmd-io/macro-util.h"
+#include "game-option/game-play-options.h"
 #include "game-option/option-flags.h"
 #include "game-option/option-types-table.h"
 #include "grid/feature.h"
@@ -43,7 +44,7 @@ static errr interpret_r_token(char *buf)
     int i = (int)strtol(zz[0], nullptr, 0);
     TERM_COLOR n1 = (TERM_COLOR)strtol(zz[1], nullptr, 0);
     SYMBOL_CODE n2 = (SYMBOL_CODE)strtol(zz[2], nullptr, 0);
-    if (i >= max_r_idx)
+    if (i >= static_cast<int>(r_info.size()))
         return 1;
 
     r_ptr = &r_info[i];
@@ -70,7 +71,7 @@ static errr interpret_k_token(char *buf)
     int i = (int)strtol(zz[0], nullptr, 0);
     TERM_COLOR n1 = (TERM_COLOR)strtol(zz[1], nullptr, 0);
     SYMBOL_CODE n2 = (SYMBOL_CODE)strtol(zz[2], nullptr, 0);
-    if (i >= max_k_idx)
+    if (i >= static_cast<int>(k_info.size()))
         return 1;
 
     k_ptr = &k_info[i];
@@ -155,7 +156,7 @@ static errr interpret_f_token(char *buf)
         return 1;
 
     int i = (int)strtol(zz[0], nullptr, 0);
-    if (i >= max_f_idx)
+    if (i >= static_cast<int>(f_info.size()))
         return 1;
 
     return decide_feature_type(i, num, zz);
@@ -195,7 +196,7 @@ static errr interpret_u_token(char *buf)
     TERM_COLOR n1 = (TERM_COLOR)strtol(zz[1], nullptr, 0);
     SYMBOL_CODE n2 = (SYMBOL_CODE)strtol(zz[2], nullptr, 0);
     for (auto &k_ref : k_info) {
-        if (k_ref.idx > 0 && k_ref.tval == j) {
+        if ((k_ref.idx > 0) && (enum2i(k_ref.tval) == j)) {
             if (n1)
                 k_ref.d_attr = n1;
             if (n2)
@@ -290,7 +291,7 @@ static errr interpret_v_token(char *buf)
  * Process "X:<str>" -- turn option off
  * Process "Y:<str>" -- turn option on
  */
-static errr interpret_xy_token(player_type *player_ptr, char *buf)
+static errr interpret_xy_token(PlayerType *player_ptr, char *buf)
 {
     for (int i = 0; option_info[i].o_desc; i++) {
         bool is_option = option_info[i].o_var != nullptr;
@@ -302,8 +303,8 @@ static errr interpret_xy_token(player_type *player_ptr, char *buf)
         int os = option_info[i].o_set;
         int ob = option_info[i].o_bit;
 
-        if ((player_ptr->playing || w_ptr->character_xtra) && (OPT_PAGE_BIRTH == option_info[i].o_page) && !w_ptr->wizard) {
-            msg_format(_("初期オプションは変更できません! '%s'", "Birth options can not changed! '%s'"), buf);
+        if ((player_ptr->playing || w_ptr->character_xtra) && (OPT_PAGE_BIRTH == option_info[i].o_page) && !allow_debug_options) {
+            msg_format(_("初期オプションは変更できません! '%s'", "Birth options can not be changed! '%s'"), buf);
             msg_print(nullptr);
             return 0;
         }
@@ -341,7 +342,7 @@ static errr interpret_z_token(char *buf)
         if (!streq(gf_desc[i].name, buf + 2))
             continue;
 
-        gf_color[gf_desc[i].num] = (TERM_COLOR)quark_add(t);
+        gf_color[(int)gf_desc[i].num] = (TERM_COLOR)quark_add(t);
         return 0;
     }
 
@@ -378,7 +379,7 @@ static errr decide_template_modifier(int tok, char **zz)
         return 0;
 
     int zz_length = strlen(zz[1]);
-    zz_length = MIN(MAX_MACRO_MOD, zz_length);
+    zz_length = std::min(MAX_MACRO_MOD, zz_length);
     if (2 + zz_length != tok)
         return 1;
 
@@ -469,7 +470,7 @@ static errr interpret_t_token(char *buf)
  * used for the "nothing" attr/char.
  * </pre>
  */
-errr interpret_pref_file(player_type *player_ptr, char *buf)
+errr interpret_pref_file(PlayerType *player_ptr, char *buf)
 {
     if (buf[1] != ':')
         return 1;

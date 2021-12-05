@@ -24,6 +24,8 @@
 #include "mspell/mspell-selector.h"
 #include "mspell/mspell-util.h"
 #include "mspell/mspell.h"
+#include "player-base/player-class.h"
+#include "player-info/mane-data-type.h"
 #include "player/attack-defense-types.h"
 #include "spell-kind/spells-world.h"
 #include "spell-realm/spells-hex.h"
@@ -39,83 +41,82 @@
 #include "monster/monster-description-types.h"
 #endif
 
+#include <iterator>
+
 static void set_no_magic_mask(msa_type *msa_ptr)
 {
     if (!msa_ptr->no_inate)
         return;
 
-    msa_ptr->ability_flags.reset(RF_ABILITY_NOMAGIC_MASK);
+    msa_ptr->ability_flags.reset(MonsterAbilityType_NOMAGIC_MASK);
 }
 
-static void check_mspell_stupid(player_type *player_ptr, msa_type *msa_ptr)
+static void check_mspell_stupid(PlayerType *player_ptr, msa_type *msa_ptr)
 {
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
-    msa_ptr->in_no_magic_dungeon = d_info[player_ptr->dungeon_idx].flags.has(DF::NO_MAGIC) && floor_ptr->dun_level
-        && (!floor_ptr->inside_quest || is_fixed_quest_idx(floor_ptr->inside_quest));
+    msa_ptr->in_no_magic_dungeon = d_info[player_ptr->dungeon_idx].flags.has(DungeonFeatureType::NO_MAGIC) && floor_ptr->dun_level && (!floor_ptr->inside_quest || quest_type::is_fixed(floor_ptr->inside_quest));
     if (!msa_ptr->in_no_magic_dungeon || ((msa_ptr->r_ptr->flags2 & RF2_STUPID) != 0))
         return;
 
-    msa_ptr->ability_flags &= RF_ABILITY_NOMAGIC_MASK;
+    msa_ptr->ability_flags &= MonsterAbilityType_NOMAGIC_MASK;
 }
 
-static void check_mspell_smart(player_type *player_ptr, msa_type *msa_ptr)
+static void check_mspell_smart(PlayerType *player_ptr, msa_type *msa_ptr)
 {
     if ((msa_ptr->r_ptr->flags2 & RF2_SMART) == 0)
         return;
 
     if ((msa_ptr->m_ptr->hp < msa_ptr->m_ptr->maxhp / 10) && (randint0(100) < 50)) {
-        msa_ptr->ability_flags &= RF_ABILITY_INT_MASK;
+        msa_ptr->ability_flags &= MonsterAbilityType_INT_MASK;
     }
 
-    if (msa_ptr->ability_flags.has(RF_ABILITY::TELE_LEVEL) && is_teleport_level_ineffective(player_ptr, 0)) {
-        msa_ptr->ability_flags.reset(RF_ABILITY::TELE_LEVEL);
+    if (msa_ptr->ability_flags.has(MonsterAbilityType::TELE_LEVEL) && is_teleport_level_ineffective(player_ptr, 0)) {
+        msa_ptr->ability_flags.reset(MonsterAbilityType::TELE_LEVEL);
     }
 }
 
-static void check_mspell_arena(player_type *player_ptr, msa_type *msa_ptr)
+static void check_mspell_arena(PlayerType *player_ptr, msa_type *msa_ptr)
 {
     if (!player_ptr->current_floor_ptr->inside_arena && !player_ptr->phase_out)
         return;
 
-    msa_ptr->ability_flags.reset(RF_ABILITY_SUMMON_MASK).reset(RF_ABILITY::TELE_LEVEL);
+    msa_ptr->ability_flags.reset(MonsterAbilityType_SUMMON_MASK).reset(MonsterAbilityType::TELE_LEVEL);
 
     if (msa_ptr->m_ptr->r_idx == MON_ROLENTO)
-        msa_ptr->ability_flags.reset(RF_ABILITY::SPECIAL);
+        msa_ptr->ability_flags.reset(MonsterAbilityType::SPECIAL);
 }
 
-static bool check_mspell_non_stupid(player_type *player_ptr, msa_type *msa_ptr)
+static bool check_mspell_non_stupid(PlayerType *player_ptr, msa_type *msa_ptr)
 {
     if ((msa_ptr->r_ptr->flags2 & RF2_STUPID) != 0)
         return true;
 
     if (!player_ptr->csp)
-        msa_ptr->ability_flags.reset(RF_ABILITY::DRAIN_MANA);
+        msa_ptr->ability_flags.reset(MonsterAbilityType::DRAIN_MANA);
 
-    if (msa_ptr->ability_flags.has_any_of(RF_ABILITY_BOLT_MASK)
-        && !clean_shot(player_ptr, msa_ptr->m_ptr->fy, msa_ptr->m_ptr->fx, player_ptr->y, player_ptr->x, false)) {
-        msa_ptr->ability_flags.reset(RF_ABILITY_BOLT_MASK);
+    if (msa_ptr->ability_flags.has_any_of(MonsterAbilityType_BOLT_MASK) && !clean_shot(player_ptr, msa_ptr->m_ptr->fy, msa_ptr->m_ptr->fx, player_ptr->y, player_ptr->x, false)) {
+        msa_ptr->ability_flags.reset(MonsterAbilityType_BOLT_MASK);
     }
 
-    if (msa_ptr->ability_flags.has_any_of(RF_ABILITY_SUMMON_MASK)
-        && !(summon_possible(player_ptr, msa_ptr->y, msa_ptr->x))) {
-        msa_ptr->ability_flags.reset(RF_ABILITY_SUMMON_MASK);
+    if (msa_ptr->ability_flags.has_any_of(MonsterAbilityType_SUMMON_MASK) && !(summon_possible(player_ptr, msa_ptr->y, msa_ptr->x))) {
+        msa_ptr->ability_flags.reset(MonsterAbilityType_SUMMON_MASK);
     }
 
-    if (msa_ptr->ability_flags.has(RF_ABILITY::RAISE_DEAD) && !raise_possible(player_ptr, msa_ptr->m_ptr))
-        msa_ptr->ability_flags.reset(RF_ABILITY::RAISE_DEAD);
+    if (msa_ptr->ability_flags.has(MonsterAbilityType::RAISE_DEAD) && !raise_possible(player_ptr, msa_ptr->m_ptr))
+        msa_ptr->ability_flags.reset(MonsterAbilityType::RAISE_DEAD);
 
-    if (msa_ptr->ability_flags.has(RF_ABILITY::SPECIAL) && (msa_ptr->m_ptr->r_idx == MON_ROLENTO) && !summon_possible(player_ptr, msa_ptr->y, msa_ptr->x))
-        msa_ptr->ability_flags.reset(RF_ABILITY::SPECIAL);
+    if (msa_ptr->ability_flags.has(MonsterAbilityType::SPECIAL) && (msa_ptr->m_ptr->r_idx == MON_ROLENTO) && !summon_possible(player_ptr, msa_ptr->y, msa_ptr->x))
+        msa_ptr->ability_flags.reset(MonsterAbilityType::SPECIAL);
 
     return msa_ptr->ability_flags.any();
 }
 
 static void set_mspell_list(msa_type *msa_ptr)
 {
-    EnumClassFlagGroup<RF_ABILITY>::get_flags(msa_ptr->ability_flags, std::back_inserter(msa_ptr->mspells));
+    EnumClassFlagGroup<MonsterAbilityType>::get_flags(msa_ptr->ability_flags, std::back_inserter(msa_ptr->mspells));
 }
 
-static void describe_mspell_monster(player_type *player_ptr, msa_type *msa_ptr)
+static void describe_mspell_monster(PlayerType *player_ptr, msa_type *msa_ptr)
 {
     monster_desc(player_ptr, msa_ptr->m_name, msa_ptr->m_ptr, 0x00);
 
@@ -127,37 +128,37 @@ static void describe_mspell_monster(player_type *player_ptr, msa_type *msa_ptr)
 #endif
 }
 
-static bool switch_do_spell(player_type *player_ptr, msa_type *msa_ptr)
+static bool switch_do_spell(PlayerType *player_ptr, msa_type *msa_ptr)
 {
     switch (msa_ptr->do_spell) {
     case DO_SPELL_NONE: {
         int attempt = 10;
         while (attempt--) {
             msa_ptr->thrown_spell = choose_attack_spell(player_ptr, msa_ptr);
-            if (msa_ptr->thrown_spell != RF_ABILITY::MAX)
+            if (msa_ptr->thrown_spell != MonsterAbilityType::MAX)
                 break;
         }
 
         return true;
     }
     case DO_SPELL_BR_LITE:
-        msa_ptr->thrown_spell = RF_ABILITY::BR_LITE;
+        msa_ptr->thrown_spell = MonsterAbilityType::BR_LITE;
         return true;
     case DO_SPELL_BR_DISI:
-        msa_ptr->thrown_spell = RF_ABILITY::BR_DISI;
+        msa_ptr->thrown_spell = MonsterAbilityType::BR_DISI;
         return true;
     case DO_SPELL_BA_LITE:
-        msa_ptr->thrown_spell = RF_ABILITY::BA_LITE;
+        msa_ptr->thrown_spell = MonsterAbilityType::BA_LITE;
         return true;
     case DO_SPELL_BO_LITE:
-        msa_ptr->thrown_spell = RF_ABILITY::BO_LITE;
+        msa_ptr->thrown_spell = MonsterAbilityType::BO_LITE;
         return true;
     default:
         return false;
     }
 }
 
-static bool check_mspell_continuation(player_type *player_ptr, msa_type *msa_ptr)
+static bool check_mspell_continuation(PlayerType *player_ptr, msa_type *msa_ptr)
 {
     if (msa_ptr->ability_flags.none())
         return false;
@@ -172,20 +173,19 @@ static bool check_mspell_continuation(player_type *player_ptr, msa_type *msa_ptr
         return false;
 
     describe_mspell_monster(player_ptr, msa_ptr);
-    if (!switch_do_spell(player_ptr, msa_ptr) || (msa_ptr->thrown_spell == RF_ABILITY::MAX))
+    if (!switch_do_spell(player_ptr, msa_ptr) || (msa_ptr->thrown_spell == MonsterAbilityType::MAX))
         return false;
 
     return true;
 }
 
-static bool check_mspell_unexploded(player_type *player_ptr, msa_type *msa_ptr)
+static bool check_mspell_unexploded(PlayerType *player_ptr, msa_type *msa_ptr)
 {
     PERCENTAGE fail_rate = 25 - (msa_ptr->rlev + 3) / 4;
     if (msa_ptr->r_ptr->flags2 & RF2_STUPID)
         fail_rate = 0;
 
-    if (!spell_is_inate(msa_ptr->thrown_spell)
-        && (msa_ptr->in_no_magic_dungeon || (monster_stunned_remaining(msa_ptr->m_ptr) && one_in_(2)) || (randint0(100) < fail_rate))) {
+    if (!spell_is_inate(msa_ptr->thrown_spell) && (msa_ptr->in_no_magic_dungeon || (monster_stunned_remaining(msa_ptr->m_ptr) && one_in_(2)) || (randint0(100) < fail_rate))) {
         disturb(player_ptr, true, true);
         msg_format(_("%^sは呪文を唱えようとしたが失敗した。", "%^s tries to cast a spell, but fails."), msa_ptr->m_name);
         return true;
@@ -204,7 +204,7 @@ static bool check_mspell_unexploded(player_type *player_ptr, msa_type *msa_ptr)
  *
  * ターゲット (msa_ptr->y, msa_ptr->x) は設定済みとする。
  */
-static bool check_thrown_mspell(player_type *player_ptr, msa_type *msa_ptr)
+static bool check_thrown_mspell(PlayerType *player_ptr, msa_type *msa_ptr)
 {
     // プレイヤーがモンスターを正しく視認できていれば思い出に残る。
     // FIXME: ここで処理するのはおかしいような?
@@ -218,68 +218,64 @@ static bool check_thrown_mspell(player_type *player_ptr, msa_type *msa_ptr)
     // ターゲットがプレイヤー位置からずれているとき、直接の射線を必要とする特技
     // (ボルト系など)は届かないものとみなす。
     switch (msa_ptr->thrown_spell) {
-    case RF_ABILITY::DISPEL:
-    case RF_ABILITY::SHOOT:
-    case RF_ABILITY::DRAIN_MANA:
-    case RF_ABILITY::MIND_BLAST:
-    case RF_ABILITY::BRAIN_SMASH:
-    case RF_ABILITY::CAUSE_1:
-    case RF_ABILITY::CAUSE_2:
-    case RF_ABILITY::CAUSE_3:
-    case RF_ABILITY::CAUSE_4:
-    case RF_ABILITY::BO_ACID:
-    case RF_ABILITY::BO_ELEC:
-    case RF_ABILITY::BO_FIRE:
-    case RF_ABILITY::BO_COLD:
-    case RF_ABILITY::BO_NETH:
-    case RF_ABILITY::BO_WATE:
-    case RF_ABILITY::BO_MANA:
-    case RF_ABILITY::BO_PLAS:
-    case RF_ABILITY::BO_ICEE:
-    case RF_ABILITY::MISSILE:
-    case RF_ABILITY::SCARE:
-    case RF_ABILITY::BLIND:
-    case RF_ABILITY::CONF:
-    case RF_ABILITY::SLOW:
-    case RF_ABILITY::HOLD:
-    case RF_ABILITY::HAND_DOOM:
-    case RF_ABILITY::TELE_TO:
-    case RF_ABILITY::TELE_AWAY:
-    case RF_ABILITY::TELE_LEVEL:
-    case RF_ABILITY::PSY_SPEAR:
-    case RF_ABILITY::DARKNESS:
-    case RF_ABILITY::FORGET:
-    case RF_ABILITY::BO_LITE:
-    case RF_ABILITY::BO_DARK:
+    case MonsterAbilityType::DISPEL:
+    case MonsterAbilityType::SHOOT:
+    case MonsterAbilityType::DRAIN_MANA:
+    case MonsterAbilityType::MIND_BLAST:
+    case MonsterAbilityType::BRAIN_SMASH:
+    case MonsterAbilityType::CAUSE_1:
+    case MonsterAbilityType::CAUSE_2:
+    case MonsterAbilityType::CAUSE_3:
+    case MonsterAbilityType::CAUSE_4:
+    case MonsterAbilityType::BO_ACID:
+    case MonsterAbilityType::BO_ELEC:
+    case MonsterAbilityType::BO_FIRE:
+    case MonsterAbilityType::BO_COLD:
+    case MonsterAbilityType::BO_NETH:
+    case MonsterAbilityType::BO_WATE:
+    case MonsterAbilityType::BO_MANA:
+    case MonsterAbilityType::BO_PLAS:
+    case MonsterAbilityType::BO_ICEE:
+    case MonsterAbilityType::MISSILE:
+    case MonsterAbilityType::SCARE:
+    case MonsterAbilityType::BLIND:
+    case MonsterAbilityType::CONF:
+    case MonsterAbilityType::SLOW:
+    case MonsterAbilityType::HOLD:
+    case MonsterAbilityType::HAND_DOOM:
+    case MonsterAbilityType::TELE_TO:
+    case MonsterAbilityType::TELE_AWAY:
+    case MonsterAbilityType::TELE_LEVEL:
+    case MonsterAbilityType::PSY_SPEAR:
+    case MonsterAbilityType::DARKNESS:
+    case MonsterAbilityType::FORGET:
+    case MonsterAbilityType::BO_LITE:
+    case MonsterAbilityType::BO_DARK:
         return false;
     default:
         return true;
     }
 }
 
-static void check_mspell_imitation(player_type *player_ptr, msa_type *msa_ptr)
+static void check_mspell_imitation(PlayerType *player_ptr, msa_type *msa_ptr)
 {
     bool seen = (!player_ptr->blind && msa_ptr->m_ptr->ml);
     bool can_imitate = player_has_los_bold(player_ptr, msa_ptr->m_ptr->fy, msa_ptr->m_ptr->fx);
-    if (!seen || !can_imitate || (w_ptr->timewalk_m_idx != 0) || (player_ptr->pclass != CLASS_IMITATOR))
+    if (!seen || !can_imitate || (w_ptr->timewalk_m_idx != 0) || (player_ptr->pclass != PlayerClassType::IMITATOR))
         return;
 
-    /* Not RF_ABILITY::SPECIAL */
-    if (msa_ptr->thrown_spell == RF_ABILITY::SPECIAL)
+    /* Not MonsterAbilityType::SPECIAL */
+    if (msa_ptr->thrown_spell == MonsterAbilityType::SPECIAL)
         return;
 
-    if (player_ptr->mane_num == MAX_MANE) {
-        player_ptr->mane_num--;
-        for (int i = 0; i < player_ptr->mane_num; i++) {
-            player_ptr->mane_spell[i] = player_ptr->mane_spell[i + 1];
-            player_ptr->mane_dam[i] = player_ptr->mane_dam[i + 1];
-        }
+    auto mane_data = PlayerClass(player_ptr).get_specific_data<mane_data_type>();
+
+    if (mane_data->mane_list.size() == MAX_MANE) {
+        mane_data->mane_list.pop_front();
     }
 
-    player_ptr->mane_spell[player_ptr->mane_num] = msa_ptr->thrown_spell;
-    player_ptr->mane_dam[player_ptr->mane_num] = msa_ptr->dam;
-    player_ptr->mane_num++;
-    player_ptr->new_mane = true;
+    mane_data->mane_list.push_back({ msa_ptr->thrown_spell, msa_ptr->dam });
+    mane_data->new_mane = true;
     player_ptr->redraw |= PR_IMITATION;
 }
 
@@ -300,7 +296,7 @@ static void remember_mspell(msa_type *msa_ptr)
  * @param m_idx モンスター構造体配列のID
  * @return 実際に特殊技能を利用したらTRUEを返す
  */
-bool make_attack_spell(player_type *player_ptr, MONSTER_IDX m_idx)
+bool make_attack_spell(PlayerType *player_ptr, MONSTER_IDX m_idx)
 {
     msa_type tmp_msa;
     msa_type *msa_ptr = initialize_msa_type(player_ptr, &tmp_msa, m_idx);
@@ -309,8 +305,7 @@ bool make_attack_spell(player_type *player_ptr, MONSTER_IDX m_idx)
         return false;
     }
 
-    if (msa_ptr->m_ptr->mflag.has(MFLAG::PREVENT_MAGIC) || !is_hostile(msa_ptr->m_ptr)
-        || ((msa_ptr->m_ptr->cdis > get_max_range(player_ptr)) && !msa_ptr->m_ptr->target_y))
+    if (msa_ptr->m_ptr->mflag.has(MonsterTemporaryFlagType::PREVENT_MAGIC) || !is_hostile(msa_ptr->m_ptr) || ((msa_ptr->m_ptr->cdis > get_max_range(player_ptr)) && !msa_ptr->m_ptr->target_y))
         return false;
 
     decide_lite_range(player_ptr, msa_ptr);

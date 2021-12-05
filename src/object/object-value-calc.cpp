@@ -424,27 +424,31 @@ PRICE flag_cost(const object_type *o_ptr, int plusses)
         else
             total += 250;
     }
+    if (flgs.has(TR_VUL_CURSE))
+        total -= 7500;
 
     if (flgs.has(TR_AGGRAVATE))
         total -= 10000;
     if (flgs.has(TR_BLESSED))
         total += 750;
-    if (o_ptr->curse_flags.has(TRC::ADD_L_CURSE))
+    if (o_ptr->curse_flags.has(CurseTraitType::ADD_L_CURSE))
         total -= 5000;
-    if (o_ptr->curse_flags.has(TRC::ADD_H_CURSE))
+    if (o_ptr->curse_flags.has(CurseTraitType::ADD_H_CURSE))
         total -= 12500;
-    if (o_ptr->curse_flags.has(TRC::CURSED))
+    if (o_ptr->curse_flags.has(CurseTraitType::CURSED))
         total -= 5000;
-    if (o_ptr->curse_flags.has(TRC::HEAVY_CURSE))
+    if (o_ptr->curse_flags.has(CurseTraitType::HEAVY_CURSE))
         total -= 12500;
-    if (o_ptr->curse_flags.has(TRC::PERMA_CURSE))
+    if (o_ptr->curse_flags.has(CurseTraitType::PERSISTENT_CURSE))
+        total -= 12500;
+    if (o_ptr->curse_flags.has(CurseTraitType::PERMA_CURSE))
         total -= 15000;
 
     /* Also, give some extra for activatable powers... */
     if (o_ptr->art_name && (o_ptr->art_flags.has(TR_ACTIVATE))) {
-        const activation_type *const act_ptr = find_activation_info(o_ptr);
-        if (act_ptr) {
-            total += act_ptr->value;
+        auto act_ptr = find_activation_info(o_ptr);
+        if (act_ptr.has_value()) {
+            total += act_ptr.value()->value;
         }
     }
 

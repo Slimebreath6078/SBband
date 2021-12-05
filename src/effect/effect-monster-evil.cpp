@@ -11,7 +11,7 @@
 #include "system/monster-type-definition.h"
 #include "system/player-type-definition.h"
 
-static bool effect_monster_away_resist(player_type *player_ptr, effect_monster_type *em_ptr)
+static bool effect_monster_away_resist(PlayerType *player_ptr, effect_monster_type *em_ptr)
 {
     if (em_ptr->r_ptr->resistance_flags.has_not(MonsterResistanceType::RESIST_TELEPORT))
         return false;
@@ -33,7 +33,7 @@ static bool effect_monster_away_resist(player_type *player_ptr, effect_monster_t
     return false;
 }
 
-process_result effect_monster_away_undead(player_type *player_ptr, effect_monster_type *em_ptr)
+process_result effect_monster_away_undead(PlayerType *player_ptr, effect_monster_type *em_ptr)
 {
     if (em_ptr->r_ptr->race_kind_flags.has_not(MonraceKindType::UNDEAD)) {
         em_ptr->skipped = true;
@@ -55,7 +55,7 @@ process_result effect_monster_away_undead(player_type *player_ptr, effect_monste
     return PROCESS_CONTINUE;
 }
 
-process_result effect_monster_away_evil(player_type *player_ptr, effect_monster_type *em_ptr)
+process_result effect_monster_away_evil(PlayerType *player_ptr, effect_monster_type *em_ptr)
 {
     if (em_ptr->r_ptr->race_kind_flags.has_not(MonraceKindType::EVIL)) {
         em_ptr->skipped = true;
@@ -77,7 +77,7 @@ process_result effect_monster_away_evil(player_type *player_ptr, effect_monster_
     return PROCESS_CONTINUE;
 }
 
-process_result effect_monster_away_all(player_type *player_ptr, effect_monster_type *em_ptr)
+process_result effect_monster_away_all(PlayerType *player_ptr, effect_monster_type *em_ptr)
 {
     bool resists_tele = effect_monster_away_resist(player_ptr, em_ptr);
     if (!resists_tele) {
@@ -91,7 +91,7 @@ process_result effect_monster_away_all(player_type *player_ptr, effect_monster_t
     return PROCESS_CONTINUE;
 }
 
-process_result effect_monster_turn_undead(player_type *player_ptr, effect_monster_type *em_ptr)
+process_result effect_monster_turn_undead(PlayerType *player_ptr, effect_monster_type *em_ptr)
 {
     if (em_ptr->r_ptr->race_kind_flags.has_not(MonraceKindType::UNDEAD)) {
         em_ptr->skipped = true;
@@ -116,7 +116,7 @@ process_result effect_monster_turn_undead(player_type *player_ptr, effect_monste
     return PROCESS_CONTINUE;
 }
 
-process_result effect_monster_turn_evil(player_type *player_ptr, effect_monster_type *em_ptr)
+process_result effect_monster_turn_evil(PlayerType *player_ptr, effect_monster_type *em_ptr)
 {
     if (em_ptr->r_ptr->race_kind_flags.has_not(MonraceKindType::EVIL)) {
         em_ptr->skipped = true;
@@ -157,7 +157,7 @@ process_result effect_monster_turn_all(effect_monster_type *em_ptr)
     return PROCESS_CONTINUE;
 }
 
-process_result effect_monster_disp_undead(player_type *player_ptr, effect_monster_type *em_ptr)
+process_result effect_monster_disp_undead(PlayerType *player_ptr, effect_monster_type *em_ptr)
 {
     if (em_ptr->r_ptr->race_kind_flags.has_not(MonraceKindType::UNDEAD)) {
         em_ptr->skipped = true;
@@ -176,7 +176,7 @@ process_result effect_monster_disp_undead(player_type *player_ptr, effect_monste
     return PROCESS_CONTINUE;
 }
 
-process_result effect_monster_disp_evil(player_type *player_ptr, effect_monster_type *em_ptr)
+process_result effect_monster_disp_evil(PlayerType *player_ptr, effect_monster_type *em_ptr)
 {
     if (em_ptr->r_ptr->race_kind_flags.has_not(MonraceKindType::EVIL)) {
         em_ptr->skipped = true;
@@ -195,7 +195,7 @@ process_result effect_monster_disp_evil(player_type *player_ptr, effect_monster_
     return PROCESS_CONTINUE;
 }
 
-process_result effect_monster_disp_good(player_type *player_ptr, effect_monster_type *em_ptr)
+process_result effect_monster_disp_good(PlayerType *player_ptr, effect_monster_type *em_ptr)
 {
     if (em_ptr->r_ptr->race_kind_flags.has_not(MonraceKindType::GOOD)) {
         em_ptr->skipped = true;
@@ -230,7 +230,7 @@ process_result effect_monster_disp_living(effect_monster_type *em_ptr)
     return PROCESS_CONTINUE;
 }
 
-process_result effect_monster_disp_demon(player_type *player_ptr, effect_monster_type *em_ptr)
+process_result effect_monster_disp_demon(PlayerType *player_ptr, effect_monster_type *em_ptr)
 {
     if (em_ptr->r_ptr->race_kind_flags.has_not(MonraceKindType::DEMON)) {
         em_ptr->skipped = true;

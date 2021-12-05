@@ -17,11 +17,10 @@
 #include "system/monster-race-definition.h"
 #include "system/monster-type-definition.h"
 #include "system/player-type-definition.h"
-#include "timed-effect/player-stun.h"
 #include "timed-effect/timed-effects.h"
 #include "view/display-messages.h"
 
-void process_blind_attack(player_type *player_ptr, monap_type *monap_ptr)
+void process_blind_attack(PlayerType *player_ptr, monap_type *monap_ptr)
 {
     if (has_resist_blind(player_ptr) || check_multishadow(player_ptr)) {
         return;
@@ -29,13 +28,13 @@ void process_blind_attack(player_type *player_ptr, monap_type *monap_ptr)
 
     auto is_dio = monap_ptr->m_ptr->r_idx == MON_DIO;
     auto dio_msg = _("どうだッ！この血の目潰しはッ！", "How is it! This blood-blinding!");
-    if (is_dio && player_ptr->prace == player_race_type::SKELETON) {
+    if (is_dio && player_ptr->prace == PlayerRaceType::SKELETON) {
         msg_print(dio_msg);
         msg_print(_("しかし、あなたには元々目はなかった！", "However, you don't have eyes!"));
         return;
     }
 
-    if (!BadStatusSetter(player_ptr).blindness(player_ptr->blind + 10 + randint1(monap_ptr->rlev))) {
+    if (!BadStatusSetter(player_ptr).mod_blindness(10 + randint1(monap_ptr->rlev))) {
         return;
     }
 
@@ -46,7 +45,7 @@ void process_blind_attack(player_type *player_ptr, monap_type *monap_ptr)
     monap_ptr->obvious = true;
 }
 
-void process_terrify_attack(player_type *player_ptr, monap_type *monap_ptr)
+void process_terrify_attack(PlayerType *player_ptr, monap_type *monap_ptr)
 {
     if (check_multishadow(player_ptr)) {
         return;
@@ -65,12 +64,12 @@ void process_terrify_attack(player_type *player_ptr, monap_type *monap_ptr)
         return;
     }
 
-    if (BadStatusSetter(player_ptr).afraidness(player_ptr->afraid + 3 + randint1(monap_ptr->rlev))) {
+    if (BadStatusSetter(player_ptr).mod_afraidness(3 + randint1(monap_ptr->rlev))) {
         monap_ptr->obvious = true;
     }
 }
 
-void process_paralyze_attack(player_type *player_ptr, monap_type *monap_ptr)
+void process_paralyze_attack(PlayerType *player_ptr, monap_type *monap_ptr)
 {
     if (check_multishadow(player_ptr)) {
         return;
@@ -94,7 +93,7 @@ void process_paralyze_attack(player_type *player_ptr, monap_type *monap_ptr)
     }
 }
 
-void process_lose_all_attack(player_type *player_ptr, monap_type *monap_ptr)
+void process_lose_all_attack(PlayerType *player_ptr, monap_type *monap_ptr)
 {
     if (do_dec_stat(player_ptr, A_STR)) {
         monap_ptr->obvious = true;
@@ -121,15 +120,14 @@ void process_lose_all_attack(player_type *player_ptr, monap_type *monap_ptr)
     }
 }
 
-void process_stun_attack(player_type *player_ptr, monap_type *monap_ptr)
+void process_stun_attack(PlayerType *player_ptr, monap_type *monap_ptr)
 {
     if (has_resist_sound(player_ptr) || check_multishadow(player_ptr)) {
         return;
     }
 
     auto *r_ptr = &r_info[monap_ptr->m_ptr->r_idx];
-    auto current_stun = player_ptr->effects()->stun()->current();
-    if (BadStatusSetter(player_ptr).stun(current_stun + 10 + randint1(r_ptr->level / 4))) {
+    if (BadStatusSetter(player_ptr).mod_stun(10 + randint1(r_ptr->level / 4))) {
         monap_ptr->obvious = true;
     }
 }
@@ -139,7 +137,7 @@ void process_stun_attack(player_type *player_ptr, monap_type *monap_ptr)
  * @param player_ptr プレイヤーへの参照ポインタ
  * @monap_ptr モンスターからモンスターへの直接攻撃構造体への参照ポインタ
  */
-static void describe_disability(player_type *player_ptr, monap_type *monap_ptr)
+static void describe_disability(PlayerType *player_ptr, monap_type *monap_ptr)
 {
     int stat = randint0(6);
     switch (stat) {
@@ -170,7 +168,7 @@ static void describe_disability(player_type *player_ptr, monap_type *monap_ptr)
     }
 }
 
-void process_monster_attack_time(player_type *player_ptr, monap_type *monap_ptr)
+void process_monster_attack_time(PlayerType *player_ptr, monap_type *monap_ptr)
 {
     if (has_resist_time(player_ptr) || check_multishadow(player_ptr)) {
         return;
@@ -182,7 +180,7 @@ void process_monster_attack_time(player_type *player_ptr, monap_type *monap_ptr)
     case 3:
     case 4:
     case 5:
-        if (player_ptr->prace == player_race_type::ANDROID) {
+        if (player_ptr->prace == PlayerRaceType::ANDROID) {
             break;
         }
 

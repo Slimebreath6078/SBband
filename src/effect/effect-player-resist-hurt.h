@@ -1,38 +1,37 @@
 ﻿#pragma once
 
-#include "system/angband.h"
 #include "player/player-damage.h"
+#include "system/angband.h"
 
-struct effect_player_type;
-struct player_type;
-void effect_player_elements(
-    player_type *player_ptr, effect_player_type *ep_ptr, concptr attack_message, element_dam &&damage_func);
-void effect_player_poison(player_type *player_ptr, effect_player_type *ep_ptr);
-void effect_player_nuke(player_type *player_ptr, effect_player_type *ep_ptr);
-void effect_player_missile(player_type *player_ptr, effect_player_type *ep_ptr);
-void effect_player_holy_fire(player_type *player_ptr, effect_player_type *ep_ptr);
-void effect_player_hell_fire(player_type *player_ptr, effect_player_type *ep_ptr);
-void effect_player_arrow(player_type *player_ptr, effect_player_type *ep_ptr);
-void effect_player_plasma(player_type *player_ptr, effect_player_type *ep_ptr);
-void effect_player_nether(player_type *player_ptr, effect_player_type *ep_ptr);
-void effect_player_water(player_type *player_ptr, effect_player_type *ep_ptr);
-void effect_player_chaos(player_type *player_ptr, effect_player_type *ep_ptr);
-void effect_player_shards(player_type *player_ptr, effect_player_type *ep_ptr);
-void effect_player_sound(player_type *player_ptr, effect_player_type *ep_ptr);
-void effect_player_confusion(player_type *player_ptr, effect_player_type *ep_ptr);
-void effect_player_disenchant(player_type *player_ptr, effect_player_type *ep_ptr);
-void effect_player_nexus(player_type *player_ptr, effect_player_type *ep_ptr);
-void effect_player_force(player_type *player_ptr, effect_player_type *ep_ptr);
-void effect_player_rocket(player_type *player_ptr, effect_player_type *ep_ptr);
-void effect_player_inertial(player_type *player_ptr, effect_player_type *ep_ptr);
-void effect_player_lite(player_type *player_ptr, effect_player_type *ep_ptr);
-void effect_player_dark(player_type *player_ptr, effect_player_type *ep_ptr);
-void effect_player_time(player_type *player_ptr, effect_player_type *ep_ptr);
-void effect_player_gravity(player_type *player_ptr, effect_player_type *ep_ptr);
-void effect_player_disintegration(player_type *player_ptr, effect_player_type *ep_ptr);
-void effect_player_death_ray(player_type *player_ptr, effect_player_type *ep_ptr);
-void effect_player_mana(player_type *player_ptr, effect_player_type *ep_ptr);
-void effect_player_psy_spear(player_type *player_ptr, effect_player_type *ep_ptr);
-void effect_player_meteor(player_type *player_ptr, effect_player_type *ep_ptr);
-void effect_player_icee(player_type *player_ptr, effect_player_type *ep_ptr);
-void effect_player_hand_doom(player_type *player_ptr, effect_player_type *ep_ptr);
+class EffectPlayerType;
+class PlayerType;
+void effect_player_elements(PlayerType *player_ptr, EffectPlayerType *ep_ptr, concptr attack_message, element_dam &&damage_func);
+void effect_player_poison(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
+void effect_player_nuke(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
+void effect_player_missile(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
+void effect_player_holy_fire(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
+void effect_player_hell_fire(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
+void effect_player_arrow(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
+void effect_player_plasma(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
+void effect_player_nether(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
+void effect_player_water(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
+void effect_player_chaos(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
+void effect_player_shards(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
+void effect_player_sound(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
+void effect_player_confusion(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
+void effect_player_disenchant(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
+void effect_player_nexus(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
+void effect_player_force(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
+void effect_player_rocket(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
+void effect_player_inertial(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
+void effect_player_lite(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
+void effect_player_dark(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
+void effect_player_time(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
+void effect_player_gravity(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
+void effect_player_disintegration(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
+void effect_player_death_ray(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
+void effect_player_mana(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
+void effect_player_psy_spear(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
+void effect_player_meteor(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
+void effect_player_icee(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
+void effect_player_hand_doom(PlayerType *player_ptr, EffectPlayerType *ep_ptr);

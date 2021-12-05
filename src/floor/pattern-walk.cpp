@@ -23,18 +23,18 @@
 #include "system/floor-type-definition.h"
 #include "system/grid-type-definition.h"
 #include "system/player-type-definition.h"
+#include "timed-effect/player-cut.h"
 #include "timed-effect/player-stun.h"
 #include "timed-effect/timed-effects.h"
 #include "util/bit-flags-calculator.h"
 #include "view/display-messages.h"
 #include "world/world-movement-processor.h"
-#include "world/world.h"
 
 /*!
  * @brief パターン終点到達時のテレポート処理を行う
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void pattern_teleport(player_type *player_ptr)
+void pattern_teleport(PlayerType *player_ptr)
 {
     DEPTH min_level = 0;
     DEPTH max_level = 99;
@@ -101,13 +101,14 @@ void pattern_teleport(player_type *player_ptr)
  * @brief 各種パターン地形上の特別な処理 / Returns TRUE if we are on the Pattern...
  * @return 実際にパターン地形上にプレイヤーが居た場合はTRUEを返す。
  */
-bool pattern_effect(player_type *player_ptr)
+bool pattern_effect(PlayerType *player_ptr)
 {
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
     if (!pattern_tile(floor_ptr, player_ptr->y, player_ptr->x))
         return false;
 
-    if ((PlayerRace(player_ptr).equals(player_race_type::AMBERITE)) && (player_ptr->cut > 0) && one_in_(10)) {
+    auto is_cut = player_ptr->effects()->cut()->is_cut();
+    if ((PlayerRace(player_ptr).equals(PlayerRaceType::AMBERITE)) && is_cut && one_in_(10)) {
         wreck_the_pattern(player_ptr);
     }
 
@@ -144,7 +145,7 @@ bool pattern_effect(player_type *player_ptr)
         break;
 
     default:
-        if (PlayerRace(player_ptr).equals(player_race_type::AMBERITE) && !one_in_(2))
+        if (PlayerRace(player_ptr).equals(PlayerRaceType::AMBERITE) && !one_in_(2))
             return true;
         else if (!is_invuln(player_ptr))
             take_hit(player_ptr, DAMAGE_NOESCAPE, damroll(1, 3), _("「パターン」を歩いたダメージ", "walking the Pattern"));
@@ -163,12 +164,12 @@ bool pattern_effect(player_type *player_ptr)
  * @param n_x プレイヤーの移動先X座標
  * @return 移動処理が可能である場合（可能な場合に選択した場合）TRUEを返す。
  */
-bool pattern_seq(player_type *player_ptr, POSITION c_y, POSITION c_x, POSITION n_y, POSITION n_x)
+bool pattern_seq(PlayerType *player_ptr, POSITION c_y, POSITION c_x, POSITION n_y, POSITION n_x)
 {
     feature_type *cur_f_ptr = &f_info[player_ptr->current_floor_ptr->grid_array[c_y][c_x].feat];
     feature_type *new_f_ptr = &f_info[player_ptr->current_floor_ptr->grid_array[n_y][n_x].feat];
-    bool is_pattern_tile_cur = cur_f_ptr->flags.has(FF::PATTERN);
-    bool is_pattern_tile_new = new_f_ptr->flags.has(FF::PATTERN);
+    bool is_pattern_tile_cur = cur_f_ptr->flags.has(FloorFeatureType::PATTERN);
+    bool is_pattern_tile_new = new_f_ptr->flags.has(FloorFeatureType::PATTERN);
     if (!is_pattern_tile_cur && !is_pattern_tile_new)
         return true;
 
@@ -238,8 +239,8 @@ bool pattern_seq(player_type *player_ptr, POSITION c_y, POSITION c_x, POSITION n
         ok_move = PATTERN_TILE_1;
         break;
     default:
-        if (w_ptr->wizard)
-            msg_format(_("おかしなパターン歩行、%d。", "Funny Pattern walking, %d."), pattern_type_cur);
+        msg_format(_("おかしなパターン歩行、%d。", "Funny Pattern walking, %d."), pattern_type_cur);
+        msg_print(_("不具合の可能性があります。開発者に連絡して下さい。", "There may be some problem. Please contact developers."));
         return true;
     }
 

@@ -229,9 +229,8 @@ static void generate_wilderness_area(floor_type *floor_ptr, int terrain, uint32_
         return;
     }
 
-    uint32_t state_backup[4];
-    Rand_state_backup(state_backup);
-    Rand_state_set(seed);
+    const auto state_backup = w_ptr->rng.get_state();
+    w_ptr->rng.set_state(seed);
     int table_size = sizeof(terrain_table[0]) / sizeof(int16_t);
     if (!corner)
         for (POSITION y1 = 0; y1 < MAX_HGT; y1++)
@@ -247,7 +246,7 @@ static void generate_wilderness_area(floor_type *floor_ptr, int terrain, uint32_
         floor_ptr->grid_array[MAX_HGT - 2][1].feat = terrain_table[terrain][floor_ptr->grid_array[MAX_HGT - 2][1].feat];
         floor_ptr->grid_array[1][MAX_WID - 2].feat = terrain_table[terrain][floor_ptr->grid_array[1][MAX_WID - 2].feat];
         floor_ptr->grid_array[MAX_HGT - 2][MAX_WID - 2].feat = terrain_table[terrain][floor_ptr->grid_array[MAX_HGT - 2][MAX_WID - 2].feat];
-        Rand_state_restore(state_backup);
+        w_ptr->rng.set_state(state_backup);
         return;
     }
 
@@ -265,7 +264,7 @@ static void generate_wilderness_area(floor_type *floor_ptr, int terrain, uint32_
         for (POSITION x1 = 1; x1 < MAX_WID - 1; x1++)
             floor_ptr->grid_array[y1][x1].feat = terrain_table[terrain][floor_ptr->grid_array[y1][x1].feat];
 
-    Rand_state_restore(state_backup);
+    w_ptr->rng.set_state(state_backup);
 }
 
 /*!
@@ -286,7 +285,7 @@ static void generate_wilderness_area(floor_type *floor_ptr, int terrain, uint32_
  * If corner is set then only the corners of the area are needed.
  * </pre>
  */
-static void generate_area(player_type *player_ptr, POSITION y, POSITION x, bool border, bool corner)
+static void generate_area(PlayerType *player_ptr, POSITION y, POSITION x, bool border, bool corner)
 {
     player_ptr->town_num = wilderness[y][x].town;
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
@@ -351,19 +350,18 @@ static void generate_area(player_type *player_ptr, POSITION y, POSITION x, bool 
 
     bool is_winner = wilderness[y][x].entrance > 0;
     is_winner &= (wilderness[y][x].town == 0);
-    bool is_wild_winner = d_info[wilderness[y][x].entrance].flags.has_not(DF::WINNER);
+    bool is_wild_winner = d_info[wilderness[y][x].entrance].flags.has_not(DungeonFeatureType::WINNER);
     is_winner &= ((w_ptr->total_winner != 0) || is_wild_winner);
     if (!is_winner)
         return;
 
-    uint32_t state_backup[4];
-    Rand_state_backup(state_backup);
-    Rand_state_set(wilderness[y][x].seed);
+    const auto state_backup = w_ptr->rng.get_state();
+    w_ptr->rng.set_state(wilderness[y][x].seed);
     int dy = rand_range(6, floor_ptr->height - 6);
     int dx = rand_range(6, floor_ptr->width - 6);
     floor_ptr->grid_array[dy][dx].feat = feat_entrance;
     floor_ptr->grid_array[dy][dx].special = wilderness[y][x].entrance;
-    Rand_state_restore(state_backup);
+    w_ptr->rng.set_state(state_backup);
 }
 
 /* Border of the wilderness area */
@@ -372,10 +370,10 @@ static border_type border;
 /*!
  * @brief 広域マップの生成 /
  * Build the wilderness area outside of the town.
- * @todo 広域マップは恒常生成にする予定、player_typeによる処理分岐は最終的に排除する。
+ * @todo 広域マップは恒常生成にする予定、PlayerTypeによる処理分岐は最終的に排除する。
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void wilderness_gen(player_type *player_ptr)
+void wilderness_gen(PlayerType *player_ptr)
 {
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
     floor_ptr->height = MAX_HGT;
@@ -468,15 +466,15 @@ void wilderness_gen(player_type *player_ptr)
 
             feature_type *f_ptr;
             f_ptr = &f_info[g_ptr->get_feat_mimic()];
-            if (!g_ptr->is_mirror() && f_ptr->flags.has_none_of({FF::QUEST_ENTER, FF::ENTRANCE})) {
+            if (!g_ptr->is_mirror() && f_ptr->flags.has_none_of({FloorFeatureType::QUEST_ENTER, FloorFeatureType::ENTRANCE})) {
                 g_ptr->info &= ~(CAVE_GLOW);
-                if (f_ptr->flags.has_not(FF::REMEMBER))
+                if (f_ptr->flags.has_not(FloorFeatureType::REMEMBER))
                     g_ptr->info &= ~(CAVE_MARK);
 
                 continue;
             }
 
-            if (f_ptr->flags.has_not(FF::ENTRANCE))
+            if (f_ptr->flags.has_not(FloorFeatureType::ENTRANCE))
                 continue;
 
             g_ptr->info |= CAVE_GLOW;
@@ -492,7 +490,7 @@ void wilderness_gen(player_type *player_ptr)
                 g_ptr = &floor_ptr->grid_array[y][x];
                 feature_type *f_ptr;
                 f_ptr = &f_info[g_ptr->feat];
-                if (f_ptr->flags.has_not(FF::BLDG))
+                if (f_ptr->flags.has_not(FloorFeatureType::BLDG))
                     continue;
 
                 if ((f_ptr->subtype != 4) && !((player_ptr->town_num == 1) && (f_ptr->subtype == 0)))
@@ -512,7 +510,7 @@ void wilderness_gen(player_type *player_ptr)
             for (x = 0; x < floor_ptr->width; x++) {
                 grid_type *g_ptr;
                 g_ptr = &floor_ptr->grid_array[y][x];
-                if (!g_ptr->cave_has_flag(FF::ENTRANCE))
+                if (!g_ptr->cave_has_flag(FloorFeatureType::ENTRANCE))
                     continue;
 
                 if (g_ptr->m_idx != 0)
@@ -542,8 +540,8 @@ void wilderness_gen(player_type *player_ptr)
     generate_encounter = false;
     set_floor_and_wall(0);
     for (int i = 0; i < max_q_idx; i++)
-        if (quest[i].status == QUEST_STATUS_REWARDED)
-            quest[i].status = QUEST_STATUS_FINISHED;
+        if (quest[i].status == QuestStatusType::REWARDED)
+            quest[i].status = QuestStatusType::FINISHED;
 }
 
 static int16_t conv_terrain2feat[MAX_WILDERNESS];
@@ -552,7 +550,7 @@ static int16_t conv_terrain2feat[MAX_WILDERNESS];
  * @brief 広域マップの生成(簡易処理版) /
  * Build the wilderness area. -DG-
  */
-void wilderness_gen_small(player_type *player_ptr)
+void wilderness_gen_small(PlayerType *player_ptr)
 {
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
     for (int i = 0; i < MAX_WID; i++)
@@ -575,7 +573,7 @@ void wilderness_gen_small(player_type *player_ptr)
                 continue;
             }
 
-            if (wilderness[j][i].entrance && (w_ptr->total_winner || d_info[wilderness[j][i].entrance].flags.has_not(DF::WINNER))) {
+            if (wilderness[j][i].entrance && (w_ptr->total_winner || d_info[wilderness[j][i].entrance].flags.has_not(DungeonFeatureType::WINNER))) {
                 floor_ptr->grid_array[j][i].feat = feat_entrance;
                 floor_ptr->grid_array[j][i].special = (byte)wilderness[j][i].entrance;
                 floor_ptr->grid_array[j][i].info |= (CAVE_GLOW | CAVE_MARK);
@@ -623,7 +621,7 @@ static wilderness_grid w_letter[255];
  * @param y 広域マップの高さを返す参照ポインタ
  * @param x 広域マップの幅を返す参照ポインタ
  */
-parse_error_type parse_line_wilderness(player_type *player_ptr, char *buf, int xmin, int xmax, int *y, int *x)
+parse_error_type parse_line_wilderness(PlayerType *player_ptr, char *buf, int xmin, int xmax, int *y, int *x)
 {
     if (!(buf[0] == 'W'))
         return (PARSE_ERROR_GENERIC);
@@ -835,7 +833,7 @@ void init_wilderness_terrains(void)
  * @param encount 襲撃時TRUE
  * @return 切り替えが行われた場合はTRUEを返す。
  */
-bool change_wild_mode(player_type *player_ptr, bool encount)
+bool change_wild_mode(PlayerType *player_ptr, bool encount)
 {
     generate_encounter = encount;
     if (player_ptr->leaving)

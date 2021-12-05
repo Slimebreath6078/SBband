@@ -3,7 +3,7 @@
  * @date 2020/03/07
  * @author Hourier
  * @details
- * 概ね、player_type 構造体が引数でない場合はここへ移動させることを検討しても良い
+ * 概ね、PlayerType 構造体が引数でない場合はここへ移動させることを検討しても良い
  * 引数に入っていたらここには移動させないこと
  */
 
@@ -123,8 +123,8 @@ void store_enemy_approch_direction(int *mm, POSITION y, POSITION x)
  */
 void store_moves_val(int *mm, int y, int x)
 {
-    POSITION ax = ABS(x);
-    POSITION ay = ABS(y);
+    POSITION ax = std::abs(x);
+    POSITION ay = std::abs(y);
 
     int move_val = 0;
     if (y < 0)

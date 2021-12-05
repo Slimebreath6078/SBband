@@ -14,84 +14,84 @@
 #include "system/player-type-definition.h"
 #include "view/display-messages.h"
 
-void describe_melee_method(player_type *player_ptr, mam_type *mam_ptr)
+void describe_melee_method(PlayerType *player_ptr, mam_type *mam_ptr)
 {
     switch (mam_ptr->method) {
-    case RBM_HIT: {
+    case RaceBlowMethodType::HIT: {
         mam_ptr->act = _("%sを殴った。", "hits %s.");
         mam_ptr->touched = true;
         break;
     }
-    case RBM_TOUCH: {
+    case RaceBlowMethodType::TOUCH: {
         mam_ptr->act = _("%sを触った。", "touches %s.");
         mam_ptr->touched = true;
         break;
     }
-    case RBM_PUNCH: {
+    case RaceBlowMethodType::PUNCH: {
         mam_ptr->act = _("%sをパンチした。", "punches %s.");
         mam_ptr->touched = true;
         break;
     }
-    case RBM_KICK: {
+    case RaceBlowMethodType::KICK: {
         mam_ptr->act = _("%sを蹴った。", "kicks %s.");
         mam_ptr->touched = true;
         break;
     }
-    case RBM_CLAW: {
+    case RaceBlowMethodType::CLAW: {
         mam_ptr->act = _("%sをひっかいた。", "claws %s.");
         mam_ptr->touched = true;
         break;
     }
-    case RBM_BITE: {
+    case RaceBlowMethodType::BITE: {
         mam_ptr->act = _("%sを噛んだ。", "bites %s.");
         mam_ptr->touched = true;
         break;
     }
-    case RBM_STING: {
+    case RaceBlowMethodType::STING: {
         mam_ptr->act = _("%sを刺した。", "stings %s.");
         mam_ptr->touched = true;
         break;
     }
-    case RBM_SLASH: {
+    case RaceBlowMethodType::SLASH: {
         mam_ptr->act = _("%sを斬った。", "slashes %s.");
         break;
     }
-    case RBM_BUTT: {
+    case RaceBlowMethodType::BUTT: {
         mam_ptr->act = _("%sを角で突いた。", "butts %s.");
         mam_ptr->touched = true;
         break;
     }
-    case RBM_CRASH: {
-        mam_ptr->act = _("%sに体当りした。", "crashes into %s.");
+    case RaceBlowMethodType::CRASH: {
+        mam_ptr->act = _("%sに体当りした。", "crushes %s.");
         mam_ptr->touched = true;
         break;
     }
-    case RBM_ENGULF: {
+    case RaceBlowMethodType::ENGULF: {
         mam_ptr->act = _("%sを飲み込んだ。", "engulfs %s.");
         mam_ptr->touched = true;
         break;
     }
-    case RBM_CHARGE: {
+    case RaceBlowMethodType::CHARGE: {
         mam_ptr->act = _("%sに請求書をよこした。", "charges %s.");
         mam_ptr->touched = true;
         break;
     }
-    case RBM_CRAWL: {
+    case RaceBlowMethodType::CRAWL: {
         mam_ptr->act = _("%sの体の上を這い回った。", "crawls on %s.");
         mam_ptr->touched = true;
         break;
     }
-    case RBM_DROOL: {
+    case RaceBlowMethodType::DROOL: {
         mam_ptr->act = _("%sによだれをたらした。", "drools on %s.");
         mam_ptr->touched = false;
         break;
     }
-    case RBM_SPIT: {
+    case RaceBlowMethodType::SPIT: {
         mam_ptr->act = _("%sに唾を吐いた。", "spits on %s.");
         mam_ptr->touched = false;
         break;
     }
-    case RBM_EXPLODE: {
+    case RaceBlowMethodType::EXPLODE: {
         if (mam_ptr->see_either)
             disturb(player_ptr, true, true);
 
@@ -100,53 +100,53 @@ void describe_melee_method(player_type *player_ptr, mam_type *mam_ptr)
         mam_ptr->touched = false;
         break;
     }
-    case RBM_GAZE: {
+    case RaceBlowMethodType::GAZE: {
         mam_ptr->act = _("%sをにらんだ。", "gazes at %s.");
         mam_ptr->touched = false;
         break;
     }
-    case RBM_WAIL: {
+    case RaceBlowMethodType::WAIL: {
         mam_ptr->act = _("%sに泣きついた。", "wails at %s.");
         mam_ptr->touched = false;
         break;
     }
-    case RBM_SPORE: {
+    case RaceBlowMethodType::SPORE: {
         mam_ptr->act = _("%sに胞子を飛ばした。", "releases spores at %s.");
         mam_ptr->touched = false;
         break;
     }
-    case RBM_XXX4: {
+    case RaceBlowMethodType::XXX4: {
         mam_ptr->act = _("%sにXXX4を飛ばした。", "projects XXX4's at %s.");
         mam_ptr->touched = false;
         break;
     }
-    case RBM_BEG: {
+    case RaceBlowMethodType::BEG: {
         mam_ptr->act = _("%sに金をせがんだ。", "begs %s for money.");
         mam_ptr->touched = false;
         break;
     }
-    case RBM_INSULT: {
+    case RaceBlowMethodType::INSULT: {
         mam_ptr->act = _("%sを侮辱した。", "insults %s.");
         mam_ptr->touched = false;
         break;
     }
-    case RBM_MOAN: {
+    case RaceBlowMethodType::MOAN: {
         mam_ptr->act = _("%sにむかってうめいた。", "moans at %s.");
         mam_ptr->touched = false;
         break;
     }
-    case RBM_SHOW: {
+    case RaceBlowMethodType::SHOW: {
         mam_ptr->act = _("%sにむかって歌った。", "sings to %s.");
         mam_ptr->touched = false;
         break;
     }
 
-    case RBM_NONE:
-    case RBM_SHOOT:
-    case NB_RBM_TYPE:
+    case RaceBlowMethodType::NONE:
+    case RaceBlowMethodType::SHOOT:
+    case RaceBlowMethodType::MAX:
         break;
 
-    case RBM_CRUSH:{
+    case RaceBlowMethodType::CRUSH: {
         mam_ptr->act = _("%sを握りつぶした。", "crushes %s.");
         mam_ptr->touched = true;
         break;
@@ -154,125 +154,125 @@ void describe_melee_method(player_type *player_ptr, mam_type *mam_ptr)
     }
 }
 
-void decide_monster_attack_effect(player_type *player_ptr, mam_type *mam_ptr)
+void decide_monster_attack_effect(PlayerType *player_ptr, mam_type *mam_ptr)
 {
     switch (mam_ptr->effect) {
-    case 0:
-    case RBE_DR_MANA:
+    case RaceBlowEffectType::NONE:
+    case RaceBlowEffectType::DR_MANA:
         mam_ptr->damage = 0;
-        mam_ptr->pt = GF_NONE;
+        mam_ptr->pt = AttributeType::NONE;
         break;
-    case RBE_SUPERHURT:
+    case RaceBlowEffectType::SUPERHURT:
         if ((randint1(mam_ptr->rlev * 2 + 250) > (mam_ptr->ac + 200)) || one_in_(13)) {
             int tmp_damage = mam_ptr->damage - (mam_ptr->damage * ((mam_ptr->ac < 150) ? mam_ptr->ac : 150) / 250);
-            mam_ptr->damage = MAX(mam_ptr->damage, tmp_damage * 2);
+            mam_ptr->damage = std::max(mam_ptr->damage, tmp_damage * 2);
             break;
         }
 
         /* Fall through */
-    case RBE_HURT:
+    case RaceBlowEffectType::HURT:
         mam_ptr->damage -= (mam_ptr->damage * ((mam_ptr->ac < 150) ? mam_ptr->ac : 150) / 250);
         break;
-    case RBE_POISON:
-    case RBE_DISEASE:
-        mam_ptr->pt = GF_POIS;
+    case RaceBlowEffectType::POISON:
+    case RaceBlowEffectType::DISEASE:
+        mam_ptr->pt = AttributeType::POIS;
         break;
-    case RBE_UN_BONUS:
-    case RBE_UN_POWER:
-        mam_ptr->pt = GF_DISENCHANT;
+    case RaceBlowEffectType::UN_BONUS:
+    case RaceBlowEffectType::UN_POWER:
+        mam_ptr->pt = AttributeType::DISENCHANT;
         break;
-    case RBE_EAT_ITEM:
-    case RBE_EAT_GOLD:
+    case RaceBlowEffectType::EAT_ITEM:
+    case RaceBlowEffectType::EAT_GOLD:
         if ((player_ptr->riding != mam_ptr->m_idx) && one_in_(2))
             mam_ptr->blinked = true;
 
         break;
-    case RBE_EAT_FOOD:
-    case RBE_EAT_LITE:
-    case RBE_BLIND:
-    case RBE_LOSE_STR:
-    case RBE_LOSE_INT:
-    case RBE_LOSE_WIS:
-    case RBE_LOSE_DEX:
-    case RBE_LOSE_CON:
-    case RBE_LOSE_CHR:
-    case RBE_LOSE_ALL:
+    case RaceBlowEffectType::EAT_FOOD:
+    case RaceBlowEffectType::EAT_LITE:
+    case RaceBlowEffectType::BLIND:
+    case RaceBlowEffectType::LOSE_STR:
+    case RaceBlowEffectType::LOSE_INT:
+    case RaceBlowEffectType::LOSE_WIS:
+    case RaceBlowEffectType::LOSE_DEX:
+    case RaceBlowEffectType::LOSE_CON:
+    case RaceBlowEffectType::LOSE_CHR:
+    case RaceBlowEffectType::LOSE_ALL:
         break;
-    case RBE_ACID:
-        mam_ptr->pt = GF_ACID;
+    case RaceBlowEffectType::ACID:
+        mam_ptr->pt = AttributeType::ACID;
         break;
-    case RBE_ELEC:
-        mam_ptr->pt = GF_ELEC;
+    case RaceBlowEffectType::ELEC:
+        mam_ptr->pt = AttributeType::ELEC;
         break;
-    case RBE_FIRE:
-        mam_ptr->pt = GF_FIRE;
+    case RaceBlowEffectType::FIRE:
+        mam_ptr->pt = AttributeType::FIRE;
         break;
-    case RBE_COLD:
-        mam_ptr->pt = GF_COLD;
+    case RaceBlowEffectType::COLD:
+        mam_ptr->pt = AttributeType::COLD;
         break;
-    case RBE_CONFUSE:
-        mam_ptr->pt = GF_CONFUSION;
+    case RaceBlowEffectType::CONFUSE:
+        mam_ptr->pt = AttributeType::CONFUSION;
         break;
-    case RBE_TERRIFY:
-        mam_ptr->effect_type = BLOW_EFFECT_TYPE_FEAR;
+    case RaceBlowEffectType::TERRIFY:
+        mam_ptr->attribute = BLOW_EFFECT_TYPE_FEAR;
         break;
-    case RBE_PARALYZE:
-        mam_ptr->effect_type = BLOW_EFFECT_TYPE_SLEEP;
+    case RaceBlowEffectType::PARALYZE:
+        mam_ptr->attribute = BLOW_EFFECT_TYPE_SLEEP;
         break;
-    case RBE_SHATTER:
+    case RaceBlowEffectType::SHATTER:
         mam_ptr->damage -= (mam_ptr->damage * ((mam_ptr->ac < 150) ? mam_ptr->ac : 150) / 250);
         if (mam_ptr->damage > 23)
             earthquake(player_ptr, mam_ptr->m_ptr->fy, mam_ptr->m_ptr->fx, 8, mam_ptr->m_idx);
 
         break;
-    case RBE_EXP_10:
-    case RBE_EXP_20:
-    case RBE_EXP_40:
-    case RBE_EXP_80:
-        mam_ptr->pt = GF_NETHER;
+    case RaceBlowEffectType::EXP_10:
+    case RaceBlowEffectType::EXP_20:
+    case RaceBlowEffectType::EXP_40:
+    case RaceBlowEffectType::EXP_80:
+        mam_ptr->pt = AttributeType::NETHER;
         break;
-    case RBE_TIME:
-        mam_ptr->pt = GF_TIME;
+    case RaceBlowEffectType::TIME:
+        mam_ptr->pt = AttributeType::TIME;
         break;
-    case RBE_DR_LIFE:
-        mam_ptr->pt = GF_HYPODYNAMIA;
-        mam_ptr->effect_type = BLOW_EFFECT_TYPE_HEAL;
+    case RaceBlowEffectType::DR_LIFE:
+        mam_ptr->pt = AttributeType::HYPODYNAMIA;
+        mam_ptr->attribute = BLOW_EFFECT_TYPE_HEAL;
         break;
-    case RBE_INERTIA:
-        mam_ptr->pt = GF_INERTIAL;
+    case RaceBlowEffectType::INERTIA:
+        mam_ptr->pt = AttributeType::INERTIAL;
         break;
-    case RBE_STUN:
-        mam_ptr->pt = GF_SOUND;
+    case RaceBlowEffectType::STUN:
+        mam_ptr->pt = AttributeType::SOUND;
         break;
-    case RBE_HUNGRY:
-        mam_ptr->pt = GF_HUNGRY;
+    case RaceBlowEffectType::HUNGRY:
+        mam_ptr->pt = AttributeType::HUNGRY;
         break;
-    case RBE_FLAVOR:
+    case RaceBlowEffectType::FLAVOR:
         // フレーバー打撃には何の効果もない。
-        mam_ptr->pt = GF_NONE;
+        mam_ptr->pt = AttributeType::NONE;
         break;
     default:
-        mam_ptr->pt = GF_NONE;
+        mam_ptr->pt = AttributeType::NONE;
         break;
     }
 }
 
-void describe_monster_missed_monster(player_type *player_ptr, mam_type *mam_ptr)
+void describe_monster_missed_monster(PlayerType *player_ptr, mam_type *mam_ptr)
 {
     switch (mam_ptr->method) {
-    case RBM_HIT:
-    case RBM_TOUCH:
-    case RBM_PUNCH:
-    case RBM_KICK:
-    case RBM_CLAW:
-    case RBM_BITE:
-    case RBM_STING:
-    case RBM_SLASH:
-    case RBM_BUTT:
-    case RBM_CRASH:
-    case RBM_ENGULF:
-    case RBM_CHARGE:
-    case RBM_CRUSH: {
+    case RaceBlowMethodType::HIT:
+    case RaceBlowMethodType::TOUCH:
+    case RaceBlowMethodType::PUNCH:
+    case RaceBlowMethodType::KICK:
+    case RaceBlowMethodType::CLAW:
+    case RaceBlowMethodType::BITE:
+    case RaceBlowMethodType::STING:
+    case RaceBlowMethodType::SLASH:
+    case RaceBlowMethodType::BUTT:
+    case RaceBlowMethodType::CRASH:
+    case RaceBlowMethodType::ENGULF:
+    case RaceBlowMethodType::CHARGE:
+    case RaceBlowMethodType::CRUSH: {
         (void)set_monster_csleep(player_ptr, mam_ptr->t_idx, 0);
         if (mam_ptr->see_m) {
 #ifdef JP

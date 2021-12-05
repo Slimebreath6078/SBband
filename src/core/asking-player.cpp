@@ -16,6 +16,10 @@
 
 #include <climits>
 #include <algorithm>
+#include <iostream>
+#include <string>
+#include <sstream>
+#include <charconv>
 
 /*
  * Get some string input at the cursor location.
@@ -238,7 +242,7 @@ bool get_check(concptr prompt) { return get_check_strict(p_ptr, prompt, 0); }
  * mode & CHECK_NO_HISTORY  : no message_add
  * mode & CHECK_DEFAULT_Y   : accept any key as y, except n and Esc.
  */
-bool get_check_strict(player_type *player_ptr, concptr prompt, BIT_FLAGS mode)
+bool get_check_strict(PlayerType *player_ptr, concptr prompt, BIT_FLAGS mode)
 {
     char buf[80];
     if (!rogue_like_commands)
@@ -413,4 +417,27 @@ void pause_line(int row)
 
     (void)inkey();
     prt("", row, 0);
+}
+
+bool get_value(const char *text, int min, int max, int *value)
+{
+    std::stringstream st;
+    int val;
+    char tmp_val[12] = "";
+    std::to_chars(std::begin(tmp_val), std::end(tmp_val) - 1, *value);
+    st << text << "(" << min << "-" << max << "): ";
+    int digit = std::max(std::to_string(min).length(), std::to_string(max).length());
+    while (true) {
+        if (!get_string(st.str().c_str(), tmp_val, digit))
+            return false;
+
+        val = atoi(tmp_val);
+
+        if (min <= val && max >= val) {
+            break;
+        }
+        msg_format(_("%dから%dの間で指定して下さい。", "It must be between %d to %d."), min, max);
+    }
+    *value = val;
+    return true;
 }

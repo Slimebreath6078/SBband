@@ -23,6 +23,8 @@
 #include "core/window-redrawer.h"
 #include "dungeon/dungeon.h"
 #include "dungeon/quest.h"
+#include "flavor/flavor-describer.h"
+#include "flavor/object-flavor-types.h"
 #include "flavor/object-flavor.h"
 #include "floor/floor-leaver.h"
 #include "floor/floor-mode-changer.h"
@@ -52,8 +54,10 @@
 #include "object-enchant/item-apply-magic.h"
 #include "object-enchant/trc-types.h"
 #include "object-enchant/trg-types.h"
+#include "object/object-kind-hook.h"
 #include "object/object-kind.h"
 #include "perception/object-perception.h"
+#include "player-base/player-class.h"
 #include "player-info/class-info.h"
 #include "player-info/race-info.h"
 #include "player-info/race-types.h"
@@ -78,6 +82,7 @@
 #include "system/floor-type-definition.h"
 #include "system/grid-type-definition.h"
 #include "system/monster-type-definition.h"
+#include "system/object-type-definition.h"
 #include "system/player-type-definition.h"
 #include "target/grid-selector.h"
 #include "term/screen-processor.h"
@@ -86,10 +91,18 @@
 #include "util/enum-converter.h"
 #include "util/int-char-converter.h"
 #include "view/display-messages.h"
+#include "wizard/spoiler-table.h"
 #include "wizard/tval-descriptions-table.h"
 #include "wizard/wizard-spells.h"
 #include "wizard/wizard-spoiler.h"
 #include "world/world.h"
+
+#include <algorithm>
+#include <optional>
+#include <sstream>
+#include <tuple>
+#include <vector>
+
 #define NUM_O_SET 8
 #define NUM_O_BIT 32
 
@@ -97,11 +110,84 @@
  * @brief プレイヤーを完全回復する /
  * Cure everything instantly
  */
-void wiz_cure_all(player_type *player_ptr)
+void wiz_cure_all(PlayerType *player_ptr)
 {
     (void)life_stream(player_ptr, false, false);
     (void)restore_mana(player_ptr, true);
     (void)set_food(player_ptr, PY_FOOD_MAX - 1);
+}
+
+static std::optional<KIND_OBJECT_IDX> wiz_select_tval()
+{
+    KIND_OBJECT_IDX list;
+    char ch;
+    for (list = 0; (list < 80) && (tvals[list].tval > ItemKindType::NONE); list++) {
+        auto row = 2 + (list % 20);
+        auto col = _(32, 24) * (list / 20);
+        ch = listsym[list];
+        prt(format("[%c] %s", ch, tvals[list].desc), row, col);
+    }
+
+    auto max_num = list;
+    if (!get_com(_("アイテム種別を選んで下さい", "Get what type of object? "), &ch, false)) {
+        return std::nullopt;
+    }
+
+    KIND_OBJECT_IDX selection;
+    for (selection = 0; selection < max_num; selection++) {
+        if (listsym[selection] == ch) {
+            break;
+        }
+    }
+
+    if ((selection < 0) || (selection >= max_num)) {
+        return std::nullopt;
+    }
+
+    return selection;
+}
+
+static KIND_OBJECT_IDX wiz_select_sval(const ItemKindType tval, concptr tval_description)
+{
+    auto num = 0;
+    KIND_OBJECT_IDX choice[80]{};
+    char buf[160]{};
+    char ch;
+    for (const auto &k_ref : k_info) {
+        if (num >= 80) {
+            break;
+        }
+
+        if (k_ref.idx == 0 || k_ref.tval != tval) {
+            continue;
+        }
+
+        auto row = 2 + (num % 20);
+        auto col = _(30, 32) * (num / 20);
+        ch = listsym[num];
+        strcpy(buf, "                    ");
+        strip_name(buf, k_ref.idx);
+        prt(format("[%c] %s", ch, buf), row, col);
+        choice[num++] = k_ref.idx;
+    }
+
+    auto max_num = num;
+    if (!get_com(format(_("%s群の具体的なアイテムを選んで下さい", "What Kind of %s? "), tval_description), &ch, false)) {
+        return 0;
+    }
+
+    KIND_OBJECT_IDX selection;
+    for (selection = 0; selection < max_num; selection++) {
+        if (listsym[selection] == ch) {
+            break;
+        }
+    }
+
+    if ((selection < 0) || (selection >= max_num)) {
+        return 0;
+    }
+
+    return choice[selection];
 }
 
 /*!
@@ -113,64 +199,18 @@ void wiz_cure_all(player_type *player_ptr)
  * This function returns the k_idx of an object type, or zero if failed
  * List up to 50 choices in three columns
  */
-KIND_OBJECT_IDX wiz_create_itemtype(void)
+static KIND_OBJECT_IDX wiz_create_itemtype()
 {
     term_clear();
-    int num;
-    TERM_LEN col, row;
-    char ch;
-    for (num = 0; (num < 80) && tvals[num].tval; num++) {
-        row = 2 + (num % 20);
-        col = 20 * (num / 20);
-        ch = listsym[num];
-        prt(format("[%c] %s", ch, tvals[num].desc), row, col);
+    auto selection = wiz_select_tval();
+    if (!selection.has_value()) {
+        return 0;
     }
 
-    int max_num = num;
-    if (!get_com("Get what type of object? ", &ch, false))
-        return 0;
-
-    for (num = 0; num < max_num; num++)
-        if (listsym[num] == ch)
-            break;
-
-    if ((num < 0) || (num >= max_num))
-        return 0;
-
-    tval_type tval = i2enum<tval_type>(tvals[num].tval);
-    concptr tval_desc = tvals[num].desc;
+    auto tval = tvals[selection.value()].tval;
+    auto tval_description = tvals[selection.value()].desc;
     term_clear();
-    num = 0;
-    KIND_OBJECT_IDX choice[80];
-    char buf[160];
-    for (const auto& k_ref : k_info) {
-        if (num >= 80) {
-            break;
-        }
-        if (k_ref.idx == 0 || k_ref.tval != tval)
-            continue;
-
-        row = 2 + (num % 20);
-        col = 20 * (num / 20);
-        ch = listsym[num];
-        strcpy(buf, "                    ");
-        strip_name(buf, k_ref.idx);
-        prt(format("[%c] %s", ch, buf), row, col);
-        choice[num++] = k_ref.idx;
-    }
-
-    max_num = num;
-    if (!get_com(format("What Kind of %s? ", tval_desc), &ch, false))
-        return 0;
-
-    for (num = 0; num < max_num; num++)
-        if (listsym[num] == ch)
-            break;
-
-    if ((num < 0) || (num >= max_num))
-        return 0;
-
-    return choice[num];
+    return wiz_select_sval(tval, tval_description);
 }
 
 /*!
@@ -184,7 +224,7 @@ KIND_OBJECT_IDX wiz_create_itemtype(void)
  * Hack -- this routine always makes a "dungeon object", and applies
  * magic to it, and attempts to decline cursed items.
  */
-void wiz_create_item(player_type *player_ptr)
+void wiz_create_item(PlayerType *player_ptr)
 {
     screen_save();
     OBJECT_IDX k_idx = wiz_create_itemtype();
@@ -192,7 +232,7 @@ void wiz_create_item(player_type *player_ptr)
     if (!k_idx)
         return;
 
-    if (k_info[k_idx].gen_flags.has(TRG::INSTA_ART)) {
+    if (k_info[k_idx].gen_flags.has(ItemGenerationTraitType::INSTA_ART)) {
         for (const auto &a_ref : a_info) {
             if ((a_ref.idx == 0) || (a_ref.tval != k_info[k_idx].tval) || (a_ref.sval != k_info[k_idx].sval))
                 continue;
@@ -213,27 +253,136 @@ void wiz_create_item(player_type *player_ptr)
 }
 
 /*!
- * @brief 指定されたIDの固定アーティファクトを生成する / Create the artifact of the specified number
- * @param player_ptr プレイヤーへの参照ポインタ
+ * @brief 指定したIDの固定アーティファクトの名称を取得する
+ *
+ * @param a_idx 固定アーティファクトのID
+ * @return 固定アーティファクトの名称(Ex. ★ロング・ソード『リンギル』)を保持する std::string オブジェクト
  */
-void wiz_create_named_art(player_type *player_ptr, ARTIFACT_IDX a_idx)
+static std::string wiz_make_named_artifact_desc(PlayerType *player_ptr, ARTIFACT_IDX a_idx)
 {
-    if (a_idx <= 0) {
-        char tmp[80] = "";
-        sprintf(tmp, "Artifact ID (1-%d): ", max_a_idx - 1);
-        char tmp_val[10] = "";
-        if (!get_string(tmp, tmp_val, 3))
+    const auto &a_ref = a_info[a_idx];
+    object_type obj;
+    obj.prep(lookup_kind(a_ref.tval, a_ref.sval));
+    obj.name1 = a_idx;
+    object_known(&obj);
+    char buf[MAX_NLEN];
+    describe_flavor(player_ptr, buf, &obj, OD_NAME_ONLY);
+
+    return buf;
+}
+
+/**
+ * @brief 固定アーティファクトをリストから選択する
+ *
+ * @param a_idx_list 選択する候補となる固定アーティファクトのIDのリスト
+ * @return 選択した固定アーティファクトのIDを返す。但しキャンセルした場合は std::nullopt を返す。
+ */
+static std::optional<ARTIFACT_IDX> wiz_select_named_artifact(PlayerType *player_ptr, const std::vector<ARTIFACT_IDX> &a_idx_list)
+{
+    constexpr auto MAX_PER_PAGE = 20UL;
+    const auto page_max = (a_idx_list.size() - 1) / MAX_PER_PAGE + 1;
+    auto current_page = 0UL;
+
+    screen_save();
+
+    std::optional<ARTIFACT_IDX> selected_a_idx;
+
+    while (!selected_a_idx.has_value()) {
+        const auto page_base_idx = current_page * MAX_PER_PAGE;
+        for (auto i = 0U; i < MAX_PER_PAGE + 1; ++i) {
+            term_erase(14, i + 1, 255);
+        }
+        const auto page_item_count = std::min(MAX_PER_PAGE, a_idx_list.size() - page_base_idx);
+        for (auto i = 0U; i < page_item_count; ++i) {
+            std::stringstream ss;
+            ss << I2A(i) << ") " << wiz_make_named_artifact_desc(player_ptr, a_idx_list[page_base_idx + i]);
+            put_str(ss.str().c_str(), i + 1, 15);
+        }
+        if (page_max > 1) {
+            put_str(format("-- more (%d/%d) --", current_page + 1, page_max), page_item_count + 1, 15);
+        }
+
+        char cmd = ESCAPE;
+        get_com("Which artifact: ", &cmd, false);
+        switch (cmd) {
+        case ESCAPE:
+            screen_load();
+            return selected_a_idx;
+        case ' ':
+            current_page++;
+            if (current_page >= page_max) {
+                current_page = 0;
+            }
+            break;
+        default:
+            const auto select_idx = A2I(cmd) + page_base_idx;
+            if (select_idx < a_idx_list.size()) {
+                selected_a_idx = a_idx_list[select_idx];
+            }
+            break;
+        }
+    }
+
+    screen_load();
+
+    return selected_a_idx;
+}
+
+/**
+ * @brief 指定したカテゴリの固定アーティファクトのIDのリストを得る
+ *
+ * @param group_artifact 固定アーティファクトのカテゴリ
+ * @return 該当のカテゴリの固定アーティファクトのIDのリスト
+ */
+static std::vector<ARTIFACT_IDX> wiz_collect_group_a_idx(const grouper &group_artifact)
+{
+    const auto &[tval_list, name] = group_artifact;
+    std::vector<ARTIFACT_IDX> a_idx_list;
+    for (auto tval : tval_list) {
+        for (const auto &a_ref : a_info) {
+            if (a_ref.tval == tval) {
+                a_idx_list.push_back(a_ref.idx);
+            }
+        }
+    }
+    return a_idx_list;
+}
+
+/*!
+ * @brief 固定アーティファクトを生成する / Create the artifact
+ */
+void wiz_create_named_art(PlayerType *player_ptr)
+{
+    screen_save();
+
+    for (auto i = 0U; i < group_artifact_list.size(); ++i) {
+        const auto &[tval_lit, name] = group_artifact_list[i];
+        std::stringstream ss;
+        ss << I2A(i) << ") " << name;
+        term_erase(14, i + 1, 255);
+        put_str(ss.str().c_str(), i + 1, 15);
+    }
+
+    std::optional<ARTIFACT_IDX> create_a_idx;
+
+    while (!create_a_idx.has_value()) {
+        char cmd = ESCAPE;
+        get_com("Kind of artifact: ", &cmd, false);
+        switch (cmd) {
+        case ESCAPE:
+            screen_load();
             return;
-
-        a_idx = (ARTIFACT_IDX)atoi(tmp_val);
+        default:
+            if (auto idx = A2I(cmd); idx < group_artifact_list.size()) {
+                const auto a_idx_list = wiz_collect_group_a_idx(group_artifact_list[idx]);
+                create_a_idx = wiz_select_named_artifact(player_ptr, a_idx_list);
+            }
+        }
     }
 
-    if (a_idx <= 0 || a_idx >= max_a_idx) {
-        msg_format(_("番号は1から%dの間で指定して下さい。", "ID must be between 1 to %d."), max_a_idx - 1);
-        return;
-    }
+    screen_load();
 
-    (void)create_named_art(player_ptr, a_idx, player_ptr->y, player_ptr->x);
+    create_named_art(player_ptr, create_a_idx.value(), player_ptr->y, player_ptr->x);
     msg_print("Allocated.");
 }
 
@@ -241,7 +390,7 @@ void wiz_create_named_art(player_type *player_ptr, ARTIFACT_IDX a_idx)
  * @brief プレイヤーの現能力値を調整する / Change various "permanent" player variables.
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void wiz_change_status(player_type *player_ptr)
+void wiz_change_status(PlayerType *player_ptr)
 {
     int tmp_int;
     char tmp_val[160];
@@ -261,37 +410,33 @@ void wiz_change_status(player_type *player_ptr)
         player_ptr->stat_cur[i] = player_ptr->stat_max[i] = (BASE_STATUS)tmp_int;
     }
 
-    sprintf(tmp_val, "%d", WEAPON_EXP_MASTER);
+    sprintf(tmp_val, "%d", PlayerSkill::weapon_exp_at(PlayerSkillRank::MASTER));
     if (!get_string(_("熟練度: ", "Proficiency: "), tmp_val, 4))
         return;
 
-    int16_t tmp_s16b = (int16_t)atoi(tmp_val);
-    if (tmp_s16b < WEAPON_EXP_UNSKILLED)
-        tmp_s16b = WEAPON_EXP_UNSKILLED;
+    auto tmp_s16b = std::clamp(static_cast<SUB_EXP>(atoi(tmp_val)),
+        PlayerSkill::weapon_exp_at(PlayerSkillRank::UNSKILLED),
+        PlayerSkill::weapon_exp_at(PlayerSkillRank::MASTER));
 
-    if (tmp_s16b > WEAPON_EXP_MASTER)
-        tmp_s16b = WEAPON_EXP_MASTER;
-
-    for (int j = 0; j <= TV_WEAPON_END - TV_WEAPON_BEGIN; j++) {
+    for (auto tval : TV_WEAPON_RANGE) {
         for (int i = 0; i < 64; i++) {
-            player_ptr->weapon_exp[j][i] = tmp_s16b;
-            if (player_ptr->weapon_exp[j][i] > s_info[player_ptr->pclass].w_max[j][i])
-                player_ptr->weapon_exp[j][i] = s_info[player_ptr->pclass].w_max[j][i];
+            player_ptr->weapon_exp[tval][i] = std::min(tmp_s16b, s_info[enum2i(player_ptr->pclass)].w_max[tval][i]);
         }
     }
 
-    for (int j = 0; j < 10; j++) {
+    for (auto j : PLAYER_SKILL_KIND_TYPE_RANGE) {
         player_ptr->skill_exp[j] = tmp_s16b;
-        if (player_ptr->skill_exp[j] > s_info[player_ptr->pclass].s_max[j])
-            player_ptr->skill_exp[j] = s_info[player_ptr->pclass].s_max[j];
+        auto short_pclass = enum2i(player_ptr->pclass);
+        if (player_ptr->skill_exp[j] > s_info[short_pclass].s_max[j])
+            player_ptr->skill_exp[j] = s_info[short_pclass].s_max[j];
     }
 
     int k;
     for (k = 0; k < 32; k++)
-        player_ptr->spell_exp[k] = (tmp_s16b > SPELL_EXP_MASTER ? SPELL_EXP_MASTER : tmp_s16b);
+        player_ptr->spell_exp[k] = std::min(PlayerSkill::spell_exp_at(PlayerSkillRank::MASTER), tmp_s16b);
 
     for (; k < 64; k++)
-        player_ptr->spell_exp[k] = (tmp_s16b > SPELL_EXP_EXPERT ? SPELL_EXP_EXPERT : tmp_s16b);
+        player_ptr->spell_exp[k] = std::min(PlayerSkill::spell_exp_at(PlayerSkillRank::EXPERT), tmp_s16b);
 
     sprintf(tmp_val, "%ld", (long)(player_ptr->au));
     if (!get_string("Gold: ", tmp_val, 9))
@@ -310,7 +455,7 @@ void wiz_change_status(player_type *player_ptr)
     if (tmp_long < 0)
         tmp_long = 0L;
 
-    if (player_ptr->prace == player_race_type::ANDROID)
+    if (player_ptr->prace == PlayerRaceType::ANDROID)
         return;
 
     player_ptr->max_exp = tmp_long;
@@ -324,7 +469,7 @@ void wiz_change_status(player_type *player_ptr)
  * Create desired feature
  * @param creaturer_ptr プレイヤーへの参照ポインタ
  */
-void wiz_create_feature(player_type *player_ptr)
+void wiz_create_feature(PlayerType *player_ptr)
 {
     POSITION y, x;
     if (!tgt_pt(player_ptr, &x, &y))
@@ -342,8 +487,8 @@ void wiz_create_feature(player_type *player_ptr)
     FEAT_IDX tmp_feat = (FEAT_IDX)atoi(tmp_val);
     if (tmp_feat < 0)
         tmp_feat = 0;
-    else if (tmp_feat >= max_f_idx)
-        tmp_feat = max_f_idx - 1;
+    else if (tmp_feat >= static_cast<FEAT_IDX>(f_info.size()))
+        tmp_feat = static_cast<FEAT_IDX>(f_info.size()) - 1;
 
     static int prev_mimic = 0;
     sprintf(tmp_val, "%d", prev_mimic);
@@ -354,17 +499,17 @@ void wiz_create_feature(player_type *player_ptr)
     FEAT_IDX tmp_mimic = (FEAT_IDX)atoi(tmp_val);
     if (tmp_mimic < 0)
         tmp_mimic = 0;
-    else if (tmp_mimic >= max_f_idx)
-        tmp_mimic = max_f_idx - 1;
+    else if (tmp_mimic >= static_cast<FEAT_IDX>(f_info.size()))
+        tmp_mimic = static_cast<FEAT_IDX>(f_info.size()) - 1;
 
     cave_set_feat(player_ptr, y, x, tmp_feat);
     g_ptr->mimic = (int16_t)tmp_mimic;
     feature_type *f_ptr;
     f_ptr = &f_info[g_ptr->get_feat_mimic()];
 
-    if (f_ptr->flags.has(FF::RUNE_PROTECTION) || f_ptr->flags.has(FF::RUNE_EXPLOSION))
+    if (f_ptr->flags.has(FloorFeatureType::RUNE_PROTECTION) || f_ptr->flags.has(FloorFeatureType::RUNE_EXPLOSION))
         g_ptr->info |= CAVE_OBJECT;
-    else if (f_ptr->flags.has(FF::MIRROR))
+    else if (f_ptr->flags.has(FloorFeatureType::MIRROR))
         g_ptr->info |= CAVE_GLOW | CAVE_OBJECT;
 
     note_spot(player_ptr, y, x);
@@ -382,10 +527,10 @@ void wiz_create_feature(player_type *player_ptr)
  * @details 0を指定すると地上に飛ぶが、元いた場所にしか飛ばない
  * @todo 可能ならダンジョンの入口 (例：ルルイエなら大洋の真ん中)へ飛べるようにしたい
  */
-static bool select_debugging_floor(player_type *player_ptr, int dungeon_type)
+static bool select_debugging_floor(PlayerType *player_ptr, int dungeon_type)
 {
     auto max_depth = d_info[dungeon_type].maxdepth;
-    if ((max_depth == 0) || (dungeon_type > w_ptr->max_d_idx)) {
+    if ((max_depth == 0) || (dungeon_type > static_cast<int>(d_info.size()))) {
         dungeon_type = DUNGEON_ANGBAND;
     }
 
@@ -425,7 +570,7 @@ static bool select_debugging_floor(player_type *player_ptr, int dungeon_type)
  * @param player_ptr プレイヤーへの参照ポインタ
  * @details 範囲外の値が選択されたら再入力を促す
  */
-static bool select_debugging_dungeon(player_type *player_ptr, DUNGEON_IDX *dungeon_type)
+static bool select_debugging_dungeon(PlayerType *player_ptr, DUNGEON_IDX *dungeon_type)
 {
     if (command_arg > 0) {
         return true;
@@ -454,7 +599,7 @@ static bool select_debugging_dungeon(player_type *player_ptr, DUNGEON_IDX *dunge
  * @brief 任意のダンジョン及び階層に飛ぶtための選択処理
  * Go to any level
  */
-void wiz_jump_to_dungeon(player_type *player_ptr)
+void wiz_jump_to_dungeon(PlayerType *player_ptr)
 {
     DUNGEON_IDX dungeon_type = 1;
     if (!select_debugging_dungeon(player_ptr, &dungeon_type)) {
@@ -483,7 +628,7 @@ void wiz_jump_to_dungeon(player_type *player_ptr)
  * Become aware of a lot of objects
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void wiz_learn_items_all(player_type *player_ptr)
+void wiz_learn_items_all(PlayerType *player_ptr)
 {
     object_type forge;
     object_type *q_ptr;
@@ -499,7 +644,7 @@ void wiz_learn_items_all(player_type *player_ptr)
 /*!
  * @brief プレイヤーの種族を変更する
  */
-void wiz_reset_race(player_type *player_ptr)
+void wiz_reset_race(PlayerType *player_ptr)
 {
     char ppp[80];
     sprintf(ppp, "Race (0-%d): ", MAX_RACES - 1);
@@ -514,7 +659,7 @@ void wiz_reset_race(player_type *player_ptr)
     if (tmp_int < 0 || tmp_int >= MAX_RACES)
         return;
 
-    player_ptr->prace = i2enum<player_race_type>(tmp_int);
+    player_ptr->prace = i2enum<PlayerRaceType>(tmp_int);
     rp_ptr = &race_info[enum2i(player_ptr->prace)];
 
     player_ptr->window_flags |= PW_PLAYER;
@@ -527,24 +672,26 @@ void wiz_reset_race(player_type *player_ptr)
  * @brief プレイヤーの職業を変更する
  * @todo 魔法領域の再選択などがまだ不完全、要実装。
  */
-void wiz_reset_class(player_type *player_ptr)
+void wiz_reset_class(PlayerType *player_ptr)
 {
     char ppp[80];
-    sprintf(ppp, "Class (0-%d): ", MAX_CLASS - 1);
+    sprintf(ppp, "Class (0-%d): ", PLAYER_CLASS_TYPE_MAX - 1);
 
     char tmp_val[160];
-    sprintf(tmp_val, "%d", player_ptr->pclass);
+    auto short_pclass = enum2i(player_ptr->pclass);
+    sprintf(tmp_val, "%d", short_pclass);
 
     if (!get_string(ppp, tmp_val, 2))
         return;
 
     int tmp_int = atoi(tmp_val);
-    if (tmp_int < 0 || tmp_int >= MAX_CLASS)
+    if (tmp_int < 0 || tmp_int >= PLAYER_CLASS_TYPE_MAX)
         return;
 
-    player_ptr->pclass = i2enum<player_class_type>(tmp_int);
-    cp_ptr = &class_info[player_ptr->pclass];
-    mp_ptr = &m_info[player_ptr->pclass];
+    player_ptr->pclass = i2enum<PlayerClassType>(tmp_int);
+    cp_ptr = &class_info[short_pclass];
+    mp_ptr = &m_info[short_pclass];
+    PlayerClass(player_ptr).init_specific_data();
     player_ptr->window_flags |= PW_PLAYER;
     player_ptr->update |= PU_BONUS | PU_HP | PU_MANA | PU_SPELLS;
     player_ptr->redraw |= PR_BASIC | PR_HP | PR_MANA | PR_STATS;
@@ -555,7 +702,7 @@ void wiz_reset_class(player_type *player_ptr)
  * @brief プレイヤーの領域を変更する
  * @todo 存在有無などは未判定。そのうちすべき。
  */
-void wiz_reset_realms(player_type *player_ptr)
+void wiz_reset_realms(PlayerType *player_ptr)
 {
     char ppp[80];
     char tmp_val[160];
@@ -566,6 +713,8 @@ void wiz_reset_realms(player_type *player_ptr)
         return;
 
     player_ptr->realm1 = static_cast<int16_t>(atoi(tmp_val));
+
+    PlayerClass(player_ptr).init_specific_data();
 
     sprintf(ppp, "2st Realm (None=0, 1-%d): ", MAX_REALM - 1);
     sprintf(tmp_val, "%d", player_ptr->realm2);
@@ -651,7 +800,7 @@ void set_gametime(void)
 /*!
  * @brief プレイヤー近辺の全モンスターを消去する / Delete all nearby monsters
  */
-void wiz_zap_surrounding_monsters(player_type *player_ptr)
+void wiz_zap_surrounding_monsters(PlayerType *player_ptr)
 {
     for (MONSTER_IDX i = 1; i < player_ptr->current_floor_ptr->m_max; i++) {
         monster_type *m_ptr = &player_ptr->current_floor_ptr->m_list[i];
@@ -673,7 +822,7 @@ void wiz_zap_surrounding_monsters(player_type *player_ptr)
  * @brief フロアに存在する全モンスターを消去する / Delete all monsters
  * @param player_ptr 術者の参照ポインタ
  */
-void wiz_zap_floor_monsters(player_type *player_ptr)
+void wiz_zap_floor_monsters(PlayerType *player_ptr)
 {
     for (MONSTER_IDX i = 1; i < player_ptr->current_floor_ptr->m_max; i++) {
         monster_type *m_ptr = &player_ptr->current_floor_ptr->m_list[i];
@@ -690,7 +839,7 @@ void wiz_zap_floor_monsters(player_type *player_ptr)
     }
 }
 
-void cheat_death(player_type *player_ptr)
+void cheat_death(PlayerType *player_ptr)
 {
     if (player_ptr->sc)
         player_ptr->sc = player_ptr->age = 0;

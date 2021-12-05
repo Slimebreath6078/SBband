@@ -23,13 +23,14 @@
 #include "util/int-char-converter.h"
 #include "view/display-messages.h"
 #include "wizard/wizard-special-process.h"
+#include <array>
 #include <sstream>
 #include <string>
 #include <tuple>
 #include <vector>
 
-void wiz_enter_quest(player_type *player_ptr);
-void wiz_complete_quest(player_type *player_ptr);
+void wiz_enter_quest(PlayerType *player_ptr);
+void wiz_complete_quest(PlayerType *player_ptr);
 void wiz_restore_monster_max_num();
 
 /*!
@@ -64,7 +65,7 @@ void display_wizard_game_modifier_menu()
  * @brief ゲーム設定コマンドの入力を受け付ける
  * @param player_ptr プレイヤーの情報へのポインタ
  */
-void wizard_game_modifier(player_type *player_ptr)
+void wizard_game_modifier(PlayerType *player_ptr)
 {
     screen_save();
     display_wizard_game_modifier_menu();
@@ -101,7 +102,7 @@ void wizard_game_modifier(player_type *player_ptr)
  * @brief 指定したクエストに突入する
  * @param プレイヤーの情報へのポインタ
  */
-void wiz_enter_quest(player_type *player_ptr)
+void wiz_enter_quest(PlayerType *player_ptr)
 {
     char ppp[30];
     char tmp_val[5];
@@ -119,7 +120,7 @@ void wiz_enter_quest(player_type *player_ptr)
     init_flags = i2enum<init_flags_type>(INIT_SHOW_TEXT | INIT_ASSIGN);
     player_ptr->current_floor_ptr->inside_quest = (QUEST_IDX)tmp_int;
     parse_fixed_map(player_ptr, "q_info.txt", 0, 0, 0, 0);
-    quest[tmp_int].status = QUEST_STATUS_TAKEN;
+    quest[tmp_int].status = QuestStatusType::TAKEN;
     if (quest[tmp_int].dungeon == 0)
         exe_enter_quest(player_ptr, (QUEST_IDX)tmp_int);
 }
@@ -128,7 +129,7 @@ void wiz_enter_quest(player_type *player_ptr)
  * @brief 指定したクエストを完了させる
  * @param プレイヤーの情報へのポインタ
  */
-void wiz_complete_quest(player_type *player_ptr)
+void wiz_complete_quest(PlayerType *player_ptr)
 {
     if (!player_ptr->current_floor_ptr->inside_quest) {
         msg_print("No current quest");
@@ -136,7 +137,7 @@ void wiz_complete_quest(player_type *player_ptr)
         return;
     }
 
-    if (quest[player_ptr->current_floor_ptr->inside_quest].status == QUEST_STATUS_TAKEN)
+    if (quest[player_ptr->current_floor_ptr->inside_quest].status == QuestStatusType::TAKEN)
         complete_quest(player_ptr, player_ptr->current_floor_ptr->inside_quest);
 }
 
@@ -145,14 +146,14 @@ void wiz_restore_monster_max_num()
     MONRACE_IDX r_idx = command_arg;
     if (r_idx <= 0) {
         std::stringstream ss;
-        ss << "Monster race (1-" << max_r_idx << "): ";
+        ss << "Monster race (1-" << r_info.size() << "): ";
 
         char tmp_val[160] = "\0";
         if (!get_string(ss.str().c_str(), tmp_val, 5))
             return;
 
         r_idx = (MONRACE_IDX)atoi(tmp_val);
-        if (r_idx <= 0 || r_idx >= max_r_idx)
+        if (r_idx <= 0 || r_idx >= static_cast<MONRACE_IDX>(r_info.size()))
             return;
     }
 
