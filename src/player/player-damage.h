@@ -13,81 +13,70 @@
 #define DAMAGE_USELIFE 6
 
 struct monster_type;
-struct player_type;
 
-struct damage_function {
-    damage_function(std::function<PERCENTAGE(player_type *player_ptr)> calc_damage_rate, std::function<BIT_FLAGS(player_type *player_ptr)> has_resist,
-        std::function<bool(player_type *player_ptr)> is_oppose);
-    damage_function() = delete;
-    ~damage_function() = default;
-    damage_function operator=(damage_function) = delete;
-    const std::function<PERCENTAGE(player_type *player_ptr)> calc_damage_rate;
-    const std::function<BIT_FLAGS(player_type *player_ptr)> has_resist;
-    const std::function<bool(player_type *player_ptr)> is_oppose;
-};
+class PlayerType;
 
-class element_dam {
+class attribute_dam {
 protected:
-    element_dam(player_type *player_ptr, concptr kb_str, HIT_POINT dam, bool aura, int stat, std::unique_ptr<ObjectBreaker> breaker, damage_function function);
-    element_dam() = delete;
-    player_type *player_ptr;
+    attribute_dam(PlayerType *player_ptr, concptr kb_str, HIT_POINT dam, bool aura, std::function<PERCENTAGE(PlayerType *player_ptr)> calc_damage_rate);
+    attribute_dam() = delete;
+    PlayerType *player_ptr;
     concptr kb_str;
     HIT_POINT dam;
     bool aura;
-    int stat;
-    std::unique_ptr<ObjectBreaker> breaker;
-    damage_function function;
-    virtual void effect(bool double_resist);
+    const std::function<PERCENTAGE(PlayerType *player_ptr)> calc_damage_rate;
+    virtual void effect(HIT_POINT &damage);
 
 public:
-    virtual ~element_dam() = default;
-    HIT_POINT process();
-    element_dam operator=(element_dam) = delete;
+    virtual ~attribute_dam() = default;
+    virtual HIT_POINT process();
+    attribute_dam operator=(attribute_dam) = delete;
 };
 
-class acid_dam : public element_dam {
+class acid_dam : public attribute_dam {
 public:
-    acid_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str);
+    acid_dam(PlayerType *player_ptr, HIT_POINT dam, concptr kb_str);
     acid_dam() = delete;
     virtual ~acid_dam() = default;
 
 private:
-    void effect(bool double_resist);
+    void effect(HIT_POINT &damage);
     virtual bool minus_ac();
     acid_dam operator=(acid_dam) = delete;
 };
 
-class elec_dam : public element_dam {
+class elec_dam : public attribute_dam {
 public:
-    elec_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura);
+    elec_dam(PlayerType *player_ptr, HIT_POINT dam, concptr kb_str, bool aura);
     elec_dam() = delete;
     virtual ~elec_dam() = default;
 
 private:
-    void effect(bool double_resist);
+    void effect(HIT_POINT &damage);
     elec_dam operator=(elec_dam) = delete;
 };
 
-class fire_dam : public element_dam {
+class fire_dam : public attribute_dam {
 public:
-    fire_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura);
+    fire_dam(PlayerType *player_ptr, HIT_POINT dam, concptr kb_str, bool aura);
     fire_dam() = delete;
     virtual ~fire_dam() = default;
 
 private:
-    void effect(bool double_resist);
+    void effect(HIT_POINT &damage);
     fire_dam operator=(fire_dam) = delete;
 };
 
-class cold_dam : public element_dam {
+class cold_dam : public attribute_dam {
 public:
-    cold_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura);
+    cold_dam(PlayerType *player_ptr, HIT_POINT dam, concptr kb_str, bool aura);
     cold_dam() = delete;
     virtual ~cold_dam() = default;
 
 private:
-    void effect(bool double_resist);
+    void effect(HIT_POINT &damage);
     cold_dam operator=(cold_dam) = delete;
 };
-int take_hit(player_type *player_ptr, int damage_type, HIT_POINT damage, concptr kb_str);
-void touch_zap_player(monster_type *m_ptr, player_type *player_ptr);
+
+int take_hit(PlayerType *player_ptr, int damage_type, HIT_POINT damage, concptr kb_str);
+void touch_zap_player(monster_type *m_ptr, PlayerType *player_ptr);

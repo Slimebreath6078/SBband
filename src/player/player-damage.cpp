@@ -43,8 +43,10 @@
 #include "object/item-tester-hooker.h"
 #include "object/object-broken.h"
 #include "object/object-flags.h"
+#include "player-base/player-class.h"
 #include "player-info/class-info.h"
 #include "player-info/race-types.h"
+#include "player-info/samurai-data-type.h"
 #include "player/player-personality-types.h"
 #include "player/player-status-flags.h"
 #include "player/player-status-resist.h"
@@ -68,99 +70,103 @@
 #include "view/display-messages.h"
 #include "world/world.h"
 
-damage_function::damage_function(std::function<PERCENTAGE(player_type *player_ptr)> calc_damage_rate, std::function<BIT_FLAGS(player_type *player_ptr)> has_resist,
-    std::function<bool(player_type *player_ptr)> is_oppose)
-    : calc_damage_rate(calc_damage_rate)
-    , has_resist(has_resist)
-    , is_oppose(is_oppose)
-{
-}
-
-element_dam::element_dam(player_type *player_ptr, concptr kb_str, HIT_POINT dam, bool aura, int stat, std::unique_ptr<ObjectBreaker> breaker, damage_function function)
+attribute_dam::attribute_dam(PlayerType *player_ptr, concptr kb_str, HIT_POINT dam, bool aura, std::function<PERCENTAGE(PlayerType *player_ptr)> calc_damage_rate)
     : player_ptr(player_ptr)
     , kb_str(kb_str)
     , dam(dam)
     , aura(aura)
-    , stat(stat)
-    , breaker(std::move(breaker))
-    , function(function)
+    , calc_damage_rate(calc_damage_rate)
 {
 }
 
-acid_dam::acid_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str)
-    : element_dam(player_ptr, kb_str, dam, false, A_CHR, std::make_unique<BreakerAcid>(), damage_function(calc_acid_damage_rate, has_resist_acid, is_oppose_acid))
+acid_dam::acid_dam(PlayerType *player_ptr, HIT_POINT dam, concptr kb_str)
+    : attribute_dam(player_ptr, kb_str, dam, false, calc_acid_damage_rate)
 {
 }
 
-elec_dam::elec_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura)
-    : element_dam(player_ptr, kb_str, dam, aura, A_DEX, std::make_unique<BreakerElec>(), damage_function(calc_elec_damage_rate, has_resist_elec, is_oppose_elec))
+elec_dam::elec_dam(PlayerType *player_ptr, HIT_POINT dam, concptr kb_str, bool aura)
+    : attribute_dam(player_ptr, kb_str, dam, aura, calc_elec_damage_rate)
 {
 }
 
-fire_dam::fire_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura)
-    : element_dam(player_ptr, kb_str, dam, aura, A_STR, std::make_unique<BreakerFire>(), damage_function(calc_fire_damage_rate, has_resist_fire, is_oppose_fire))
+fire_dam::fire_dam(PlayerType *player_ptr, HIT_POINT dam, concptr kb_str, bool aura)
+    : attribute_dam(player_ptr, kb_str, dam, aura, calc_fire_damage_rate)
 {
 }
 
-cold_dam::cold_dam(player_type *player_ptr, HIT_POINT dam, concptr kb_str, bool aura)
-    : element_dam(player_ptr, kb_str, dam, aura, A_STR, std::make_unique<BreakerCold>(), damage_function(calc_cold_damage_rate, has_resist_cold, is_oppose_cold))
+cold_dam::cold_dam(PlayerType *player_ptr, HIT_POINT dam, concptr kb_str, bool aura)
+    : attribute_dam(player_ptr, kb_str, dam, aura, calc_cold_damage_rate)
 {
 }
 
-HIT_POINT element_dam::process()
+HIT_POINT attribute_dam::process()
 {
-    HIT_POINT dam;
-    int inv = (this->dam < 30) ? 1 : (this->dam < 60) ? 2
-                                                      : 3;
-    bool double_resist = this->function.is_oppose(this->player_ptr);
-
-    dam = this->dam;
-    this->dam = this->dam * this->function.calc_damage_rate(this->player_ptr) / 100;
+    HIT_POINT dam = this->dam * this->calc_damage_rate(this->player_ptr) / 100;
 
     if (this->dam <= 0)
         return 0;
 
-    if (!this->aura || !check_multishadow(this->player_ptr)) {
-        this->effect(double_resist);
-    }
-
     HIT_POINT get_damage = take_hit(this->player_ptr, this->aura ? DAMAGE_NOESCAPE : DAMAGE_ATTACK, this->dam, kb_str);
-    this->dam = dam;
 
-    if (!this->aura && !double_resist && this->function.has_resist(this->player_ptr) == FLAG_CAUSE_NONE)
-        inventory_damage(this->player_ptr, *this->breaker.get(), inv);
+    if (!this->aura)
+        this->effect(get_damage);
 
     return get_damage;
 }
 
-void element_dam::effect(bool double_resist)
+void attribute_dam::effect(HIT_POINT &damage)
 {
-    if ((!(double_resist || this->function.has_resist(this->player_ptr))) && one_in_(HURT_CHANCE))
-        (void)do_dec_stat(player_ptr, this->stat);
 }
 
-void acid_dam::effect(bool double_resist)
+void acid_dam::effect(HIT_POINT &damage)
 {
+    bool double_resist = is_oppose_acid(this->player_ptr);
+    int inv = (damage < 30) ? 1 : (damage < 60) ? 2
+                                                : 3;
+    if ((!(double_resist || has_resist_acid(this->player_ptr) || !check_multishadow(this->player_ptr))) && one_in_(HURT_CHANCE))
+        (void)do_dec_stat(player_ptr, A_CHR);
 
-    element_dam::effect(double_resist);
+    if (!double_resist && has_resist_acid(this->player_ptr) == FLAG_CAUSE_NONE)
+        inventory_damage(this->player_ptr, BreakerAcid(), inv);
 
     if (this->minus_ac())
-        this->dam = (this->dam + 1) / 2;
+        damage = (damage + 1) / 2;
 }
 
-void elec_dam::effect(bool double_resist)
+void elec_dam::effect(HIT_POINT &damage)
 {
-    element_dam::effect(double_resist);
+    bool double_resist = is_oppose_elec(this->player_ptr);
+    int inv = (damage < 30) ? 1 : (damage < 60) ? 2
+                                                : 3;
+    if ((!(double_resist || has_resist_elec(this->player_ptr) || !check_multishadow(this->player_ptr))) && one_in_(HURT_CHANCE))
+        (void)do_dec_stat(player_ptr, A_DEX);
+
+    if (!double_resist && has_resist_elec(this->player_ptr) == FLAG_CAUSE_NONE)
+        inventory_damage(this->player_ptr, BreakerElec(), inv);
 }
 
-void fire_dam::effect(bool double_resist)
+void fire_dam::effect(HIT_POINT &damage)
 {
-    element_dam::effect(double_resist);
+    bool double_resist = is_oppose_fire(this->player_ptr);
+    int inv = (damage < 30) ? 1 : (damage < 60) ? 2
+                                                : 3;
+    if ((!(double_resist || has_resist_fire(this->player_ptr) || !check_multishadow(this->player_ptr))) && one_in_(HURT_CHANCE))
+        (void)do_dec_stat(player_ptr, A_STR);
+
+    if (!double_resist && has_resist_fire(this->player_ptr) == FLAG_CAUSE_NONE)
+        inventory_damage(this->player_ptr, BreakerFire(), inv);
 }
 
-void cold_dam::effect(bool double_resist)
+void cold_dam::effect(HIT_POINT &damage)
 {
-    element_dam::effect(double_resist);
+    bool double_resist = is_oppose_cold(this->player_ptr);
+    int inv = (damage < 30) ? 1 : (damage < 60) ? 2
+                                                : 3;
+    if ((!(double_resist || has_resist_cold(this->player_ptr) || !check_multishadow(this->player_ptr))) && one_in_(HURT_CHANCE))
+        (void)do_dec_stat(player_ptr, A_STR);
+
+    if (!double_resist && has_resist_cold(this->player_ptr) == FLAG_CAUSE_NONE)
+        inventory_damage(this->player_ptr, BreakerCold(), inv);
 }
 
 /*!
@@ -232,7 +238,7 @@ bool acid_dam::minus_ac()
  * the game when he dies, since the "You die." message is shown before
  * setting the player to "dead".
  */
-int take_hit(player_type *player_ptr, int damage_type, HIT_POINT damage, concptr hit_from)
+int take_hit(PlayerType *player_ptr, int damage_type, HIT_POINT damage, concptr hit_from)
 {
     int old_chp = player_ptr->chp;
 
@@ -245,11 +251,8 @@ int take_hit(player_type *player_ptr, int damage_type, HIT_POINT damage, concptr
 
     if (player_ptr->sutemi)
         damage *= 2;
-    if (player_ptr->special_defense & KATA_IAI)
+    if (PlayerClass(player_ptr).samurai_stance_is(SamuraiStanceType::IAI))
         damage += (damage + 4) / 5;
-
-    if (easy_band)
-        damage = (damage + 1) / 2;
 
     if (damage_type != DAMAGE_USELIFE) {
         disturb(player_ptr, true, true);
@@ -288,7 +291,7 @@ int take_hit(player_type *player_ptr, int damage_type, HIT_POINT damage, concptr
             }
         }
 
-        if (player_ptr->special_defense & KATA_MUSOU) {
+        if (PlayerClass(player_ptr).samurai_stance_is(SamuraiStanceType::MUSOU)) {
             damage /= 2;
             if ((damage == 0) && one_in_(2))
                 damage = 1;
@@ -312,7 +315,7 @@ int take_hit(player_type *player_ptr, int damage_type, HIT_POINT damage, concptr
     }
 
     if (player_ptr->chp < 0 && !cheat_immortal) {
-        bool android = (player_ptr->prace == player_race_type::ANDROID ? true : false);
+        bool android = player_ptr->prace == PlayerRaceType::ANDROID;
 
         /* 死んだ時に強制終了して死を回避できなくしてみた by Habu */
         if (!cheat_save && !save_player(player_ptr, SAVE_TYPE_CLOSE_GAME))
@@ -347,9 +350,9 @@ int take_hit(player_type *player_ptr, int damage_type, HIT_POINT damage, concptr
                 char dummy[1024];
 #ifdef JP
                 sprintf(dummy, "%s%s%s",
-                    !player_ptr->paralyzed     ? ""
-                        : player_ptr->free_act ? "彫像状態で"
-                                               : "麻痺状態で",
+                    !player_ptr->paralyzed ? ""
+                    : player_ptr->free_act ? "彫像状態で"
+                                           : "麻痺状態で",
                     player_ptr->hallucinated ? "幻覚に歪んだ" : "", hit_from);
 #else
                 sprintf(dummy, "%s%s", hit_from, !player_ptr->paralyzed ? "" : " while helpless");
@@ -368,7 +371,7 @@ int take_hit(player_type *player_ptr, int damage_type, HIT_POINT damage, concptr
                     strcpy(buf, _("アリーナ", "in the Arena"));
                 else if (!is_in_dungeon(player_ptr))
                     strcpy(buf, _("地上", "on the surface"));
-                else if (q_idx && (is_fixed_quest_idx(q_idx) && !((q_idx == QUEST_OBERON) || (q_idx == QUEST_SERPENT))))
+                else if (q_idx && (quest_type::is_fixed(q_idx) && !((q_idx == QUEST_OBERON) || (q_idx == QUEST_SERPENT))))
                     strcpy(buf, _("クエスト", "in a quest"));
                 else
                     sprintf(buf, _("%d階", "level %d"), (int)player_ptr->current_floor_ptr->dun_level);
@@ -499,7 +502,7 @@ int take_hit(player_type *player_ptr, int damage_type, HIT_POINT damage, concptr
         flush();
     }
 
-    if (player_ptr->wild_mode && !player_ptr->leaving && (player_ptr->chp < MAX(warning, player_ptr->mhp / 5)))
+    if (player_ptr->wild_mode && !player_ptr->leaving && (player_ptr->chp < std::max(warning, player_ptr->mhp / 5)))
         change_wild_mode(player_ptr, false);
 
     return damage;
@@ -515,18 +518,19 @@ int take_hit(player_type *player_ptr, int damage_type, HIT_POINT damage, concptr
  * @param dam_func ダメージ処理を行う関数の参照ポインタ
  * @param message オーラダメージを受けた際のメッセージ
  */
-static void process_aura_damage(monster_type *m_ptr, player_type *player_ptr, bool immune, int flags_offset, int r_flags_offset, uint32_t aura_flag,
-    element_dam &&dam_func, concptr message)
+static void process_aura_damage(monster_type *m_ptr, PlayerType *player_ptr, bool immune, MonsterAuraType aura_flag, attribute_dam &&dam_func, concptr message)
 {
-    monster_race *r_ptr = &r_info[m_ptr->r_idx];
-    if (!(atoffset(BIT_FLAGS, r_ptr, flags_offset) & aura_flag) || immune)
+    auto *r_ptr = &r_info[m_ptr->r_idx];
+    if (r_ptr->aura_flags.has_not(aura_flag) || immune) {
         return;
+    }
 
     msg_print(message);
     dam_func.process();
 
-    if (is_original_ap_and_seen(player_ptr, m_ptr))
-        atoffset(BIT_FLAGS, r_ptr, r_flags_offset) |= aura_flag;
+    if (is_original_ap_and_seen(player_ptr, m_ptr)) {
+        r_ptr->r_aura_flags.set(aura_flag);
+    }
 
     handle_stuff(player_ptr);
 }
@@ -541,18 +545,14 @@ static HIT_POINT calc_aura_damage(DEPTH level)
  * @param m_ptr オーラを持つモンスターの構造体参照ポインタ
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void touch_zap_player(monster_type *m_ptr, player_type *player_ptr)
+void touch_zap_player(monster_type *m_ptr, PlayerType *player_ptr)
 {
     monster_race *r_ptr = &r_info[m_ptr->r_idx];
     GAME_TEXT mon_name[MAX_NLEN];
 
     monster_desc(player_ptr, mon_name, m_ptr, MD_WRONGDOER_NAME);
 
-    process_aura_damage(m_ptr, player_ptr, (bool)has_immune_fire(player_ptr), offsetof(monster_race, flags2), offsetof(monster_race, r_flags2), RF2_AURA_FIRE,
-        fire_dam(player_ptr, calc_aura_damage(r_ptr->level), mon_name, true),
-        _("突然とても熱くなった！", "You are suddenly very hot!"));
-    process_aura_damage(m_ptr, player_ptr, (bool)has_immune_cold(player_ptr), offsetof(monster_race, flags3), offsetof(monster_race, r_flags3), RF3_AURA_COLD,
-        cold_dam(player_ptr, calc_aura_damage(r_ptr->level), mon_name, true), _("突然とても寒くなった！", "You are suddenly very cold!"));
-    process_aura_damage(m_ptr, player_ptr, (bool)has_immune_elec(player_ptr), offsetof(monster_race, flags2), offsetof(monster_race, r_flags2), RF2_AURA_ELEC,
-        elec_dam(player_ptr, calc_aura_damage(r_ptr->level), mon_name, true), _("電撃をくらった！", "You get zapped!"));
+    process_aura_damage(m_ptr, player_ptr, has_immune_fire(player_ptr) != 0, MonsterAuraType::FIRE, fire_dam(player_ptr, calc_aura_damage(r_ptr->level), mon_name, true), _("突然とても熱くなった！", "You are suddenly very hot!"));
+    process_aura_damage(m_ptr, player_ptr, has_immune_cold(player_ptr) != 0, MonsterAuraType::COLD, cold_dam(player_ptr, calc_aura_damage(r_ptr->level), mon_name, true), _("突然とても寒くなった！", "You are suddenly very cold!"));
+    process_aura_damage(m_ptr, player_ptr, has_immune_elec(player_ptr) != 0, MonsterAuraType::ELEC, elec_dam(player_ptr, calc_aura_damage(r_ptr->level), mon_name, true), _("電撃をくらった！", "You get zapped!"));
 }
