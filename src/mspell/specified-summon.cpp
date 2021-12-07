@@ -1,4 +1,5 @@
 ﻿#include "mspell/specified-summon.h"
+#include "effect/attribute-types.h"
 #include "effect/effect-characteristics.h"
 #include "effect/effect-processor.h"
 #include "floor/cave.h"
@@ -11,7 +12,6 @@
 #include "mspell/mspell-checker.h"
 #include "mspell/mspell-util.h"
 #include "spell-kind/spells-launcher.h"
-#include "spell/spell-types.h"
 #include "spell/summon-types.h"
 #include "system/monster-race-definition.h"
 #include "system/player-type-definition.h"
@@ -26,7 +26,7 @@
  * @param m_idx 呪文を唱えるモンスターID
  * @return 召喚したモンスターの数を返す。
  */
-MONSTER_NUMBER summon_EAGLE(player_type *player_ptr, POSITION y, POSITION x, int rlev, MONSTER_IDX m_idx)
+MONSTER_NUMBER summon_EAGLE(PlayerType *player_ptr, POSITION y, POSITION x, int rlev, MONSTER_IDX m_idx)
 {
     int count = 0;
     int num = 4 + randint1(3);
@@ -46,7 +46,7 @@ MONSTER_NUMBER summon_EAGLE(player_type *player_ptr, POSITION y, POSITION x, int
  * @param m_idx 呪文を唱えるモンスターID
  * @return 召喚したモンスターの数を返す。
  */
-MONSTER_NUMBER summon_EDGE(player_type *player_ptr, POSITION y, POSITION x, int rlev, MONSTER_IDX m_idx)
+MONSTER_NUMBER summon_EDGE(PlayerType *player_ptr, POSITION y, POSITION x, int rlev, MONSTER_IDX m_idx)
 {
     int count = 0;
     int num = 2 + randint1(1 + rlev / 20);
@@ -67,20 +67,22 @@ MONSTER_NUMBER summon_EDGE(player_type *player_ptr, POSITION y, POSITION x, int 
  * @param TARGET_TYPE プレイヤーを対象とする場合MONSTER_TO_PLAYER、モンスターを対象とする場合MONSTER_TO_MONSTER
  * @return 召喚したモンスターの数を返す。
  */
-MONSTER_NUMBER summon_guardian(player_type *player_ptr, POSITION y, POSITION x, int rlev, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
+MONSTER_NUMBER summon_guardian(PlayerType *player_ptr, POSITION y, POSITION x, int rlev, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
 {
     int num = 2 + randint1(3);
     bool mon_to_mon = (TARGET_TYPE == MONSTER_TO_MONSTER);
     bool mon_to_player = (TARGET_TYPE == MONSTER_TO_PLAYER);
 
     if (r_info[MON_JORMUNGAND].cur_num < r_info[MON_JORMUNGAND].max_num && one_in_(6)) {
-        simple_monspell_message(player_ptr, m_idx, t_idx, _("地面から水が吹き出した！", "Water blew off from the ground!"),
-            _("地面から水が吹き出した！", "Water blew off from the ground!"), TARGET_TYPE);
+        mspell_cast_msg_simple msg(_("地面から水が吹き出した！", "Water blew off from the ground!"),
+            _("地面から水が吹き出した！", "Water blew off from the ground!"));
+
+        simple_monspell_message(player_ptr, m_idx, t_idx, msg, TARGET_TYPE);
 
         if (mon_to_player)
-            fire_ball_hide(player_ptr, GF_WATER_FLOW, 0, 3, 8);
+            fire_ball_hide(player_ptr, AttributeType::WATER_FLOW, 0, 3, 8);
         else if (mon_to_mon)
-            project(player_ptr, t_idx, 8, y, x, 3, GF_WATER_FLOW, PROJECT_GRID | PROJECT_HIDE);
+            project(player_ptr, t_idx, 8, y, x, 3, AttributeType::WATER_FLOW, PROJECT_GRID | PROJECT_HIDE);
     }
 
     int count = 0;
@@ -99,7 +101,7 @@ MONSTER_NUMBER summon_guardian(player_type *player_ptr, POSITION y, POSITION x, 
  * @param m_idx 呪文を唱えるモンスターID
  * @return 召喚したモンスターの数を返す。
  */
-MONSTER_NUMBER summon_LOCKE_CLONE(player_type *player_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx)
+MONSTER_NUMBER summon_LOCKE_CLONE(PlayerType *player_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx)
 {
     int count = 0;
     int num = randint1(3);
@@ -119,7 +121,7 @@ MONSTER_NUMBER summon_LOCKE_CLONE(player_type *player_ptr, POSITION y, POSITION 
  * @param m_idx 呪文を唱えるモンスターID
  * @return 召喚したモンスターの数を返す。
  */
-MONSTER_NUMBER summon_LOUSE(player_type *player_ptr, POSITION y, POSITION x, int rlev, MONSTER_IDX m_idx)
+MONSTER_NUMBER summon_LOUSE(PlayerType *player_ptr, POSITION y, POSITION x, int rlev, MONSTER_IDX m_idx)
 {
     int count = 0;
     int num = 2 + randint1(3);
@@ -129,7 +131,7 @@ MONSTER_NUMBER summon_LOUSE(player_type *player_ptr, POSITION y, POSITION x, int
     return count;
 }
 
-MONSTER_NUMBER summon_MOAI(player_type *player_ptr, POSITION y, POSITION x, int rlev, MONSTER_IDX m_idx)
+MONSTER_NUMBER summon_MOAI(PlayerType *player_ptr, POSITION y, POSITION x, int rlev, MONSTER_IDX m_idx)
 {
     int count = 0;
     int num = 3 + randint1(3);
@@ -139,7 +141,7 @@ MONSTER_NUMBER summon_MOAI(player_type *player_ptr, POSITION y, POSITION x, int 
     return count;
 }
 
-MONSTER_NUMBER summon_DEMON_SLAYER(player_type *player_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx)
+MONSTER_NUMBER summon_DEMON_SLAYER(PlayerType *player_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx)
 {
     monster_race *r_ptr = &r_info[MON_DEMON_SLAYER_MEMBER];
     if (r_ptr->max_num == 0) {
@@ -165,7 +167,7 @@ MONSTER_NUMBER summon_DEMON_SLAYER(player_type *player_ptr, POSITION y, POSITION
  * @param m_idx 呪文を唱えるモンスターID
  * @return 召喚したモンスターの数を返す。
  */
-MONSTER_NUMBER summon_NAZGUL(player_type *player_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx)
+MONSTER_NUMBER summon_NAZGUL(PlayerType *player_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx)
 {
     BIT_FLAGS mode = 0L;
     POSITION cy = y;
@@ -216,18 +218,18 @@ MONSTER_NUMBER summon_NAZGUL(player_type *player_ptr, POSITION y, POSITION x, MO
     return count;
 }
 
-MONSTER_NUMBER summon_APOCRYPHA(player_type *player_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx)
+MONSTER_NUMBER summon_APOCRYPHA(PlayerType *player_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx)
 {
     int count = 0;
     int num = 4 + randint1(4);
-    summon_type followers = next_bool() ? SUMMON_APOCRYPHA_FOLLOWERS : SUMMON_APOCRYPHA_DRAGONS;
+    summon_type followers = one_in_(2) ? SUMMON_APOCRYPHA_FOLLOWERS : SUMMON_APOCRYPHA_DRAGONS;
     for (int k = 0; k < num; k++)
         count += summon_specific(player_ptr, m_idx, y, x, 200, followers, PM_ALLOW_UNIQUE);
 
     return count;
 }
 
-MONSTER_NUMBER summon_HIGHEST_DRAGON(player_type *player_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx)
+MONSTER_NUMBER summon_HIGHEST_DRAGON(PlayerType *player_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx)
 {
     int count = 0;
     int num = 4 + randint1(4);
@@ -237,7 +239,7 @@ MONSTER_NUMBER summon_HIGHEST_DRAGON(player_type *player_ptr, POSITION y, POSITI
     return count;
 }
 
-MONSTER_NUMBER summon_PYRAMID(player_type *player_ptr, POSITION y, POSITION x, int rlev, MONSTER_IDX m_idx)
+MONSTER_NUMBER summon_PYRAMID(PlayerType *player_ptr, POSITION y, POSITION x, int rlev, MONSTER_IDX m_idx)
 {
     int count = 0;
     int num = 2 + randint1(3);
@@ -247,7 +249,7 @@ MONSTER_NUMBER summon_PYRAMID(player_type *player_ptr, POSITION y, POSITION x, i
     return count;
 }
 
-MONSTER_NUMBER summon_EYE_PHORN(player_type *player_ptr, POSITION y, POSITION x, int rlev, MONSTER_IDX m_idx)
+MONSTER_NUMBER summon_EYE_PHORN(PlayerType *player_ptr, POSITION y, POSITION x, int rlev, MONSTER_IDX m_idx)
 {
     int count = 0;
     int num = 2 + randint1(1 + rlev / 20);
@@ -257,7 +259,7 @@ MONSTER_NUMBER summon_EYE_PHORN(player_type *player_ptr, POSITION y, POSITION x,
     return count;
 }
 
-MONSTER_NUMBER summon_VESPOID(player_type *player_ptr, POSITION y, POSITION x, int rlev, MONSTER_IDX m_idx)
+MONSTER_NUMBER summon_VESPOID(PlayerType *player_ptr, POSITION y, POSITION x, int rlev, MONSTER_IDX m_idx)
 {
     int count = 0;
     int num = 2 + randint1(3);
@@ -267,14 +269,14 @@ MONSTER_NUMBER summon_VESPOID(player_type *player_ptr, POSITION y, POSITION x, i
     return count;
 }
 
-MONSTER_NUMBER summon_THUNDERS(player_type *player_ptr, POSITION y, POSITION x, int rlev, MONSTER_IDX m_idx)
+MONSTER_NUMBER summon_THUNDERS(PlayerType *player_ptr, POSITION y, POSITION x, int rlev, MONSTER_IDX m_idx)
 {
     auto count = (MONSTER_NUMBER)0;
     auto num = 11;
     for (auto k = 0; k < num; k++) {
         count += summon_specific(player_ptr, m_idx, y, x, rlev, SUMMON_ANTI_TIGERS, PM_NONE);
     }
-    
+
     return count;
 }
 
@@ -286,7 +288,7 @@ MONSTER_NUMBER summon_THUNDERS(player_type *player_ptr, POSITION y, POSITION x, 
  * @param m_idx 呪文を唱えるモンスターID
  * @return 召喚したモンスターの数を返す。
  */
-MONSTER_NUMBER summon_YENDER_WIZARD(player_type *player_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx)
+MONSTER_NUMBER summon_YENDER_WIZARD(PlayerType *player_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx)
 {
     auto *r_ptr = &r_info[MON_YENDOR_WIZARD_2];
     if (r_ptr->max_num == 0) {
@@ -304,14 +306,14 @@ MONSTER_NUMBER summon_YENDER_WIZARD(player_type *player_ptr, POSITION y, POSITIO
     return count;
 }
 
-MONSTER_NUMBER summon_PLASMA(player_type *player_ptr, POSITION y, POSITION x, int rlev, MONSTER_IDX m_idx)
+MONSTER_NUMBER summon_PLASMA(PlayerType *player_ptr, POSITION y, POSITION x, int rlev, MONSTER_IDX m_idx)
 {
     auto count = 0;
     auto num = 2 + randint1(1 + rlev / 20);
     for (auto k = 0; k < num; k++) {
         count += summon_named_creature(player_ptr, m_idx, y, x, MON_PLASMA_VORTEX, PM_NONE);
     }
-    
+
     msg_print(_("プーラーズーマーッ！！", "P--la--s--ma--!!"));
     return count;
 }
@@ -325,13 +327,13 @@ MONSTER_NUMBER summon_PLASMA(player_type *player_ptr, POSITION y, POSITION x, in
  * @return 召喚したモンスターの数を返す。
  */
 
-MONSTER_NUMBER summon_OSCAR(player_type *target_ptr, POSITION y, POSITION x, int rlev, MONSTER_IDX m_idx)
+MONSTER_NUMBER summon_OSCAR(PlayerType *target_ptr, POSITION y, POSITION x, int rlev, MONSTER_IDX m_idx)
 {
     GAME_TEXT m_name[MAX_NLEN];
     monster_name(target_ptr, m_idx, m_name);
 
     auto count = 0;
-    auto num = 1 + MIN(2, rlev / 20);
+    auto num = 1 + std::min(2, rlev / 20);
     for (auto k = 0; k < num; k++) {
         count += summon_named_creature(target_ptr, m_idx, y, x, MON_OSCAR_TORPEDO, PM_NONE);
     }

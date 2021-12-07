@@ -8,13 +8,12 @@
 #include "mspell/mspell-damage-calculator.h"
 #include "mspell/mspell-util.h"
 #include "mspell/mspell.h"
-#include "spell/spell-types.h"
 #include "system/floor-type-definition.h"
 #include "system/player-type-definition.h"
 #include "view/display-messages.h"
 
-CAUSE_Projector::CAUSE_Projector(player_type *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, const SpellMsg_blind &msgs,
-    RF_ABILITY ms_type, EFFECT_ID typ, int TARGET_TYPE)
+CAUSE_Projector::CAUSE_Projector(PlayerType *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, const mspell_cast_msg_blind &msgs,
+    MonsterAbilityType ms_type, AttributeType typ, int TARGET_TYPE)
     : player_ptr(player_ptr)
     , m_idx(m_idx)
     , t_idx(t_idx)
@@ -22,7 +21,8 @@ CAUSE_Projector::CAUSE_Projector(player_type *player_ptr, MONSTER_IDX m_idx, MON
     , typ(typ)
     , TARGET_TYPE(TARGET_TYPE)
     , msgs(msgs)
-{}
+{
+}
 
 /*!
  * @brief RF5_CAUSE_* の処理関数
@@ -46,40 +46,45 @@ MonsterSpellResult CAUSE_Projector::spell_RF5_CAUSE(HIT_POINT dam, POSITION y, P
     return res;
 }
 
-MonsterSpellResult CAUSE_Projector::project(POSITION y, POSITION x){
+MonsterSpellResult CAUSE_Projector::project(POSITION y, POSITION x)
+{
     const auto dam = monspell_damage(player_ptr, ms_type, m_idx, DAM_ROLL);
 
     return this->spell_RF5_CAUSE(dam, y, x);
 }
 
-CAUSE_1_Projector::CAUSE_1_Projector(player_type *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
+CAUSE_1_Projector::CAUSE_1_Projector(PlayerType *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
     : CAUSE_Projector(player_ptr, m_idx, t_idx,
-        SpellMsg_blind(_("%^sが何かをつぶやいた。", "%^s mumbles."), 
-        _("%^sがあなたを指さして呪った。", "%^s points at you and curses."), 
-        _("%^sは%sを指さして呪いをかけた。", "%^s points at %s and curses.")),
-        RF_ABILITY::CAUSE_1, GF_CAUSE_1, TARGET_TYPE)
-{}
+          mspell_cast_msg_blind(_("%^sが何かをつぶやいた。", "%^s mumbles."),
+              _("%^sがあなたを指さして呪った。", "%^s points at you and curses."),
+              _("%^sは%sを指さして呪いをかけた。", "%^s points at %s and curses.")),
+          MonsterAbilityType::CAUSE_1, AttributeType::CAUSE_1, TARGET_TYPE)
+{
+}
 
-CAUSE_2_Projector::CAUSE_2_Projector(player_type *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
+CAUSE_2_Projector::CAUSE_2_Projector(PlayerType *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
     : CAUSE_Projector(player_ptr, m_idx, t_idx,
-        SpellMsg_blind(_("%^sが何かをつぶやいた。", "%^s mumbles."),
-        _("%^sがあなたを指さして恐ろしげに呪った。", "%^s points at you and curses horribly."),
-        _("%^sは%sを指さして恐ろしげに呪いをかけた。", "%^s points at %s and curses horribly.")),
-        RF_ABILITY::CAUSE_2, GF_CAUSE_2, TARGET_TYPE)
-{}
+          mspell_cast_msg_blind(_("%^sが何かをつぶやいた。", "%^s mumbles."),
+              _("%^sがあなたを指さして恐ろしげに呪った。", "%^s points at you and curses horribly."),
+              _("%^sは%sを指さして恐ろしげに呪いをかけた。", "%^s points at %s and curses horribly.")),
+          MonsterAbilityType::CAUSE_2, AttributeType::CAUSE_2, TARGET_TYPE)
+{
+}
 
-CAUSE_3_Projector::CAUSE_3_Projector(player_type *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
+CAUSE_3_Projector::CAUSE_3_Projector(PlayerType *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
     : CAUSE_Projector(player_ptr, m_idx, t_idx,
-        SpellMsg_blind(_("%^sが何かを大声で叫んだ。", "%^s mumbles loudly."),
-        _("%^sがあなたを指さして恐ろしげに呪文を唱えた！", "%^s points at you, incanting terribly!"),
-        _("%^sは%sを指さし、恐ろしげに呪文を唱えた！", "%^s points at %s, incanting terribly!")),
-        RF_ABILITY::CAUSE_3, GF_CAUSE_3, TARGET_TYPE)
-{}
+          mspell_cast_msg_blind(_("%^sが何かを大声で叫んだ。", "%^s mumbles loudly."),
+              _("%^sがあなたを指さして恐ろしげに呪文を唱えた！", "%^s points at you, incanting terribly!"),
+              _("%^sは%sを指さし、恐ろしげに呪文を唱えた！", "%^s points at %s, incanting terribly!")),
+          MonsterAbilityType::CAUSE_3, AttributeType::CAUSE_3, TARGET_TYPE)
+{
+}
 
-CAUSE_4_Projector::CAUSE_4_Projector(player_type *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
+CAUSE_4_Projector::CAUSE_4_Projector(PlayerType *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
     : CAUSE_Projector(player_ptr, m_idx, t_idx,
-        SpellMsg_blind(_("%^sが「お前は既に死んでいる」と叫んだ。", "%^s screams the word 'DIE!'"),
-        _("%^sがあなたの秘孔を突いて「お前は既に死んでいる」と叫んだ。", "%^s points at you, screaming the word DIE!"),
-        _("%^sが%sの秘孔を突いて、「お前は既に死んでいる」と叫んだ。", "%^s points at %s, screaming the word, 'DIE!'")),
-        RF_ABILITY::CAUSE_4, GF_CAUSE_4, TARGET_TYPE)
-{}
+          mspell_cast_msg_blind(_("%^sが「お前は既に死んでいる」と叫んだ。", "%^s screams the word 'DIE!'"),
+              _("%^sがあなたの秘孔を突いて「お前は既に死んでいる」と叫んだ。", "%^s points at you, screaming the word DIE!"),
+              _("%^sが%sの秘孔を突いて、「お前は既に死んでいる」と叫んだ。", "%^s points at %s, screaming the word, 'DIE!'")),
+          MonsterAbilityType::CAUSE_4, AttributeType::CAUSE_4, TARGET_TYPE)
+{
+}
