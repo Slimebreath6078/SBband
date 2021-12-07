@@ -300,7 +300,7 @@ static void rd_player_status(PlayerType *player_ptr)
     rd_skills(player_ptr);
     rd_race(player_ptr);
     set_imitation();
-    rd_bounty_uniques(player_ptr);
+    rd_bounty_uniques();
     rd_arena(player_ptr);
     rd_dummy1();
     rd_hp(player_ptr);

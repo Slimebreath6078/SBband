@@ -5,7 +5,7 @@
 
 class EffectPlayerType;
 class PlayerType;
-void effect_player_elements(PlayerType *player_ptr, EffectPlayerType *ep_ptr, concptr attack_message, element_dam &&damage_func);
+void effect_player_elements(PlayerType *player_ptr, EffectPlayerType *ep_ptr, concptr attack_message, attribute_dam &&damage_func);
 void effect_player_poison(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
 void effect_player_nuke(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
 void effect_player_missile(PlayerType *player_ptr, EffectPlayerType *ep_ptr);

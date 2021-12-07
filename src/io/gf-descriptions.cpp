@@ -6,7 +6,7 @@
 #include "effect/attribute-types.h"
 
 //clang-format off
-const named_num GF_desc[MAX_NAMED_NUM] = {
+const named_num gf_desc[MAX_NAMED_NUM] = {
     { "GF_ELEC", AttributeType::ELEC },
     { "GF_POIS", AttributeType::POIS },
     { "GF_ACID", AttributeType::ACID },

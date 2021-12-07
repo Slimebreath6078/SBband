@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include "effect/attribute-types.h"
 #include "monster-race/race-ability-flags.h"
 #include "mspell/mspell-util.h"
 #include "system/angband.h"
