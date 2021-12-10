@@ -2361,6 +2361,12 @@
     <ClCompile Include="..\..\src\specific-object\stone-of-lore.cpp">
       <Filter>specific-object</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\load\item\item-loader-savefile1.cpp">
+      <Filter>load\item</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\load\monster\monster-loader-savefile1.cpp">
+      <Filter>load\monster</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\combat\shoot.h">
@@ -5058,10 +5064,10 @@
     <ClInclude Include="..\..\src\load\monster\monster-loader-version-types.h">
       <Filter>load\monster</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\save\item-flag-types-savefile10.h">
+    <ClInclude Include="..\..\src\load\item-flag-types-savefile1.h">
       <Filter>save</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\save\monster-flag-types-savefile10.h">
+    <ClInclude Include="..\..\src\load\monster-flag-types-savefile1.h">
       <Filter>save</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\player-info\magic-eater-data-type.h">
@@ -5093,6 +5099,15 @@
     </ClInclude>
     <ClInclude Include="..\..\src\timed-effect\player-cut.h">
       <Filter>timed-effect</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\load\item\item-flag-types-savefile1.h">
+      <Filter>load\item</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\load\item\item-loader-savefile1.h">
+      <Filter>load\item</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\load\monster\monster-loader-savefile1.h">
+      <Filter>load\monster</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

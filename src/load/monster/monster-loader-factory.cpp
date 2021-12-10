@@ -4,10 +4,11 @@
  * @author Hourier
  */
 
-#include "load/monster/monster-loader-base.h"
 #include "load/monster/monster-loader-factory.h"
-#include "load/monster/monster-loader-version-types.h"
 #include "load/load-util.h"
+#include "load/monster/monster-loader-base.h"
+#include "load/monster/monster-loader-savefile1.h"
+#include "load/monster/monster-loader-version-types.h"
 
 /*!
  * @brief アイテム読み込みクラスを返却する.
@@ -19,8 +20,8 @@ std::shared_ptr<MonsterLoaderBase> MonsterLoaderFactory::create_loader(PlayerTyp
 {
     auto version = get_version();
     switch (version) {
-    case MonsterLoaderVersionType::LOAD11:
-        // dummy yet.
+    case MonsterLoaderVersionType::LOAD1:
+        return std::make_shared<MonsterLoader1>(player_ptr);
     default:
         throw("Invalid loader version was specified!");
     }
@@ -41,5 +42,5 @@ std::shared_ptr<MonsterLoaderBase> MonsterLoaderFactory::create_loader(PlayerTyp
  */
 MonsterLoaderVersionType MonsterLoaderFactory::get_version()
 {
-    return MonsterLoaderVersionType::LOAD11;
+    return MonsterLoaderVersionType::LOAD1;
 }

@@ -273,7 +273,9 @@
     <ClCompile Include="..\..\src\inventory\inventory-damage.cpp" />
     <ClCompile Include="..\..\src\load\item\item-loader-base.cpp" />
     <ClCompile Include="..\..\src\load\item\item-loader-factory.cpp" />
+    <ClCompile Include="..\..\src\load\item\item-loader-savefile1.cpp" />
     <ClCompile Include="..\..\src\load\monster\monster-loader-factory.cpp" />
+    <ClCompile Include="..\..\src\load\monster\monster-loader-savefile1.cpp" />
     <ClCompile Include="..\..\src\load\player-class-specific-data-loader.cpp" />
     <ClCompile Include="..\..\src\monster-race\race-resistance-mask.cpp" />
     <ClCompile Include="..\..\src\object-enchant\object-smith.cpp" />
@@ -974,11 +976,14 @@
     <ClInclude Include="..\..\src\dungeon\dungeon-flag-mask.h" />
     <ClInclude Include="..\..\src\grid\feature-action-flags.h" />
     <ClInclude Include="..\..\src\inventory\inventory-damage.h" />
+    <ClInclude Include="..\..\src\load\item\item-flag-types-savefile1.h" />
     <ClInclude Include="..\..\src\load\item\item-loader-base.h" />
     <ClInclude Include="..\..\src\load\item\item-loader-factory.h" />
+    <ClInclude Include="..\..\src\load\item\item-loader-savefile1.h" />
     <ClInclude Include="..\..\src\load\item\item-loader-version-types.h" />
     <ClInclude Include="..\..\src\load\monster\monster-loader-base.h" />
     <ClInclude Include="..\..\src\load\monster\monster-loader-factory.h" />
+    <ClInclude Include="..\..\src\load\monster\monster-loader-savefile1.h" />
     <ClInclude Include="..\..\src\load\monster\monster-loader-version-types.h" />
     <ClInclude Include="..\..\src\load\player-class-specific-data-loader.h" />
     <ClInclude Include="..\..\src\load\savedata-old-flag-types.h" />
@@ -1021,8 +1026,8 @@
     <ClInclude Include="..\..\src\player-status\player-energy.h" />
     <ClInclude Include="..\..\src\player-status\player-hand-types.h" />
     <ClInclude Include="..\..\src\main-win\main-win-utils.h" />
-    <ClInclude Include="..\..\src\save\item-flag-types-savefile10.h" />
-    <ClInclude Include="..\..\src\save\monster-flag-types-savefile10.h" />
+    <ClInclude Include="..\..\src\load\item-flag-types-savefile1.h" />
+    <ClInclude Include="..\..\src\load\monster-flag-types-savefile1.h" />
     <ClInclude Include="..\..\src\save\player-class-specific-data-writer.h" />
     <ClInclude Include="..\..\src\specific-object\stone-of-lore.h" />
     <ClInclude Include="..\..\src\store\cmd-store.h" />

@@ -358,10 +358,14 @@ SBband_SOURCES = \
 	\
 	load/item/item-loader-base.cpp load/item/item-loader-base.h \
 	load/item/item-loader-factory.cpp load/item/item-loader-factory.h \
+	load/item/item-loader-savefile1.cpp load/item/item-loader-savefile1.h \
+	load/item/item-flag-types-savefile1.h \
 	load/item/item-loader-version-types.h \
 	\
 	load/monster/monster-loader-base.h \
 	load/monster/monster-loader-factory.cpp load/monster/monster-loader-factory.h \
+	load/monster/monster-loader-savefile1.cpp load/monster/monster-loader-savefile1.h \
+	load/monster/monster-flag-types-savefile1.h \
 	load/monster/monster-loader-version-types.h \
 	\
 	locale/english.cpp locale/english.h \
@@ -753,9 +757,7 @@ SBband_SOURCES = \
 	\
 	save/floor-writer.cpp save/floor-writer.h \
 	save/info-writer.cpp save/info-writer.h \
-	save/item-flag-types-savefile10.cpp \
 	save/item-writer.cpp save/item-writer.h \
-	save/monster-flag-types-savefile10.cpp \
 	save/monster-writer.cpp save/monster-writer.h \
 	save/player-class-specific-data-writer.cpp save/player-class-specific-data-writer.h \
 	save/player-writer.cpp save/player-writer.h \

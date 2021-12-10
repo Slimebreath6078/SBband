@@ -2,7 +2,7 @@
 #include "monster-race/monster-race.h"
 #include "monster/monster-info.h"
 #include "monster/monster-status.h"
-#include "save/monster-flag-types-savefile10.h"
+#include "load/monster/monster-flag-types-savefile1.h"
 #include "save/save-util.h"
 #include "system/monster-race-definition.h"
 #include "system/monster-type-definition.h"

@@ -2,6 +2,7 @@
 #include "avatar/avatar.h"
 #include "floor/floor-town.h"
 #include "load/angband-version-comparer.h"
+#include "load/item/item-flag-types-savefile1.h"
 #include "load/item/item-loader-factory.h"
 #include "load/load-util.h"
 #include "object/object-stack.h"

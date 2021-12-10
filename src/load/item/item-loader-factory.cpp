@@ -6,6 +6,7 @@
 
 #include "load/item/item-loader-factory.h"
 #include "load/item/item-loader-base.h"
+#include "load/item/item-loader-savefile1.h"
 #include "load/item/item-loader-version-types.h"
 #include "load/load-util.h"
 
@@ -19,8 +20,8 @@ std::shared_ptr<ItemLoaderBase> ItemLoaderFactory::create_loader()
 {
     auto version = get_version();
     switch (version) {
-    case ItemLoaderVersionType::LOAD11:
-        // dummy yet.
+    case ItemLoaderVersionType::LOAD1:
+        return std::make_shared<ItemLoader1>();
     default:
         throw("Invalid loader version was specified!");
     }
@@ -41,5 +42,5 @@ std::shared_ptr<ItemLoaderBase> ItemLoaderFactory::create_loader()
  */
 ItemLoaderVersionType ItemLoaderFactory::get_version()
 {
-    return ItemLoaderVersionType::LOAD11;
+    return ItemLoaderVersionType::LOAD1;
 }

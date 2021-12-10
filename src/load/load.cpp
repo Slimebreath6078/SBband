@@ -232,10 +232,6 @@ static errr rd_savefile(PlayerType *player_ptr)
  */
 static bool can_takeover_savefile(const PlayerType *player_ptr)
 {
-    if (loading_savefile_version_is_older_than(8) && player_ptr->pclass == PlayerClassType::SMITH) {
-        return false;
-    }
-
     return true;
 }
 

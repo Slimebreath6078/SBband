@@ -26,6 +26,8 @@ void rd_version_info(void)
     load_xor_byte = 0;
     w_ptr->h_ver_major = rd_byte();
 
+    strip_bytes(1);
+
     load_xor_byte = w_ptr->sf_extra;
     v_check = 0L;
     x_check = 0L;
