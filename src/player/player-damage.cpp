@@ -106,16 +106,12 @@ HIT_POINT attribute_dam::process()
     if (this->dam <= 0)
         return 0;
 
-    HIT_POINT get_damage = take_hit(this->player_ptr, this->aura ? DAMAGE_NOESCAPE : DAMAGE_ATTACK, this->dam, kb_str);
-
     if (!this->aura)
-        this->effect(get_damage);
+        this->effect(dam);
+
+    HIT_POINT get_damage = take_hit(this->player_ptr, this->aura ? DAMAGE_NOESCAPE : DAMAGE_ATTACK, dam, kb_str);
 
     return get_damage;
-}
-
-void attribute_dam::effect(HIT_POINT &damage)
-{
 }
 
 void acid_dam::effect(HIT_POINT &damage)
