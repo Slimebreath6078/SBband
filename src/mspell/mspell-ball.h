@@ -9,13 +9,13 @@
 struct MonsterSpellResult;
 class BallProjector {
 protected:
-    BallProjector(PlayerType *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, const mspell_cast_msg_blind &msgs, byte rad, int TARGET_TYPE, MonsterAbilityType ms_type, AttributeType typ, int SOUND);
+    BallProjector(PlayerType *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, const mspell_cast_msg_blind &msgs, int TARGET_TYPE, byte rad, MonsterAbilityType ms_type, AttributeType typ, int SOUND);
     BallProjector() = delete;
     PlayerType *player_ptr;
     MONSTER_IDX m_idx;
     MONSTER_IDX t_idx;
-    int TARGET_TYPE;
     mspell_cast_msg_blind const msgs;
+    int TARGET_TYPE;
     bool view_message(mspell_cast_msg_blind msg);
     bool virtual view_message();
     void virtual smart_learn();

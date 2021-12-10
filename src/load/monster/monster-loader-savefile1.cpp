@@ -8,11 +8,6 @@
 #include "util/enum-converter.h"
 #include "util/quarks.h"
 
-MonsterLoader1::MonsterLoader1(PlayerType *player_ptr)
-    : player_ptr(player_ptr)
-{
-}
-
 /*!
  * @brief モンスターを読み込む(v3.0.0 Savefile ver10まで)
  */

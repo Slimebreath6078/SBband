@@ -227,10 +227,9 @@ static errr rd_savefile(PlayerType *player_ptr)
 /**
  * @brief セーブデータから引き継いでプレイできるかどうか調べる
  *
- * @param player_ptr プレイヤーへの参照ポインタ
  * @return 引き継ぎ可能ならtrue、そうでなければfalseを返す
  */
-static bool can_takeover_savefile(const PlayerType *player_ptr)
+static bool can_takeover_savefile()
 {
     return true;
 }
@@ -313,7 +312,7 @@ bool load_savedata(PlayerType *player_ptr, bool *new_game)
         return false;
     }
 
-    if (!can_takeover_savefile(player_ptr)) {
+    if (!can_takeover_savefile()) {
         msg_format(_("このセーブデータの続きをプレイすることはできません。", "You can't play the rest of the game from this save data."));
         msg_print(nullptr);
         if (!get_check(_("最初からプレイを始めますか？(モンスターの思い出は引き継がれます)",

@@ -147,7 +147,7 @@ errr rd_saved_floor(PlayerType *player_ptr, saved_floor_type *sf_ptr)
     if (limit > w_ptr->max_m_idx)
         return 161;
 
-    auto monster_loader = MonsterLoaderFactory::create_loader(player_ptr);
+    auto monster_loader = MonsterLoaderFactory::create_loader();
     for (auto i = 1; i < limit; i++) {
         auto m_idx = m_pop(floor_ptr);
         if (i != m_idx) {

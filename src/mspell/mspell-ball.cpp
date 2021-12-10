@@ -18,13 +18,13 @@
 #include "system/player-type-definition.h"
 #include "view/display-messages.h"
 
-BallProjector::BallProjector(PlayerType *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, const mspell_cast_msg_blind &msgs, byte rad, int TARGET_TYPE, MonsterAbilityType ms_type, AttributeType typ, int SOUND)
+BallProjector::BallProjector(PlayerType *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, const mspell_cast_msg_blind &msgs, int TARGET_TYPE, byte rad, MonsterAbilityType ms_type, AttributeType typ, int SOUND)
     : player_ptr(player_ptr)
     , m_idx(m_idx)
     , t_idx(t_idx)
+    , msgs(msgs)
     , TARGET_TYPE(TARGET_TYPE)
     , rad(rad)
-    , msgs(msgs)
     , ms_type(ms_type)
     , typ(typ)
     , SOUND(SOUND)
@@ -161,9 +161,9 @@ bool BA_FIRE_Projector::view_message()
 
     //else以外では特殊メッセージを表示する
     if (m_ptr->r_idx == MON_ROLENTO) {
-        msg.blind = ("%sが何かを投げた。", "%^s throws something.");
+        msg.blind = _("%sが何かを投げた。", "%^s throws something.");
         msg.to_player = _("%sは手榴弾を投げた。", "%^s throws a hand grenade.");
-        msg.to_mons = ("%^sが%^sに向かって手榴弾を投げた。", "%^s throws a hand grenade.");
+        msg.to_mons = _("%^sが%^sに向かって手榴弾を投げた。", "%^s throws a hand grenade.");
     } else {
         msg.blind = this->msgs.blind;
         msg.to_player = this->msgs.to_player;

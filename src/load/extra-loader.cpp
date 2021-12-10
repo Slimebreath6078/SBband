@@ -23,7 +23,7 @@ void rd_extra(PlayerType *player_ptr)
 
     player_ptr->floor_id = rd_s16b();
 
-    rd_dummy_monsters(player_ptr);
+    rd_dummy_monsters();
     w_ptr->play_time = rd_u32b();
 
     rd_visited_towns(player_ptr);

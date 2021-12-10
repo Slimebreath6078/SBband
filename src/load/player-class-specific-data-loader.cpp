@@ -16,21 +16,6 @@
 #include <tuple>
 #include <vector>
 
-namespace {
-
-//! 職業間で配列データを共有して使っていた時の配列長。古いセーブデータのマイグレーション用。
-constexpr int OLD_SAVEFILE_MAX_SPELLS = 108;
-
-std::tuple<std::vector<int32_t>, std::vector<byte>> load_old_savfile_magic_num()
-{
-    std::vector<int32_t> magic_num1(OLD_SAVEFILE_MAX_SPELLS);
-    std::vector<byte> magic_num2(OLD_SAVEFILE_MAX_SPELLS);
-
-    return std::make_tuple(std::move(magic_num1), std::move(magic_num2));
-}
-
-}
-
 void PlayerClassSpecificDataLoader::operator()(no_class_specific_data &) const
 {
 }

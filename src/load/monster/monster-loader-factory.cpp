@@ -16,12 +16,12 @@
  * @details MonsterLoaderBaseは純粋仮想関数を含むので参照を返す必要がある.
  * (値を返す設計はコンパイルエラー)
  */
-std::shared_ptr<MonsterLoaderBase> MonsterLoaderFactory::create_loader(PlayerType *player_ptr)
+std::shared_ptr<MonsterLoaderBase> MonsterLoaderFactory::create_loader()
 {
     auto version = get_version();
     switch (version) {
     case MonsterLoaderVersionType::LOAD1:
-        return std::make_shared<MonsterLoader1>(player_ptr);
+        return std::make_shared<MonsterLoader1>();
     default:
         throw("Invalid loader version was specified!");
     }

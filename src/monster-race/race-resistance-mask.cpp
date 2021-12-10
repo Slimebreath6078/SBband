@@ -25,25 +25,15 @@ const EnumClassFlagGroup<MonsterResistanceType> RFR_EFF_IM_POISON_MASK = {
     MonsterResistanceType::RESIST_ALL,
 };
 
-const EnumClassFlagGroup<MonsterResistanceType> RFR_EFF_RESIST_ACID_MASK = EnumClassFlagGroup<MonsterResistanceType>(RFR_EFF_IM_ACID_MASK).set({
-    MonsterResistanceType::RESIST_ACID,
-});
+const EnumClassFlagGroup<MonsterResistanceType> RFR_EFF_RESIST_ACID_MASK = EnumClassFlagGroup<MonsterResistanceType>(RFR_EFF_IM_ACID_MASK).set(MonsterResistanceType::RESIST_ACID);
 
-const EnumClassFlagGroup<MonsterResistanceType> RFR_EFF_RESIST_ELEC_MASK = EnumClassFlagGroup<MonsterResistanceType>(RFR_EFF_IM_ELEC_MASK).set({
-    MonsterResistanceType::RESIST_ELEC,
-});
+const EnumClassFlagGroup<MonsterResistanceType> RFR_EFF_RESIST_ELEC_MASK = EnumClassFlagGroup<MonsterResistanceType>(RFR_EFF_IM_ELEC_MASK).set(MonsterResistanceType::RESIST_ELEC);
 
-const EnumClassFlagGroup<MonsterResistanceType> RFR_EFF_RESIST_FIRE_MASK = EnumClassFlagGroup<MonsterResistanceType>(RFR_EFF_IM_FIRE_MASK).set({
-    MonsterResistanceType::RESIST_FIRE,
-});
+const EnumClassFlagGroup<MonsterResistanceType> RFR_EFF_RESIST_FIRE_MASK = EnumClassFlagGroup<MonsterResistanceType>(RFR_EFF_IM_FIRE_MASK).set(MonsterResistanceType::RESIST_FIRE);
 
-const EnumClassFlagGroup<MonsterResistanceType> RFR_EFF_RESIST_COLD_MASK = EnumClassFlagGroup<MonsterResistanceType>(RFR_EFF_IM_COLD_MASK).set({
-    MonsterResistanceType::RESIST_COLD,
-});
+const EnumClassFlagGroup<MonsterResistanceType> RFR_EFF_RESIST_COLD_MASK = EnumClassFlagGroup<MonsterResistanceType>(RFR_EFF_IM_COLD_MASK).set(MonsterResistanceType::RESIST_COLD);
 
-const EnumClassFlagGroup<MonsterResistanceType> RFR_EFF_RESIST_POISON_MASK = EnumClassFlagGroup<MonsterResistanceType>(RFR_EFF_IM_POISON_MASK).set({
-    MonsterResistanceType::RESIST_POISON,
-});
+const EnumClassFlagGroup<MonsterResistanceType> RFR_EFF_RESIST_POISON_MASK = EnumClassFlagGroup<MonsterResistanceType>(RFR_EFF_IM_POISON_MASK).set(MonsterResistanceType::RESIST_POISON);
 
 const EnumClassFlagGroup<MonsterResistanceType> RFR_EFF_RESIST_SHARDS_MASK = {
     MonsterResistanceType::RESIST_SHARDS,

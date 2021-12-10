@@ -25,12 +25,12 @@ protected:
     HIT_POINT dam;
     bool aura;
     const std::function<PERCENTAGE(PlayerType *player_ptr)> calc_damage_rate;
-    virtual void effect(HIT_POINT &damage);
+    virtual void effect(HIT_POINT &damage) = 0;
 
 public:
     virtual ~attribute_dam() = default;
     virtual HIT_POINT process();
-    attribute_dam operator=(attribute_dam) = delete;
+    void operator=(const attribute_dam &) = delete;
 };
 
 class acid_dam : public attribute_dam {

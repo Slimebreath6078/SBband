@@ -13,7 +13,7 @@
  * @param r_ptr 読み込み先モンスター種族情報へのポインタ
  * @param r_idx 読み込み先モンスターID(種族特定用)
  */
-static void rd_lore(monster_race *r_ptr, const MONRACE_IDX r_idx)
+static void rd_lore(monster_race *r_ptr)
 {
     r_ptr->r_sights = rd_s16b();
     r_ptr->r_deaths = rd_s16b();
@@ -70,7 +70,7 @@ void load_lore(void)
     monster_race dummy;
     for (auto i = 0U; i < loading_max_r_idx; i++) {
         auto *r_ptr = i < r_info.size() ? &r_info[i] : &dummy;
-        rd_lore(r_ptr, static_cast<MONRACE_IDX>(i));
+        rd_lore(r_ptr);
     }
 
     load_note(_("モンスターの思い出をロードしました", "Loaded Monster Memory"));
