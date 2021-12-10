@@ -42,7 +42,7 @@
  * @return プレイヤーによりアイテムが選択されたならTRUEを返す
  * @todo 適切な関数名をどうしても付けられなかったので暫定でauxとした
  */
-static bool check_floor_item_tag_aux(player_type *player_ptr, fis_type *fis_ptr, char *prev_tag, const ItemTester& item_tester)
+static bool check_floor_item_tag_aux(PlayerType *player_ptr, fis_type *fis_ptr, char *prev_tag, const ItemTester& item_tester)
 {
     if (!fis_ptr->floor || (*fis_ptr->cp >= 0))
         return false;
@@ -74,7 +74,7 @@ static bool check_floor_item_tag_aux(player_type *player_ptr, fis_type *fis_ptr,
  * @param prev_tag 前回選択したアイテムのタグ (のはず)
  * @return プレイヤーによりアイテムが選択されたならTRUEを返す
  */
-static bool get_floor_item_tag_inventory(player_type *player_ptr, fis_type *fis_ptr, char *prev_tag, const ItemTester& item_tester)
+static bool get_floor_item_tag_inventory(PlayerType *player_ptr, fis_type *fis_ptr, char *prev_tag, const ItemTester& item_tester)
 {
     bool flag = false;
     item_use_flag use_flag = (*fis_ptr->cp >= INVEN_MAIN_HAND) ? USE_EQUIP : USE_INVEN;
@@ -104,7 +104,7 @@ static bool get_floor_item_tag_inventory(player_type *player_ptr, fis_type *fis_
  * @param prev_tag 前回選択したアイテムのタグ (のはず)
  * @return プレイヤーによりアイテムが選択されたならTRUEを返す
  */
-static bool check_floor_item_tag_inventory(player_type *player_ptr, fis_type *fis_ptr, char *prev_tag, const ItemTester& item_tester)
+static bool check_floor_item_tag_inventory(PlayerType *player_ptr, fis_type *fis_ptr, char *prev_tag, const ItemTester& item_tester)
 {
     if ((!fis_ptr->inven || (*fis_ptr->cp < 0) || (*fis_ptr->cp >= INVEN_PACK))
         && (!fis_ptr->equip || (*fis_ptr->cp < INVEN_MAIN_HAND) || (*fis_ptr->cp >= INVEN_TOTAL)))
@@ -128,7 +128,7 @@ static bool check_floor_item_tag_inventory(player_type *player_ptr, fis_type *fi
  * @param prev_tag 前回選択したアイテムのタグ (のはず)
  * @return プレイヤーによりアイテムが選択されたならTRUEを返す
  */
-static bool check_floor_item_tag(player_type *player_ptr, fis_type *fis_ptr, char *prev_tag, const ItemTester& item_tester)
+static bool check_floor_item_tag(PlayerType *player_ptr, fis_type *fis_ptr, char *prev_tag, const ItemTester& item_tester)
 {
     if (!repeat_pull(fis_ptr->cp))
         return false;
@@ -149,7 +149,7 @@ static bool check_floor_item_tag(player_type *player_ptr, fis_type *fis_ptr, cha
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param fis_ptr 床上アイテムへの参照ポインタ
  */
-static void test_inventory_floor(player_type *player_ptr, fis_type *fis_ptr, const ItemTester& item_tester)
+static void test_inventory_floor(PlayerType *player_ptr, fis_type *fis_ptr, const ItemTester& item_tester)
 {
     if (!fis_ptr->inven) {
         fis_ptr->i2 = -1;
@@ -169,7 +169,7 @@ static void test_inventory_floor(player_type *player_ptr, fis_type *fis_ptr, con
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param fis_ptr 床上アイテムへの参照ポインタ
  */
-static void test_equipment_floor(player_type *player_ptr, fis_type *fis_ptr, const ItemTester& item_tester)
+static void test_equipment_floor(PlayerType *player_ptr, fis_type *fis_ptr, const ItemTester& item_tester)
 {
     if (!fis_ptr->equip) {
         fis_ptr->e2 = -1;
@@ -194,7 +194,7 @@ static void test_equipment_floor(player_type *player_ptr, fis_type *fis_ptr, con
  * @param mode オプションフラグ
  * @return プレイヤーによりアイテムが選択されたならTRUEを返す。/
  */
-bool get_item_floor(player_type *player_ptr, COMMAND_CODE *cp, concptr pmt, concptr str, BIT_FLAGS mode, const ItemTester& item_tester)
+bool get_item_floor(PlayerType *player_ptr, COMMAND_CODE *cp, concptr pmt, concptr str, BIT_FLAGS mode, const ItemTester& item_tester)
 {
     fis_type tmp_fis;
     fis_type *fis_ptr = initialize_fis_type(&tmp_fis, cp, mode);
@@ -310,7 +310,7 @@ bool get_item_floor(player_type *player_ptr, COMMAND_CODE *cp, concptr pmt, conc
                 get_item_label = show_equipment(player_ptr, fis_ptr->menu_line, mode, item_tester);
         } else if (command_wrk == USE_FLOOR) {
             int j = fis_ptr->floor_top;
-            fis_ptr->k = MIN(fis_ptr->floor_top + 23, fis_ptr->floor_num) - 1;
+            fis_ptr->k = std::min(fis_ptr->floor_top + 23, fis_ptr->floor_num) - 1;
             fis_ptr->n1 = I2A(j - fis_ptr->floor_top); // TODO: 常に'0'になる。どんな意図でこのようなコードになっているのか不明.
             fis_ptr->n2 = I2A(fis_ptr->k - fis_ptr->floor_top);
             if (command_see)
@@ -417,7 +417,7 @@ bool get_item_floor(player_type *player_ptr, COMMAND_CODE *cp, concptr pmt, conc
             else if (command_wrk == USE_EQUIP)
                 max_line = fis_ptr->max_equip;
             else if (command_wrk == USE_FLOOR)
-                max_line = MIN(23, fis_ptr->floor_num);
+                max_line = std::min(23, fis_ptr->floor_num);
             switch (fis_ptr->which) {
             case ESCAPE:
             case 'z':
@@ -483,7 +483,7 @@ bool get_item_floor(player_type *player_ptr, COMMAND_CODE *cp, concptr pmt, conc
                 else if (command_wrk == USE_EQUIP)
                     max_line = fis_ptr->max_equip;
                 else if (command_wrk == USE_FLOOR)
-                    max_line = MIN(23, fis_ptr->floor_num);
+                    max_line = std::min(23, fis_ptr->floor_num);
 
                 if (fis_ptr->menu_line > max_line)
                     fis_ptr->menu_line = max_line;
@@ -535,7 +535,7 @@ bool get_item_floor(player_type *player_ptr, COMMAND_CODE *cp, concptr pmt, conc
                 else if (command_wrk == USE_EQUIP)
                     max_line = fis_ptr->max_equip;
                 else if (command_wrk == USE_FLOOR)
-                    max_line = MIN(23, fis_ptr->floor_num);
+                    max_line = std::min(23, fis_ptr->floor_num);
 
                 if (fis_ptr->menu_line > max_line)
                     fis_ptr->menu_line = max_line;

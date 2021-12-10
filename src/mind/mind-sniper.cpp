@@ -26,6 +26,8 @@
 #include "monster-race/race-flags-resistance.h"
 #include "monster-race/race-flags3.h"
 #include "monster-race/race-kind-flags.h"
+#include "player-base/player-class.h"
+#include "player-info/sniper-data-type.h"
 #include "player-status/player-energy.h"
 #include "system/monster-race-definition.h"
 #include "system/monster-type-definition.h"
@@ -128,15 +130,20 @@ static snipe_power const snipe_powers[MAX_SNIPE_POWERS] = {
 
 /*!
  * @brief スナイパーの集中度加算
- * @return 常にTRUEを返す
+ * @return 集中度を加算した場合は true、そうでなければ false
  */
-static bool snipe_concentrate(player_type *player_ptr)
+static bool snipe_concentrate(PlayerType *player_ptr)
 {
-    if ((int)player_ptr->concent < (2 + (player_ptr->lev + 5) / 10))
-        player_ptr->concent++;
+    auto sniper_data = PlayerClass(player_ptr).get_specific_data<sniper_data_type>();
+    if (!sniper_data) {
+        return false;
+    }
 
-    msg_format(_("集中した。(集中度 %d)", "You concentrate deeply. (lvl %d)"), player_ptr->concent);
-    player_ptr->reset_concent = false;
+    if (sniper_data->concent < (2 + (player_ptr->lev + 5) / 10))
+        sniper_data->concent++;
+
+    msg_format(_("集中した。(集中度 %d)", "You concentrate deeply. (lvl %d)"), sniper_data->concent);
+    sniper_data->reset_concent = false;
 
     player_ptr->update |= (PU_BONUS | PU_MONSTERS);
     player_ptr->redraw |= (PR_STATUS);
@@ -145,16 +152,22 @@ static bool snipe_concentrate(player_type *player_ptr)
 
 /*!
  * @brief スナイパーの集中度リセット
+ * スナイパーではない、もしくは集中度がすでに0であればなにもしない。
  * @param msg TRUEならばメッセージを表示する
  */
-void reset_concentration(player_type *player_ptr, bool msg)
+void reset_concentration(PlayerType *player_ptr, bool msg)
 {
-    if (msg) {
+    auto sniper_data = PlayerClass(player_ptr).get_specific_data<sniper_data_type>();
+    if (!sniper_data) {
+        return;
+    }
+
+    if (msg && (sniper_data->concent > 0)) {
         msg_print(_("集中力が途切れてしまった。", "Stop concentrating."));
     }
 
-    player_ptr->concent = 0;
-    player_ptr->reset_concent = false;
+    sniper_data->concent = 0;
+    sniper_data->reset_concent = false;
 
     player_ptr->update |= (PU_BONUS | PU_MONSTERS);
     player_ptr->redraw |= (PR_STATUS);
@@ -165,10 +178,12 @@ void reset_concentration(player_type *player_ptr, bool msg)
  * @param tdam 算出中のダメージ
  * @return 集中度修正を加えたダメージ
  */
-int boost_concentration_damage(player_type *player_ptr, int tdam)
+int boost_concentration_damage(PlayerType *player_ptr, int tdam)
 {
-    tdam *= (10 + player_ptr->concent);
-    tdam /= 10;
+    auto sniper_data = PlayerClass(player_ptr).get_specific_data<sniper_data_type>();
+    const auto sniper_concent = sniper_data ? sniper_data->concent : 0;
+
+    tdam = tdam * (10 + sniper_concent) / 10;
 
     return (tdam);
 }
@@ -176,7 +191,7 @@ int boost_concentration_damage(player_type *player_ptr, int tdam)
 /*!
  * @brief スナイパーの技能リストを表示する
  */
-void display_snipe_list(player_type *player_ptr)
+void display_snipe_list(PlayerType *player_ptr)
 {
     int i;
     TERM_LEN y = 1;
@@ -190,6 +205,8 @@ void display_snipe_list(player_type *player_ptr)
     put_str(_("名前", "Name"), y, x + 5);
     put_str(_("Lv   MP", "Lv Mana"), y, x + 35);
 
+    auto sniper_data = PlayerClass(player_ptr).get_specific_data<sniper_data_type>();
+
     for (i = 0; i < MAX_SNIPE_POWERS; i++) {
         /* Access the available spell */
         spell = snipe_powers[i];
@@ -198,12 +215,11 @@ void display_snipe_list(player_type *player_ptr)
 
         sprintf(psi_desc, "  %c) %-30s%2d %4d", I2A(i), spell.name, spell.min_lev, spell.mana_cost);
 
-        if (spell.mana_cost > (int)player_ptr->concent)
+        if (spell.mana_cost > sniper_data->concent)
             term_putstr(x, y + i + 1, -1, TERM_SLATE, psi_desc);
         else
             term_putstr(x, y + i + 1, -1, TERM_WHITE, psi_desc);
     }
-    return;
 }
 
 /*!
@@ -224,7 +240,7 @@ void display_snipe_list(player_type *player_ptr)
  * when you run it. It's probably easy to fix but I haven't tried,\n
  * sorry.\n
  */
-static int get_snipe_power(player_type *player_ptr, COMMAND_CODE *sn, bool only_browse)
+static int get_snipe_power(PlayerType *player_ptr, COMMAND_CODE *sn, bool only_browse)
 {
     COMMAND_CODE i;
     int num = 0;
@@ -243,11 +259,13 @@ static int get_snipe_power(player_type *player_ptr, COMMAND_CODE *sn, bool only_
     /* Assume cancelled */
     *sn = (-1);
 
+    auto sniper_data = PlayerClass(player_ptr).get_specific_data<sniper_data_type>();
+
     /* Repeat previous command */
     /* Get the spell, if available */
     if (repeat_pull(sn)) {
         /* Verify the spell */
-        if ((snipe_powers[*sn].min_lev <= plev) && (snipe_powers[*sn].mana_cost <= (int)player_ptr->concent)) {
+        if ((snipe_powers[*sn].min_lev <= plev) && (snipe_powers[*sn].mana_cost <= sniper_data->concent)) {
             /* Success */
             return true;
         }
@@ -257,7 +275,7 @@ static int get_snipe_power(player_type *player_ptr, COMMAND_CODE *sn, bool only_
     redraw = false;
 
     for (i = 0; i < MAX_SNIPE_POWERS; i++) {
-        if ((snipe_powers[i].min_lev <= plev) && ((only_browse) || (snipe_powers[i].mana_cost <= (int)player_ptr->concent))) {
+        if ((snipe_powers[i].min_lev <= plev) && ((only_browse) || (snipe_powers[i].mana_cost <= sniper_data->concent))) {
             num = i;
         }
     }
@@ -311,7 +329,7 @@ static int get_snipe_power(player_type *player_ptr, COMMAND_CODE *sn, bool only_
 
                     if (spell.min_lev > plev)
                         tcol = TERM_SLATE;
-                    else if (spell.mana_cost > (int)player_ptr->concent)
+                    else if (spell.mana_cost > sniper_data->concent)
                         tcol = TERM_L_BLUE;
 
                     term_putstr(x, y + i + 1, -1, tcol, psi_index);
@@ -345,7 +363,7 @@ static int get_snipe_power(player_type *player_ptr, COMMAND_CODE *sn, bool only_
         i = (islower(choice) ? A2I(choice) : -1);
 
         /* Totally Illegal */
-        if ((i < 0) || (i > num) || (!only_browse && (snipe_powers[i].mana_cost > (int)player_ptr->concent))) {
+        if ((i < 0) || (i > num) || (!only_browse && (snipe_powers[i].mana_cost > sniper_data->concent))) {
             bell();
             continue;
         }
@@ -394,15 +412,18 @@ static int get_snipe_power(player_type *player_ptr, COMMAND_CODE *sn, bool only_
  * @param m_ptr 目標となるモンスターの構造体参照ポインタ
  * @return スレイの倍率(/10倍)
  */
-MULTIPLY calc_snipe_damage_with_slay(player_type *player_ptr, MULTIPLY mult, monster_type *m_ptr, SPELL_IDX snipe_type)
+MULTIPLY calc_snipe_damage_with_slay(PlayerType *player_ptr, MULTIPLY mult, monster_type *m_ptr, SPELL_IDX snipe_type)
 {
     monster_race *r_ptr = &r_info[m_ptr->r_idx];
     bool seen = is_seen(player_ptr, m_ptr);
 
+    auto sniper_data = PlayerClass(player_ptr).get_specific_data<sniper_data_type>();
+    const auto sniper_concent = sniper_data ? sniper_data->concent : 0;
+
     switch (snipe_type) {
     case SP_LITE:
         if (r_ptr->resistance_flags.has(MonsterResistanceType::HURT_LITE)) {
-            MULTIPLY n = 20 + player_ptr->concent;
+            MULTIPLY n = 20 + sniper_concent;
             if (seen)
                 r_ptr->r_resistance_flags.set(MonsterResistanceType::HURT_LITE);
             if (mult < n)
@@ -416,10 +437,10 @@ MULTIPLY calc_snipe_damage_with_slay(player_type *player_ptr, MULTIPLY mult, mon
         } else {
             MULTIPLY n;
             if (r_ptr->resistance_flags.has(MonsterResistanceType::HURT_FIRE)) {
-                n = 22 + (player_ptr->concent * 4);
+                n = 22 + (sniper_concent * 4);
                 r_ptr->r_resistance_flags.set(MonsterResistanceType::HURT_FIRE);
             } else
-                n = 15 + (player_ptr->concent * 3);
+                n = 15 + (sniper_concent * 3);
 
             if (mult < n)
                 mult = n;
@@ -432,10 +453,10 @@ MULTIPLY calc_snipe_damage_with_slay(player_type *player_ptr, MULTIPLY mult, mon
         } else {
             MULTIPLY n;
             if (r_ptr->resistance_flags.has(MonsterResistanceType::HURT_COLD)) {
-                n = 22 + (player_ptr->concent * 4);
+                n = 22 + (sniper_concent * 4);
                 r_ptr->r_resistance_flags.set(MonsterResistanceType::HURT_COLD);
             } else
-                n = 15 + (player_ptr->concent * 3);
+                n = 15 + (sniper_concent * 3);
 
             if (mult < n)
                 mult = n;
@@ -446,20 +467,20 @@ MULTIPLY calc_snipe_damage_with_slay(player_type *player_ptr, MULTIPLY mult, mon
             if (seen)
                 r_ptr->resistance_flags.set(MonsterResistanceType::IMMUNE_ELEC);
         } else {
-            MULTIPLY n = 18 + (player_ptr->concent * 4);
+            MULTIPLY n = 18 + (sniper_concent * 4);
             if (mult < n)
                 mult = n;
         }
         break;
     case SP_KILL_WALL:
         if (r_ptr->resistance_flags.has(MonsterResistanceType::HURT_ROCK)) {
-            MULTIPLY n = 15 + (player_ptr->concent * 2);
+            MULTIPLY n = 15 + (sniper_concent * 2);
             if (seen)
                 r_ptr->resistance_flags.set(MonsterResistanceType::HURT_ROCK);
             if (mult < n)
                 mult = n;
         } else if (r_ptr->race_kind_flags.has(MonraceKindType::NONLIVING)) {
-            MULTIPLY n = 15 + (player_ptr->concent * 2);
+            MULTIPLY n = 15 + (sniper_concent * 2);
             if (seen)
                 r_ptr->r_race_kind_flags.set(MonraceKindType::NONLIVING);
             if (mult < n)
@@ -468,7 +489,7 @@ MULTIPLY calc_snipe_damage_with_slay(player_type *player_ptr, MULTIPLY mult, mon
         break;
     case SP_EVILNESS:
         if (r_ptr->race_kind_flags.has(MonraceKindType::GOOD)) {
-            MULTIPLY n = 15 + (player_ptr->concent * 4);
+            MULTIPLY n = 15 + (sniper_concent * 4);
             if (seen)
                 r_ptr->r_race_kind_flags.set(MonraceKindType::GOOD);
             if (mult < n)
@@ -477,11 +498,11 @@ MULTIPLY calc_snipe_damage_with_slay(player_type *player_ptr, MULTIPLY mult, mon
         break;
     case SP_HOLYNESS:
         if (r_ptr->race_kind_flags.has(MonraceKindType::EVIL)) {
-            MULTIPLY n = 12 + (player_ptr->concent * 3);
+            MULTIPLY n = 12 + (sniper_concent * 3);
             if (seen)
                 r_ptr->r_race_kind_flags.set(MonraceKindType::EVIL);
             if (r_ptr->resistance_flags.has(MonsterResistanceType::HURT_LITE)) {
-                n += (player_ptr->concent * 3);
+                n += (sniper_concent * 3);
                 if (seen)
                     r_ptr->r_resistance_flags.set(MonsterResistanceType::HURT_LITE);
             }
@@ -504,12 +525,12 @@ MULTIPLY calc_snipe_damage_with_slay(player_type *player_ptr, MULTIPLY mult, mon
  * @param spell 発動する特殊技能のID
  * @return 処理を実行したらTRUE、キャンセルした場合FALSEを返す。
  */
-static bool cast_sniper_spell(player_type *player_ptr, int spell)
+static bool cast_sniper_spell(PlayerType *player_ptr, int spell)
 {
     object_type *o_ptr = &player_ptr->inventory_list[INVEN_BOW];
     SPELL_IDX snipe_type = SP_NONE;
 
-    if (o_ptr->tval != TV_BOW) {
+    if (o_ptr->tval != ItemKindType::BOW) {
         msg_print(_("弓を装備していない！", "You wield no bow!"));
         return false;
     }
@@ -580,7 +601,7 @@ static bool cast_sniper_spell(player_type *player_ptr, int spell)
 /*!
  * @brief スナイパー技能コマンドのメインルーチン /
  */
-void do_cmd_snipe(player_type *player_ptr)
+void do_cmd_snipe(PlayerType *player_ptr)
 {
     COMMAND_CODE n = 0;
     bool cast;
@@ -607,7 +628,7 @@ void do_cmd_snipe(player_type *player_ptr)
 /*!
  * @brief スナイパー技能コマンドの表示 /
  */
-void do_cmd_snipe_browse(player_type *player_ptr)
+void do_cmd_snipe_browse(PlayerType *player_ptr)
 {
     COMMAND_CODE n = 0;
     int j, line;

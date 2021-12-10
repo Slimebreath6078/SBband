@@ -14,9 +14,9 @@
 #include "mspell/mspell-attack-util.h"
 #include "mspell/mspell-judgement.h"
 #include "player/player-status.h"
-#include "system/monster-type-definition.h"
 #include "system/floor-type-definition.h"
 #include "system/monster-race-definition.h"
+#include "system/monster-type-definition.h"
 #include "system/player-type-definition.h"
 #include "util/enum-converter.h"
 #include "world/world.h"
@@ -31,7 +31,7 @@
  * @param end 範囲の終了ID(このIDも含む)
  * @return IDが start <= spell <= end なら true、そうでなければ false
  */
-static bool spell_in_between(RF_ABILITY spell, RF_ABILITY start, RF_ABILITY end)
+static bool spell_in_between(MonsterAbilityType spell, MonsterAbilityType start, MonsterAbilityType end)
 {
     auto spell_int = enum2i(spell);
     return enum2i(start) <= spell_int && spell_int <= enum2i(end);
@@ -43,30 +43,30 @@ static bool spell_in_between(RF_ABILITY spell, RF_ABILITY start, RF_ABILITY end)
  * @param spell 判定対象のID
  * @return 正しいIDならばTRUEを返す。
  */
-static bool spell_attack(RF_ABILITY spell)
+static bool spell_attack(MonsterAbilityType spell)
 {
     /* All RF4 spells hurt (except for shriek and dispel) */
-    if (spell_in_between(spell, RF_ABILITY::ROCKET, RF_ABILITY::BR_DISI))
+    if (spell_in_between(spell, MonsterAbilityType::ROCKET, MonsterAbilityType::BR_DISI))
         return true;
 
     /* Various "ball" spells */
-    if (spell_in_between(spell, RF_ABILITY::BA_ACID, RF_ABILITY::BA_DARK))
+    if (spell_in_between(spell, MonsterAbilityType::BA_ACID, MonsterAbilityType::BA_DARK))
         return true;
 
     /* "Cause wounds" and "bolt" spells */
-    if (spell_in_between(spell, RF_ABILITY::CAUSE_1, RF_ABILITY::MISSILE))
+    if (spell_in_between(spell, MonsterAbilityType::CAUSE_1, MonsterAbilityType::MISSILE))
         return true;
 
     /* "Cause wounds" and "bolt" spells */
-    if (spell_in_between(spell, RF_ABILITY::BO_LITE, RF_ABILITY::BO_DARK))
+    if (spell_in_between(spell, MonsterAbilityType::BO_LITE, MonsterAbilityType::BO_DARK))
         return true;
 
     /* Hand of Doom */
-    if (spell == RF_ABILITY::HAND_DOOM)
+    if (spell == MonsterAbilityType::HAND_DOOM)
         return true;
 
     /* Psycho-Spear */
-    if (spell == RF_ABILITY::PSY_SPEAR)
+    if (spell == MonsterAbilityType::PSY_SPEAR)
         return true;
 
     /* Doesn't hurt */
@@ -79,14 +79,14 @@ static bool spell_attack(RF_ABILITY spell)
  * @param spell 判定対象のID
  * @return 適した魔法のIDならばTRUEを返す。
  */
-static bool spell_escape(RF_ABILITY spell)
+static bool spell_escape(MonsterAbilityType spell)
 {
     /* Blink or Teleport */
-    if (spell == RF_ABILITY::BLINK || spell == RF_ABILITY::TPORT)
+    if (spell == MonsterAbilityType::BLINK || spell == MonsterAbilityType::TPORT)
         return true;
 
     /* Teleport the player away */
-    if (spell == RF_ABILITY::TELE_AWAY || spell == RF_ABILITY::TELE_LEVEL)
+    if (spell == MonsterAbilityType::TELE_AWAY || spell == MonsterAbilityType::TELE_LEVEL)
         return true;
 
     /* Isn't good for escaping */
@@ -99,30 +99,30 @@ static bool spell_escape(RF_ABILITY spell)
  * @param spell 判定対象のID
  * @return 適した魔法のIDならばTRUEを返す。
  */
-static bool spell_annoy(RF_ABILITY spell)
+static bool spell_annoy(MonsterAbilityType spell)
 {
     /* Shriek */
-    if (spell == RF_ABILITY::SHRIEK)
+    if (spell == MonsterAbilityType::SHRIEK)
         return true;
 
     /* Brain smash, et al (added curses) */
-    if (spell_in_between(spell, RF_ABILITY::DRAIN_MANA, RF_ABILITY::CAUSE_4))
+    if (spell_in_between(spell, MonsterAbilityType::DRAIN_MANA, MonsterAbilityType::CAUSE_4))
         return true;
 
     /* Scare, confuse, blind, slow, paralyze */
-    if (spell_in_between(spell, RF_ABILITY::SCARE, RF_ABILITY::HOLD))
+    if (spell_in_between(spell, MonsterAbilityType::SCARE, MonsterAbilityType::HOLD))
         return true;
 
     /* Teleport to */
-    if (spell == RF_ABILITY::TELE_TO)
+    if (spell == MonsterAbilityType::TELE_TO)
         return true;
 
     /* Teleport level */
-    if (spell == RF_ABILITY::TELE_LEVEL)
+    if (spell == MonsterAbilityType::TELE_LEVEL)
         return true;
 
     /* Darkness, make traps, cause amnesia */
-    if (spell_in_between(spell, RF_ABILITY::TRAPS, RF_ABILITY::RAISE_DEAD))
+    if (spell_in_between(spell, MonsterAbilityType::TRAPS, MonsterAbilityType::RAISE_DEAD))
         return true;
 
     /* Doesn't annoy */
@@ -135,9 +135,9 @@ static bool spell_annoy(RF_ABILITY spell)
  * @param spell 判定対象のID
  * @return 召喚型魔法のIDならばTRUEを返す。
  */
-static bool spell_summon(RF_ABILITY spell)
+static bool spell_summon(MonsterAbilityType spell)
 {
-    return spell_in_between(spell, RF_ABILITY::S_KIN, RF_ABILITY::S_UNIQUE);
+    return spell_in_between(spell, MonsterAbilityType::S_KIN, MonsterAbilityType::S_UNIQUE);
 }
 
 /*!
@@ -146,9 +146,9 @@ static bool spell_summon(RF_ABILITY spell)
  * @param spell 判定対象のID
  * @return 死者復活の処理ならばTRUEを返す。
  */
-static bool spell_raise(RF_ABILITY spell)
+static bool spell_raise(MonsterAbilityType spell)
 {
-    return spell == RF_ABILITY::RAISE_DEAD;
+    return spell == MonsterAbilityType::RAISE_DEAD;
 }
 
 /*!
@@ -157,9 +157,9 @@ static bool spell_raise(RF_ABILITY spell)
  * @param spell 判定対象のID
  * @return 戦術的な魔法のIDならばTRUEを返す。
  */
-static bool spell_tactic(RF_ABILITY spell)
+static bool spell_tactic(MonsterAbilityType spell)
 {
-    return spell == RF_ABILITY::BLINK;
+    return spell == MonsterAbilityType::BLINK;
 }
 
 /*!
@@ -168,9 +168,9 @@ static bool spell_tactic(RF_ABILITY spell)
  * @param spell 判定対象のID
  * @return 召喚型魔法のIDならばTRUEを返す。
  */
-static bool spell_invulner(RF_ABILITY spell)
+static bool spell_invulner(MonsterAbilityType spell)
 {
-    return spell == RF_ABILITY::INVULNER;
+    return spell == MonsterAbilityType::INVULNER;
 }
 
 /*!
@@ -179,9 +179,9 @@ static bool spell_invulner(RF_ABILITY spell)
  * @param spell 判定対象のID
  * @return 召喚型魔法のIDならばTRUEを返す。
  */
-static bool spell_haste(RF_ABILITY spell)
+static bool spell_haste(MonsterAbilityType spell)
 {
-    return spell == RF_ABILITY::HASTE;
+    return spell == MonsterAbilityType::HASTE;
 }
 
 /*!
@@ -190,9 +190,9 @@ static bool spell_haste(RF_ABILITY spell)
  * @param spell 判定対象のID
  * @return 時間停止魔法のIDならばTRUEを返す。
  */
-static bool spell_world(RF_ABILITY spell)
+static bool spell_world(MonsterAbilityType spell)
 {
-    return spell == RF_ABILITY::WORLD;
+    return spell == MonsterAbilityType::WORLD;
 }
 
 /*!
@@ -202,12 +202,12 @@ static bool spell_world(RF_ABILITY spell)
  * @param spell 判定対象のID
  * @return 特別効果魔法のIDならばTRUEを返す。
  */
-static bool spell_special(player_type *player_ptr, RF_ABILITY spell)
+static bool spell_special(PlayerType *player_ptr, MonsterAbilityType spell)
 {
     if (player_ptr->phase_out)
         return false;
 
-    return spell == RF_ABILITY::SPECIAL;
+    return spell == MonsterAbilityType::SPECIAL;
 }
 
 /*!
@@ -216,9 +216,9 @@ static bool spell_special(player_type *player_ptr, RF_ABILITY spell)
  * @param spell 判定対象のID
  * @return 光の剣のIDならばTRUEを返す。
  */
-static bool spell_psy_spe(RF_ABILITY spell)
+static bool spell_psy_spe(MonsterAbilityType spell)
 {
-    return spell == RF_ABILITY::PSY_SPEAR;
+    return spell == MonsterAbilityType::PSY_SPEAR;
 }
 
 /*!
@@ -227,9 +227,9 @@ static bool spell_psy_spe(RF_ABILITY spell)
  * @param spell 判定対象のID
  * @return 治癒魔法のIDならばTRUEを返す。
  */
-static bool spell_heal(RF_ABILITY spell)
+static bool spell_heal(MonsterAbilityType spell)
 {
-    return spell == RF_ABILITY::HEAL;
+    return spell == MonsterAbilityType::HEAL;
 }
 
 /*!
@@ -238,9 +238,9 @@ static bool spell_heal(RF_ABILITY spell)
  * @param spell 判定対象のID
  * @return 魔力消去のIDならばTRUEを返す。
  */
-static bool spell_dispel(RF_ABILITY spell)
+static bool spell_dispel(MonsterAbilityType spell)
 {
-    return spell == RF_ABILITY::DISPEL;
+    return spell == MonsterAbilityType::DISPEL;
 }
 
 /*!
@@ -264,21 +264,21 @@ static bool spell_dispel(RF_ABILITY spell)
  * This function may well be an efficiency bottleneck.\n
  * @todo 長過ぎる。切り分けが必要
  */
-RF_ABILITY choose_attack_spell(player_type *player_ptr, msa_type *msa_ptr)
+MonsterAbilityType choose_attack_spell(PlayerType *player_ptr, msa_type *msa_ptr)
 {
-    std::vector<RF_ABILITY> escape;
-    std::vector<RF_ABILITY> attack;
-    std::vector<RF_ABILITY> summon;
-    std::vector<RF_ABILITY> tactic;
-    std::vector<RF_ABILITY> annoy;
-    std::vector<RF_ABILITY> invul;
-    std::vector<RF_ABILITY> haste;
-    std::vector<RF_ABILITY> world;
-    std::vector<RF_ABILITY> special;
-    std::vector<RF_ABILITY> psy_spe;
-    std::vector<RF_ABILITY> raise;
-    std::vector<RF_ABILITY> heal;
-    std::vector<RF_ABILITY> dispel;
+    std::vector<MonsterAbilityType> escape;
+    std::vector<MonsterAbilityType> attack;
+    std::vector<MonsterAbilityType> summon;
+    std::vector<MonsterAbilityType> tactic;
+    std::vector<MonsterAbilityType> annoy;
+    std::vector<MonsterAbilityType> invul;
+    std::vector<MonsterAbilityType> haste;
+    std::vector<MonsterAbilityType> world;
+    std::vector<MonsterAbilityType> special;
+    std::vector<MonsterAbilityType> psy_spe;
+    std::vector<MonsterAbilityType> raise;
+    std::vector<MonsterAbilityType> heal;
+    std::vector<MonsterAbilityType> dispel;
 
     monster_type *m_ptr = &player_ptr->current_floor_ptr->m_list[msa_ptr->m_idx];
     monster_race *r_ptr = &r_info[m_ptr->r_idx];
@@ -379,8 +379,7 @@ RF_ABILITY choose_attack_spell(player_type *player_ptr, msa_type *msa_ptr)
             return (special[randint0(special.size())]);
     }
 
-    if ((distance(player_ptr->y, player_ptr->x, m_ptr->fy, m_ptr->fx) < 4) && (!attack.empty() || r_ptr->ability_flags.has(RF_ABILITY::TRAPS)) && (randint0(100) < 75)
-        && !w_ptr->timewalk_m_idx) {
+    if ((distance(player_ptr->y, player_ptr->x, m_ptr->fy, m_ptr->fx) < 4) && (!attack.empty() || r_ptr->ability_flags.has(MonsterAbilityType::TRAPS)) && (randint0(100) < 75) && !w_ptr->timewalk_m_idx) {
         if (!tactic.empty())
             return (tactic[randint0(tactic.size())]);
     }
@@ -424,5 +423,5 @@ RF_ABILITY choose_attack_spell(player_type *player_ptr, msa_type *msa_ptr)
     if (!annoy.empty() && (randint0(100) < 80))
         return (annoy[randint0(annoy.size())]);
 
-    return RF_ABILITY::MAX;
+    return MonsterAbilityType::MAX;
 }

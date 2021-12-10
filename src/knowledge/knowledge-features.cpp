@@ -7,6 +7,7 @@
 #include "knowledge/knowledge-features.h"
 #include "core/show-file.h"
 #include "dungeon/dungeon.h"
+#include "game-option/game-play-options.h"
 #include "game-option/special-options.h"
 #include "io-dump/dump-util.h"
 #include "io/input-key-acceptor.h"
@@ -66,9 +67,9 @@ static void display_feature_list(int col, int row, int per_page, FEAT_IDX *feat_
         if (per_page == 1) {
             c_prt(attr, format("(%s)", lighting_level_str[lighting_level]), row_i, col + 1 + f_ptr->name.size());
             c_prt(attr, format("%02x/%02x", f_ptr->x_attr[lighting_level], (unsigned char)f_ptr->x_char[lighting_level]), row_i,
-                f_idx_col - ((w_ptr->wizard || visual_only) ? 6 : 2));
+                f_idx_col - ((allow_debug_options || visual_only) ? 6 : 2));
         }
-        if (w_ptr->wizard || visual_only) {
+        if (allow_debug_options || visual_only) {
             c_prt(attr, format("%d", f_idx), row_i, f_idx_col);
         }
 
@@ -94,10 +95,8 @@ static void display_feature_list(int col, int row, int per_page, FEAT_IDX *feat_
  */
 void do_cmd_knowledge_features(bool *need_redraw, bool visual_only, IDX direct_f_idx, IDX *lighting_level)
 {
-    TERM_COLOR attr_old[F_LIT_MAX];
-    (void)C_WIPE(attr_old, F_LIT_MAX, TERM_COLOR);
-    SYMBOL_CODE char_old[F_LIT_MAX];
-    (void)C_WIPE(char_old, F_LIT_MAX, SYMBOL_CODE);
+    TERM_COLOR attr_old[F_LIT_MAX] = {};
+    SYMBOL_CODE char_old[F_LIT_MAX] = {};
 
     TERM_LEN wid, hgt;
     term_get_size(&wid, &hgt);
@@ -166,11 +165,11 @@ void do_cmd_knowledge_features(bool *need_redraw, bool visual_only, IDX direct_f
                 prt(_("グループ", "Group"), 4, 0);
             prt(_("名前", "Name"), 4, max + 3);
             if (use_bigtile) {
-                if (w_ptr->wizard || visual_only)
+                if (allow_debug_options || visual_only)
                     prt("Idx", 4, 62);
                 prt(_("文字 ( l/ d)", "Sym ( l/ d)"), 4, 66);
             } else {
-                if (w_ptr->wizard || visual_only)
+                if (allow_debug_options || visual_only)
                     prt("Idx", 4, 64);
                 prt(_("文字 (l/d)", "Sym (l/d)"), 4, 68);
             }
@@ -201,9 +200,9 @@ void do_cmd_knowledge_features(bool *need_redraw, bool visual_only, IDX direct_f
             }
 
             while (feat_cur < feat_top)
-                feat_top = MAX(0, feat_top - browser_rows / 2);
+                feat_top = std::max<short>(0, feat_top - browser_rows / 2);
             while (feat_cur >= feat_top + browser_rows)
-                feat_top = MIN(feat_cnt - browser_rows, feat_top + browser_rows / 2);
+                feat_top = std::min<short>(feat_cnt - browser_rows, feat_top + browser_rows / 2);
         }
 
         if (!visual_list) {
@@ -249,10 +248,10 @@ void do_cmd_knowledge_features(bool *need_redraw, bool visual_only, IDX direct_f
             }
 
             if (f_ptr->x_attr[prev_lighting_level] != f_ptr->x_attr[*lighting_level])
-                attr_top = MAX(0, (f_ptr->x_attr[*lighting_level] & 0x7f) - 5);
+                attr_top = std::max<byte>(0, (f_ptr->x_attr[*lighting_level] & 0x7f) - 5);
 
             if (f_ptr->x_char[prev_lighting_level] != f_ptr->x_char[*lighting_level])
-                char_left = MAX(0, f_ptr->x_char[*lighting_level] - 10);
+                char_left = std::max<byte>(0, f_ptr->x_char[*lighting_level] - 10);
 
             continue;
         } else if ((ch == 'D') || (ch == 'd')) {
@@ -263,10 +262,10 @@ void do_cmd_knowledge_features(bool *need_redraw, bool visual_only, IDX direct_f
 
             if (visual_list) {
                 if (prev_x_attr != f_ptr->x_attr[*lighting_level])
-                    attr_top = MAX(0, (f_ptr->x_attr[*lighting_level] & 0x7f) - 5);
+                    attr_top = std::max<byte>(0, (f_ptr->x_attr[*lighting_level] & 0x7f) - 5);
 
                 if (prev_x_char != f_ptr->x_char[*lighting_level])
-                    char_left = MAX(0, f_ptr->x_char[*lighting_level] - 10);
+                    char_left = std::max<byte>(0, f_ptr->x_char[*lighting_level] - 10);
             } else
                 *need_redraw = true;
 
@@ -338,7 +337,7 @@ void do_cmd_knowledge_features(bool *need_redraw, bool visual_only, IDX direct_f
 /*
  * Dungeon
  */
-void do_cmd_knowledge_dungeon(player_type *player_ptr)
+void do_cmd_knowledge_dungeon(PlayerType *player_ptr)
 {
     FILE *fff = nullptr;
     GAME_TEXT file_name[FILE_NAME_SIZE];

@@ -7,6 +7,8 @@
 #include "grid/feature.h"
 #include "grid/grid.h"
 #include "io/input-key-requester.h"
+#include "player-base/player-class.h"
+#include "player-info/samurai-data-type.h"
 #include "player-status/player-energy.h"
 #include "player/attack-defense-types.h"
 #include "player/special-defense-types.h"
@@ -30,11 +32,10 @@
  * accomplished by strong players using heavy weapons.
  * </pre>
  */
-void do_cmd_tunnel(player_type *player_ptr)
+void do_cmd_tunnel(PlayerType *player_ptr)
 {
     bool more = false;
-    if (player_ptr->special_defense & KATA_MUSOU)
-        set_action(player_ptr, ACTION_NONE);
+    PlayerClass(player_ptr).break_samurai_stance({ SamuraiStanceType::MUSOU });
 
     if (command_arg) {
         command_rep = command_arg - 1;
@@ -55,9 +56,9 @@ void do_cmd_tunnel(player_type *player_ptr)
     grid_type *g_ptr;
     g_ptr = &player_ptr->current_floor_ptr->grid_array[y][x];
     FEAT_IDX feat = g_ptr->get_feat_mimic();
-    if (f_info[feat].flags.has(FF::DOOR))
+    if (f_info[feat].flags.has(FloorFeatureType::DOOR))
         msg_print(_("ドアは掘れない。", "You cannot tunnel through doors."));
-    else if (f_info[feat].flags.has_not(FF::TUNNEL))
+    else if (f_info[feat].flags.has_not(FloorFeatureType::TUNNEL))
         msg_print(_("そこは掘れない。", "You can't tunnel through that."));
     else if (g_ptr->m_idx) {
         PlayerEnergy(player_ptr).set_player_turn_energy(100);

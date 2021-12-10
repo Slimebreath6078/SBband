@@ -36,8 +36,6 @@
 #include "system/monster-race-definition.h"
 #include "system/monster-type-definition.h"
 #include "system/player-type-definition.h"
-#include "timed-effect/player-stun.h"
-#include "timed-effect/timed-effects.h"
 #include "util/bit-flags-calculator.h"
 #include "view/display-messages.h"
 
@@ -51,10 +49,10 @@
  * @param m_idx 地震を起こしたモンスターID(0ならばプレイヤー)
  * @return 効力があった場合TRUEを返す
  */
-bool earthquake(player_type *player_ptr, POSITION cy, POSITION cx, POSITION r, MONSTER_IDX m_idx)
+bool earthquake(PlayerType *player_ptr, POSITION cy, POSITION cx, POSITION r, MONSTER_IDX m_idx)
 {
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
-    if ((floor_ptr->inside_quest && is_fixed_quest_idx(floor_ptr->inside_quest)) || !floor_ptr->dun_level) {
+    if ((floor_ptr->inside_quest && quest_type::is_fixed(floor_ptr->inside_quest)) || !floor_ptr->dun_level) {
         return false;
     }
 
@@ -139,8 +137,6 @@ bool earthquake(player_type *player_ptr, POSITION cy, POSITION cx, POSITION r, M
             msg_print(_("あなたはひどい怪我を負った！", "You are severely crushed!"));
             damage = 200;
         } else {
-            auto effects = player_ptr->effects();
-            auto stun_value = effects->stun()->current();
             BadStatusSetter bss(player_ptr);
             switch (randint1(3)) {
             case 1: {
@@ -151,13 +147,13 @@ bool earthquake(player_type *player_ptr, POSITION cy, POSITION cx, POSITION r, M
             case 2: {
                 msg_print(_("岩石があなたに直撃した!", "You are bashed by rubble!"));
                 damage = damroll(10, 4);
-                (void)bss.stun(stun_value + randint1(50));
+                (void)bss.mod_stun(randint1(50));
                 break;
             }
             case 3: {
                 msg_print(_("あなたは床と壁との間に挟まれてしまった！", "You are crushed between the floor and ceiling!"));
                 damage = damroll(10, 4);
-                (void)bss.stun(stun_value + randint1(50));
+                (void)bss.mod_stun(randint1(50));
                 break;
             }
             }
@@ -167,7 +163,7 @@ bool earthquake(player_type *player_ptr, POSITION cy, POSITION cx, POSITION r, M
 
         map[16 + player_ptr->y - cy][16 + player_ptr->x - cx] = false;
         if (damage) {
-            concptr killer;
+            std::string killer;
 
             if (m_idx) {
                 GAME_TEXT m_name[MAX_NLEN];
@@ -178,7 +174,7 @@ bool earthquake(player_type *player_ptr, POSITION cy, POSITION cx, POSITION r, M
                 killer = _("地震", "an earthquake");
             }
 
-            take_hit(player_ptr, DAMAGE_ATTACK, damage, killer);
+            take_hit(player_ptr, DAMAGE_ATTACK, damage, killer.c_str());
         }
     }
 
@@ -295,7 +291,7 @@ bool earthquake(player_type *player_ptr, POSITION cy, POSITION cx, POSITION r, M
                 continue;
 
             delete_all_items_from_floor(player_ptr, yy, xx);
-            int t = cave_has_flag_bold(floor_ptr, yy, xx, FF::PROJECT) ? randint0(100) : 200;
+            int t = cave_has_flag_bold(floor_ptr, yy, xx, FloorFeatureType::PROJECT) ? randint0(100) : 200;
             if (t < 20) {
                 cave_set_feat(player_ptr, yy, xx, feat_granite);
                 continue;
@@ -331,7 +327,7 @@ bool earthquake(player_type *player_ptr, POSITION cy, POSITION cx, POSITION r, M
                 continue;
             }
 
-            if (d_info[player_ptr->dungeon_idx].flags.has(DF::DARKNESS))
+            if (d_info[player_ptr->dungeon_idx].flags.has(DungeonFeatureType::DARKNESS))
                 continue;
 
             grid_type *cc_ptr;
@@ -341,7 +337,7 @@ bool earthquake(player_type *player_ptr, POSITION cy, POSITION cx, POSITION r, M
                 if (!in_bounds2(floor_ptr, yyy, xxx))
                     continue;
                 cc_ptr = &floor_ptr->grid_array[yyy][xxx];
-                if (f_info[cc_ptr->get_feat_mimic()].flags.has(FF::GLOW)) {
+                if (f_info[cc_ptr->get_feat_mimic()].flags.has(FloorFeatureType::GLOW)) {
                     g_ptr->info |= CAVE_GLOW;
                     break;
                 }
@@ -352,9 +348,8 @@ bool earthquake(player_type *player_ptr, POSITION cy, POSITION cx, POSITION r, M
     player_ptr->update |= (PU_UN_VIEW | PU_UN_LITE | PU_VIEW | PU_LITE | PU_FLOW | PU_MON_LITE | PU_MONSTERS);
     player_ptr->redraw |= (PR_HEALTH | PR_UHEALTH | PR_MAP);
     player_ptr->window_flags |= (PW_OVERHEAD | PW_DUNGEON);
-    if (player_ptr->special_defense & NINJA_S_STEALTH) {
-        if (floor_ptr->grid_array[player_ptr->y][player_ptr->x].info & CAVE_GLOW)
-            set_superstealth(player_ptr, false);
+    if (floor_ptr->grid_array[player_ptr->y][player_ptr->x].info & CAVE_GLOW) {
+        set_superstealth(player_ptr, false);
     }
 
     return true;

@@ -34,7 +34,7 @@
 /*!
  * @brief プレイヤーに魔力消去効果を与える。
  */
-static void dispel_player(player_type *player_ptr)
+static void dispel_player(PlayerType *player_ptr)
 {
     (void)set_fast(player_ptr, 0, true);
     set_lightspeed(player_ptr, 0, true);
@@ -81,11 +81,19 @@ static void dispel_player(player_type *player_ptr)
         msg_print(_("手の輝きがなくなった。", "Your hands stop glowing."));
     }
 
-    if (music_singing_any(player_ptr) || SpellHex(player_ptr).is_spelling_any()) {
-        concptr str = (music_singing_any(player_ptr)) ? _("歌", "singing") : _("呪文", "casting");
-        set_interrupting_song_effect(player_ptr, get_singing_song_effect(player_ptr));
-        set_singing_song_effect(player_ptr, MUSIC_NONE);
-        msg_format(_("%sが途切れた。", "Your %s is interrupted."), str);
+    auto song_interruption = music_singing_any(player_ptr);
+    auto spellhex_interruption = SpellHex(player_ptr).is_spelling_any();
+
+    if (song_interruption || spellhex_interruption) {
+        if (song_interruption) {
+            set_interrupting_song_effect(player_ptr, get_singing_song_effect(player_ptr));
+            set_singing_song_effect(player_ptr, MUSIC_NONE);
+            msg_print(_("歌が途切れた。", "Your singing is interrupted."));
+        }
+        if (spellhex_interruption) {
+            SpellHex(player_ptr).interrupt_spelling();
+            msg_print(_("呪文が途切れた。", "Your casting is interrupted."));
+        }
 
         player_ptr->action = ACTION_NONE;
         player_ptr->update |= (PU_BONUS | PU_HP | PU_MONSTERS);
@@ -104,7 +112,7 @@ static void dispel_player(player_type *player_ptr)
  *
  * プレイヤーが対象ならラーニング可。
  */
-MonsterSpellResult spell_RF4_DISPEL(MONSTER_IDX m_idx, player_type *player_ptr, MONSTER_IDX t_idx, int TARGET_TYPE)
+MonsterSpellResult spell_RF4_DISPEL(MONSTER_IDX m_idx, PlayerType *player_ptr, MONSTER_IDX t_idx, int TARGET_TYPE)
 {
     auto res = MonsterSpellResult::make_valid();
     res.learnable = TARGET_TYPE == MONSTER_TO_PLAYER;
@@ -113,10 +121,10 @@ MonsterSpellResult spell_RF4_DISPEL(MONSTER_IDX m_idx, player_type *player_ptr, 
     monster_name(player_ptr, m_idx, m_name);
     monster_name(player_ptr, t_idx, t_name);
 
-    monspell_message(player_ptr, m_idx, t_idx, 
-        SpellMsg_blind(_("%^sが何かを力強くつぶやいた。", "%^s mumbles powerfully."),
-        _("%^sが魔力消去の呪文を念じた。", "%^s invokes a dispel magic."), _("%^sが%sに対して魔力消去の呪文を念じた。", "%^s invokes a dispel magic at %s.")),
-        TARGET_TYPE);
+    mspell_cast_msg_blind msg(_("%^sが何かを力強くつぶやいた。", "%^s mumbles powerfully."),
+        _("%^sが魔力消去の呪文を念じた。", "%^s invokes a dispel magic."), _("%^sが%sに対して魔力消去の呪文を念じた。", "%^s invokes a dispel magic at %s."));
+
+    monspell_message(player_ptr, m_idx, t_idx, msg, TARGET_TYPE);
 
     if (TARGET_TYPE == MONSTER_TO_PLAYER) {
         dispel_player(player_ptr);

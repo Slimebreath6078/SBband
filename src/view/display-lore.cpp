@@ -7,6 +7,8 @@
 #include "view/display-lore.h"
 #include "game-option/cheat-options.h"
 #include "game-option/text-display-options.h"
+#include "locale/english.h"
+#include "locale/japanese.h"
 #include "lore/lore-calculator.h"
 #include "lore/lore-util.h"
 #include "lore/monster-lore.h"
@@ -26,11 +28,6 @@
 #include "util/bit-flags-calculator.h"
 #include "view/display-messages.h"
 #include "world/world.h"
-#ifdef JP
-#include "locale/japanese.h"
-#else
-#include "locale/english.h"
-#endif
 
 /*!
  * 英語の複数系記述用マクロ / Pluralizer.  Args(count, singular, plural)
@@ -61,7 +58,7 @@ void roff_top(MONRACE_IDX r_idx)
     }
 #endif
 
-    if (w_ptr->wizard || cheat_know) {
+    if (cheat_know) {
         term_addstr(-1, TERM_WHITE, "[");
         term_addstr(-1, TERM_L_BLUE, format("%d", r_idx));
         term_addstr(-1, TERM_WHITE, "] ");
@@ -84,7 +81,7 @@ void roff_top(MONRACE_IDX r_idx)
  * @param r_idx モンスターの種族ID
  * @param mode 表示オプション
  */
-void screen_roff(player_type *player_ptr, MONRACE_IDX r_idx, monster_lore_mode mode)
+void screen_roff(PlayerType *player_ptr, MONRACE_IDX r_idx, monster_lore_mode mode)
 {
     msg_erase();
     term_erase(0, 1, 255);
@@ -98,7 +95,7 @@ void screen_roff(player_type *player_ptr, MONRACE_IDX r_idx, monster_lore_mode m
  * Hack -- describe the given monster race in the current "term" window
  * @param r_idx モンスターの種族ID
  */
-void display_roff(player_type *player_ptr)
+void display_roff(PlayerType *player_ptr)
 {
     for (int y = 0; y < Term->hgt; y++) {
         term_erase(0, y, 255);
@@ -121,7 +118,7 @@ void display_roff(player_type *player_ptr)
 void output_monster_spoiler(MONRACE_IDX r_idx, void (*roff_func)(TERM_COLOR attr, concptr str))
 {
     hook_c_roff = roff_func;
-    player_type dummy;
+    PlayerType dummy;
 
     dummy.lev = 1;
     dummy.max_plv = 1;
@@ -410,7 +407,7 @@ void display_monster_alignment(lore_type *lore_ptr)
  * @param player_ptr プレイヤーの情報へのポインター
  * @param lore_ptr モンスターの思い出の情報へのポインター
  */
-void display_monster_exp(player_type *player_ptr, lore_type *lore_ptr)
+void display_monster_exp(PlayerType *player_ptr, lore_type *lore_ptr)
 {
 #ifdef JP
     hooked_roff("を倒すことは");
@@ -461,24 +458,27 @@ void display_monster_exp(player_type *player_ptr, lore_type *lore_ptr)
 
 void display_monster_aura(lore_type *lore_ptr)
 {
-    if ((lore_ptr->flags2 & RF2_AURA_FIRE) && (lore_ptr->flags2 & RF2_AURA_ELEC) && (lore_ptr->flags3 & RF3_AURA_COLD))
+    auto has_fire_aura = lore_ptr->aura_flags.has(MonsterAuraType::FIRE);
+    auto has_elec_aura = lore_ptr->aura_flags.has(MonsterAuraType::ELEC);
+    auto has_cold_aura = lore_ptr->aura_flags.has(MonsterAuraType::COLD);
+    if (has_fire_aura && has_elec_aura && has_cold_aura)
         hook_c_roff(
             TERM_VIOLET, format(_("%^sは炎と氷とスパークに包まれている。", "%^s is surrounded by flames, ice and electricity.  "), Who::who(lore_ptr->msex)));
-    else if ((lore_ptr->flags2 & RF2_AURA_FIRE) && (lore_ptr->flags2 & RF2_AURA_ELEC))
+    else if (has_fire_aura && has_elec_aura)
         hook_c_roff(TERM_L_RED, format(_("%^sは炎とスパークに包まれている。", "%^s is surrounded by flames and electricity.  "), Who::who(lore_ptr->msex)));
-    else if ((lore_ptr->flags2 & RF2_AURA_FIRE) && (lore_ptr->flags3 & RF3_AURA_COLD))
+    else if (has_fire_aura && has_cold_aura)
         hook_c_roff(TERM_BLUE, format(_("%^sは炎と氷に包まれている。", "%^s is surrounded by flames and ice.  "), Who::who(lore_ptr->msex)));
-    else if ((lore_ptr->flags3 & RF3_AURA_COLD) && (lore_ptr->flags2 & RF2_AURA_ELEC))
+    else if (has_cold_aura && has_elec_aura)
         hook_c_roff(TERM_L_GREEN, format(_("%^sは氷とスパークに包まれている。", "%^s is surrounded by ice and electricity.  "), Who::who(lore_ptr->msex)));
-    else if (lore_ptr->flags2 & RF2_AURA_FIRE)
+    else if (has_fire_aura)
         hook_c_roff(TERM_RED, format(_("%^sは炎に包まれている。", "%^s is surrounded by flames.  "), Who::who(lore_ptr->msex)));
-    else if (lore_ptr->flags3 & RF3_AURA_COLD)
+    else if (has_cold_aura)
         hook_c_roff(TERM_BLUE, format(_("%^sは氷に包まれている。", "%^s is surrounded by ice.  "), Who::who(lore_ptr->msex)));
-    else if (lore_ptr->flags2 & RF2_AURA_ELEC)
+    else if (has_elec_aura)
         hook_c_roff(TERM_L_BLUE, format(_("%^sはスパークに包まれている。", "%^s is surrounded by electricity.  "), Who::who(lore_ptr->msex)));
 }
 
-void display_lore_this(player_type *player_ptr, lore_type *lore_ptr)
+void display_lore_this(PlayerType *player_ptr, lore_type *lore_ptr)
 {
     if ((lore_ptr->r_ptr->r_tkills == 0) && !lore_ptr->know_everything)
         return;
@@ -561,26 +561,26 @@ void display_monster_collective(lore_type *lore_ptr)
  * a monster.
  * @todo max_blows はゲームの中核的なパラメータの1つなのでどこかのヘッダに定数宣言しておきたい
  */
-void display_monster_launching(player_type *player_ptr, lore_type *lore_ptr)
+void display_monster_launching(PlayerType *player_ptr, lore_type *lore_ptr)
 {
-    if (lore_ptr->ability_flags.has(RF_ABILITY::ROCKET)) {
-        set_damage(player_ptr, lore_ptr, RF_ABILITY::ROCKET, _("ロケット%sを発射する", "shoot a rocket%s"));
+    if (lore_ptr->ability_flags.has(MonsterAbilityType::ROCKET)) {
+        set_damage(player_ptr, lore_ptr, MonsterAbilityType::ROCKET, _("ロケット%sを発射する", "shoot a rocket%s"));
         lore_ptr->vp[lore_ptr->vn] = lore_ptr->tmp_msg[lore_ptr->vn];
         lore_ptr->color[lore_ptr->vn++] = TERM_UMBER;
         lore_ptr->rocket = true;
     }
 
-    if (lore_ptr->ability_flags.has_not(RF_ABILITY::SHOOT))
+    if (lore_ptr->ability_flags.has_not(MonsterAbilityType::SHOOT))
         return;
 
     int p = -1; /* Position of SHOOT */
     int n = 0; /* Number of blows */
     const int max_blows = 4;
     for (int m = 0; m < max_blows; m++) {
-        if (lore_ptr->r_ptr->blow[m].method != RBM_NONE)
+        if (lore_ptr->r_ptr->blow[m].method != RaceBlowMethodType::NONE)
             n++; /* Count blows */
 
-        if (lore_ptr->r_ptr->blow[m].method == RBM_SHOOT) {
+        if (lore_ptr->r_ptr->blow[m].method == RaceBlowMethodType::SHOOT) {
             p = m; /* Remember position */
             break;
         }

@@ -1,14 +1,14 @@
 ﻿#pragma once
 
-#include <string>
-#include <unordered_map>
-
 #include "monster-attack/monster-attack-types.h"
+#include "monster-race/monster-aura-types.h"
 #include "monster-race/race-ability-flags.h"
 #include "monster-race/race-flags-resistance.h"
 #include "monster-race/race-kind-flags.h"
 #include "system/angband.h"
 #include "util/flag-group.h"
+#include <string>
+#include <unordered_map>
 
 enum monster_sex {
     MSEX_NONE = 0,
@@ -32,8 +32,9 @@ typedef struct lore_type {
     BIT_FLAGS flags2;
     BIT_FLAGS flags3;
     EnumClassFlagGroup<MonsterResistanceType> resistance_flags;
-    EnumClassFlagGroup<RF_ABILITY> ability_flags;
+    EnumClassFlagGroup<MonsterAbilityType> ability_flags;
     EnumClassFlagGroup<MonraceKindType> race_kind_flags;
+    EnumClassFlagGroup<MonsterAuraType> aura_flags;
 
     BIT_FLAGS flags7;
     bool reinforce;
@@ -54,7 +55,7 @@ typedef struct lore_type {
     byte pc;
     concptr q;
     byte qc;
-    rbm_type method;
+    RaceBlowMethodType method;
     int count;
     bool shoot = false;
     bool rocket = false;

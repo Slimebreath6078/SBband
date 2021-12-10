@@ -3,8 +3,8 @@
 #include "load/angband-version-comparer.h"
 #include "load/load-util.h"
 #include "load/option-loader.h"
-#include "system/angband.h"
 #include "system/angband-version.h"
+#include "system/angband.h"
 #include "view/display-messages.h"
 #include "world/world.h"
 
@@ -17,14 +17,14 @@
 void rd_version_info(void)
 {
 
-    load_xor_byte = 0; 
-    rd_byte(&w_ptr->h_ver_extra); 
     load_xor_byte = 0;
-    rd_byte(&w_ptr->h_ver_patch);
+    w_ptr->h_ver_extra = rd_byte();
     load_xor_byte = 0;
-    rd_byte(&w_ptr->h_ver_minor);
+    w_ptr->h_ver_patch = rd_byte();
     load_xor_byte = 0;
-    rd_byte(&w_ptr->h_ver_major);
+    w_ptr->h_ver_minor = rd_byte();
+    load_xor_byte = 0;
+    w_ptr->h_ver_major = rd_byte();
 
     strip_bytes(1);
 
@@ -32,12 +32,12 @@ void rd_version_info(void)
     v_check = 0L;
     x_check = 0L;
 
-    rd_u32b(&w_ptr->sf_system);
-    rd_u32b(&w_ptr->sf_when);
-    rd_u16b(&w_ptr->sf_lives);
-    rd_u16b(&w_ptr->sf_saves);
+    w_ptr->sf_system = rd_u32b();
+    w_ptr->sf_when = rd_u32b();
+    w_ptr->sf_lives = rd_u16b();
+    w_ptr->sf_saves = rd_u16b();
 
-    rd_u32b(&loading_savefile_version);
+    loading_savefile_version = rd_u32b();
 
     load_note(format(_("バージョン %d.%d.%d のセーブデータ(SAVE%lu形式)をロード中...", "Loading a Verison %d.%d.%d savefile (SAVE%lu format)..."),
         w_ptr->h_ver_major, w_ptr->h_ver_minor, w_ptr->h_ver_patch,
@@ -49,11 +49,15 @@ void rd_version_info(void)
  */
 void rd_randomizer(void)
 {
-    uint16_t tmp16u;
-    rd_u16b(&tmp16u);
-    rd_u16b(&Rand_place);
-    for (int i = 0; i < RAND_DEG; i++)
-        rd_u32b(&Rand_state[i]);
+    strip_bytes(4);
+
+    Xoshiro128StarStar::state_type state;
+    for (auto &s : state) {
+        s = rd_u32b();
+    }
+    w_ptr->rng.set_state(state);
+
+    strip_bytes(4 * (RAND_DEG - state.size()));
 }
 
 /*!
@@ -61,8 +65,7 @@ void rd_randomizer(void)
  */
 void rd_messages(void)
 {
-    uint32_t num;
-    rd_u32b(&num);
+    auto num = rd_u32b();
     int message_max = (int)num;
     for (int i = 0; i < message_max; i++) {
         char buf[128];
@@ -73,7 +76,7 @@ void rd_messages(void)
 
 void rd_system_info(void)
 {
-    rd_byte(&kanji_code);
+    kanji_code = rd_byte();
     rd_randomizer();
     load_note(_("乱数情報をロードしました", "Loaded Randomizer Info"));
     rd_options();

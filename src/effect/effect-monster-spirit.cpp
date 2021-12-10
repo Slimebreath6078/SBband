@@ -18,12 +18,12 @@
 #include "system/player-type-definition.h"
 #include "view/display-messages.h"
 
-process_result effect_monster_drain_mana(player_type *player_ptr, effect_monster_type *em_ptr)
+process_result effect_monster_drain_mana(PlayerType *player_ptr, effect_monster_type *em_ptr)
 {
     if (em_ptr->seen)
         em_ptr->obvious = true;
     auto ability_flags = em_ptr->r_ptr->ability_flags;
-    bool has_mana = ability_flags.reset(RF_ABILITY_NOMAGIC_MASK).any();
+    bool has_mana = ability_flags.reset(MonsterAbilityType_NOMAGIC_MASK).any();
     if (!has_mana) {
         if (em_ptr->see_s_msg)
             msg_format(_("%sには効果がなかった。", "%s is unaffected."), em_ptr->m_name);
@@ -63,15 +63,14 @@ process_result effect_monster_drain_mana(player_type *player_ptr, effect_monster
     return PROCESS_CONTINUE;
 }
 
-process_result effect_monster_mind_blast(player_type *player_ptr, effect_monster_type *em_ptr)
+process_result effect_monster_mind_blast(PlayerType *player_ptr, effect_monster_type *em_ptr)
 {
     if (em_ptr->seen)
         em_ptr->obvious = true;
     if (!em_ptr->who)
         msg_format(_("%sをじっと睨んだ。", "You gaze intently at %s."), em_ptr->m_name);
 
-    if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || (em_ptr->r_ptr->flags3 & RF3_NO_CONF)
-        || (em_ptr->r_ptr->level > randint1((em_ptr->caster_lev - 10) < 1 ? 1 : (em_ptr->caster_lev - 10)) + 10)) {
+    if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || (em_ptr->r_ptr->flags3 & RF3_NO_CONF) || (em_ptr->r_ptr->level > randint1((em_ptr->caster_lev - 10) < 1 ? 1 : (em_ptr->caster_lev - 10)) + 10)) {
         if (em_ptr->r_ptr->flags3 & (RF3_NO_CONF)) {
             if (is_original_ap_and_seen(player_ptr, em_ptr->m_ptr))
                 em_ptr->r_ptr->r_flags3 |= (RF3_NO_CONF);
@@ -102,15 +101,14 @@ process_result effect_monster_mind_blast(player_type *player_ptr, effect_monster
     return PROCESS_CONTINUE;
 }
 
-process_result effect_monster_brain_smash(player_type *player_ptr, effect_monster_type *em_ptr)
+process_result effect_monster_brain_smash(PlayerType *player_ptr, effect_monster_type *em_ptr)
 {
     if (em_ptr->seen)
         em_ptr->obvious = true;
     if (!em_ptr->who)
         msg_format(_("%sをじっと睨んだ。", "You gaze intently at %s."), em_ptr->m_name);
 
-    if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || (em_ptr->r_ptr->flags3 & RF3_NO_CONF)
-        || (em_ptr->r_ptr->level > randint1((em_ptr->caster_lev - 10) < 1 ? 1 : (em_ptr->caster_lev - 10)) + 10)) {
+    if (em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || (em_ptr->r_ptr->flags3 & RF3_NO_CONF) || (em_ptr->r_ptr->level > randint1((em_ptr->caster_lev - 10) < 1 ? 1 : (em_ptr->caster_lev - 10)) + 10)) {
         if (em_ptr->r_ptr->flags3 & (RF3_NO_CONF)) {
             if (is_original_ap_and_seen(player_ptr, em_ptr->m_ptr))
                 em_ptr->r_ptr->r_flags3 |= (RF3_NO_CONF);

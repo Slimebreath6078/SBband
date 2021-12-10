@@ -22,7 +22,7 @@
  * @param questnum クエストのID
  * @param do_init クエストの開始処理か(true)、結果処理か(FALSE)
  */
-static void get_questinfo(player_type *player_ptr, IDX questnum, bool do_init)
+static void get_questinfo(PlayerType *player_ptr, IDX questnum, bool do_init)
 {
     for (int i = 0; i < 10; i++) {
         quest_text[i][0] = '\0';
@@ -48,7 +48,7 @@ static void get_questinfo(player_type *player_ptr, IDX questnum, bool do_init)
  * @param questnum クエストのID
  * @param do_init クエストの開始処理か(true)、結果処理か(FALSE)
  */
-void print_questinfo(player_type *player_ptr, IDX questnum, bool do_init)
+void print_questinfo(PlayerType *player_ptr, IDX questnum, bool do_init)
 {
     get_questinfo(player_ptr, questnum, do_init);
 
@@ -66,7 +66,7 @@ void print_questinfo(player_type *player_ptr, IDX questnum, bool do_init)
  * @brief クエスト処理のメインルーチン / Request a quest from the Lord.
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void castle_quest(player_type *player_ptr)
+void castle_quest(PlayerType *player_ptr)
 {
     clear_bldg(4, 18);
     QUEST_IDX q_index = player_ptr->current_floor_ptr->grid_array[player_ptr->y][player_ptr->x].special;
@@ -78,21 +78,21 @@ void castle_quest(player_type *player_ptr)
 
     quest_type *q_ptr;
     q_ptr = &quest[q_index];
-    if (q_ptr->status == QUEST_STATUS_COMPLETED) {
-        q_ptr->status = QUEST_STATUS_REWARDED;
+    if (q_ptr->status == QuestStatusType::COMPLETED) {
+        q_ptr->status = QuestStatusType::REWARDED;
         print_questinfo(player_ptr, q_index, false);
         reinit_wilderness = true;
         return;
     }
 
-    if (q_ptr->status == QUEST_STATUS_TAKEN) {
+    if (q_ptr->status == QuestStatusType::TAKEN) {
         put_str(_("あなたは現在のクエストを終了させていません！", "You have not completed your current quest yet!"), 8, 0);
         put_str(_("CTRL-Qを使えばクエストの状態がチェックできます。", "Use CTRL-Q to check the status of your quest."), 9, 0);
 
         get_questinfo(player_ptr, q_index, false);
         put_str(format(_("現在のクエスト「%s」", "Current quest is '%s'."), q_ptr->name), 11, 0);
 
-        if (q_ptr->type != QUEST_TYPE_KILL_LEVEL || q_ptr->dungeon == 0) {
+        if (q_ptr->type != QuestKindType::KILL_LEVEL || q_ptr->dungeon == 0) {
             put_str(_("クエストを終わらせたら戻って来て下さい。", "Return when you have completed your quest."), 12, 0);
             return;
         }
@@ -105,22 +105,22 @@ void castle_quest(player_type *player_ptr)
         clear_bldg(4, 18);
         msg_print(_("放棄しました。", "You gave up."));
         msg_print(nullptr);
-        record_quest_final_status(q_ptr, player_ptr->lev, QUEST_STATUS_FAILED);
+        record_quest_final_status(q_ptr, player_ptr->lev, QuestStatusType::FAILED);
     }
 
-    if (q_ptr->status == QUEST_STATUS_FAILED) {
+    if (q_ptr->status == QuestStatusType::FAILED) {
         print_questinfo(player_ptr, q_index, false);
-        q_ptr->status = QUEST_STATUS_FAILED_DONE;
+        q_ptr->status = QuestStatusType::FAILED_DONE;
         reinit_wilderness = true;
         return;
     }
 
-    if (q_ptr->status != QUEST_STATUS_UNTAKEN)
+    if (q_ptr->status != QuestStatusType::UNTAKEN)
         return;
 
-    q_ptr->status = QUEST_STATUS_TAKEN;
+    q_ptr->status = QuestStatusType::TAKEN;
     reinit_wilderness = true;
-    if (q_ptr->type != QUEST_TYPE_KILL_ANY_LEVEL) {
+    if (q_ptr->type != QuestKindType::KILL_ANY_LEVEL) {
         print_questinfo(player_ptr, q_index, true);
         return;
     }

@@ -39,7 +39,7 @@
 #include "spell-kind/spells-perception.h"
 #include "spell-kind/spells-sight.h"
 #include "spell-kind/spells-teleport.h"
-#include "spell/spell-types.h"
+#include "effect/attribute-types.h"
 #include "spell/technic-info-table.h"
 #include "status/bad-status-setter.h"
 #include "system/floor-type-definition.h"
@@ -52,6 +52,8 @@
 #include "target/projection-path-calculator.h"
 #include "target/target-getter.h"
 #include "term/screen-processor.h"
+#include "timed-effect/player-cut.h"
+#include "timed-effect/timed-effects.h"
 #include "util/bit-flags-calculator.h"
 #include "view/display-messages.h"
 #include "world/world.h"
@@ -60,14 +62,14 @@
  * @brief 剣術の各処理を行う
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param spell 剣術ID
- * @param mode 処理内容 (SPELL_NAME / SPELL_DESC / SPELL_CAST)
- * @return SPELL_NAME / SPELL_DESC 時には文字列ポインタを返す。SPELL_CAST時はnullptr文字列を返す。
+ * @param mode 処理内容 (SpellProcessType::NAME / SPELL_DESC / SpellProcessType::CAST)
+ * @return SpellProcessType::NAME / SPELL_DESC 時には文字列ポインタを返す。SpellProcessType::CAST時はnullptr文字列を返す。
  */
-concptr do_hissatsu_spell(player_type *player_ptr, SPELL_IDX spell, spell_type mode)
+concptr do_hissatsu_spell(PlayerType *player_ptr, SPELL_IDX spell, SpellProcessType mode)
 {
-    bool name = (mode == SPELL_NAME) ? true : false;
-    bool desc = (mode == SPELL_DESCRIPTION) ? true : false;
-    bool cast = (mode == SPELL_CAST) ? true : false;
+    bool name = mode == SpellProcessType::NAME;
+    bool desc = mode == SpellProcessType::DESCRIPTION;
+    bool cast = mode == SpellProcessType::CAST;
 
     DIRECTION dir;
     PLAYER_LEVEL plev = player_ptr->lev;
@@ -84,7 +86,7 @@ concptr do_hissatsu_spell(player_type *player_ptr, SPELL_IDX spell, spell_type m
             if (!get_aim_dir(player_ptr, &dir))
                 return nullptr;
 
-            project_hook(player_ptr, GF_ATTACK, dir, HISSATSU_2, PROJECT_STOP | PROJECT_KILL);
+            project_hook(player_ptr, AttributeType::ATTACK, dir, HISSATSU_2, PROJECT_STOP | PROJECT_KILL);
         }
         break;
 
@@ -348,7 +350,7 @@ concptr do_hissatsu_spell(player_type *player_ptr, SPELL_IDX spell, spell_type m
                 msg_print(_("その方向にはモンスターはいません。", "There is no monster."));
                 return nullptr;
             }
-            if (d_info[player_ptr->dungeon_idx].flags.has(DF::NO_MELEE)) {
+            if (d_info[player_ptr->dungeon_idx].flags.has(DungeonFeatureType::NO_MELEE)) {
                 return "";
             }
             if (player_ptr->current_floor_ptr->grid_array[y][x].m_idx) {
@@ -426,11 +428,11 @@ concptr do_hissatsu_spell(player_type *player_ptr, SPELL_IDX spell, spell_type m
             if (player_ptr->current_floor_ptr->grid_array[y][x].m_idx)
                 do_cmd_attack(player_ptr, y, x, HISSATSU_HAGAN);
 
-            if (!cave_has_flag_bold(player_ptr->current_floor_ptr, y, x, FF::HURT_ROCK))
+            if (!cave_has_flag_bold(player_ptr->current_floor_ptr, y, x, FloorFeatureType::HURT_ROCK))
                 break;
 
             /* Destroy the feature */
-            cave_alter_feat(player_ptr, y, x, FF::HURT_ROCK);
+            cave_alter_feat(player_ptr, y, x, FloorFeatureType::HURT_ROCK);
             player_ptr->update |= (PU_FLOW);
         }
         break;
@@ -593,14 +595,15 @@ concptr do_hissatsu_spell(player_type *player_ptr, SPELL_IDX spell, spell_type m
 
         if (cast) {
             POSITION y = 0, x = 0;
-            short new_cut = player_ptr->cut < 300 ? player_ptr->cut + 300 : player_ptr->cut * 2;
+            auto current_cut = player_ptr->effects()->cut()->current();
+            short new_cut = current_cut < 300 ? current_cut + 300 : current_cut * 2;
             (void)BadStatusSetter(player_ptr).cut(new_cut);
             for (dir = 0; dir < 8; dir++) {
                 y = player_ptr->y + ddy_ddd[dir];
                 x = player_ptr->x + ddx_ddd[dir];
                 auto *g_ptr = &player_ptr->current_floor_ptr->grid_array[y][x];
                 auto *m_ptr = &player_ptr->current_floor_ptr->m_list[g_ptr->m_idx];
-                if ((g_ptr->m_idx == 0) || (!m_ptr->ml && !cave_has_flag_bold(player_ptr->current_floor_ptr, y, x, FF::PROJECT))) {
+                if ((g_ptr->m_idx == 0) || (!m_ptr->ml && !cave_has_flag_bold(player_ptr->current_floor_ptr, y, x, FloorFeatureType::PROJECT))) {
                     continue;
                 }
 
@@ -676,7 +679,7 @@ concptr do_hissatsu_spell(player_type *player_ptr, SPELL_IDX spell, spell_type m
                 if (i)
                     total_damage = total_damage * 7 / 10;
             }
-            fire_beam(player_ptr, GF_FORCE, dir, total_damage);
+            fire_beam(player_ptr, AttributeType::FORCE, dir, total_damage);
         }
         break;
 
@@ -689,7 +692,7 @@ concptr do_hissatsu_spell(player_type *player_ptr, SPELL_IDX spell, spell_type m
 
         if (cast) {
             msg_print(_("雄叫びをあげた！", "You roar!"));
-            project_all_los(player_ptr, GF_SOUND, randint1(plev * 3));
+            project_all_los(player_ptr, AttributeType::SOUND, randint1(plev * 3));
             aggravate_monsters(player_ptr, 0);
         }
         break;
@@ -726,7 +729,7 @@ concptr do_hissatsu_spell(player_type *player_ptr, SPELL_IDX spell, spell_type m
                     return nullptr;
                 }
 
-                if (d_info[player_ptr->dungeon_idx].flags.has(DF::NO_MELEE)) {
+                if (d_info[player_ptr->dungeon_idx].flags.has(DungeonFeatureType::NO_MELEE)) {
                     return "";
                 }
 
@@ -810,7 +813,7 @@ concptr do_hissatsu_spell(player_type *player_ptr, SPELL_IDX spell, spell_type m
 
         if (cast) {
             msg_print(_("武器を不規則に揺らした．．．", "You irregularly wave your weapon..."));
-            project_all_los(player_ptr, GF_ENGETSU, plev * 4);
+            project_all_los(player_ptr, AttributeType::ENGETSU, plev * 4);
         }
         break;
 
@@ -874,7 +877,7 @@ concptr do_hissatsu_spell(player_type *player_ptr, SPELL_IDX spell, spell_type m
                 msg_print(_("不思議な力がテレポートを防いだ！", "A mysterious force prevents you from teleporting!"));
                 break;
             }
-            project(player_ptr, 0, 0, y, x, HISSATSU_ISSEN, GF_ATTACK, PROJECT_BEAM | PROJECT_KILL);
+            project(player_ptr, 0, 0, y, x, HISSATSU_ISSEN, AttributeType::ATTACK, PROJECT_BEAM | PROJECT_KILL);
             teleport_player_to(player_ptr, y, x, TELEPORT_SPONTANEOUS);
         }
         break;
@@ -926,7 +929,7 @@ concptr do_hissatsu_spell(player_type *player_ptr, SPELL_IDX spell, spell_type m
             y = player_ptr->y + ddy[dir];
             x = player_ptr->x + ddx[dir];
 
-            if (d_info[player_ptr->dungeon_idx].flags.has(DF::NO_MELEE)) {
+            if (d_info[player_ptr->dungeon_idx].flags.has(DungeonFeatureType::NO_MELEE)) {
                 msg_print(_("なぜか攻撃することができない。", "Something prevents you from attacking."));
                 return "";
             }
@@ -953,7 +956,7 @@ concptr do_hissatsu_spell(player_type *player_ptr, SPELL_IDX spell, spell_type m
                 damage *= player_ptr->num_blow[i];
                 total_damage += (damage / 100);
             }
-            project(player_ptr, 0, (cave_has_flag_bold(player_ptr->current_floor_ptr, y, x, FF::PROJECT) ? 5 : 0), y, x, total_damage * 3 / 2, GF_METEOR,
+            project(player_ptr, 0, (cave_has_flag_bold(player_ptr->current_floor_ptr, y, x, FloorFeatureType::PROJECT) ? 5 : 0), y, x, total_damage * 3 / 2, AttributeType::METEOR,
                 PROJECT_KILL | PROJECT_JUMP | PROJECT_ITEM);
         }
         break;

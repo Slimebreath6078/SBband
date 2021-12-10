@@ -18,7 +18,6 @@
 #include "cmd-item/cmd-eat.h"
 #include "cmd-item/cmd-quaff.h"
 #include "cmd-item/cmd-read.h"
-#include "cmd-item/cmd-usestaff.h"
 #include "cmd-item/cmd-zaprod.h"
 #include "cmd-item/cmd-zapwand.h"
 #include "combat/shoot.h"
@@ -34,17 +33,23 @@
 #include "inventory/inventory-slot-types.h"
 #include "io/input-key-acceptor.h"
 #include "io/input-key-requester.h"
+#include "locale/japanese.h"
 #include "mind/snipe-types.h"
 #include "object-activation/activation-switcher.h"
 #include "object-hook/hook-magic.h"
 #include "object-use/quaff-execution.h"
 #include "object-use/read-execution.h"
+#include "object-use/use-execution.h"
+#include "object-use/zaprod-execution.h"
+#include "object-use/zapwand-execution.h"
 #include "object/item-tester-hooker.h"
 #include "object/item-use-flags.h"
 #include "perception/identification.h"
 #include "perception/object-perception.h"
+#include "player-base/player-class.h"
 #include "player-info/class-info.h"
 #include "player-info/race-types.h"
+#include "player-info/samurai-data-type.h"
 #include "player-info/self-info.h"
 #include "player-status/player-energy.h"
 #include "player/attack-defense-types.h"
@@ -67,7 +72,7 @@
 /*!
  * @brief 持ち物一覧を表示するコマンドのメインルーチン / Display inventory_list
  */
-void do_cmd_inven(player_type *player_ptr)
+void do_cmd_inven(PlayerType *player_ptr)
 {
     char out_val[160];
     command_wrk = false;
@@ -79,9 +84,9 @@ void do_cmd_inven(player_type *player_ptr)
     WEIGHT weight = calc_inventory_weight(player_ptr);
     WEIGHT weight_lim = calc_weight_limit(player_ptr);
 #ifdef JP
-    sprintf(out_val, "持ち物： 合計 %3d.%1d kg (限界の%ld%%) コマンド: ", (int)lbtokg1(weight), (int)lbtokg2(weight),
+    sprintf(out_val, "持ち物： 合計 %3d.%1d kg (限界の%ld%%) コマンド: ", lb_to_kg_integer(weight), lb_to_kg_fraction(weight),
 #else
-    sprintf(out_val, "Inventory: carrying %d.%d pounds (%ld%% of capacity). Command: ", (int)(weight / 10), (int)(weight % 10),
+    sprintf(out_val, "Inventory: carrying %d.%d pounds (%ld%% of capacity). Command: ", weight / 10, weight % 10,
 #endif
         (long int)(weight * 100) / weight_lim);
 
@@ -102,13 +107,12 @@ void do_cmd_inven(player_type *player_ptr)
 /*!
  * @brief アイテムを落とすコマンドのメインルーチン / Drop an item
  */
-void do_cmd_drop(player_type *player_ptr)
+void do_cmd_drop(PlayerType *player_ptr)
 {
     OBJECT_IDX item;
     int amt = 1;
     object_type *o_ptr;
-    if (player_ptr->special_defense & KATA_MUSOU)
-        set_action(player_ptr, ACTION_NONE);
+    PlayerClass(player_ptr).break_samurai_stance({ SamuraiStanceType::MUSOU });
 
     concptr q = _("どのアイテムを落としますか? ", "Drop which item? ");
     concptr s = _("落とせるアイテムを持っていない。", "You have nothing to drop.");
@@ -140,7 +144,7 @@ void do_cmd_drop(player_type *player_ptr)
 /*!
  * @brief アイテムを調査するコマンドのメインルーチン / Observe an item which has been *identify*-ed
  */
-void do_cmd_observe(player_type *player_ptr)
+void do_cmd_observe(PlayerType *player_ptr)
 {
     OBJECT_IDX item;
     object_type *o_ptr;
@@ -166,7 +170,7 @@ void do_cmd_observe(player_type *player_ptr)
  * @brief アイテムの銘を消すコマンドのメインルーチン
  * Remove the inscription from an object XXX Mention item (when done)?
  */
-void do_cmd_uninscribe(player_type *player_ptr)
+void do_cmd_uninscribe(PlayerType *player_ptr)
 {
     OBJECT_IDX item;
     object_type *o_ptr;
@@ -192,7 +196,7 @@ void do_cmd_uninscribe(player_type *player_ptr)
  * @brief アイテムの銘を刻むコマンドのメインルーチン
  * Inscribe an object with a comment
  */
-void do_cmd_inscribe(player_type *player_ptr)
+void do_cmd_inscribe(PlayerType *player_ptr)
 {
     OBJECT_IDX item;
     object_type *o_ptr;
@@ -225,15 +229,14 @@ void do_cmd_inscribe(player_type *player_ptr)
  * @details
  * XXX - Add actions for other item types
  */
-void do_cmd_use(player_type *player_ptr)
+void do_cmd_use(PlayerType *player_ptr)
 {
     OBJECT_IDX item;
     object_type *o_ptr;
     if (player_ptr->wild_mode || cmd_limit_arena(player_ptr))
         return;
 
-    if (player_ptr->special_defense & (KATA_MUSOU | KATA_KOUKIJIN))
-        set_action(player_ptr, ACTION_NONE);
+    PlayerClass(player_ptr).break_samurai_stance({ SamuraiStanceType::MUSOU, SamuraiStanceType::KOUKIJIN });
 
     concptr q = _("どれを使いますか？", "Use which item? ");
     concptr s = _("使えるものがありません。", "You have nothing to use.");
@@ -243,33 +246,33 @@ void do_cmd_use(player_type *player_ptr)
         return;
 
     switch (o_ptr->tval) {
-    case TV_SPIKE:
+    case ItemKindType::SPIKE:
         do_cmd_spike(player_ptr);
         break;
-    case TV_FOOD:
+    case ItemKindType::FOOD:
         exe_eat_food(player_ptr, item);
         break;
-    case TV_WAND:
-        exe_aim_wand(player_ptr, item);
+    case ItemKindType::WAND:
+        ObjectZapWandEntity(player_ptr).execute(item);
         break;
-    case TV_STAFF:
-        exe_use_staff(player_ptr, item);
+    case ItemKindType::STAFF:
+        ObjectUseEntity(player_ptr, item).execute();
         break;
-    case TV_ROD:
-        exe_zap_rod(player_ptr, item);
+    case ItemKindType::ROD:
+        ObjectZapRodEntity(player_ptr).execute(item);
         break;
-    case TV_POTION:
-        exe_quaff_potion(player_ptr, item);
+    case ItemKindType::POTION:
+        ObjectQuaffEntity(player_ptr).execute(item);
         break;
-    case TV_SCROLL:
+    case ItemKindType::SCROLL:
         if (cmd_limit_blind(player_ptr) || cmd_limit_confused(player_ptr))
             return;
 
-        exe_read(player_ptr, item, true);
+        ObjectReadEntity(player_ptr, item).execute(true);
         break;
-    case TV_SHOT:
-    case TV_ARROW:
-    case TV_BOLT:
+    case ItemKindType::SHOT:
+    case ItemKindType::ARROW:
+    case ItemKindType::BOLT:
         exe_fire(player_ptr, item, &player_ptr->inventory_list[INVEN_BOW], SP_NONE);
         break;
     default:
@@ -282,14 +285,13 @@ void do_cmd_use(player_type *player_ptr)
  * @brief 装備を発動するコマンドのメインルーチン /
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void do_cmd_activate(player_type *player_ptr)
+void do_cmd_activate(PlayerType *player_ptr)
 {
     OBJECT_IDX item;
     if (player_ptr->wild_mode || cmd_limit_arena(player_ptr))
         return;
 
-    if (player_ptr->special_defense & (KATA_MUSOU | KATA_KOUKIJIN))
-        set_action(player_ptr, ACTION_NONE);
+    PlayerClass(player_ptr).break_samurai_stance({ SamuraiStanceType::MUSOU, SamuraiStanceType::KOUKIJIN });
 
     concptr q = _("どのアイテムを始動させますか? ", "Activate which item? ");
     concptr s = _("始動できるアイテムを装備していない。", "You have nothing to activate.");

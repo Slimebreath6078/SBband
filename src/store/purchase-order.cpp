@@ -46,7 +46,7 @@
  * @return プレイヤーの価格に対して店主が不服ならばTRUEを返す /
  * Return TRUE if purchase is NOT successful
  */
-static std::optional<PRICE> prompt_to_buy(player_type *player_ptr, object_type *o_ptr)
+static std::optional<PRICE> prompt_to_buy(PlayerType *player_ptr, object_type *o_ptr)
 {
     auto price_ask = price_item(player_ptr, o_ptr, ot_ptr->inflate, false);
 
@@ -73,10 +73,10 @@ static bool show_store_select_item(COMMAND_CODE *item, const int i)
     char out_val[160];
 
     switch (cur_store_num) {
-    case STORE_HOME:
+    case StoreSaleType::HOME:
         sprintf(out_val, _("どのアイテムを取りますか? ", "Which item do you want to take? "));
         break;
-    case STORE_BLACK:
+    case StoreSaleType::BLACK:
         sprintf(out_val, _("どれ? ", "Which item, huh? "));
         break;
     default:
@@ -97,7 +97,7 @@ static bool show_store_select_item(COMMAND_CODE *item, const int i)
  * @param i お店のストック数(アドレス渡し)
  * @param 取得元インベントリ番号
  */
-static void take_item_from_home(player_type *player_ptr, object_type *o_ptr, object_type *j_ptr, const COMMAND_CODE item)
+static void take_item_from_home(PlayerType *player_ptr, object_type *o_ptr, object_type *j_ptr, const COMMAND_CODE item)
 {
     const int amt = j_ptr->number;
     distribute_charges(o_ptr, j_ptr, amt);
@@ -112,7 +112,7 @@ static void take_item_from_home(player_type *player_ptr, object_type *o_ptr, obj
     store_item_increase(item, -amt);
     store_item_optimize(item);
 
-    auto combined_or_reordered = combine_and_reorder_home(player_ptr, STORE_HOME);
+    auto combined_or_reordered = combine_and_reorder_home(player_ptr, StoreSaleType::HOME);
 
     if (i == st_ptr->stock_num) {
         if (combined_or_reordered)
@@ -131,7 +131,7 @@ static void take_item_from_home(player_type *player_ptr, object_type *o_ptr, obj
     chg_virtue(player_ptr, V_SACRIFICE, 1);
 }
 
-static void shuffle_store(player_type *player_ptr)
+static void shuffle_store(PlayerType *player_ptr)
 {
     if (!one_in_(STORE_SHUFFLE)) {
         msg_print(_("店主は新たな在庫を取り出した。", "The shopkeeper brings out some new stock."));
@@ -148,7 +148,7 @@ static void shuffle_store(player_type *player_ptr)
     prt(buf, 3, 50);
 }
 
-static void switch_store_stock(player_type *player_ptr, const int i, const COMMAND_CODE item)
+static void switch_store_stock(PlayerType *player_ptr, const int i, const COMMAND_CODE item)
 {
     if (st_ptr->stock_num == 0) {
         shuffle_store(player_ptr);
@@ -175,15 +175,15 @@ static void switch_store_stock(player_type *player_ptr, const int i, const COMMA
  * Buy an item from a store 			-RAK-
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void store_purchase(player_type *player_ptr)
+void store_purchase(PlayerType *player_ptr)
 {
-    if (cur_store_num == STORE_MUSEUM) {
+    if (cur_store_num == StoreSaleType::MUSEUM) {
         msg_print(_("博物館から取り出すことはできません。", "Items cannot be taken out of the Museum."));
         return;
     }
 
     if (st_ptr->stock_num <= 0) {
-        if (cur_store_num == STORE_HOME)
+        if (cur_store_num == StoreSaleType::HOME)
             msg_print(_("我が家には何も置いてありません。", "Your home is empty."));
         else
             msg_print(_("現在商品の在庫を切らしています。", "I am currently out of stock."));
@@ -220,7 +220,7 @@ void store_purchase(player_type *player_ptr)
 
     PRICE best = price_item(player_ptr, j_ptr, ot_ptr->inflate, false);
     if (o_ptr->number > 1) {
-        if (cur_store_num != STORE_HOME) {
+        if (cur_store_num != StoreSaleType::HOME) {
             msg_format(_("一つにつき $%ldです。", "That costs %ld gold per item."), (long)(best));
         }
 
@@ -243,7 +243,7 @@ void store_purchase(player_type *player_ptr)
         return;
     }
 
-    if (cur_store_num == STORE_HOME) {
+    if (cur_store_num == StoreSaleType::HOME) {
         take_item_from_home(player_ptr, o_ptr, j_ptr, item);
         return;
     }
@@ -269,9 +269,9 @@ void store_purchase(player_type *player_ptr)
     }
 
     store_owner_says_comment(player_ptr);
-    if (cur_store_num == STORE_BLACK)
+    if (cur_store_num == StoreSaleType::BLACK)
         chg_virtue(player_ptr, V_JUSTICE, -1);
-    if ((o_ptr->tval == TV_BOTTLE) && (cur_store_num != STORE_HOME))
+    if ((o_ptr->tval == ItemKindType::BOTTLE) && (cur_store_num != StoreSaleType::HOME))
         chg_virtue(player_ptr, V_NATURE, -1);
 
     sound(SOUND_BUY);
@@ -305,7 +305,7 @@ void store_purchase(player_type *player_ptr)
     describe_flavor(player_ptr, o_name, &player_ptr->inventory_list[item_new], 0);
     msg_format(_("%s(%c)を手に入れた。", "You have %s (%c)."), o_name, index_to_label(item_new));
 
-    if ((o_ptr->tval == TV_ROD) || (o_ptr->tval == TV_WAND))
+    if ((o_ptr->tval == ItemKindType::ROD) || (o_ptr->tval == ItemKindType::WAND))
         o_ptr->pval -= j_ptr->pval;
 
     i = st_ptr->stock_num;

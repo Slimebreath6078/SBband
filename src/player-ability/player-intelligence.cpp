@@ -1,8 +1,11 @@
 ﻿#include "player-ability/player-intelligence.h"
 #include "mutation/mutation-flag-types.h"
 #include "object/object-flags.h"
+#include "player-base/player-class.h"
 #include "player-info/class-info.h"
 #include "player-info/mimic-info-table.h"
+#include "player-info/monk-data-type.h"
+#include "player-info/samurai-data-type.h"
 #include "player/player-personality.h"
 #include "player/race-info-table.h"
 #include "player/special-defense-types.h"
@@ -10,6 +13,11 @@
 #include "spell-realm/spells-hex.h"
 #include "system/player-type-definition.h"
 #include "util/bit-flags-calculator.h"
+
+PlayerIntelligence::PlayerIntelligence(PlayerType *player_ptr)
+    : PlayerBasicStatistics(player_ptr)
+{
+}
 
 void PlayerIntelligence::set_locals()
 {
@@ -29,17 +37,18 @@ void PlayerIntelligence::set_locals()
  * * 玄武の構えで減算(-1)
  * * 朱雀の構えで加算(+1)
  */
-int16_t PlayerIntelligence::battleform_value()
+int16_t PlayerIntelligence::stance_value()
 {
     int16_t result = 0;
 
-    if (any_bits(this->player_ptr->special_defense, KATA_KOUKIJIN)) {
+    PlayerClass pc(player_ptr);
+    if (pc.samurai_stance_is(SamuraiStanceType::KOUKIJIN)) {
         result += 5;
     }
 
-    if (any_bits(this->player_ptr->special_defense, KAMAE_GENBU)) {
+    if (pc.monk_stance_is(MonkStanceType::GENBU)) {
         result -= 1;
-    } else if (any_bits(this->player_ptr->special_defense, KAMAE_SUZAKU)) {
+    } else if (pc.monk_stance_is(MonkStanceType::SUZAKU)) {
         result += 1;
     }
 
@@ -58,11 +67,11 @@ int16_t PlayerIntelligence::mutation_value()
 {
     int16_t result = 0;
     if (this->player_ptr->muta.any()) {
-        if (this->player_ptr->muta.has(MUTA::HYPER_INT)) {
+        if (this->player_ptr->muta.has(PlayerMutationType::HYPER_INT)) {
             result += 4;
         }
 
-        if (this->player_ptr->muta.has(MUTA::MORONIC)) {
+        if (this->player_ptr->muta.has(PlayerMutationType::MORONIC)) {
             result -= 4;
         }
     }

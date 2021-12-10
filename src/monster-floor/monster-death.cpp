@@ -9,6 +9,7 @@
 #include "effect/effect-processor.h"
 #include "floor/floor-object.h"
 #include "game-option/birth-options.h"
+#include "game-option/game-play-options.h"
 #include "game-option/play-record-options.h"
 #include "io/write-diary.h"
 #include "lore/lore-store.h"
@@ -49,7 +50,7 @@
 #include "view/display-messages.h"
 #include "world/world.h"
 
-static void write_pet_death(player_type *player_ptr, monster_death_type *md_ptr)
+static void write_pet_death(PlayerType *player_ptr, monster_death_type *md_ptr)
 {
     md_ptr->md_y = md_ptr->m_ptr->fy;
     md_ptr->md_x = md_ptr->m_ptr->fx;
@@ -60,14 +61,14 @@ static void write_pet_death(player_type *player_ptr, monster_death_type *md_ptr)
     }
 }
 
-static void on_dead_explosion(player_type *player_ptr, monster_death_type *md_ptr)
+static void on_dead_explosion(PlayerType *player_ptr, monster_death_type *md_ptr)
 {
     for (int i = 0; i < 4; i++) {
-        if (md_ptr->r_ptr->blow[i].method != RBM_EXPLODE)
+        if (md_ptr->r_ptr->blow[i].method != RaceBlowMethodType::EXPLODE)
             continue;
 
         BIT_FLAGS flg = PROJECT_GRID | PROJECT_ITEM | PROJECT_KILL;
-        EFFECT_ID typ = mbe_info[md_ptr->r_ptr->blow[i].effect].explode_type;
+        AttributeType typ = mbe_info[enum2i(md_ptr->r_ptr->blow[i].effect)].explode_type;
         DICE_NUMBER d_dice = md_ptr->r_ptr->blow[i].d_dice;
         DICE_SID d_side = md_ptr->r_ptr->blow[i].d_side;
         HIT_POINT damage = damroll(d_dice, d_side);
@@ -76,7 +77,7 @@ static void on_dead_explosion(player_type *player_ptr, monster_death_type *md_pt
     }
 }
 
-static void on_defeat_arena_monster(player_type *player_ptr, monster_death_type *md_ptr)
+static void on_defeat_arena_monster(PlayerType *player_ptr, monster_death_type *md_ptr)
 {
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
     if (!floor_ptr->inside_arena || is_pet(md_ptr->m_ptr))
@@ -88,7 +89,7 @@ static void on_defeat_arena_monster(player_type *player_ptr, monster_death_type 
     else
         msg_print(_("勝利！チャンピオンへの道を進んでいる。", "Victorious! You're on your way to becoming Champion."));
 
-    if (arena_info[player_ptr->arena_number].tval) {
+    if (arena_info[player_ptr->arena_number].tval > ItemKindType::NONE) {
         object_type forge;
         object_type *q_ptr = &forge;
         q_ptr->prep(lookup_kind(arena_info[player_ptr->arena_number].tval, arena_info[player_ptr->arena_number].sval));
@@ -108,13 +109,12 @@ static void on_defeat_arena_monster(player_type *player_ptr, monster_death_type 
     exe_write_diary(player_ptr, DIARY_ARENA, player_ptr->arena_number, m_name);
 }
 
-static void drop_corpse(player_type *player_ptr, monster_death_type *md_ptr)
+static void drop_corpse(PlayerType *player_ptr, monster_death_type *md_ptr)
 {
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
     bool is_drop_corpse = one_in_(md_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) ? 1 : 4);
     is_drop_corpse &= (md_ptr->r_ptr->flags9 & (RF9_DROP_CORPSE | RF9_DROP_SKELETON)) != 0;
-    is_drop_corpse &= !(floor_ptr->inside_arena || player_ptr->phase_out || md_ptr->cloned
-        || ((md_ptr->m_ptr->r_idx == w_ptr->today_mon) && is_pet(md_ptr->m_ptr)));
+    is_drop_corpse &= !(floor_ptr->inside_arena || player_ptr->phase_out || md_ptr->cloned || ((md_ptr->m_ptr->r_idx == w_ptr->today_mon) && is_pet(md_ptr->m_ptr)));
     if (!is_drop_corpse)
         return;
 
@@ -135,7 +135,7 @@ static void drop_corpse(player_type *player_ptr, monster_death_type *md_ptr)
 
     object_type forge;
     object_type *q_ptr = &forge;
-    q_ptr->prep(lookup_kind(TV_CORPSE, (corpse ? SV_CORPSE : SV_SKELETON)));
+    q_ptr->prep(lookup_kind(ItemKindType::CORPSE, (corpse ? SV_CORPSE : SV_SKELETON)));
     apply_magic_to_object(player_ptr, q_ptr, floor_ptr->object_level, AM_NO_FIXED_ART);
     q_ptr->pval = md_ptr->m_ptr->r_idx;
     (void)drop_near(player_ptr, q_ptr, -1, md_ptr->md_y, md_ptr->md_x);
@@ -147,7 +147,7 @@ static void drop_corpse(player_type *player_ptr, monster_death_type *md_ptr)
  * @param md_ptr モンスター死亡構造体への参照ポインタ
  * @return 何かドロップするなら1以上、何もドロップしないなら0
  */
-static ARTIFACT_IDX drop_artifact_index(player_type *player_ptr, monster_death_type *md_ptr)
+static ARTIFACT_IDX drop_artifact_index(PlayerType *player_ptr, monster_death_type *md_ptr)
 {
     ARTIFACT_IDX a_idx = 0;
     PERCENTAGE chance = 0;
@@ -157,34 +157,53 @@ static ARTIFACT_IDX drop_artifact_index(player_type *player_ptr, monster_death_t
 
         a_idx = md_ptr->r_ptr->artifact_id[i];
         chance = md_ptr->r_ptr->artifact_percent[i];
-        if ((randint0(100) >= chance) && !w_ptr->wizard)
+        if (allow_debug_options) {
+            // continue process.
+            // @todo ここより下の処理は関数分割で何とかしたい.
+            // 処理を送るだけのif文は気持ち悪い.
+        } else if (randint0(100) >= chance) {
             continue;
-
-        artifact_type *a_ptr = &a_info[a_idx];
-        if (a_ptr->cur_num == 1)
-            continue;
-
-        if (create_named_art(player_ptr, a_idx, md_ptr->md_y, md_ptr->md_x)) {
-            a_ptr->cur_num = 1;
-            if (w_ptr->character_dungeon)
-                a_ptr->floor_id = player_ptr->floor_id;
-
-            break;
         }
 
-        if (!preserve_mode) {
-            a_ptr->cur_num = 1;
+        if (drop_single_artifact(player_ptr, md_ptr, a_idx))
             break;
-        }
     }
 
     return a_idx;
 }
 
-static KIND_OBJECT_IDX drop_dungeon_final_artifact(player_type *player_ptr, monster_death_type *md_ptr, ARTIFACT_IDX a_idx)
+/*!
+ * @brief 特定アーティファクトのドロップ処理
+ * @param player_ptr プレイヤーへの参照ポインタ
+ * @param md_ptr モンスター死亡構造体への参照ポインタ
+ * @param a_ix ドロップを試みるアーティファクトID
+ * @return ドロップするならtrue
+ */
+bool drop_single_artifact(PlayerType *player_ptr, monster_death_type *md_ptr, ARTIFACT_IDX a_idx)
 {
-    KIND_OBJECT_IDX k_idx
-        = d_info[player_ptr->dungeon_idx].final_object != 0 ? d_info[player_ptr->dungeon_idx].final_object : lookup_kind(TV_SCROLL, SV_SCROLL_ACQUIREMENT);
+    artifact_type *a_ptr = &a_info[a_idx];
+    if (a_ptr->cur_num == 1)
+        return false;
+
+    if (create_named_art(player_ptr, a_idx, md_ptr->md_y, md_ptr->md_x)) {
+        a_ptr->cur_num = 1;
+
+        if (w_ptr->character_dungeon) {
+            a_ptr->floor_id = player_ptr->floor_id;
+        }
+
+        if (!preserve_mode) {
+            a_ptr->cur_num = 1;
+        }
+
+        return true;
+    }
+    return false;
+}
+
+static KIND_OBJECT_IDX drop_dungeon_final_artifact(PlayerType *player_ptr, monster_death_type *md_ptr, ARTIFACT_IDX a_idx)
+{
+    auto k_idx = d_info[player_ptr->dungeon_idx].final_object != 0 ? d_info[player_ptr->dungeon_idx].final_object : lookup_kind(ItemKindType::SCROLL, SV_SCROLL_ACQUIREMENT);
     if (d_info[player_ptr->dungeon_idx].final_artifact == 0)
         return k_idx;
 
@@ -203,7 +222,7 @@ static KIND_OBJECT_IDX drop_dungeon_final_artifact(player_type *player_ptr, mons
     return d_info[player_ptr->dungeon_idx].final_object ? k_idx : 0;
 }
 
-static void drop_artifact(player_type *player_ptr, monster_death_type *md_ptr)
+static void drop_artifact(PlayerType *player_ptr, monster_death_type *md_ptr)
 {
     if (!md_ptr->drop_chosen_item)
         return;
@@ -234,7 +253,7 @@ static void decide_drop_quality(monster_death_type *md_ptr)
         md_ptr->mo_mode |= (AM_GOOD | AM_GREAT);
 }
 
-static int decide_drop_numbers(player_type *player_ptr, monster_death_type *md_ptr, const bool drop_item)
+static int decide_drop_numbers(PlayerType *player_ptr, monster_death_type *md_ptr, const bool drop_item)
 {
     int drop_numbers = 0;
     if ((md_ptr->r_ptr->flags1 & RF1_DROP_60) && (randint0(100) < 60))
@@ -270,7 +289,7 @@ static int decide_drop_numbers(player_type *player_ptr, monster_death_type *md_p
     return drop_numbers;
 }
 
-static void drop_items_golds(player_type *player_ptr, monster_death_type *md_ptr, int drop_numbers)
+static void drop_items_golds(PlayerType *player_ptr, monster_death_type *md_ptr, int drop_numbers)
 {
     int dump_item = 0;
     int dump_gold = 0;
@@ -305,14 +324,14 @@ static void drop_items_golds(player_type *player_ptr, monster_death_type *md_ptr
  * @brief 最終ボス(混沌のサーペント)を倒したときの処理
  * @param player_ptr プレイヤー情報への参照ポインタ
  */
-static void on_defeat_last_boss(player_type *player_ptr)
+static void on_defeat_last_boss(PlayerType *player_ptr)
 {
     w_ptr->total_winner = true;
     add_winner_class(player_ptr->pclass);
     player_ptr->redraw |= PR_TITLE;
     play_music(TERM_XTRA_MUSIC_BASIC, MUSIC_BASIC_FINAL_QUEST_CLEAR);
     exe_write_diary(player_ptr, DIARY_DESCRIPTION, 0, _("見事にSBbandの勝利者となった！", "finally became *WINNER* of SBband!"));
-    admire_from_patron(player_ptr);
+    patron_list[player_ptr->chaos_patron].admire(player_ptr);
     msg_print(_("*** おめでとう ***", "*** CONGRATULATIONS ***"));
     msg_print(_("あなたはゲームをコンプリートしました。", "You have won the game!"));
     msg_print(_("準備が整ったら引退(自殺コマンド)しても結構です。", "You may retire (commit suicide) when you are ready."));
@@ -323,7 +342,22 @@ static void on_defeat_last_boss(player_type *player_ptr)
  * Handle the "death" of a monster.
  * @param m_idx 死亡したモンスターのID
  * @param drop_item TRUEならばモンスターのドロップ処理を行う
- * @return 撃破されたモンスターの述語
+ * @param type ラストアタックの属性 (単一属性)
+ */
+void monster_death(PlayerType *player_ptr, MONSTER_IDX m_idx, bool drop_item, AttributeType type)
+{
+    AttributeFlags flags;
+    flags.clear();
+    flags.set(type);
+    monster_death(player_ptr, m_idx, drop_item, flags);
+}
+
+/*!
+ * @brief モンスターが死亡した時の処理 /
+ * Handle the "death" of a monster.
+ * @param m_idx 死亡したモンスターのID
+ * @param drop_item TRUEならばモンスターのドロップ処理を行う
+ * @param attribute_flags ラストアタックの属性 (複数属性)
  * @details
  * <pre>
  * Disperse treasures centered at the monster location based on the
@@ -335,7 +369,7 @@ static void on_defeat_last_boss(player_type *player_ptr)
  * it drops all of its objects, which may disappear in crowded rooms.
  * </pre>
  */
-void monster_death(player_type *player_ptr, MONSTER_IDX m_idx, bool drop_item)
+void monster_death(PlayerType *player_ptr, MONSTER_IDX m_idx, bool drop_item, AttributeFlags attribute_flags)
 {
     monster_death_type tmp_md;
     monster_death_type *md_ptr = initialize_monster_death_type(player_ptr, &tmp_md, m_idx, drop_item);
@@ -343,7 +377,7 @@ void monster_death(player_type *player_ptr, MONSTER_IDX m_idx, bool drop_item)
         w_ptr->timewalk_m_idx = 0;
 
     // プレイヤーしかユニークを倒せないのでここで時間を記録
-    if (md_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) && md_ptr->m_ptr->mflag2.has_not(MFLAG2::CLONED)) {
+    if (md_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) && md_ptr->m_ptr->mflag2.has_not(MonsterConstantFlagType::CLONED)) {
         update_playtime();
         md_ptr->r_ptr->defeat_time = w_ptr->play_time;
         md_ptr->r_ptr->defeat_level = player_ptr->lev;
@@ -354,12 +388,12 @@ void monster_death(player_type *player_ptr, MONSTER_IDX m_idx, bool drop_item)
 
     write_pet_death(player_ptr, md_ptr);
     on_dead_explosion(player_ptr, md_ptr);
-    if (md_ptr->m_ptr->mflag2.has(MFLAG2::CHAMELEON)) {
+    if (md_ptr->m_ptr->mflag2.has(MonsterConstantFlagType::CHAMELEON)) {
         choose_new_monster(player_ptr, m_idx, true, MON_CHAMELEON);
         md_ptr->r_ptr = &r_info[md_ptr->m_ptr->r_idx];
     }
 
-    check_quest_completion(player_ptr, md_ptr->m_ptr);
+    QuestCompletionChecker(player_ptr, md_ptr->m_ptr).complete();
     on_defeat_arena_monster(player_ptr, md_ptr);
     if (m_idx == player_ptr->riding && process_fall_off_horse(player_ptr, -1, false))
         msg_print(_("地面に落とされた。", "You have fallen from the pet you were riding."));
@@ -367,7 +401,7 @@ void monster_death(player_type *player_ptr, MONSTER_IDX m_idx, bool drop_item)
     drop_corpse(player_ptr, md_ptr);
     monster_drop_carried_objects(player_ptr, md_ptr->m_ptr);
     decide_drop_quality(md_ptr);
-    switch_special_death(player_ptr, md_ptr);
+    switch_special_death(player_ptr, md_ptr, attribute_flags);
     drop_artifact(player_ptr, md_ptr);
     int drop_numbers = decide_drop_numbers(player_ptr, md_ptr, drop_item);
     coin_type = md_ptr->force_coin;
@@ -393,7 +427,7 @@ concptr extract_note_dies(MONRACE_IDX r_idx)
         return _("は死んだ。", " dies.");
 
     for (int i = 0; i < 4; i++)
-        if (r_ptr->blow[i].method == RBM_EXPLODE)
+        if (r_ptr->blow[i].method == RaceBlowMethodType::EXPLODE)
             return _("は爆発して粉々になった。", " explodes into tiny shreds.");
 
     return _("を倒した。", " is destroyed.");

@@ -11,14 +11,15 @@
 #include <string>
 #include <vector>
 
-typedef struct object_kind {
+enum class RandomArtActType : short;
+struct object_kind {
     KIND_OBJECT_IDX idx{};
 
     std::string name; /*!< ベースアイテム名参照のためのネームバッファオフセット値 / Name (offset) */
     std::string text; /*!< 解説テキスト参照のためのネームバッファオフセット値 / Text (offset) */
     std::string flavor_name; /*!< 未確定名参照のためのネームバッファオフセット値 / Flavor name (offset) */
 
-    tval_type tval{}; /*!< ベースアイテム種別の大項目値 Object type */
+    ItemKindType tval{}; /*!< ベースアイテム種別の大項目値 Object type */
     OBJECT_SUBTYPE_VALUE sval{}; /*!< ベースアイテム種別の小項目値 Object sub type */
 
     PARAMETER_VALUE pval{}; /*!< ベースアイテムのpval（能力修正共通値） Object extra info */
@@ -38,7 +39,7 @@ typedef struct object_kind {
 
     TrFlags flags{}; /*!< ベースアイテムの基本特性ビット配列 / Flags */
 
-    EnumClassFlagGroup<TRG> gen_flags; /*!< ベースアイテムの生成特性ビット配列 / flags for generate */
+    EnumClassFlagGroup<ItemGenerationTraitType> gen_flags; /*!< ベースアイテムの生成特性ビット配列 / flags for generate */
 
     DEPTH locale[4]{}; /*!< ベースアイテムの生成階テーブル / Allocation level(s) */
     PROB chance[4]{}; /*!< ベースアイテムの生成確率テーブル / Allocation chance(s) */
@@ -57,11 +58,10 @@ typedef struct object_kind {
     bool aware{}; /*!< ベースアイテムが鑑定済かどうか /  The player is "aware" of the item's effects */
     bool tried{}; /*!< ベースアイテムを未鑑定のまま試したことがあるか /  The player has "tried" one of the items */
 
-    int16_t act_idx{}; /*!< 発動能力のID /  Activative ability index */
-} object_kind;
+    RandomArtActType act_idx{}; /*!< 発動能力のID /  Activative ability index */
+};
 
 extern std::vector<object_kind> k_info;
-extern KIND_OBJECT_IDX max_k_idx;
 
 struct object_type;
 SYMBOL_CODE object_char(object_type *o_ptr);

@@ -2,7 +2,7 @@
 #include "blue-magic/blue-magic-checker.h"
 #include "core/player-redraw-types.h"
 #include "core/window-redrawer.h"
-#include "effect/effect-player-util.h"
+#include "effect/effect-player.h"
 #include "mind/mind-mirror-master.h"
 #include "player/player-damage.h"
 #include "player/player-status-flags.h"
@@ -13,7 +13,7 @@
 #include "view/display-messages.h"
 #include "world/world.h"
 
-void effect_player_drain_mana(player_type *player_ptr, effect_player_type *ep_ptr)
+void effect_player_drain_mana(PlayerType *player_ptr, EffectPlayerType *ep_ptr)
 {
     if (check_multishadow(player_ptr)) {
         msg_print(_("攻撃は幻影に命中し、あなたには届かなかった。", "The attack hits Shadow, but you are unharmed!"));
@@ -63,9 +63,9 @@ void effect_player_drain_mana(player_type *player_ptr, effect_player_type *ep_pt
     ep_ptr->dam = 0;
 }
 
-void effect_player_mind_blast(player_type *player_ptr, effect_player_type *ep_ptr)
+void effect_player_mind_blast(PlayerType *player_ptr, EffectPlayerType *ep_ptr)
 {
-    if ((randint0(100 + ep_ptr->rlev / 2) < MAX(5, player_ptr->skill_sav)) && !check_multishadow(player_ptr)) {
+    if ((randint0(100 + ep_ptr->rlev / 2) < std::max<short>(5, player_ptr->skill_sav)) && !check_multishadow(player_ptr)) {
         msg_print(_("しかし効力を跳ね返した！", "You resist the effects!"));
         return;
     }
@@ -78,11 +78,11 @@ void effect_player_mind_blast(player_type *player_ptr, effect_player_type *ep_pt
     msg_print(_("霊的エネルギーで精神が攻撃された。", "Your mind is blasted by psionic energy."));
     BadStatusSetter bss(player_ptr);
     if (!has_resist_conf(player_ptr)) {
-        (void)bss.confusion(player_ptr->confused + randint0(4) + 4);
+        (void)bss.mod_confusion(randint0(4) + 4);
     }
 
     if (!has_resist_chaos(player_ptr) && one_in_(3)) {
-        (void)bss.hallucination(player_ptr->hallucinated + randint0(250) + 150);
+        (void)bss.mod_hallucination(randint0(250) + 150);
     }
 
     player_ptr->csp -= 50;
@@ -95,9 +95,9 @@ void effect_player_mind_blast(player_type *player_ptr, effect_player_type *ep_pt
     ep_ptr->get_damage = take_hit(player_ptr, DAMAGE_ATTACK, ep_ptr->dam, ep_ptr->killer);
 }
 
-void effect_player_brain_smash(player_type *player_ptr, effect_player_type *ep_ptr)
+void effect_player_brain_smash(PlayerType *player_ptr, EffectPlayerType *ep_ptr)
 {
-    if ((randint0(100 + ep_ptr->rlev / 2) < MAX(5, player_ptr->skill_sav)) && !check_multishadow(player_ptr)) {
+    if ((randint0(100 + ep_ptr->rlev / 2) < std::max<short>(5, player_ptr->skill_sav)) && !check_multishadow(player_ptr)) {
         msg_print(_("しかし効力を跳ね返した！", "You resist the effects!"));
         return;
     }
@@ -119,25 +119,25 @@ void effect_player_brain_smash(player_type *player_ptr, effect_player_type *ep_p
 
     BadStatusSetter bss(player_ptr);
     if (!has_resist_blind(player_ptr)) {
-        (void)bss.blindness(player_ptr->blind + 8 + randint0(8));
+        (void)bss.mod_blindness(8 + randint0(8));
     }
 
     if (!has_resist_conf(player_ptr)) {
-        (void)bss.confusion(player_ptr->confused + randint0(4) + 4);
+        (void)bss.mod_confusion(randint0(4) + 4);
     }
 
     if (!player_ptr->free_act) {
-        (void)bss.paralysis(player_ptr->paralyzed + randint0(4) + 4);
+        (void)bss.mod_paralysis(randint0(4) + 4);
     }
 
-    (void)bss.slowness(player_ptr->slow + randint0(4) + 4, false);
+    (void)bss.mod_slowness(randint0(4) + 4, false);
 
-    while (randint0(100 + ep_ptr->rlev / 2) > (MAX(5, player_ptr->skill_sav)))
+    while (randint0(100 + ep_ptr->rlev / 2) > (std::max<short>(5, player_ptr->skill_sav)))
         (void)do_dec_stat(player_ptr, A_INT);
-    while (randint0(100 + ep_ptr->rlev / 2) > (MAX(5, player_ptr->skill_sav)))
+    while (randint0(100 + ep_ptr->rlev / 2) > (std::max<short>(5, player_ptr->skill_sav)))
         (void)do_dec_stat(player_ptr, A_WIS);
 
     if (!has_resist_chaos(player_ptr)) {
-        (void)bss.hallucination(player_ptr->hallucinated + randint0(250) + 150);
+        (void)bss.mod_hallucination(randint0(250) + 150);
     }
 }

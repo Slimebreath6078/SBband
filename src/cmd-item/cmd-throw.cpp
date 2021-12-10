@@ -9,6 +9,8 @@
 #include "game-option/special-options.h"
 #include "inventory/inventory-slot-types.h"
 #include "object/object-broken.h"
+#include "player-base/player-class.h"
+#include "player-info/samurai-data-type.h"
 #include "player/attack-defense-types.h"
 #include "player/special-defense-types.h"
 #include "specific-object/torch.h"
@@ -16,7 +18,7 @@
 #include "system/object-type-definition.h"
 #include "system/player-type-definition.h"
 
-ThrowCommand::ThrowCommand(player_type *player_ptr)
+ThrowCommand::ThrowCommand(PlayerType *player_ptr)
     : player_ptr(player_ptr)
 {
 }
@@ -44,9 +46,7 @@ bool ThrowCommand::do_cmd_throw(int mult, bool boomerang, OBJECT_IDX shuriken)
         return false;
     }
 
-    if (this->player_ptr->special_defense & KATA_MUSOU) {
-        set_action(this->player_ptr, ACTION_NONE);
-    }
+    PlayerClass(this->player_ptr).break_samurai_stance({ SamuraiStanceType::MUSOU });
 
     object_type tmp_object;
     ObjectThrowEntity ote(this->player_ptr, &tmp_object, delay_factor, mult, boomerang, shuriken);
@@ -74,7 +74,7 @@ bool ThrowCommand::do_cmd_throw(int mult, bool boomerang, OBJECT_IDX shuriken)
         torch_lost_fuel(ote.q_ptr);
     }
 
-    ote.corruption_possibility = ote.hit_body ? breakage_chance(this->player_ptr, ote.q_ptr, this->player_ptr->pclass == CLASS_ARCHER, 0) : 0;
+    ote.corruption_possibility = ote.hit_body ? breakage_chance(this->player_ptr, ote.q_ptr, this->player_ptr->pclass == PlayerClassType::ARCHER, 0) : 0;
     ote.display_figurine_throw();
     ote.display_potion_throw();
     ote.check_boomerang_throw();

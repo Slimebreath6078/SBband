@@ -4,6 +4,7 @@
 #include "core/window-redrawer.h"
 #include "mutation/mutation-flag-types.h"
 #include "object/object-flags.h"
+#include "player-base/player-race.h"
 #include "player-info/class-info.h"
 #include "player-info/mimic-info-table.h"
 #include "player/player-personality.h"
@@ -15,6 +16,11 @@
 #include "system/player-type-definition.h"
 #include "util/bit-flags-calculator.h"
 #include "util/enum-converter.h"
+
+PlayerBasicStatistics::PlayerBasicStatistics(PlayerType *player_ptr)
+    : PlayerStatusBase(player_ptr)
+{
+}
 
 /*!
  * @brief 基礎ステータス補正値
@@ -46,13 +52,7 @@ int16_t PlayerBasicStatistics::get_value()
  */
 int16_t PlayerBasicStatistics::race_value()
 {
-    const player_race_info *tmp_rp_ptr;
-    if (this->player_ptr->mimic_form)
-        tmp_rp_ptr = &mimic_info[this->player_ptr->mimic_form];
-    else
-        tmp_rp_ptr = &race_info[enum2i(this->player_ptr->prace)];
-
-    return tmp_rp_ptr->r_adj[this->ability_type];
+    return PlayerRace(this->player_ptr).get_info()->r_adj[this->ability_type];
 }
 
 /*!
@@ -64,7 +64,7 @@ int16_t PlayerBasicStatistics::race_value()
  */
 int16_t PlayerBasicStatistics::class_value()
 {
-    const player_class_info *c_ptr = &class_info[this->player_ptr->pclass];
+    const player_class_info *c_ptr = &class_info[enum2i(this->player_ptr->pclass)];
     return c_ptr->c_adj[this->ability_type];
 }
 
@@ -77,7 +77,7 @@ int16_t PlayerBasicStatistics::class_value()
  */
 int16_t PlayerBasicStatistics::personality_value()
 {
-    const player_personality *a_ptr = &personality_info[this->player_ptr->pseikaku];
+    const player_personality *a_ptr = &personality_info[this->player_ptr->ppersonality];
     return a_ptr->a_adj[this->ability_type];
 }
 

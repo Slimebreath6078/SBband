@@ -25,7 +25,7 @@ enum mimic_kind_type {
 /*!
  * @brief プレイヤー種族の生命形態
  */
-enum class PlayerRaceLife {
+enum class PlayerRaceLifeType {
     LIVING = 0, //!< 生きている
     UNDEAD = 1, //!< 不死
     DEMON = 2, //!< 悪魔
@@ -36,7 +36,7 @@ enum class PlayerRaceLife {
 /*!
  * @brief プレイヤー種族の食料形態
  */
-enum class PlayerRaceFood {
+enum class PlayerRaceFoodType {
     RATION = 0, //!< 食料
     WATER = 1, //!< 水
     OIL = 2, //!< 油
@@ -52,10 +52,10 @@ enum class PlayerRaceFood {
 struct player_race_condition {
     tr_type type{};
     PLAYER_LEVEL level{};
-    std::optional<player_class_type> pclass{};
+    std::optional<PlayerClassType> pclass{};
     bool not_class{};
 
-    player_race_condition(tr_type t, PLAYER_LEVEL l = 1, const std::optional<player_class_type> &c = std::nullopt, bool nc = false)
+    player_race_condition(tr_type t, PLAYER_LEVEL l = 1, const std::optional<PlayerClassType> &c = std::nullopt, bool nc = false)
         : type(t)
         , level(l)
         , pclass(c)
@@ -103,17 +103,13 @@ struct player_race_info {
     byte infra{}; //!< 赤外線視力 / Infra-vision range
 
     uint32_t choice{}; //!< 似つかわしい職業(ミミック時はミミック種族属性) / Legal class choices
-    PlayerRaceLife life{}; //!< 生命の形態
-    PlayerRaceFood food{}; //!< 食料の形態
+    PlayerRaceLifeType life{}; //!< 生命の形態
+    PlayerRaceFoodType food{}; //!< 食料の形態
 
     std::vector<player_race_condition> extra_flags;
 };
 
 extern const player_race_info *rp_ptr;
 
-struct player_type;
-SYMBOL_CODE get_summon_symbol_from_player(player_type *player_ptr);
-bool player_race_has_flag(player_type *player_ptr, tr_type flag, bool base_race = false);
-void add_player_race_flags(player_type *player_ptr, TrFlags &flags, bool base_race = false);
-PlayerRaceLife player_race_life(player_type *player_ptr, bool base_race = false);
-PlayerRaceFood player_race_food(player_type *player_ptr, bool base_race = false);
+class PlayerType;
+SYMBOL_CODE get_summon_symbol_from_player(PlayerType *player_ptr);

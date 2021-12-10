@@ -14,6 +14,7 @@
 #include "monster-race/race-flags3.h"
 #include "monster-race/race-indice-types.h"
 #include "monster-race/race-kind-flags.h"
+#include "monster/monster-info.h"
 #include "system/floor-type-definition.h"
 #include "system/monster-race-definition.h"
 #include "system/monster-type-definition.h"
@@ -23,7 +24,7 @@
 /*!
  * @brief AvaterChangerコンストラクタ
  */
-AvatarChanger::AvatarChanger(player_type *player_ptr, monster_type *m_ptr)
+AvatarChanger::AvatarChanger(PlayerType *player_ptr, monster_type *m_ptr)
     : player_ptr(player_ptr)
     , m_ptr(m_ptr)
 {
@@ -36,7 +37,7 @@ void AvatarChanger::change_virtue()
 {
     this->change_virtue_non_beginner();
     this->change_virtue_unique();
-    auto *r_ptr = &r_info[m_ptr->r_idx];
+    auto *r_ptr = real_r_ptr(this->m_ptr);
     if (m_ptr->r_idx == MON_BEGGAR || m_ptr->r_idx == MON_LEPER) {
         chg_virtue(this->player_ptr, V_COMPASSION, -1);
     }
@@ -62,7 +63,7 @@ void AvatarChanger::change_virtue_non_beginner()
 {
     auto *floor_ptr = this->player_ptr->current_floor_ptr;
     auto *r_ptr = &r_info[m_ptr->r_idx];
-    if (d_info[this->player_ptr->dungeon_idx].flags.has(DF::BEGINNER)) {
+    if (d_info[this->player_ptr->dungeon_idx].flags.has(DungeonFeatureType::BEGINNER)) {
         return;
     }
 
@@ -176,7 +177,7 @@ void AvatarChanger::change_virtue_wild_thief()
             innocent = false;
         }
 
-        if ((r_ptr->blow[i].effect == RBE_EAT_ITEM) || (r_ptr->blow[i].effect == RBE_EAT_GOLD)) {
+        if ((r_ptr->blow[i].effect == RaceBlowEffectType::EAT_ITEM) || (r_ptr->blow[i].effect == RaceBlowEffectType::EAT_GOLD)) {
             thief = true;
         }
     }
@@ -210,7 +211,7 @@ void AvatarChanger::change_virtue_good_animal()
 {
     auto *r_ptr = &r_info[m_ptr->r_idx];
     auto magic_ability_flags = r_ptr->ability_flags;
-    magic_ability_flags.reset(RF_ABILITY_NOMAGIC_MASK);
+    magic_ability_flags.reset(MonsterAbilityType_NOMAGIC_MASK);
     if (r_ptr->race_kind_flags.has_not(MonraceKindType::ANIMAL) || r_ptr->race_kind_flags.has(MonraceKindType::EVIL) || magic_ability_flags.any()) {
         return;
     }

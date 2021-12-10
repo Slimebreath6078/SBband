@@ -5,6 +5,9 @@
 #include "io/write-diary.h"
 #include "market/bounty.h"
 #include "market/building-actions-table.h"
+#include "player-base/player-class.h"
+#include "player-base/player-race.h"
+#include "player-info/magic-eater-data-type.h"
 #include "player-info/race-info.h"
 #include "player-info/race-types.h"
 #include "player/digestion-processor.h"
@@ -12,6 +15,7 @@
 #include "status/bad-status-setter.h"
 #include "store/rumor.h"
 #include "system/player-type-definition.h"
+#include "timed-effect/player-cut.h"
 #include "timed-effect/player-stun.h"
 #include "timed-effect/timed-effects.h"
 #include "view/display-messages.h"
@@ -22,7 +26,7 @@
  * @param player_ptr プレイヤーへの参照ポインタ
  * @return 満腹ならFALSE、そうでないならTRUE
  */
-static bool buy_food(player_type *player_ptr)
+static bool buy_food(PlayerType *player_ptr)
 {
     if (player_ptr->food >= PY_FOOD_FULL) {
         msg_print(_("今は満腹だ。", "You are full now."));
@@ -39,10 +43,11 @@ static bool buy_food(player_type *player_ptr)
  * @param player_ptr プレイヤーへの参照ポインタ
  * @return 毒でも切り傷でもないならTRUE、そうでないならFALSE
  */
-static bool is_healthy_stay(player_type *player_ptr)
+static bool is_healthy_stay(PlayerType *player_ptr)
 {
-    if (!player_ptr->poisoned && !player_ptr->cut)
+    if (!player_ptr->poisoned && !player_ptr->effects()->cut()->is_cut()) {
         return true;
+    }
 
     msg_print(_("あなたに必要なのは部屋ではなく、治療者です。", "You need a healer, not a room."));
     msg_print(nullptr);
@@ -51,9 +56,9 @@ static bool is_healthy_stay(player_type *player_ptr)
 }
 
 #ifdef JP
-static bool is_player_undead(player_type *player_ptr)
+static bool is_player_undead(PlayerType *player_ptr)
 {
-    return player_race_life(player_ptr, true) == PlayerRaceLife::UNDEAD;
+    return PlayerRace(player_ptr, true).life() == PlayerRaceLifeType::UNDEAD;
 }
 #endif
 
@@ -62,7 +67,7 @@ static bool is_player_undead(player_type *player_ptr)
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param prev_hour 宿屋に入った直後のゲーム内時刻
  */
-static void write_diary_stay_inn(player_type *player_ptr, int prev_hour)
+static void write_diary_stay_inn(PlayerType *player_ptr, int prev_hour)
 {
     if ((prev_hour >= 6) && (prev_hour < 18)) {
         concptr stay_message = _(is_player_undead(player_ptr) ? "宿屋に泊まった。" : "日が暮れるまで宿屋で過ごした。", "stayed during the day at the inn.");
@@ -85,7 +90,7 @@ static void pass_game_turn_by_stay(void)
     if (w_ptr->dungeon_turn >= w_ptr->dungeon_turn_limit)
         return;
 
-    w_ptr->dungeon_turn += MIN((w_ptr->game_turn - oldturn), TURNS_PER_TICK * 250) * INN_DUNGEON_TURN_ADJ;
+    w_ptr->dungeon_turn += std::min<int>((w_ptr->game_turn - oldturn), TURNS_PER_TICK * 250) * INN_DUNGEON_TURN_ADJ;
     if (w_ptr->dungeon_turn > w_ptr->dungeon_turn_limit)
         w_ptr->dungeon_turn = w_ptr->dungeon_turn_limit;
 }
@@ -95,7 +100,7 @@ static void pass_game_turn_by_stay(void)
  * @param player_ptr プレイヤーへの参照ポインタ
  * @return 悪夢モードならばTRUE
  */
-static bool has_a_nightmare(player_type *player_ptr)
+static bool has_a_nightmare(PlayerType *player_ptr)
 {
     if (!ironman_nightmare)
         return false;
@@ -117,7 +122,7 @@ static bool has_a_nightmare(player_type *player_ptr)
  * @brief 体調を元に戻す
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-static void back_to_health(player_type *player_ptr)
+static void back_to_health(PlayerType *player_ptr)
 {
     BadStatusSetter bss(player_ptr);
     (void)bss.blindness(0);
@@ -128,21 +133,23 @@ static void back_to_health(player_type *player_ptr)
 }
 
 /*!
- * @brief 魔力喰いの残り回数回復(本当？ 要調査)
+ * @brief 魔道具術師の取り込んだ魔法をすべて完全に回復した状態にする
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-static void charge_magic_eating_energy(player_type *player_ptr)
+static void charge_magic_eating_energy(PlayerType *player_ptr)
 {
-    if (player_ptr->pclass != CLASS_MAGIC_EATER)
+    auto magic_eater_data = PlayerClass(player_ptr).get_specific_data<magic_eater_data_type>();
+    if (!magic_eater_data) {
         return;
-
-    int i;
-    for (i = 0; i < 72; i++) {
-        player_ptr->magic_num1[i] = player_ptr->magic_num2[i] * EATER_CHARGE;
     }
 
-    for (; i < MAX_SPELLS; i++) {
-        player_ptr->magic_num1[i] = 0;
+    for (auto tval : { ItemKindType::STAFF, ItemKindType::WAND }) {
+        for (auto &item : magic_eater_data->get_item_group(tval)) {
+            item.charge = item.count * EATER_CHARGE;
+        }
+    }
+    for (auto &item : magic_eater_data->get_item_group(ItemKindType::ROD)) {
+        item.charge = 0;
     }
 }
 
@@ -151,7 +158,7 @@ static void charge_magic_eating_energy(player_type *player_ptr)
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param prev_hour 宿屋に入った直後のゲーム内時刻
  */
-static void display_stay_result(player_type *player_ptr, int prev_hour)
+static void display_stay_result(PlayerType *player_ptr, int prev_hour)
 {
     if ((prev_hour >= 6) && (prev_hour < 18)) {
 #if JP
@@ -176,7 +183,7 @@ static void display_stay_result(player_type *player_ptr, int prev_hour)
  * @param player_ptr プレイヤーへの参照ポインタ
  * @return 泊まれたらTRUE
  */
-static bool stay_inn(player_type *player_ptr)
+static bool stay_inn(PlayerType *player_ptr)
 {
     if (!is_healthy_stay(player_ptr))
         return false;
@@ -218,7 +225,7 @@ static bool stay_inn(player_type *player_ptr)
  * Resting at night is also a quick way to restock stores -KMW-
  * @todo 悪夢を見る前後に全回復しているが、何か意図がある？
  */
-bool inn_comm(player_type *player_ptr, int cmd)
+bool inn_comm(PlayerType *player_ptr, int cmd)
 {
     switch (cmd) {
     case BACT_FOOD:

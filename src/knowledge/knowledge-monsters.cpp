@@ -10,6 +10,7 @@
 #include "core/show-file.h"
 #include "core/stuff-handler.h"
 #include "game-option/cheat-options.h"
+#include "game-option/game-play-options.h"
 #include "game-option/special-options.h"
 #include "io-dump/dump-util.h"
 #include "io/input-key-acceptor.h"
@@ -50,7 +51,7 @@
  * @param mode 思い出の扱いに関するモード
  * @return 得られたモンスターIDの数 / The number of monsters in the group
  */
-static IDX collect_monsters(player_type *player_ptr, IDX grp_cur, IDX mon_idx[], monster_lore_mode mode)
+static IDX collect_monsters(PlayerType *player_ptr, IDX grp_cur, IDX mon_idx[], monster_lore_mode mode)
 {
     concptr group_char = monster_group_char[grp_cur];
     bool grp_unique = (monster_group_char[grp_cur] == (char *)-1L);
@@ -109,7 +110,7 @@ static IDX collect_monsters(player_type *player_ptr, IDX grp_cur, IDX mon_idx[],
  * Display current pets
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void do_cmd_knowledge_pets(player_type *player_ptr)
+void do_cmd_knowledge_pets(PlayerType *player_ptr)
 {
     FILE *fff = nullptr;
     GAME_TEXT file_name[FILE_NAME_SIZE];
@@ -150,7 +151,7 @@ void do_cmd_knowledge_pets(player_type *player_ptr)
  * Total kill count
  * @note the player ghosts are ignored.
  */
-void do_cmd_knowledge_kill_count(player_type *player_ptr)
+void do_cmd_knowledge_kill_count(PlayerType *player_ptr)
 {
     FILE *fff = nullptr;
     GAME_TEXT file_name[FILE_NAME_SIZE];
@@ -258,9 +259,9 @@ static void display_monster_list(int col, int row, int per_page, int16_t mon_idx
         attr = ((i + mon_top == mon_cur) ? TERM_L_BLUE : TERM_WHITE);
         c_prt(attr, (r_ptr->name.c_str()), row + i, col);
         if (per_page == 1)
-            c_prt(attr, format("%02x/%02x", r_ptr->x_attr, r_ptr->x_char), row + i, (w_ptr->wizard || visual_only) ? 56 : 61);
+            c_prt(attr, format("%02x/%02x", r_ptr->x_attr, r_ptr->x_char), row + i, (allow_debug_options || visual_only) ? 56 : 61);
 
-        if (w_ptr->wizard || visual_only)
+        if (allow_debug_options || visual_only)
             c_prt(attr, format("%d", r_idx), row + i, 62);
 
         term_erase(69, row + i, 255);
@@ -286,7 +287,7 @@ static void display_monster_list(int col, int row, int per_page, int16_t mon_idx
  * @param direct_r_idx モンスターID
  * @todo 引数の詳細について加筆求む
  */
-void do_cmd_knowledge_monsters(player_type *player_ptr, bool *need_redraw, bool visual_only, IDX direct_r_idx)
+void do_cmd_knowledge_monsters(PlayerType *player_ptr, bool *need_redraw, bool visual_only, IDX direct_r_idx)
 {
     TERM_LEN wid, hgt;
     term_get_size(&wid, &hgt);
@@ -341,7 +342,7 @@ void do_cmd_knowledge_monsters(player_type *player_ptr, bool *need_redraw, bool 
             if (direct_r_idx < 0)
                 prt(_("グループ", "Group"), 4, 0);
             prt(_("名前", "Name"), 4, max + 3);
-            if (w_ptr->wizard || visual_only)
+            if (allow_debug_options || visual_only)
                 prt("Idx", 4, 62);
             prt(_("文字", "Sym"), 4, 67);
             if (!visual_only)
@@ -373,9 +374,10 @@ void do_cmd_knowledge_monsters(player_type *player_ptr, bool *need_redraw, bool 
             }
 
             while (mon_cur < mon_top)
-                mon_top = MAX(0, mon_top - browser_rows / 2);
+                mon_top = std::max<short>(0, mon_top - browser_rows / 2);
+
             while (mon_cur >= mon_top + browser_rows)
-                mon_top = MIN(mon_cnt - browser_rows, mon_top + browser_rows / 2);
+                mon_top = std::min<short>(mon_cnt - browser_rows, mon_top + browser_rows / 2);
         }
 
         if (!visual_list) {
@@ -462,7 +464,7 @@ void do_cmd_knowledge_monsters(player_type *player_ptr, bool *need_redraw, bool 
  * List wanted monsters
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void do_cmd_knowledge_bounty(player_type *player_ptr)
+void do_cmd_knowledge_bounty(PlayerType *player_ptr)
 {
     FILE *fff = nullptr;
     GAME_TEXT file_name[FILE_NAME_SIZE];

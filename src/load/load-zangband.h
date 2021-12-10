@@ -2,6 +2,6 @@
 
 #include "system/angband.h"
 
-struct player_type;
+class PlayerType;
 typedef struct quest_type quest_type;
-void set_zangband_action(player_type *player_ptr);
+void set_zangband_action(PlayerType *player_ptr);

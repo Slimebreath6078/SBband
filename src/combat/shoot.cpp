@@ -5,6 +5,7 @@
 #include "core/player-redraw-types.h"
 #include "core/player-update-types.h"
 #include "core/stuff-handler.h"
+#include "effect/attribute-types.h"
 #include "effect/effect-characteristics.h"
 #include "effect/effect-processor.h"
 #include "effect/spells-effect-util.h"
@@ -48,12 +49,13 @@
 #include "object/object-info.h"
 #include "object/object-kind.h"
 #include "object/object-mark-types.h"
+#include "player-base/player-class.h"
 #include "player-info/class-info.h"
+#include "player-info/sniper-data-type.h"
 #include "player-status/player-energy.h"
 #include "player/player-personality-types.h"
 #include "player/player-skill.h"
 #include "player/player-status-table.h"
-#include "spell/spell-types.h"
 #include "sv-definition/sv-bow-types.h"
 #include "system/artifact-type-definition.h"
 #include "system/floor-type-definition.h"
@@ -70,6 +72,73 @@
 #include "world/world-object.h"
 
 /*!
+ * @brief 矢弾の属性を定義する
+ * @param bow_ptr 弓のオブジェクト構造体参照ポインタ
+ * @param arrow_ptr 矢弾のオブジェクト構造体参照ポインタ
+ * @return スナイパーの射撃属性、弓矢の属性を考慮する。デフォルトはGF_PLAYER_SHOOT。
+ */
+AttributeFlags shot_attribute(PlayerType *player_ptr, object_type *bow_ptr, object_type *arrow_ptr, SPELL_IDX snipe_type)
+{
+    AttributeFlags attribute_flags{};
+    attribute_flags.set(AttributeType::PLAYER_SHOOT);
+
+    TrFlags flags{};
+    auto arrow_flags = object_flags(arrow_ptr);
+    auto bow_flags = object_flags(bow_ptr);
+
+    flags = bow_flags | arrow_flags;
+
+    static const struct snipe_convert_table_t {
+        SPELL_IDX snipe_type;
+        AttributeType attribute;
+    } snipe_convert_table[] = {
+        { SP_LITE, AttributeType::LITE },
+        { SP_FIRE, AttributeType::FIRE },
+        { SP_COLD, AttributeType::COLD },
+        { SP_ELEC, AttributeType::ELEC },
+        { SP_KILL_WALL, AttributeType::KILL_WALL },
+        { SP_EVILNESS, AttributeType::HELL_FIRE },
+        { SP_HOLYNESS, AttributeType::HOLY_FIRE },
+        { SP_FINAL, AttributeType::MANA },
+    };
+
+    static const struct brand_convert_table_t {
+        tr_type brand_type;
+        AttributeType attribute;
+    } brand_convert_table[] = {
+        { TR_BRAND_ACID, AttributeType::ACID },
+        { TR_BRAND_FIRE, AttributeType::FIRE },
+        { TR_BRAND_ELEC, AttributeType::ELEC },
+        { TR_BRAND_COLD, AttributeType::COLD },
+        { TR_BRAND_POIS, AttributeType::POIS },
+        { TR_SLAY_GOOD, AttributeType::HELL_FIRE },
+        { TR_KILL_GOOD, AttributeType::HELL_FIRE },
+        { TR_SLAY_EVIL, AttributeType::HOLY_FIRE },
+        { TR_KILL_EVIL, AttributeType::HOLY_FIRE },
+    };
+
+    for (size_t i = 0; i < sizeof(snipe_convert_table) / sizeof(snipe_convert_table[0]); ++i) {
+        const struct snipe_convert_table_t *p = &snipe_convert_table[i];
+
+        if (snipe_type == p->snipe_type)
+            attribute_flags.set(p->attribute);
+    }
+
+    for (size_t i = 0; i < sizeof(brand_convert_table) / sizeof(brand_convert_table[0]); ++i) {
+        const struct brand_convert_table_t *p = &brand_convert_table[i];
+
+        if (flags.has(p->brand_type))
+            attribute_flags.set(p->attribute);
+    }
+
+    if ((flags.has(TR_FORCE_WEAPON)) && (player_ptr->csp > (player_ptr->msp / 30))) {
+        attribute_flags.set(AttributeType::MANA);
+    }
+
+    return attribute_flags;
+}
+
+/*!
  * @brief 矢弾を射撃した際のスレイ倍率をかけた結果を返す /
  * Determines the odds of an object breaking when thrown at a monster
  * @param bow_ptr 弓のオブジェクト構造体参照ポインタ
@@ -79,7 +148,7 @@
  * @return スレイ倍率をかけたダメージ量
  */
 static MULTIPLY calc_shot_damage_with_slay(
-    player_type *player_ptr, object_type *bow_ptr, object_type *arrow_ptr, HIT_POINT tdam, monster_type *monster_ptr, SPELL_IDX snipe_type)
+    PlayerType *player_ptr, object_type *bow_ptr, object_type *arrow_ptr, HIT_POINT tdam, monster_type *monster_ptr, SPELL_IDX snipe_type)
 {
     MULTIPLY mult = 10;
 
@@ -93,9 +162,9 @@ static MULTIPLY calc_shot_damage_with_slay(
 
     /* Some "weapons" and "ammo" do extra damage */
     switch (arrow_ptr->tval) {
-    case TV_SHOT:
-    case TV_ARROW:
-    case TV_BOLT: {
+    case ItemKindType::SHOT:
+    case ItemKindType::ARROW:
+    case ItemKindType::BOLT: {
         if ((flags.has(TR_SLAY_ANIMAL)) && race_ptr->race_kind_flags.has(MonraceKindType::ANIMAL)) {
             if (is_original_ap_and_seen(player_ptr, monster_ptr)) {
                 race_ptr->r_race_kind_flags.set(MonraceKindType::ANIMAL);
@@ -380,7 +449,7 @@ static MULTIPLY calc_shot_damage_with_slay(
  * Note that Bows of "Extra Shots" give an extra shot.
  * </pre>
  */
-void exe_fire(player_type *player_ptr, INVENTORY_IDX item, object_type *j_ptr, SPELL_IDX snipe_type)
+void exe_fire(PlayerType *player_ptr, INVENTORY_IDX item, object_type *j_ptr, SPELL_IDX snipe_type)
 {
     DIRECTION dir;
     int i;
@@ -392,16 +461,16 @@ void exe_fire(player_type *player_ptr, INVENTORY_IDX item, object_type *j_ptr, S
 
     object_type forge;
     object_type *q_ptr;
-
     object_type *o_ptr;
+
+    AttributeFlags attribute_flags{};
+    attribute_flags.set(AttributeType::PLAYER_SHOOT);
 
     bool hit_body = false;
 
     GAME_TEXT o_name[MAX_NLEN];
 
     uint16_t path_g[512]; /* For calcuration of path length */
-
-    int msec = delay_factor * delay_factor * delay_factor;
 
     /* STICK TO */
     bool stick_to = false;
@@ -431,9 +500,9 @@ void exe_fire(player_type *player_ptr, INVENTORY_IDX item, object_type *j_ptr, S
     /* Actually "fire" the object */
     bonus = (player_ptr->to_h_b + o_ptr->to_h + j_ptr->to_h);
     if ((j_ptr->sval == SV_LIGHT_XBOW) || (j_ptr->sval == SV_HEAVY_XBOW))
-        chance = (player_ptr->skill_thb + (player_ptr->weapon_exp[0][j_ptr->sval] / 400 + bonus) * BTH_PLUS_ADJ);
+        chance = (player_ptr->skill_thb + (player_ptr->weapon_exp[j_ptr->tval][j_ptr->sval] / 400 + bonus) * BTH_PLUS_ADJ);
     else
-        chance = (player_ptr->skill_thb + ((player_ptr->weapon_exp[0][j_ptr->sval] - (WEAPON_EXP_MASTER / 2)) / 200 + bonus) * BTH_PLUS_ADJ);
+        chance = (player_ptr->skill_thb + ((player_ptr->weapon_exp[j_ptr->tval][j_ptr->sval] - (PlayerSkill::weapon_exp_at(PlayerSkillRank::MASTER) / 2)) / 200 + bonus) * BTH_PLUS_ADJ);
 
     PlayerEnergy(player_ptr).set_player_turn_energy(bow_energy(j_ptr->sval));
     tmul = bow_tmul(j_ptr->sval);
@@ -448,13 +517,13 @@ void exe_fire(player_type *player_ptr, INVENTORY_IDX item, object_type *j_ptr, S
     tdam_base *= tmul;
     tdam_base /= 100;
 
+    auto sniper_data = PlayerClass(player_ptr).get_specific_data<sniper_data_type>();
+    auto sniper_concent = sniper_data ? sniper_data->concent : 0;
+
     /* Base range */
     tdis = 13 + tmul / 80;
     if ((j_ptr->sval == SV_LIGHT_XBOW) || (j_ptr->sval == SV_HEAVY_XBOW)) {
-        if (player_ptr->concent)
-            tdis -= (5 - (player_ptr->concent + 1) / 2);
-        else
-            tdis -= 5;
+        tdis -= (5 - (sniper_concent + 1) / 2);
     }
 
     project_length = tdis + 1;
@@ -504,7 +573,7 @@ void exe_fire(player_type *player_ptr, INVENTORY_IDX item, object_type *j_ptr, S
 
     /* Sniper - Difficult to shot twice at 1 turn */
     if (snipe_type == SP_DOUBLE)
-        player_ptr->concent = (player_ptr->concent + 1) / 2;
+        sniper_concent = (sniper_concent + 1) / 2;
 
     /* Sniper - Repeat shooting when double shots */
     for (i = 0; i < ((snipe_type == SP_DOUBLE) ? 2 : 1); i++) {
@@ -545,7 +614,7 @@ void exe_fire(player_type *player_ptr, INVENTORY_IDX item, object_type *j_ptr, S
             if (snipe_type == SP_KILL_WALL) {
                 g_ptr = &player_ptr->current_floor_ptr->grid_array[ny][nx];
 
-                if (g_ptr->cave_has_flag(FF::HURT_ROCK) && !g_ptr->m_idx) {
+                if (g_ptr->cave_has_flag(FloorFeatureType::HURT_ROCK) && !g_ptr->m_idx) {
                     if (any_bits(g_ptr->info, (CAVE_MARK)))
                         msg_print(_("岩が砕け散った。", "Wall rocks were shattered."));
                     /* Forget the wall */
@@ -553,7 +622,7 @@ void exe_fire(player_type *player_ptr, INVENTORY_IDX item, object_type *j_ptr, S
                     set_bits(player_ptr->update, PU_VIEW | PU_LITE | PU_FLOW | PU_MON_LITE);
 
                     /* Destroy the wall */
-                    cave_alter_feat(player_ptr, ny, nx, FF::HURT_ROCK);
+                    cave_alter_feat(player_ptr, ny, nx, FloorFeatureType::HURT_ROCK);
 
                     hit_body = true;
                     break;
@@ -561,7 +630,7 @@ void exe_fire(player_type *player_ptr, INVENTORY_IDX item, object_type *j_ptr, S
             }
 
             /* Stopped by walls/doors */
-            if (!cave_has_flag_bold(player_ptr->current_floor_ptr, ny, nx, FF::PROJECT) && !player_ptr->current_floor_ptr->grid_array[ny][nx].m_idx)
+            if (!cave_has_flag_bold(player_ptr->current_floor_ptr, ny, nx, FloorFeatureType::PROJECT) && !player_ptr->current_floor_ptr->grid_array[ny][nx].m_idx)
                 break;
 
             /* Advance the distance */
@@ -580,11 +649,11 @@ void exe_fire(player_type *player_ptr, INVENTORY_IDX item, object_type *j_ptr, S
                 byte a = object_attr(q_ptr);
 
                 /* Draw, Hilite, Fresh, Pause, Erase */
-                if (msec > 0) {
+                if (delay_factor > 0) {
                     print_rel(player_ptr, c, a, ny, nx);
                     move_cursor_relative(ny, nx);
                     term_fresh();
-                    term_xtra(TERM_XTRA_DELAY, msec);
+                    term_xtra(TERM_XTRA_DELAY, delay_factor);
                     lite_spot(player_ptr, ny, nx);
                     term_fresh();
                 }
@@ -593,14 +662,14 @@ void exe_fire(player_type *player_ptr, INVENTORY_IDX item, object_type *j_ptr, S
             /* The player cannot see the missile */
             else {
                 /* Pause anyway, for consistancy **/
-                if (msec > 0) {
-                    term_xtra(TERM_XTRA_DELAY, msec);
+                if (delay_factor > 0) {
+                    term_xtra(TERM_XTRA_DELAY, delay_factor);
                 }
             }
 
             /* Sniper */
             if (snipe_type == SP_KILL_TRAP) {
-                project(player_ptr, 0, 0, ny, nx, 0, GF_KILL_TRAP, (PROJECT_JUMP | PROJECT_HIDE | PROJECT_GRID | PROJECT_ITEM));
+                project(player_ptr, 0, 0, ny, nx, 0, AttributeType::KILL_TRAP, (PROJECT_JUMP | PROJECT_HIDE | PROJECT_GRID | PROJECT_ITEM));
             }
 
             /* Sniper */
@@ -639,30 +708,11 @@ void exe_fire(player_type *player_ptr, INVENTORY_IDX item, object_type *j_ptr, S
                 }
 
                 if ((r_ptr->level + 10) > player_ptr->lev) {
-                    int now_exp = player_ptr->weapon_exp[0][j_ptr->sval];
-                    if (now_exp < s_info[player_ptr->pclass].w_max[0][j_ptr->sval]) {
-                        SUB_EXP amount = 0;
-                        if (now_exp < WEAPON_EXP_BEGINNER)
-                            amount = 80;
-                        else if (now_exp < WEAPON_EXP_SKILLED)
-                            amount = 25;
-                        else if ((now_exp < WEAPON_EXP_EXPERT) && (player_ptr->lev > 19))
-                            amount = 10;
-                        else if (player_ptr->lev > 34)
-                            amount = 2;
-                        player_ptr->weapon_exp[0][j_ptr->sval] += amount;
-                        set_bits(player_ptr->update, PU_BONUS);
-                    }
+                    PlayerSkill(player_ptr).gain_range_weapon_exp(j_ptr);
                 }
 
                 if (player_ptr->riding) {
-                    if ((player_ptr->skill_exp[SKILL_RIDING] < s_info[player_ptr->pclass].s_max[SKILL_RIDING])
-                        && ((player_ptr->skill_exp[SKILL_RIDING] - (RIDING_EXP_BEGINNER * 2)) / 200
-                            < r_info[player_ptr->current_floor_ptr->m_list[player_ptr->riding].r_idx].level)
-                        && one_in_(2)) {
-                        player_ptr->skill_exp[SKILL_RIDING] += 1;
-                        set_bits(player_ptr->update, PU_BONUS);
-                    }
+                    PlayerSkill(player_ptr).gain_riding_skill_exp_on_range_attack();
                 }
 
                 /* Did we hit it (penalize range) */
@@ -672,8 +722,7 @@ void exe_fire(player_type *player_ptr, INVENTORY_IDX item, object_type *j_ptr, S
                     auto base_dam = tdam; //!< @note 補正前の与えるダメージ(無傷、全ての耐性など)
 
                     /* Get extra damage from concentration */
-                    if (player_ptr->concent)
-                        tdam = boost_concentration_damage(player_ptr, tdam);
+                    tdam = boost_concentration_damage(player_ptr, tdam);
 
                     /* Handle unseen monster */
                     if (!visible) {
@@ -698,8 +747,7 @@ void exe_fire(player_type *player_ptr, INVENTORY_IDX item, object_type *j_ptr, S
                     }
 
                     if (snipe_type == SP_NEEDLE) {
-                        if ((randint1(randint1(r_ptr->level / (3 + player_ptr->concent)) + (8 - player_ptr->concent)) == 1)
-                            && r_ptr->race_kind_flags.has_not(MonraceKindType::UNIQUE) && none_bits(r_ptr->flags7, RF7_UNIQUE2)) {
+                        if ((randint1(randint1(r_ptr->level / (3 + sniper_concent)) + (8 - sniper_concent)) == 1) && r_ptr->race_kind_flags.has_not(MonraceKindType::UNIQUE) && none_bits(r_ptr->flags7, RF7_UNIQUE2)) {
                             GAME_TEXT m_name[MAX_NLEN];
 
                             /* Get "the monster" or "it" */
@@ -713,6 +761,8 @@ void exe_fire(player_type *player_ptr, INVENTORY_IDX item, object_type *j_ptr, S
                             base_dam = tdam;
                         }
                     } else {
+
+                        attribute_flags = shot_attribute(player_ptr, j_ptr, q_ptr, snipe_type);
                         /* Apply special damage */
                         tdam = calc_shot_damage_with_slay(player_ptr, j_ptr, q_ptr, tdam, m_ptr, snipe_type);
                         tdam = critical_shot(player_ptr, q_ptr->weight, q_ptr->to_h, j_ptr->to_h, tdam);
@@ -734,7 +784,7 @@ void exe_fire(player_type *player_ptr, INVENTORY_IDX item, object_type *j_ptr, S
                         uint16_t flg = (PROJECT_STOP | PROJECT_JUMP | PROJECT_KILL | PROJECT_GRID);
 
                         sound(SOUND_EXPLODE); /* No explode sound - use breath fire instead */
-                        project(player_ptr, 0, ((player_ptr->concent + 1) / 2 + 1), ny, nx, base_dam, GF_MISSILE, flg);
+                        project(player_ptr, 0, ((sniper_concent + 1) / 2 + 1), ny, nx, base_dam, AttributeType::MISSILE, flg);
                         break;
                     }
 
@@ -746,7 +796,7 @@ void exe_fire(player_type *player_ptr, INVENTORY_IDX item, object_type *j_ptr, S
                     }
 
                     /* Hit the monster, check for death */
-                    MonsterDamageProcessor mdp(player_ptr, c_mon_ptr->m_idx, tdam, &fear);
+                    MonsterDamageProcessor mdp(player_ptr, c_mon_ptr->m_idx, tdam, &fear, attribute_flags);
                     if (mdp.mon_take_hit(extract_note_dies(real_r_idx(m_ptr)))) {
                         /* Dead monster */
                     }
@@ -754,7 +804,7 @@ void exe_fire(player_type *player_ptr, INVENTORY_IDX item, object_type *j_ptr, S
                     /* No death */
                     else {
                         /* STICK TO */
-                        if (q_ptr->is_fixed_artifact() && (player_ptr->pclass != CLASS_SNIPER || player_ptr->concent == 0)) {
+                        if (q_ptr->is_fixed_artifact() && (sniper_concent == 0)) {
                             GAME_TEXT m_name[MAX_NLEN];
 
                             monster_desc(player_ptr, m_name, m_ptr, 0);
@@ -813,11 +863,11 @@ void exe_fire(player_type *player_ptr, INVENTORY_IDX item, object_type *j_ptr, S
 
                                 update_monster(player_ptr, m_idx, true);
 
-                                if (msec > 0) {
+                                if (delay_factor > 0) {
                                     lite_spot(player_ptr, ny, nx);
                                     lite_spot(player_ptr, oy, ox);
                                     term_fresh();
-                                    term_xtra(TERM_XTRA_DELAY, msec);
+                                    term_xtra(TERM_XTRA_DELAY, delay_factor);
                                 }
 
                                 x = nx;
@@ -830,10 +880,8 @@ void exe_fire(player_type *player_ptr, INVENTORY_IDX item, object_type *j_ptr, S
                 }
 
                 /* Sniper */
-                if (snipe_type == SP_PIERCE) {
-                    if (player_ptr->concent < 1)
-                        break;
-                    player_ptr->concent--;
+                if (snipe_type == SP_PIERCE && sniper_concent > 0) {
+                    sniper_concent--;
                     continue;
                 }
 
@@ -843,7 +891,7 @@ void exe_fire(player_type *player_ptr, INVENTORY_IDX item, object_type *j_ptr, S
         }
 
         /* Chance of breakage (during attacks) */
-        j = (hit_body ? breakage_chance(player_ptr, q_ptr, player_ptr->pclass == CLASS_ARCHER, snipe_type) : 0);
+        j = (hit_body ? breakage_chance(player_ptr, q_ptr, player_ptr->pclass == PlayerClassType::ARCHER, snipe_type) : 0);
 
         if (stick_to) {
             MONSTER_IDX m_idx = player_ptr->current_floor_ptr->grid_array[y][x].m_idx;
@@ -872,7 +920,7 @@ void exe_fire(player_type *player_ptr, INVENTORY_IDX item, object_type *j_ptr, S
 
             /* Carry object */
             m_ptr->hold_o_idx_list.add(player_ptr->current_floor_ptr, o_idx);
-        } else if (cave_has_flag_bold(player_ptr->current_floor_ptr, y, x, FF::PROJECT)) {
+        } else if (cave_has_flag_bold(player_ptr->current_floor_ptr, y, x, FloorFeatureType::PROJECT)) {
             /* Drop (or break) near that location */
             (void)drop_near(player_ptr, q_ptr, j, y, x);
         } else {
@@ -884,8 +932,7 @@ void exe_fire(player_type *player_ptr, INVENTORY_IDX item, object_type *j_ptr, S
     }
 
     /* Sniper - Loose his/her concentration after any shot */
-    if (player_ptr->concent)
-        reset_concentration(player_ptr, false);
+    reset_concentration(player_ptr, false);
 }
 
 /*!
@@ -898,7 +945,7 @@ void exe_fire(player_type *player_ptr, INVENTORY_IDX item, object_type *j_ptr, S
  * @return 命中と判定された場合TRUEを返す
  * @note Always miss 5%, always hit 5%, otherwise random.
  */
-bool test_hit_fire(player_type *player_ptr, int chance, monster_type *m_ptr, int vis, char *o_name)
+bool test_hit_fire(PlayerType *player_ptr, int chance, monster_type *m_ptr, int vis, char *o_name)
 {
     int k;
     ARMOUR_CLASS ac;
@@ -907,8 +954,11 @@ bool test_hit_fire(player_type *player_ptr, int chance, monster_type *m_ptr, int
     /* Percentile dice */
     k = randint1(100);
 
+    auto sniper_data = PlayerClass(player_ptr).get_specific_data<sniper_data_type>();
+    auto sniper_concent = sniper_data ? sniper_data->concent : 0;
+
     /* Snipers with high-concentration reduce instant miss percentage.*/
-    k += player_ptr->concent;
+    k += sniper_concent;
 
     /* Hack -- Instant miss or hit */
     if (k <= 5)
@@ -916,7 +966,7 @@ bool test_hit_fire(player_type *player_ptr, int chance, monster_type *m_ptr, int
     if (k > 95)
         return true;
 
-    if (player_ptr->pseikaku == PERSONALITY_LAZY)
+    if (player_ptr->ppersonality == PERSONALITY_LAZY)
         if (one_in_(20))
             return false;
 
@@ -925,10 +975,7 @@ bool test_hit_fire(player_type *player_ptr, int chance, monster_type *m_ptr, int
         return false;
 
     ac = r_ptr->ac;
-    if (player_ptr->concent) {
-        ac *= (8 - player_ptr->concent);
-        ac /= 8;
-    }
+    ac = ac * (8 - sniper_concent) / 8;
 
     if (m_ptr->r_idx == MON_GOEMON && !monster_csleep_remaining(m_ptr))
         ac *= 3;
@@ -960,7 +1007,7 @@ bool test_hit_fire(player_type *player_ptr, int chance, monster_type *m_ptr, int
  * @param dam 現在算出中のダメージ値
  * @return クリティカル修正が入ったダメージ値
  */
-HIT_POINT critical_shot(player_type *player_ptr, WEIGHT weight, int plus_ammo, int plus_bow, HIT_POINT dam)
+HIT_POINT critical_shot(PlayerType *player_ptr, WEIGHT weight, int plus_ammo, int plus_bow, HIT_POINT dam)
 {
     int i, k;
     object_type *j_ptr = &player_ptr->inventory_list[INVEN_BOW];
@@ -968,19 +1015,21 @@ HIT_POINT critical_shot(player_type *player_ptr, WEIGHT weight, int plus_ammo, i
     /* Extract "shot" power */
     i = player_ptr->to_h_b + plus_ammo;
 
-    if (player_ptr->tval_ammo == TV_BOLT)
-        i = (player_ptr->skill_thb + (player_ptr->weapon_exp[0][j_ptr->sval] / 400 + i) * BTH_PLUS_ADJ);
+    if (player_ptr->tval_ammo == ItemKindType::BOLT)
+        i = (player_ptr->skill_thb + (player_ptr->weapon_exp[j_ptr->tval][j_ptr->sval] / 400 + i) * BTH_PLUS_ADJ);
     else
-        i = (player_ptr->skill_thb + ((player_ptr->weapon_exp[0][j_ptr->sval] - (WEAPON_EXP_MASTER / 2)) / 200 + i) * BTH_PLUS_ADJ);
+        i = (player_ptr->skill_thb + ((player_ptr->weapon_exp[j_ptr->tval][j_ptr->sval] - (PlayerSkill::weapon_exp_at(PlayerSkillRank::MASTER) / 2)) / 200 + i) * BTH_PLUS_ADJ);
+
+    auto sniper_data = PlayerClass(player_ptr).get_specific_data<sniper_data_type>();
+    auto sniper_concent = sniper_data ? sniper_data->concent : 0;
 
     /* Snipers can shot more critically with crossbows */
-    if (player_ptr->concent)
-        i += ((i * player_ptr->concent) / 5);
-    if ((player_ptr->pclass == CLASS_SNIPER) && (player_ptr->tval_ammo == TV_BOLT))
+    i += ((i * sniper_concent) / 5);
+    if ((player_ptr->pclass == PlayerClassType::SNIPER) && (player_ptr->tval_ammo == ItemKindType::BOLT))
         i *= 2;
 
     /* Good bow makes more critical */
-    i += plus_bow * 8 * (player_ptr->concent ? player_ptr->concent + 5 : 5);
+    i += plus_bow * 8 * (sniper_concent + 5);
 
     /* Critical hit */
     if (randint1(10000) <= i) {
@@ -1109,7 +1158,7 @@ int bow_tmul(OBJECT_SUBTYPE_VALUE sval)
  * @return ダメージ期待値
  * @note 基本ダメージ量と重量はこの部位では計算に加わらない。
  */
-HIT_POINT calc_crit_ratio_shot(player_type *player_ptr, HIT_POINT plus_ammo, HIT_POINT plus_bow)
+HIT_POINT calc_crit_ratio_shot(PlayerType *player_ptr, HIT_POINT plus_ammo, HIT_POINT plus_bow)
 {
     HIT_POINT i;
     object_type *j_ptr = &player_ptr->inventory_list[INVEN_BOW];
@@ -1117,19 +1166,21 @@ HIT_POINT calc_crit_ratio_shot(player_type *player_ptr, HIT_POINT plus_ammo, HIT
     /* Extract "shot" power */
     i = player_ptr->to_h_b + plus_ammo;
 
-    if (player_ptr->tval_ammo == TV_BOLT)
-        i = (player_ptr->skill_thb + (player_ptr->weapon_exp[0][j_ptr->sval] / 400 + i) * BTH_PLUS_ADJ);
+    if (player_ptr->tval_ammo == ItemKindType::BOLT)
+        i = (player_ptr->skill_thb + (player_ptr->weapon_exp[j_ptr->tval][j_ptr->sval] / 400 + i) * BTH_PLUS_ADJ);
     else
-        i = (player_ptr->skill_thb + ((player_ptr->weapon_exp[0][j_ptr->sval] - (WEAPON_EXP_MASTER / 2)) / 200 + i) * BTH_PLUS_ADJ);
+        i = (player_ptr->skill_thb + ((player_ptr->weapon_exp[j_ptr->tval][j_ptr->sval] - (PlayerSkill::weapon_exp_at(PlayerSkillRank::MASTER) / 2)) / 200 + i) * BTH_PLUS_ADJ);
+
+    auto sniper_data = PlayerClass(player_ptr).get_specific_data<sniper_data_type>();
+    auto sniper_concent = sniper_data ? sniper_data->concent : 0;
 
     /* Snipers can shot more critically with crossbows */
-    if (player_ptr->concent)
-        i += ((i * player_ptr->concent) / 5);
-    if ((player_ptr->pclass == CLASS_SNIPER) && (player_ptr->tval_ammo == TV_BOLT))
+    i += ((i * sniper_concent) / 5);
+    if ((player_ptr->pclass == PlayerClassType::SNIPER) && (player_ptr->tval_ammo == ItemKindType::BOLT))
         i *= 2;
 
     /* Good bow makes more critical */
-    i += plus_bow * 8 * (player_ptr->concent ? player_ptr->concent + 5 : 5);
+    i += plus_bow * 8 * (sniper_concent + 5);
 
     if (i < 0)
         i = 0;
@@ -1145,7 +1196,7 @@ HIT_POINT calc_crit_ratio_shot(player_type *player_ptr, HIT_POINT plus_ammo, HIT
  * @param dam 基本ダメージ量
  * @return ダメージ期待値
  */
-HIT_POINT calc_expect_crit_shot(player_type *player_ptr, WEIGHT weight, int plus_ammo, int plus_bow, HIT_POINT dam)
+HIT_POINT calc_expect_crit_shot(PlayerType *player_ptr, WEIGHT weight, int plus_ammo, int plus_bow, HIT_POINT dam)
 {
     uint32_t num;
     int i, k, crit;
@@ -1154,11 +1205,11 @@ HIT_POINT calc_expect_crit_shot(player_type *player_ptr, WEIGHT weight, int plus
     k = 0;
     num = 0;
 
-    crit = MIN(500, 900 / weight);
+    crit = std::min(500, 900 / weight);
     num += dam * 3 / 2 * crit;
     k = crit;
 
-    crit = MIN(500, 1350 / weight);
+    crit = std::min(500, 1350 / weight);
     crit -= k;
     num += dam * 2 * crit;
     k += crit;
@@ -1188,7 +1239,7 @@ HIT_POINT calc_expect_crit_shot(player_type *player_ptr, WEIGHT weight, int plus
  * @param impact 強撃かどうか
  * @return ダメージ期待値
  */
-HIT_POINT calc_expect_crit(player_type *player_ptr, WEIGHT weight, int plus, HIT_POINT dam, int16_t meichuu, bool dokubari, bool impact)
+HIT_POINT calc_expect_crit(PlayerType *player_ptr, WEIGHT weight, int plus, HIT_POINT dam, int16_t meichuu, bool dokubari, bool impact)
 {
     if (dokubari)
         return dam;
@@ -1218,7 +1269,7 @@ HIT_POINT calc_expect_crit(player_type *player_ptr, WEIGHT weight, int plus, HIT
         num += calc_weight_expect_dam(dam, weight);
     }
 
-    int pow = (player_ptr->pclass == CLASS_NINJA) ? 4444 : 5000;
+    int pow = (player_ptr->pclass == PlayerClassType::NINJA) ? 4444 : 5000;
     if (impact)
         pow /= 2;
 

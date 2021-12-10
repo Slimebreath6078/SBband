@@ -15,7 +15,7 @@
 #include "spell-kind/spells-world.h"
 #include "spell-realm/spells-chaos.h"
 #include "spell-realm/spells-trump.h"
-#include "spell/spell-types.h"
+#include "effect/attribute-types.h"
 #include "spell/spells-object.h"
 #include "spell/spells-status.h"
 #include "spell/spells-summon.h"
@@ -32,16 +32,16 @@
  * @brief トランプ領域魔法の各処理を行う
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param spell 魔法ID
- * @param mode 処理内容 (SPELL_NAME / SPELL_DESC / SPELL_INFO / SPELL_CAST)
- * @return SPELL_NAME / SPELL_DESC / SPELL_INFO 時には文字列ポインタを返す。SPELL_CAST時はnullptr文字列を返す。
+ * @param mode 処理内容 (SpellProcessType::NAME / SPELL_DESC / SpellProcessType::INFO / SpellProcessType::CAST)
+ * @return SpellProcessType::NAME / SPELL_DESC / SpellProcessType::INFO 時には文字列ポインタを返す。SpellProcessType::CAST時はnullptr文字列を返す。
  */
-concptr do_trump_spell(player_type *player_ptr, SPELL_IDX spell, spell_type mode)
+concptr do_trump_spell(PlayerType *player_ptr, SPELL_IDX spell, SpellProcessType mode)
 {
-    bool name = (mode == SPELL_NAME) ? true : false;
-    bool desc = (mode == SPELL_DESCRIPTION) ? true : false;
-    bool info = (mode == SPELL_INFO) ? true : false;
-    bool cast = (mode == SPELL_CAST) ? true : false;
-    bool fail = (mode == SPELL_FAIL) ? true : false;
+    bool name = mode == SpellProcessType::NAME;
+    bool desc = mode == SpellProcessType::DESCRIPTION;
+    bool info = mode == SpellProcessType::INFO;
+    bool cast = mode == SpellProcessType::CAST;
+    bool fail = mode == SpellProcessType::FAIL;
 
     DIRECTION dir;
     PLAYER_LEVEL plev = player_ptr->lev;
@@ -73,7 +73,7 @@ concptr do_trump_spell(player_type *player_ptr, SPELL_IDX spell, spell_type mode
 
         {
             if (cast || fail) {
-                msg_print(_("あなたは蜘蛛のカードに集中する...", "You concentrate on the trump of an spider..."));
+                msg_print(_("あなたは蜘蛛のカードに集中する...", "You concentrate on the trump of a spider..."));
                 if (trump_summoning(player_ptr, 1, !fail, player_ptr->y, player_ptr->x, 0, SUMMON_SPIDER, PM_ALLOW_GROUP)) {
                     if (fail) {
                         msg_print(_("召喚された蜘蛛は怒っている！", "The summoned spiders get angry!"));
@@ -166,7 +166,7 @@ concptr do_trump_spell(player_type *player_ptr, SPELL_IDX spell, spell_type mode
                 if (!get_aim_dir(player_ptr, &dir))
                     return nullptr;
 
-                fire_beam(player_ptr, GF_AWAY_ALL, dir, power);
+                fire_beam(player_ptr, AttributeType::AWAY_ALL, dir, power);
             }
         }
         break;
@@ -233,7 +233,7 @@ concptr do_trump_spell(player_type *player_ptr, SPELL_IDX spell, spell_type mode
                     y = player_ptr->y;
                 }
 
-                if (player_ptr->pclass == CLASS_BEASTMASTER)
+                if (player_ptr->pclass == PlayerClassType::BEASTMASTER)
                     type = SUMMON_KAMIKAZE_LIVING;
                 else
                     type = SUMMON_KAMIKAZE;
@@ -439,7 +439,7 @@ concptr do_trump_spell(player_type *player_ptr, SPELL_IDX spell, spell_type mode
             if (cast || fail) {
                 summon_type type;
                 msg_print(_("あなたはモンスターのカードに集中する...", "You concentrate on several trumps at once..."));
-                if (player_ptr->pclass == CLASS_BEASTMASTER)
+                if (player_ptr->pclass == PlayerClassType::BEASTMASTER)
                     type = SUMMON_LIVING;
                 else
                     type = SUMMON_NONE;
@@ -661,7 +661,7 @@ concptr do_trump_spell(player_type *player_ptr, SPELL_IDX spell, spell_type mode
             if (cast) {
                 summon_type type;
 
-                if (player_ptr->pclass == CLASS_BEASTMASTER)
+                if (player_ptr->pclass == PlayerClassType::BEASTMASTER)
                     type = SUMMON_HI_DRAGON_LIVING;
                 else
                     type = SUMMON_HI_DRAGON;

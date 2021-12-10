@@ -9,7 +9,7 @@
 #include "player-info/equipment-info.h"
 #include "player/player-status.h"
 #include "spell-kind/spells-launcher.h"
-#include "spell/spell-types.h"
+#include "effect/attribute-types.h"
 #include "sv-definition/sv-armor-types.h"
 #include "sv-definition/sv-protector-types.h"
 #include "sv-definition/sv-weapon-types.h"
@@ -19,7 +19,7 @@
 #include "target/target-getter.h"
 #include "view/display-messages.h"
 
-bool android_inside_weapon(player_type *player_ptr)
+bool android_inside_weapon(PlayerType *player_ptr)
 {
     DIRECTION dir;
     if (!get_aim_dir(player_ptr, &dir))
@@ -27,37 +27,37 @@ bool android_inside_weapon(player_type *player_ptr)
 
     if (player_ptr->lev < 10) {
         msg_print(_("レイガンを発射した。", "You fire your ray gun."));
-        fire_bolt(player_ptr, GF_MISSILE, dir, (player_ptr->lev + 1) / 2);
+        fire_bolt(player_ptr, AttributeType::MISSILE, dir, (player_ptr->lev + 1) / 2);
         return true;
     }
 
     if (player_ptr->lev < 25) {
         msg_print(_("ブラスターを発射した。", "You fire your blaster."));
-        fire_bolt(player_ptr, GF_MISSILE, dir, player_ptr->lev);
+        fire_bolt(player_ptr, AttributeType::MISSILE, dir, player_ptr->lev);
         return true;
     }
 
     if (player_ptr->lev < 35) {
         msg_print(_("バズーカを発射した。", "You fire your bazooka."));
-        fire_ball(player_ptr, GF_MISSILE, dir, player_ptr->lev * 2, 2);
+        fire_ball(player_ptr, AttributeType::MISSILE, dir, player_ptr->lev * 2, 2);
         return true;
     }
 
     if (player_ptr->lev < 45) {
         msg_print(_("ビームキャノンを発射した。", "You fire a beam cannon."));
-        fire_beam(player_ptr, GF_MISSILE, dir, player_ptr->lev * 2);
+        fire_beam(player_ptr, AttributeType::MISSILE, dir, player_ptr->lev * 2);
         return true;
     }
 
     msg_print(_("ロケットを発射した。", "You fire a rocket."));
-    fire_rocket(player_ptr, GF_ROCKET, dir, player_ptr->lev * 5, 2);
+    fire_rocket(player_ptr, AttributeType::ROCKET, dir, player_ptr->lev * 5, 2);
     return true;
 }
 
-void calc_android_exp(player_type *player_ptr)
+void calc_android_exp(PlayerType *player_ptr)
 {
     uint32_t total_exp = 0;
-    if (player_ptr->is_dead || (player_ptr->prace != player_race_type::ANDROID))
+    if (player_ptr->is_dead || (player_ptr->prace != PlayerRaceType::ANDROID))
         return;
 
     for (int i = INVEN_MAIN_HAND; i < INVEN_TOTAL; i++) {
@@ -65,7 +65,7 @@ void calc_android_exp(player_type *player_ptr)
         object_type forge;
         object_type *q_ptr = &forge;
         uint32_t value, exp;
-        DEPTH level = MAX(k_info[o_ptr->k_idx].level - 8, 1);
+        DEPTH level = std::max(k_info[o_ptr->k_idx].level - 8, 1);
 
         if ((i == INVEN_MAIN_RING) || (i == INVEN_SUB_RING) || (i == INVEN_NECK) || (i == INVEN_LITE))
             continue;
@@ -78,10 +78,10 @@ void calc_android_exp(player_type *player_ptr)
         q_ptr->curse_flags.clear();
 
         if (o_ptr->is_fixed_artifact()) {
-            level = (level + MAX(a_info[o_ptr->name1].level - 8, 5)) / 2;
-            level += MIN(20, a_info[o_ptr->name1].rarity / (a_info[o_ptr->name1].gen_flags.has(TRG::INSTA_ART) ? 10 : 3));
+            level = (level + std::max(a_info[o_ptr->name1].level - 8, 5)) / 2;
+            level += std::min(20, a_info[o_ptr->name1].rarity / (a_info[o_ptr->name1].gen_flags.has(ItemGenerationTraitType::INSTA_ART) ? 10 : 3));
         } else if (o_ptr->is_ego()) {
-            level += MAX(3, (e_info[o_ptr->name2].rating - 5) / 2);
+            level += std::max(3, (e_info[o_ptr->name2].rating - 5) / 2);
         } else if (o_ptr->art_name) {
             int32_t total_flags = flag_cost(o_ptr, o_ptr->pval);
             int fake_level;
@@ -102,33 +102,33 @@ void calc_android_exp(player_type *player_ptr)
                     fake_level = 40;
             }
 
-            level = MAX(level, (level + MAX(fake_level - 8, 5)) / 2 + 3);
+            level = std::max(level, (level + std::max(fake_level - 8, 5)) / 2 + 3);
         }
 
         value = object_value_real(q_ptr);
         if (value <= 0)
             continue;
-        if ((o_ptr->tval == TV_SOFT_ARMOR) && (o_ptr->sval == SV_ABUNAI_MIZUGI) && (player_ptr->pseikaku != PERSONALITY_SEXY))
+        if ((o_ptr->tval == ItemKindType::SOFT_ARMOR) && (o_ptr->sval == SV_ABUNAI_MIZUGI) && (player_ptr->ppersonality != PERSONALITY_SEXY))
             value /= 32;
         if (value > 5000000L)
             value = 5000000L;
-        if ((o_ptr->tval == TV_DRAG_ARMOR) || (o_ptr->tval == TV_CARD))
+        if ((o_ptr->tval == ItemKindType::DRAG_ARMOR) || (o_ptr->tval == ItemKindType::CARD))
             level /= 2;
 
-        if (o_ptr->is_artifact() || o_ptr->is_ego() || (o_ptr->tval == TV_DRAG_ARMOR) || ((o_ptr->tval == TV_HELM) && (o_ptr->sval == SV_DRAGON_HELM))
-            || ((o_ptr->tval == TV_SHIELD) && (o_ptr->sval == SV_DRAGON_SHIELD)) || ((o_ptr->tval == TV_GLOVES) && (o_ptr->sval == SV_SET_OF_DRAGON_GLOVES))
-            || ((o_ptr->tval == TV_BOOTS) && (o_ptr->sval == SV_PAIR_OF_DRAGON_GREAVE)) || ((o_ptr->tval == TV_SWORD) && (o_ptr->sval == SV_DIAMOND_EDGE))) {
+        if (o_ptr->is_artifact() || o_ptr->is_ego() || (o_ptr->tval == ItemKindType::DRAG_ARMOR) || ((o_ptr->tval == ItemKindType::HELM) && (o_ptr->sval == SV_DRAGON_HELM))
+            || ((o_ptr->tval == ItemKindType::SHIELD) && (o_ptr->sval == SV_DRAGON_SHIELD)) || ((o_ptr->tval == ItemKindType::GLOVES) && (o_ptr->sval == SV_SET_OF_DRAGON_GLOVES))
+            || ((o_ptr->tval == ItemKindType::BOOTS) && (o_ptr->sval == SV_PAIR_OF_DRAGON_GREAVE)) || ((o_ptr->tval == ItemKindType::SWORD) && (o_ptr->sval == SV_DIAMOND_EDGE))) {
             if (level > 65)
                 level = 35 + (level - 65) / 5;
             else if (level > 35)
                 level = 25 + (level - 35) / 3;
             else if (level > 15)
                 level = 15 + (level - 15) / 2;
-            exp = MIN(100000L, value) / 2 * level * level;
+            exp = std::min<uint>(100000, value) / 2 * level * level;
             if (value > 100000L)
                 exp += (value - 100000L) / 8 * level * level;
         } else {
-            exp = MIN(100000L, value) * level;
+            exp = std::min<uint>(100000, value) * level;
             if (value > 100000L)
                 exp += (value - 100000L) / 4 * level;
         }

@@ -59,7 +59,7 @@ int adjust_stat(int value, int amount)
  * calc_bonuses()による、独立ステータスからの副次ステータス算出も行っている。
  * For efficiency, we include a chunk of "calc_bonuses()".\n
  */
-void get_stats(player_type *player_ptr)
+void get_stats(PlayerType *player_ptr)
 {
     while (true) {
         int sum = 0;
@@ -88,14 +88,14 @@ void get_stats(player_type *player_ptr)
 /*!
  * @brief 経験値修正の合計値を計算
  */
-uint16_t get_expfact(player_type *player_ptr)
+uint16_t get_expfact(PlayerType *player_ptr)
 {
     uint16_t expfact = rp_ptr->r_exp;
 
-    if (player_ptr->prace != player_race_type::ANDROID)
+    if (player_ptr->prace != PlayerRaceType::ANDROID)
         expfact += cp_ptr->c_exp;
-    if (((player_ptr->pclass == CLASS_MONK) || (player_ptr->pclass == CLASS_FORCETRAINER) || (player_ptr->pclass == CLASS_NINJA))
-        && ((player_ptr->prace == player_race_type::KLACKON) || (player_ptr->prace == player_race_type::SPRITE)))
+    if (((player_ptr->pclass == PlayerClassType::MONK) || (player_ptr->pclass == PlayerClassType::FORCETRAINER) || (player_ptr->pclass == PlayerClassType::NINJA))
+        && ((player_ptr->prace == PlayerRaceType::KLACKON) || (player_ptr->prace == PlayerRaceType::SPRITE)))
         expfact -= 15;
 
     return expfact;
@@ -104,7 +104,7 @@ uint16_t get_expfact(player_type *player_ptr)
 /*!
  * @brief その他「オートローラ中は算出の対象にしない」副次ステータスを処理する / Roll for some info that the auto-roller ignores
  */
-void get_extra(player_type *player_ptr, bool roll_hitdie)
+void get_extra(PlayerType *player_ptr, bool roll_hitdie)
 {
     player_ptr->expfact = get_expfact(player_ptr);
 
@@ -115,26 +115,26 @@ void get_extra(player_type *player_ptr, bool roll_hitdie)
     player_ptr->old_realm = 0;
 
     for (int i = 0; i < 64; i++) {
-        if (player_ptr->pclass == CLASS_SORCERER)
-            player_ptr->spell_exp[i] = SPELL_EXP_MASTER;
-        else if (player_ptr->pclass == CLASS_RED_MAGE)
-            player_ptr->spell_exp[i] = SPELL_EXP_SKILLED;
+        if (player_ptr->pclass == PlayerClassType::SORCERER)
+            player_ptr->spell_exp[i] = PlayerSkill::spell_exp_at(PlayerSkillRank::MASTER);
+        else if (player_ptr->pclass == PlayerClassType::RED_MAGE)
+            player_ptr->spell_exp[i] = PlayerSkill::spell_exp_at(PlayerSkillRank::SKILLED);
         else
-            player_ptr->spell_exp[i] = SPELL_EXP_UNSKILLED;
+            player_ptr->spell_exp[i] = PlayerSkill::spell_exp_at(PlayerSkillRank::UNSKILLED);
     }
 
-    for (int i = 0; i < 5; i++)
-        for (int j = 0; j < 64; j++)
-            player_ptr->weapon_exp[i][j] = s_info[player_ptr->pclass].w_start[i][j];
+    auto pclass = enum2i(player_ptr->pclass);
+    player_ptr->weapon_exp = s_info[pclass].w_start;
 
-    if ((player_ptr->pseikaku == PERSONALITY_SEXY) && (player_ptr->weapon_exp[TV_HAFTED - TV_WEAPON_BEGIN][SV_WHIP] < WEAPON_EXP_BEGINNER)) {
-        player_ptr->weapon_exp[TV_HAFTED - TV_WEAPON_BEGIN][SV_WHIP] = WEAPON_EXP_BEGINNER;
+    if (player_ptr->ppersonality == PERSONALITY_SEXY) {
+        auto &whip_exp = player_ptr->weapon_exp[ItemKindType::HAFTED][SV_WHIP];
+        whip_exp = std::max(whip_exp, PlayerSkill::weapon_exp_at(PlayerSkillRank::BEGINNER));
     }
 
-    for (int i = 0; i < MAX_SKILLS; i++)
-        player_ptr->skill_exp[i] = s_info[player_ptr->pclass].s_start[i];
+    for (auto i : PLAYER_SKILL_KIND_TYPE_RANGE)
+        player_ptr->skill_exp[i] = s_info[pclass].s_start[i];
 
-    if (player_ptr->pclass == CLASS_SORCERER)
+    if (player_ptr->pclass == PlayerClassType::SORCERER)
         player_ptr->hitdie = rp_ptr->r_mhp / 2 + cp_ptr->c_mhp + ap_ptr->a_mhp;
     else
         player_ptr->hitdie = rp_ptr->r_mhp + cp_ptr->c_mhp + ap_ptr->a_mhp;
@@ -150,7 +150,7 @@ void get_extra(player_type *player_ptr, bool roll_hitdie)
  * @param player_ptr プレイヤーへの参照ポインタ
  * @details 新生の薬やステータスシャッフルでもこの関数が呼ばれる
  */
-void get_max_stats(player_type *player_ptr)
+void get_max_stats(PlayerType *player_ptr)
 {
     int dice[6];
     while (true) {

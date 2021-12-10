@@ -101,7 +101,7 @@ static void update_object_flags(const TrFlags &flgs, EnumClassFlagGroup<MonsterR
  * @param o_name アイテム名
  * @param this_o_idx モンスターが乗ったオブジェクトID
  */
-static void monster_pickup_object(player_type *player_ptr, turn_flags *turn_flags_ptr, MONSTER_IDX m_idx, object_type *o_ptr, bool is_special_object,
+static void monster_pickup_object(PlayerType *player_ptr, turn_flags *turn_flags_ptr, MONSTER_IDX m_idx, object_type *o_ptr, bool is_special_object,
     POSITION ny, POSITION nx, GAME_TEXT *m_name, GAME_TEXT *o_name, OBJECT_IDX this_o_idx)
 {
     monster_type *m_ptr = &player_ptr->current_floor_ptr->m_list[m_idx];
@@ -150,7 +150,7 @@ static void monster_pickup_object(player_type *player_ptr, turn_flags *turn_flag
  * @param ny 移動後の、モンスターのY座標
  * @param nx 移動後の、モンスターのX座標
  */
-void update_object_by_monster_movement(player_type *player_ptr, turn_flags *turn_flags_ptr, MONSTER_IDX m_idx, POSITION ny, POSITION nx)
+void update_object_by_monster_movement(PlayerType *player_ptr, turn_flags *turn_flags_ptr, MONSTER_IDX m_idx, POSITION ny, POSITION nx)
 {
     monster_type *m_ptr = &player_ptr->current_floor_ptr->m_list[m_idx];
     monster_race *r_ptr = &r_info[m_ptr->r_idx];
@@ -167,7 +167,7 @@ void update_object_by_monster_movement(player_type *player_ptr, turn_flags *turn
 
         if (turn_flags_ptr->do_take) {
             /* Skip gold, corpse and statue */
-            if (o_ptr->tval == TV_GOLD || (o_ptr->tval == TV_CORPSE) || (o_ptr->tval == TV_STATUE))
+            if (o_ptr->tval == ItemKindType::GOLD || (o_ptr->tval == ItemKindType::CORPSE) || (o_ptr->tval == ItemKindType::STATUE))
                 continue;
         }
 
@@ -187,7 +187,7 @@ void update_object_by_monster_movement(player_type *player_ptr, turn_flags *turn
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param m_ptr モンスター参照ポインタ
  */
-void monster_drop_carried_objects(player_type *player_ptr, monster_type *m_ptr)
+void monster_drop_carried_objects(PlayerType *player_ptr, monster_type *m_ptr)
 {
     for (auto it = m_ptr->hold_o_idx_list.begin(); it != m_ptr->hold_o_idx_list.end();) {
         object_type forge;

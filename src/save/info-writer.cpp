@@ -36,9 +36,14 @@ void wr_store(store_type *store_ptr)
 void wr_randomizer(void)
 {
     wr_u16b(0);
-    wr_u16b(Rand_place);
-    for (int i = 0; i < RAND_DEG; i++)
-        wr_u32b(Rand_state[i]);
+    wr_u16b(0);
+    const auto &state = w_ptr->rng.get_state();
+    for (const auto s : state) {
+        wr_u32b(s);
+    }
+    for (int i = state.size(); i < RAND_DEG; i++) {
+        wr_u32b(0);
+    }
 }
 
 /*!
@@ -49,15 +54,13 @@ void wr_options(save_type type)
     for (int i = 0; i < 4; i++)
         wr_u32b(0L);
 
-    wr_byte(delay_factor);
+    wr_u32b(delay_factor);
+
     wr_byte(hitpoint_warn);
     wr_byte(mana_warn);
 
     /*** Cheating options ***/
     uint16_t c = 0;
-    if (w_ptr->wizard)
-        c |= 0x0002;
-
     if (cheat_sight)
         c |= 0x0040;
 
@@ -143,7 +146,7 @@ void save_quick_start(void)
     wr_byte(previous_char.psex);
     wr_byte((byte)previous_char.prace);
     wr_byte((byte)previous_char.pclass);
-    wr_byte((byte)previous_char.pseikaku);
+    wr_byte((byte)previous_char.ppersonality);
     wr_byte((byte)previous_char.realm1);
     wr_byte((byte)previous_char.realm2);
 

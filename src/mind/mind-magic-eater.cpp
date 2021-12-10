@@ -6,6 +6,8 @@
 #include "object/item-tester-hooker.h"
 #include "object/item-use-flags.h"
 #include "perception/object-perception.h"
+#include "player-base/player-class.h"
+#include "player-info/magic-eater-data-type.h"
 #include "player-status/player-energy.h"
 #include "sv-definition/sv-staff-types.h"
 #include "system/object-type-definition.h"
@@ -17,7 +19,7 @@
  * @param player_ptr プレイヤーへの参照ポインタ
  * @return 取り込みを実行したらTRUE、キャンセルしたらFALSEを返す
  */
-bool import_magic_device(player_type *player_ptr)
+bool import_magic_device(PlayerType *player_ptr)
 {
     concptr q = _("どのアイテムの魔力を取り込みますか? ", "Gain power of which item? ");
     concptr s = _("魔力を取り込めるアイテムがない。", "There's nothing with power to absorb.");
@@ -26,7 +28,7 @@ bool import_magic_device(player_type *player_ptr)
     if (!o_ptr)
         return false;
 
-    if (o_ptr->tval == TV_STAFF && o_ptr->sval == SV_STAFF_NOTHING) {
+    if (o_ptr->tval == ItemKindType::STAFF && o_ptr->sval == SV_STAFF_NOTHING) {
         msg_print(_("この杖には発動の為の能力は何も備わっていないようだ。", "This staff doesn't have any magical ability."));
         return false;
     }
@@ -41,38 +43,28 @@ bool import_magic_device(player_type *player_ptr)
         return false;
     }
 
-    PARAMETER_VALUE pval = o_ptr->pval;
-    int ext = 0;
-    if (o_ptr->tval == TV_ROD)
-        ext = 72;
-    else if (o_ptr->tval == TV_WAND)
-        ext = 36;
+    auto magic_eater_data = PlayerClass(player_ptr).get_specific_data<magic_eater_data_type>();
+    auto &target_item = magic_eater_data->get_item_group(o_ptr->tval)[o_ptr->sval];
 
-    if (o_ptr->tval == TV_ROD) {
-        player_ptr->magic_num2[o_ptr->sval + ext] += (byte)o_ptr->number;
-        if (player_ptr->magic_num2[o_ptr->sval + ext] > 99)
-            player_ptr->magic_num2[o_ptr->sval + ext] = 99;
+    PARAMETER_VALUE pval = o_ptr->pval;
+
+    if (o_ptr->tval == ItemKindType::ROD) {
+        target_item.count = std::min<byte>(target_item.count + o_ptr->number, 99);
     } else {
-        int num;
-        for (num = o_ptr->number; num; num--) {
+        for (auto num = o_ptr->number; num > 0; num--) {
             int gain_num = pval;
-            if (o_ptr->tval == TV_WAND)
+            if (o_ptr->tval == ItemKindType::WAND)
                 gain_num = (pval + num - 1) / num;
-            if (player_ptr->magic_num2[o_ptr->sval + ext]) {
+            if (target_item.count > 0) {
                 gain_num *= 256;
                 gain_num = (gain_num / 3 + randint0(gain_num / 3)) / 256;
                 if (gain_num < 1)
                     gain_num = 1;
             }
-            player_ptr->magic_num2[o_ptr->sval + ext] += (byte)gain_num;
-            if (player_ptr->magic_num2[o_ptr->sval + ext] > 99)
-                player_ptr->magic_num2[o_ptr->sval + ext] = 99;
-            player_ptr->magic_num1[o_ptr->sval + ext] += pval * 0x10000;
-            if (player_ptr->magic_num1[o_ptr->sval + ext] > 99 * 0x10000)
-                player_ptr->magic_num1[o_ptr->sval + ext] = 99 * 0x10000;
-            if (player_ptr->magic_num1[o_ptr->sval + ext] > player_ptr->magic_num2[o_ptr->sval + ext] * 0x10000)
-                player_ptr->magic_num1[o_ptr->sval + ext] = player_ptr->magic_num2[o_ptr->sval + ext] * 0x10000;
-            if (o_ptr->tval == TV_WAND)
+            target_item.count = std::min<byte>(target_item.count + gain_num, 99);
+            target_item.charge += pval * EATER_CHARGE;
+            target_item.charge = std::min(target_item.charge, target_item.count * EATER_CHARGE);
+            if (o_ptr->tval == ItemKindType::WAND)
                 pval -= (pval + num - 1) / num;
         }
     }

@@ -4,6 +4,7 @@
  * @author deskull
  */
 #include "object/object-broken.h"
+#include "effect/attribute-types.h"
 #include "effect/effect-characteristics.h"
 #include "effect/effect-processor.h"
 #include "flavor/flavor-describer.h"
@@ -19,7 +20,6 @@
 #include "object/object-kind.h"
 #include "object/object-stack.h"
 #include "player/player-status.h"
-#include "spell/spell-types.h"
 #include "sv-definition/sv-potion-types.h"
 #include "system/floor-type-definition.h"
 #include "system/object-type-definition.h"
@@ -66,39 +66,39 @@ bool BreakerAcid::hates(object_type *o_ptr) const
     /* Analyze the type */
     switch (o_ptr->tval) {
         /* Wearable items */
-    case TV_ARROW:
-    case TV_BOLT:
-    case TV_BOW:
-    case TV_SWORD:
-    case TV_HAFTED:
-    case TV_POLEARM:
-    case TV_HELM:
-    case TV_CROWN:
-    case TV_SHIELD:
-    case TV_BOOTS:
-    case TV_GLOVES:
-    case TV_CLOAK:
-    case TV_SOFT_ARMOR:
-    case TV_HARD_ARMOR:
-    case TV_DRAG_ARMOR: {
+    case ItemKindType::ARROW:
+    case ItemKindType::BOLT:
+    case ItemKindType::BOW:
+    case ItemKindType::SWORD:
+    case ItemKindType::HAFTED:
+    case ItemKindType::POLEARM:
+    case ItemKindType::HELM:
+    case ItemKindType::CROWN:
+    case ItemKindType::SHIELD:
+    case ItemKindType::BOOTS:
+    case ItemKindType::GLOVES:
+    case ItemKindType::CLOAK:
+    case ItemKindType::SOFT_ARMOR:
+    case ItemKindType::HARD_ARMOR:
+    case ItemKindType::DRAG_ARMOR: {
         return true;
     }
 
     /* Staffs/Scrolls are wood/paper */
-    case TV_STAFF:
-    case TV_SCROLL: {
+    case ItemKindType::STAFF:
+    case ItemKindType::SCROLL: {
         return true;
     }
 
     /* Ouch */
-    case TV_CHEST: {
+    case ItemKindType::CHEST: {
         return true;
     }
 
     /* Junk is useless */
-    case TV_SKELETON:
-    case TV_BOTTLE:
-    case TV_JUNK: {
+    case ItemKindType::SKELETON:
+    case ItemKindType::BOTTLE:
+    case ItemKindType::JUNK: {
         return true;
     }
 
@@ -118,8 +118,8 @@ bool BreakerAcid::hates(object_type *o_ptr) const
 bool BreakerElec::hates(object_type *o_ptr) const
 {
     switch (o_ptr->tval) {
-    case TV_RING:
-    case TV_WAND: {
+    case ItemKindType::RING:
+    case ItemKindType::WAND: {
         return true;
     }
 
@@ -144,43 +144,43 @@ bool BreakerFire::hates(object_type *o_ptr) const
     /* Analyze the type */
     switch (o_ptr->tval) {
         /* Wearable */
-    case TV_LITE:
-    case TV_ARROW:
-    case TV_BOW:
-    case TV_HAFTED:
-    case TV_POLEARM:
-    case TV_BOOTS:
-    case TV_GLOVES:
-    case TV_CLOAK:
-    case TV_SOFT_ARMOR: {
+    case ItemKindType::LITE:
+    case ItemKindType::ARROW:
+    case ItemKindType::BOW:
+    case ItemKindType::HAFTED:
+    case ItemKindType::POLEARM:
+    case ItemKindType::BOOTS:
+    case ItemKindType::GLOVES:
+    case ItemKindType::CLOAK:
+    case ItemKindType::SOFT_ARMOR: {
         return true;
     }
 
     /* Books */
-    case TV_LIFE_BOOK:
-    case TV_SORCERY_BOOK:
-    case TV_NATURE_BOOK:
-    case TV_CHAOS_BOOK:
-    case TV_DEATH_BOOK:
-    case TV_TRUMP_BOOK:
-    case TV_ARCANE_BOOK:
-    case TV_CRAFT_BOOK:
-    case TV_DEMON_BOOK:
-    case TV_CRUSADE_BOOK:
-    case TV_MUSIC_BOOK:
-    case TV_HISSATSU_BOOK:
-    case TV_HEX_BOOK: {
+    case ItemKindType::LIFE_BOOK:
+    case ItemKindType::SORCERY_BOOK:
+    case ItemKindType::NATURE_BOOK:
+    case ItemKindType::CHAOS_BOOK:
+    case ItemKindType::DEATH_BOOK:
+    case ItemKindType::TRUMP_BOOK:
+    case ItemKindType::ARCANE_BOOK:
+    case ItemKindType::CRAFT_BOOK:
+    case ItemKindType::DEMON_BOOK:
+    case ItemKindType::CRUSADE_BOOK:
+    case ItemKindType::MUSIC_BOOK:
+    case ItemKindType::HISSATSU_BOOK:
+    case ItemKindType::HEX_BOOK: {
         return true;
     }
 
     /* Chests */
-    case TV_CHEST: {
+    case ItemKindType::CHEST: {
         return true;
     }
 
     /* Staffs/Scrolls burn */
-    case TV_STAFF:
-    case TV_SCROLL: {
+    case ItemKindType::STAFF:
+    case ItemKindType::SCROLL: {
         return true;
     }
 
@@ -200,9 +200,9 @@ bool BreakerFire::hates(object_type *o_ptr) const
 bool BreakerCold::hates(object_type *o_ptr) const
 {
     switch (o_ptr->tval) {
-    case TV_POTION:
-    case TV_FLASK:
-    case TV_BOTTLE: {
+    case ItemKindType::POTION:
+    case ItemKindType::FLASK:
+    case ItemKindType::BOTTLE: {
         return true;
     }
 
@@ -257,10 +257,10 @@ bool ObjectBreaker::can_destroy(object_type *o_ptr) const
  *    o_ptr --- pointer to the potion object.
  * </pre>
  */
-bool potion_smash_effect(player_type *player_ptr, MONSTER_IDX who, POSITION y, POSITION x, KIND_OBJECT_IDX k_idx)
+bool potion_smash_effect(PlayerType *player_ptr, MONSTER_IDX who, POSITION y, POSITION x, KIND_OBJECT_IDX k_idx)
 {
     int radius = 2;
-    int dt = 0;
+    AttributeType dt = AttributeType::NONE;
     int dam = 0;
     bool angry = false;
     object_kind *k_ptr = &k_info[k_idx];
@@ -310,81 +310,81 @@ bool potion_smash_effect(player_type *player_ptr, MONSTER_IDX who, POSITION y, P
         /* All of the above potions have no effect when shattered */
         return false;
     case SV_POTION_SLOWNESS:
-        dt = GF_OLD_SLOW;
+        dt = AttributeType::OLD_SLOW;
         dam = 5;
         angry = true;
         break;
     case SV_POTION_POISON:
-        dt = GF_POIS;
+        dt = AttributeType::POIS;
         dam = 3;
         angry = true;
         break;
     case SV_POTION_BLINDNESS:
-        dt = GF_DARK;
+        dt = AttributeType::DARK;
         angry = true;
         break;
     case SV_POTION_BOOZE:
-        dt = GF_OLD_CONF;
+        dt = AttributeType::OLD_CONF;
         angry = true;
         break;
     case SV_POTION_SLEEP:
-        dt = GF_OLD_SLEEP;
+        dt = AttributeType::OLD_SLEEP;
         angry = true;
         break;
     case SV_POTION_RUINATION:
     case SV_POTION_DETONATIONS:
-        dt = GF_SHARDS;
+        dt = AttributeType::SHARDS;
         dam = damroll(25, 25);
         angry = true;
         break;
     case SV_POTION_DEATH:
-        dt = GF_DEATH_RAY;
+        dt = AttributeType::DEATH_RAY;
         dam = k_ptr->level * 10;
         angry = true;
         radius = 1;
         break;
     case SV_POTION_SPEED:
-        dt = GF_OLD_SPEED;
+        dt = AttributeType::OLD_SPEED;
         break;
     case SV_POTION_CURE_LIGHT:
-        dt = GF_OLD_HEAL;
+        dt = AttributeType::OLD_HEAL;
         dam = damroll(2, 3);
         break;
     case SV_POTION_CURE_SERIOUS:
-        dt = GF_OLD_HEAL;
+        dt = AttributeType::OLD_HEAL;
         dam = damroll(4, 3);
         break;
     case SV_POTION_CURE_CRITICAL:
     case SV_POTION_CURING:
-        dt = GF_OLD_HEAL;
+        dt = AttributeType::OLD_HEAL;
         dam = damroll(6, 3);
         break;
     case SV_POTION_HEALING:
-        dt = GF_OLD_HEAL;
+        dt = AttributeType::OLD_HEAL;
         dam = damroll(10, 10);
         break;
     case SV_POTION_RESTORE_EXP:
-        dt = GF_STAR_HEAL;
+        dt = AttributeType::STAR_HEAL;
         dam = 0;
         radius = 1;
         break;
     case SV_POTION_LIFE:
-        dt = GF_STAR_HEAL;
+        dt = AttributeType::STAR_HEAL;
         dam = damroll(50, 50);
         radius = 1;
         break;
     case SV_POTION_STAR_HEALING:
-        dt = GF_OLD_HEAL;
+        dt = AttributeType::OLD_HEAL;
         dam = damroll(50, 50);
         radius = 1;
         break;
     case SV_POTION_RESTORE_MANA:
-        dt = GF_MANA;
+        dt = AttributeType::MANA;
         dam = damroll(10, 10);
         radius = 1;
         break;
     case SV_POTION_POLY_SELF:
-        dt = GF_NEXUS;
+        dt = AttributeType::NEXUS;
         dam = damroll(20, 20);
         radius = 1;
         break;
@@ -404,7 +404,7 @@ bool potion_smash_effect(player_type *player_ptr, MONSTER_IDX who, POSITION y, P
  * @details
  * Note that artifacts never break, see the "drop_near()" function.
  */
-PERCENTAGE breakage_chance(player_type *player_ptr, object_type *o_ptr, bool has_archer_bonus, SPELL_IDX snipe_type)
+PERCENTAGE breakage_chance(PlayerType *player_ptr, object_type *o_ptr, bool has_archer_bonus, SPELL_IDX snipe_type)
 {
     /* Examine the snipe type */
     if (snipe_type) {
@@ -428,29 +428,29 @@ PERCENTAGE breakage_chance(player_type *player_ptr, object_type *o_ptr, bool has
     PERCENTAGE archer_bonus = (has_archer_bonus ? (PERCENTAGE)(player_ptr->lev - 1) / 7 + 4 : 0);
     switch (o_ptr->tval) {
         /* Always break */
-    case TV_FLASK:
-    case TV_POTION:
-    case TV_BOTTLE:
-    case TV_FOOD:
-    case TV_JUNK:
+    case ItemKindType::FLASK:
+    case ItemKindType::POTION:
+    case ItemKindType::BOTTLE:
+    case ItemKindType::FOOD:
+    case ItemKindType::JUNK:
         return 100;
 
         /* Often break */
-    case TV_LITE:
-    case TV_SCROLL:
-    case TV_SKELETON:
+    case ItemKindType::LITE:
+    case ItemKindType::SCROLL:
+    case ItemKindType::SKELETON:
         return 50;
 
         /* Sometimes break */
-    case TV_WAND:
-    case TV_SPIKE:
+    case ItemKindType::WAND:
+    case ItemKindType::SPIKE:
         return 25;
-    case TV_ARROW:
+    case ItemKindType::ARROW:
         return 20 - archer_bonus * 2;
 
         /* Rarely break */
-    case TV_SHOT:
-    case TV_BOLT:
+    case ItemKindType::SHOT:
+    case ItemKindType::BOLT:
         return 10 - archer_bonus;
     default:
         return 10;

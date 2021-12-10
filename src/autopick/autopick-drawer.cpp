@@ -17,7 +17,7 @@
 
 #define DESCRIPT_HGT 3
 
-static void process_dirty_expression(player_type *player_ptr, text_body_type *tb)
+static void process_dirty_expression(PlayerType *player_ptr, text_body_type *tb)
 {
     if ((tb->dirty_flags & DIRTY_EXPRESSION) == 0)
         return;
@@ -57,7 +57,7 @@ static void process_dirty_expression(player_type *player_ptr, text_body_type *tb
 /*!
  * @brief Draw text
  */
-void draw_text_editor(player_type *player_ptr, text_body_type *tb)
+void draw_text_editor(PlayerType *player_ptr, text_body_type *tb)
 {
     int by1 = 0, by2 = 0;
 
@@ -120,8 +120,8 @@ void draw_text_editor(player_type *player_ptr, text_body_type *tb)
     if (tb->mark) {
         tb->dirty_flags |= DIRTY_ALL;
 
-        by1 = MIN(tb->my, tb->cy);
-        by2 = MAX(tb->my, tb->cy);
+        by1 = std::min(tb->my, tb->cy);
+        by2 = std::max(tb->my, tb->cy);
     }
 
     int i;
@@ -170,8 +170,8 @@ void draw_text_editor(player_type *player_ptr, text_body_type *tb)
         } else {
             int x0 = leftcol + tb->left;
             int len = strlen(tb->lines_list[tb->cy]);
-            int bx1 = MIN(tb->mx, tb->cx);
-            int bx2 = MAX(tb->mx, tb->cx);
+            int bx1 = std::min(tb->mx, tb->cx);
+            int bx2 = std::max(tb->mx, tb->cx);
 
             if (bx2 > len)
                 bx2 = len;

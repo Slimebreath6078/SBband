@@ -1,10 +1,9 @@
 ﻿#pragma once
 
-#include "system/h-type.h"
-
+#include "system/angband.h"
 #include <cstddef>
 #include <vector>
-#include <map>
+#include <unordered_map>
 #include <initializer_list>
 
 typedef uint cfg_key;

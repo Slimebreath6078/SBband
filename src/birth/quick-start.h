@@ -12,9 +12,9 @@
  */
 struct birther {
     player_sex psex{}; /* Sex index */
-    player_race_type prace{}; /* Race index */
-    player_class_type pclass{}; /* Class index */
-    player_personality_type pseikaku{}; /* Seikaku index */
+    PlayerRaceType prace{}; /* Race index */
+    PlayerClassType pclass{}; /* Class index */
+    player_personality_type ppersonality{}; /* Seikaku index */
     int16_t realm1{}; /* First magic realm */
     int16_t realm2{}; /* Second magic realm */
 
@@ -40,7 +40,7 @@ struct birther {
 
 extern birther previous_char;
 
-struct player_type;
-bool ask_quick_start(player_type *player_ptr);
-void save_prev_data(player_type *player_ptr, birther *birther_ptr);
-void load_prev_data(player_type *player_ptr, bool swap);
+class PlayerType;
+bool ask_quick_start(PlayerType *player_ptr);
+void save_prev_data(PlayerType *player_ptr, birther *birther_ptr);
+void load_prev_data(PlayerType *player_ptr, bool swap);

@@ -25,13 +25,13 @@ int total_friends = 0;
  * @param now_riding trueなら下馬処理、falseならば騎乗処理
  * @return 可能ならばtrueを返す
  */
-bool can_player_ride_pet(player_type *player_ptr, grid_type *g_ptr, bool now_riding)
+bool can_player_ride_pet(PlayerType *player_ptr, grid_type *g_ptr, bool now_riding)
 {
     bool old_character_xtra = w_ptr->character_xtra;
     MONSTER_IDX old_riding = player_ptr->riding;
     bool old_riding_two_hands = player_ptr->riding_ryoute;
     bool old_old_riding_two_hands = player_ptr->old_riding_ryoute;
-    bool old_pf_two_hands = (player_ptr->pet_extra_flags & PF_TWO_HANDS) ? true : false;
+    bool old_pf_two_hands = any_bits(player_ptr->pet_extra_flags, PF_TWO_HANDS);
     w_ptr->character_xtra = true;
 
     if (now_riding)
@@ -65,7 +65,7 @@ bool can_player_ride_pet(player_type *player_ptr, grid_type *g_ptr, bool now_rid
  * @brief ペットの維持コスト計算
  * @return 維持コスト(%)
  */
-PERCENTAGE calculate_upkeep(player_type *player_ptr)
+PERCENTAGE calculate_upkeep(PlayerType *player_ptr)
 {
     bool has_a_unique = false;
     DEPTH total_friend_levels = 0;
@@ -86,7 +86,7 @@ PERCENTAGE calculate_upkeep(player_type *player_ptr)
             continue;
         }
 
-        if (player_ptr->pclass != CLASS_CAVALRY) {
+        if (player_ptr->pclass != PlayerClassType::CAVALRY) {
             total_friend_levels += (r_ptr->level + 5) * 10;
             continue;
         }

@@ -36,7 +36,7 @@
 #include "realm/realm-song-numbers.h"
 #include "spell-kind/spells-floor.h"
 #include "spell-realm/spells-song.h"
-#include "spell/spell-types.h"
+#include "effect/attribute-types.h"
 #include "status/action-setter.h"
 #include "system/floor-type-definition.h"
 #include "system/grid-type-definition.h"
@@ -59,7 +59,7 @@ POSITION temp2_y[MAX_SHORT];
  * @param y 対象となるマスのY座標
  * @param x 対象となるマスのX座標
  */
-static void discover_hidden_things(player_type *player_ptr, POSITION y, POSITION x)
+static void discover_hidden_things(PlayerType *player_ptr, POSITION y, POSITION x)
 {
     grid_type *g_ptr;
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
@@ -79,9 +79,9 @@ static void discover_hidden_things(player_type *player_ptr, POSITION y, POSITION
     for (const auto this_o_idx : g_ptr->o_idx_list) {
         object_type *o_ptr;
         o_ptr = &floor_ptr->o_list[this_o_idx];
-        if (o_ptr->tval != TV_CHEST)
+        if (o_ptr->tval != ItemKindType::CHEST)
             continue;
-        if (!chest_traps[o_ptr->pval])
+        if (chest_traps[o_ptr->pval].none())
             continue;
         if (!o_ptr->is_known()) {
             msg_print(_("箱に仕掛けられたトラップを発見した！", "You have discovered a trap on the chest!"));
@@ -95,7 +95,7 @@ static void discover_hidden_things(player_type *player_ptr, POSITION y, POSITION
  * @brief プレイヤーの探索処理判定
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void search(player_type *player_ptr)
+void search(PlayerType *player_ptr)
 {
     PERCENTAGE chance = player_ptr->skill_srh;
     if (player_ptr->blind || no_lite(player_ptr))
@@ -117,7 +117,7 @@ void search(player_type *player_ptr)
  * @param mpe_mode 移動オプションフラグ
  * @return プレイヤーが死亡やフロア離脱を行わず、実際に移動が可能ならばTRUEを返す。
  */
-bool move_player_effect(player_type *player_ptr, POSITION ny, POSITION nx, BIT_FLAGS mpe_mode)
+bool move_player_effect(PlayerType *player_ptr, POSITION ny, POSITION nx, BIT_FLAGS mpe_mode)
 {
     POSITION oy = player_ptr->y;
     POSITION ox = player_ptr->x;
@@ -164,13 +164,13 @@ bool move_player_effect(player_type *player_ptr, POSITION ny, POSITION nx, BIT_F
         if ((!player_ptr->blind && !no_lite(player_ptr)) || !is_trap(player_ptr, g_ptr->feat))
             g_ptr->info &= ~(CAVE_UNSAFE);
 
-        if (floor_ptr->dun_level && d_info[player_ptr->dungeon_idx].flags.has(DF::FORGET))
+        if (floor_ptr->dun_level && d_info[player_ptr->dungeon_idx].flags.has(DungeonFeatureType::FORGET))
             wiz_dark(player_ptr);
 
         if (mpe_mode & MPE_HANDLE_STUFF)
             handle_stuff(player_ptr);
 
-        if (player_ptr->pclass == CLASS_NINJA) {
+        if (player_ptr->pclass == PlayerClassType::NINJA) {
             if (g_ptr->info & (CAVE_GLOW))
                 set_superstealth(player_ptr, false);
             else if (player_ptr->cur_lite <= 0)
@@ -178,13 +178,13 @@ bool move_player_effect(player_type *player_ptr, POSITION ny, POSITION nx, BIT_F
         }
 
         if ((player_ptr->action == ACTION_HAYAGAKE)
-            && (f_ptr->flags.has_not(FF::PROJECT) || (!player_ptr->levitation && f_ptr->flags.has(FF::DEEP)))) {
+            && (f_ptr->flags.has_not(FloorFeatureType::PROJECT) || (!player_ptr->levitation && f_ptr->flags.has(FloorFeatureType::DEEP)))) {
             msg_print(_("ここでは素早く動けない。", "You cannot run in here."));
             set_action(player_ptr, ACTION_NONE);
         }
 
-        if (player_ptr->prace == player_race_type::MERFOLK) {
-            if (f_ptr->flags.has(FF::WATER) ^ of_ptr->flags.has(FF::WATER)) {
+        if (player_ptr->prace == PlayerRaceType::MERFOLK) {
+            if (f_ptr->flags.has(FloorFeatureType::WATER) ^ of_ptr->flags.has(FloorFeatureType::WATER)) {
                 player_ptr->update |= PU_BONUS;
                 update_creature(player_ptr);
             }
@@ -193,7 +193,7 @@ bool move_player_effect(player_type *player_ptr, POSITION ny, POSITION nx, BIT_F
 
     if (mpe_mode & MPE_ENERGY_USE) {
         if (music_singing(player_ptr, MUSIC_WALL)) {
-            (void)project(player_ptr, 0, 0, player_ptr->y, player_ptr->x, (60 + player_ptr->lev), GF_DISINTEGRATE, PROJECT_KILL | PROJECT_ITEM);
+            (void)project(player_ptr, 0, 0, player_ptr->y, player_ptr->x, (60 + player_ptr->lev), AttributeType::DISINTEGRATE, PROJECT_KILL | PROJECT_ITEM);
             if (!player_bold(player_ptr, ny, nx) || player_ptr->is_dead || player_ptr->leaving)
                 return false;
         }
@@ -206,7 +206,7 @@ bool move_player_effect(player_type *player_ptr, POSITION ny, POSITION nx, BIT_F
     }
 
     if (!(mpe_mode & MPE_DONT_PICKUP))
-        carry(player_ptr, (mpe_mode & MPE_DO_PICKUP) ? true : false);
+        carry(player_ptr, any_bits(mpe_mode, MPE_DO_PICKUP));
 
     if (!player_ptr->running) {
         // 自動拾い/自動破壊により床上のアイテムリストが変化した可能性があるので表示を更新
@@ -215,20 +215,20 @@ bool move_player_effect(player_type *player_ptr, POSITION ny, POSITION nx, BIT_F
     }
 
     PlayerEnergy energy(player_ptr);
-    if (f_ptr->flags.has(FF::STORE)) {
+    if (f_ptr->flags.has(FloorFeatureType::STORE)) {
         disturb(player_ptr, false, true);
         energy.reset_player_turn();
         command_new = SPECIAL_KEY_STORE;
-    } else if (f_ptr->flags.has(FF::BLDG)) {
+    } else if (f_ptr->flags.has(FloorFeatureType::BLDG)) {
         disturb(player_ptr, false, true);
         energy.reset_player_turn();
         command_new = SPECIAL_KEY_BUILDING;
-    } else if (f_ptr->flags.has(FF::QUEST_ENTER)) {
+    } else if (f_ptr->flags.has(FloorFeatureType::QUEST_ENTER)) {
         disturb(player_ptr, false, true);
         energy.reset_player_turn();
         command_new = SPECIAL_KEY_QUEST;
-    } else if (f_ptr->flags.has(FF::QUEST_EXIT)) {
-        if (quest[floor_ptr->inside_quest].type == QUEST_TYPE_FIND_EXIT)
+    } else if (f_ptr->flags.has(FloorFeatureType::QUEST_EXIT)) {
+        if (quest[floor_ptr->inside_quest].type == QuestKindType::FIND_EXIT)
             complete_quest(player_ptr, floor_ptr->inside_quest);
 
         leave_quest_check(player_ptr);
@@ -239,14 +239,14 @@ bool move_player_effect(player_type *player_ptr, POSITION ny, POSITION nx, BIT_F
         player_ptr->oldpx = 0;
         player_ptr->oldpy = 0;
         player_ptr->leaving = true;
-    } else if (f_ptr->flags.has(FF::HIT_TRAP) && !(mpe_mode & MPE_STAYING)) {
+    } else if (f_ptr->flags.has(FloorFeatureType::HIT_TRAP) && !(mpe_mode & MPE_STAYING)) {
         disturb(player_ptr, false, true);
-        if (g_ptr->mimic || f_ptr->flags.has(FF::SECRET)) {
+        if (g_ptr->mimic || f_ptr->flags.has(FloorFeatureType::SECRET)) {
             msg_print(_("トラップだ！", "You found a trap!"));
             disclose_grid(player_ptr, player_ptr->y, player_ptr->x);
         }
 
-        hit_trap(player_ptr, (mpe_mode & MPE_BREAK_TRAP) ? true : false);
+        hit_trap(player_ptr, any_bits(mpe_mode, MPE_BREAK_TRAP));
         if (!player_bold(player_ptr, ny, nx) || player_ptr->is_dead || player_ptr->leaving)
             return false;
     }
@@ -271,10 +271,10 @@ bool move_player_effect(player_type *player_ptr, POSITION ny, POSITION nx, BIT_F
  * @param feat 地形ID
  * @return トラップが自動的に無効ならばTRUEを返す
  */
-bool trap_can_be_ignored(player_type *player_ptr, FEAT_IDX feat)
+bool trap_can_be_ignored(PlayerType *player_ptr, FEAT_IDX feat)
 {
     feature_type *f_ptr = &f_info[feat];
-    if (f_ptr->flags.has_not(FF::TRAP))
+    if (f_ptr->flags.has_not(FloorFeatureType::TRAP))
         return true;
 
     switch (f_ptr->subtype) {

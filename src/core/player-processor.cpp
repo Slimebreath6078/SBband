@@ -37,6 +37,11 @@
 #include "monster/monster-update.h"
 #include "monster/monster-util.h"
 #include "mutation/mutation-investor-remover.h"
+#include "player-base/player-class.h"
+#include "player-info/bluemage-data-type.h"
+#include "player-info/mane-data-type.h"
+#include "player-info/samurai-data-type.h"
+#include "player-info/sniper-data-type.h"
 #include "player-status/player-energy.h"
 #include "player/attack-defense-types.h"
 #include "player/eldritch-horror.h"
@@ -51,6 +56,7 @@
 #include "system/monster-race-definition.h"
 #include "system/player-type-definition.h"
 #include "term/screen-processor.h"
+#include "timed-effect/player-cut.h"
 #include "timed-effect/player-stun.h"
 #include "timed-effect/timed-effects.h"
 #include "util/bit-flags-calculator.h"
@@ -61,7 +67,7 @@
 bool load = true;
 bool can_save = false;
 
-static void process_fishing(player_type *player_ptr)
+static void process_fishing(PlayerType *player_ptr)
 {
     term_xtra(TERM_XTRA_DELAY, 10);
     if (one_in_(1000)) {
@@ -93,7 +99,7 @@ static void process_fishing(player_type *player_ptr)
     }
 }
 
-bool continuous_action_running(player_type *player_ptr)
+bool continuous_action_running(PlayerType *player_ptr)
 {
     return player_ptr->running || travel.run || command_rep || (player_ptr->action == ACTION_REST) || (player_ptr->action == ACTION_FISH);
 }
@@ -105,7 +111,7 @@ bool continuous_action_running(player_type *player_ptr)
  * must come first just in case somebody manages to corrupt\n
  * the savefiles by clever use of menu commands or something.\n
  */
-void process_player(player_type *player_ptr)
+void process_player(PlayerType *player_ptr)
 {
     if (player_ptr->hack_mutation) {
         msg_print(_("何か変わった気がする！", "You feel different!"));
@@ -125,7 +131,7 @@ void process_player(player_type *player_ptr)
             if (!monster_is_valid(m_ptr))
                 continue;
 
-            m_ptr->mflag2.set({MFLAG2::MARK, MFLAG2::SHOW});
+            m_ptr->mflag2.set({MonsterConstantFlagType::MARK, MonsterConstantFlagType::SHOW});
             update_monster(player_ptr, m_idx, false);
         }
 
@@ -152,8 +158,9 @@ void process_player(player_type *player_ptr)
         } else if (player_ptr->resting == COMMAND_ARG_REST_UNTIL_DONE) {
             auto effects = player_ptr->effects();
             auto is_stunned = effects->stun()->is_stunned();
+            auto is_cut = effects->cut()->is_cut();
             if ((player_ptr->chp == player_ptr->mhp) && (player_ptr->csp >= player_ptr->msp) && !player_ptr->blind && !player_ptr->confused
-                && !player_ptr->poisoned && !player_ptr->afraid && !is_stunned && !player_ptr->cut && !player_ptr->slow
+                && !player_ptr->poisoned && !player_ptr->afraid && !is_stunned && !is_cut && !player_ptr->slow
                 && !player_ptr->paralyzed && !player_ptr->hallucinated && !player_ptr->word_recall && !player_ptr->alter_reality) {
                 set_action(player_ptr, ACTION_NONE);
             }
@@ -186,7 +193,7 @@ void process_player(player_type *player_ptr)
 
         if (monster_stunned_remaining(m_ptr)) {
             if (set_monster_stunned(player_ptr, player_ptr->riding,
-                    (randint0(r_ptr->level) < player_ptr->skill_exp[SKILL_RIDING]) ? 0 : (monster_stunned_remaining(m_ptr) - 1))) {
+                    (randint0(r_ptr->level) < player_ptr->skill_exp[PlayerSkillKindType::RIDING]) ? 0 : (monster_stunned_remaining(m_ptr) - 1))) {
                 GAME_TEXT m_name[MAX_NLEN];
                 monster_desc(player_ptr, m_name, m_ptr, 0);
                 msg_format(_("%^sを朦朧状態から立ち直らせた。", "%^s is no longer stunned."), m_name);
@@ -195,7 +202,7 @@ void process_player(player_type *player_ptr)
 
         if (monster_confused_remaining(m_ptr)) {
             if (set_monster_confused(player_ptr, player_ptr->riding,
-                    (randint0(r_ptr->level) < player_ptr->skill_exp[SKILL_RIDING]) ? 0 : (monster_confused_remaining(m_ptr) - 1))) {
+                    (randint0(r_ptr->level) < player_ptr->skill_exp[PlayerSkillKindType::RIDING]) ? 0 : (monster_confused_remaining(m_ptr) - 1))) {
                 GAME_TEXT m_name[MAX_NLEN];
                 monster_desc(player_ptr, m_name, m_ptr, 0);
                 msg_format(_("%^sを混乱状態から立ち直らせた。", "%^s is no longer confused."), m_name);
@@ -204,7 +211,7 @@ void process_player(player_type *player_ptr)
 
         if (monster_fear_remaining(m_ptr)) {
             if (set_monster_monfear(player_ptr, player_ptr->riding,
-                    (randint0(r_ptr->level) < player_ptr->skill_exp[SKILL_RIDING]) ? 0 : (monster_fear_remaining(m_ptr) - 1))) {
+                    (randint0(r_ptr->level) < player_ptr->skill_exp[PlayerSkillKindType::RIDING]) ? 0 : (monster_fear_remaining(m_ptr) - 1))) {
                 GAME_TEXT m_name[MAX_NLEN];
                 monster_desc(player_ptr, m_name, m_ptr, 0);
                 msg_format(_("%^sを恐怖から立ち直らせた。", "%^s is no longer afraid."), m_name);
@@ -218,7 +225,7 @@ void process_player(player_type *player_ptr)
     if (player_ptr->lightspeed)
         set_lightspeed(player_ptr, player_ptr->lightspeed - 1, true);
 
-    if ((player_ptr->pclass == CLASS_FORCETRAINER) && get_current_ki(player_ptr)) {
+    if ((player_ptr->pclass == PlayerClassType::FORCETRAINER) && get_current_ki(player_ptr)) {
         if (get_current_ki(player_ptr) < 40)
             set_current_ki(player_ptr, true, 0);
         else
@@ -241,14 +248,12 @@ void process_player(player_type *player_ptr)
         player_ptr->redraw |= PR_MANA;
     }
 
-    if (player_ptr->special_defense & KATA_MASK) {
-        if (player_ptr->special_defense & KATA_MUSOU) {
-            if (player_ptr->csp < 3) {
-                set_action(player_ptr, ACTION_NONE);
-            } else {
-                player_ptr->csp -= 2;
-                player_ptr->redraw |= (PR_MANA);
-            }
+    if (PlayerClass(player_ptr).samurai_stance_is(SamuraiStanceType::MUSOU)) {
+        if (player_ptr->csp < 3) {
+            set_action(player_ptr, ACTION_NONE);
+        } else {
+            player_ptr->csp -= 2;
+            player_ptr->redraw |= (PR_MANA);
         }
     }
 
@@ -272,12 +277,12 @@ void process_player(player_type *player_ptr)
         PlayerEnergy energy(player_ptr);
         energy.reset_player_turn();
         auto effects = player_ptr->effects();
-        auto is_unconscious = effects->stun()->get_rank() == PlayerStunRank::UNCONSCIOUS;
+        auto is_knocked_out = effects->stun()->is_knocked_out();
         if (player_ptr->phase_out) {
             move_cursor_relative(player_ptr->y, player_ptr->x);
             command_cmd = SPECIAL_KEY_BUILDING;
             process_command(player_ptr);
-        } else if ((player_ptr->paralyzed || is_unconscious) && !cheat_immortal) {
+        } else if ((player_ptr->paralyzed || is_knocked_out) && !cheat_immortal) {
             energy.set_player_turn_energy(100);
         } else if (player_ptr->action == ACTION_REST) {
             if (player_ptr->resting > 0) {
@@ -339,22 +344,22 @@ void process_player(player_type *player_ptr)
                 }
 
                 // 出現して即魔法を使わないようにするフラグを落とす処理
-                if (m_ptr->mflag.has(MFLAG::PREVENT_MAGIC)) {
-                    m_ptr->mflag.reset(MFLAG::PREVENT_MAGIC);
+                if (m_ptr->mflag.has(MonsterTemporaryFlagType::PREVENT_MAGIC)) {
+                    m_ptr->mflag.reset(MonsterTemporaryFlagType::PREVENT_MAGIC);
                 }
 
-                if (m_ptr->mflag.has(MFLAG::SANITY_BLAST)) {
-                    m_ptr->mflag.reset(MFLAG::SANITY_BLAST);
+                if (m_ptr->mflag.has(MonsterTemporaryFlagType::SANITY_BLAST)) {
+                    m_ptr->mflag.reset(MonsterTemporaryFlagType::SANITY_BLAST);
                     sanity_blast(player_ptr, m_ptr, false);
                 }
 
                 // 感知中のモンスターのフラグを落とす処理
                 // 感知したターンはMFLAG2_SHOWを落とし、次のターンに感知中フラグのMFLAG2_MARKを落とす
-                if (m_ptr->mflag2.has(MFLAG2::MARK)) {
-                    if (m_ptr->mflag2.has(MFLAG2::SHOW)) {
-                        m_ptr->mflag2.reset(MFLAG2::SHOW);
+                if (m_ptr->mflag2.has(MonsterConstantFlagType::MARK)) {
+                    if (m_ptr->mflag2.has(MonsterConstantFlagType::SHOW)) {
+                        m_ptr->mflag2.reset(MonsterConstantFlagType::SHOW);
                     } else {
-                        m_ptr->mflag2.reset(MFLAG2::MARK);
+                        m_ptr->mflag2.reset(MonsterConstantFlagType::MARK);
                         m_ptr->ml = false;
                         update_monster(player_ptr, m_idx, false);
                         if (player_ptr->health_who == m_idx)
@@ -367,21 +372,19 @@ void process_player(player_type *player_ptr)
                 }
             }
 
-            if (player_ptr->pclass == CLASS_IMITATOR) {
-                if (player_ptr->mane_num > (player_ptr->lev > 44 ? 3 : player_ptr->lev > 29 ? 2 : 1)) {
-                    player_ptr->mane_num--;
-                    for (int j = 0; j < player_ptr->mane_num; j++) {
-                        player_ptr->mane_spell[j] = player_ptr->mane_spell[j + 1];
-                        player_ptr->mane_dam[j] = player_ptr->mane_dam[j + 1];
-                    }
+            if (player_ptr->pclass == PlayerClassType::IMITATOR) {
+                auto mane_data = PlayerClass(player_ptr).get_specific_data<mane_data_type>();
+                if (static_cast<int>(mane_data->mane_list.size()) > (player_ptr->lev > 44 ? 3 : player_ptr->lev > 29 ? 2 : 1)) {
+                    mane_data->mane_list.pop_front();
                 }
 
-                player_ptr->new_mane = false;
+                mane_data->new_mane = false;
                 player_ptr->redraw |= (PR_IMITATION);
             }
 
             if (player_ptr->action == ACTION_LEARN) {
-                player_ptr->new_mane = false;
+                auto mane_data = PlayerClass(player_ptr).get_specific_data<bluemage_data_type>();
+                mane_data->new_magic_learned = false;
                 player_ptr->redraw |= (PR_STATE);
             }
 
@@ -404,7 +407,8 @@ void process_player(player_type *player_ptr)
             break;
         }
 
-        if (player_ptr->energy_use && player_ptr->reset_concent)
+        auto sniper_data = PlayerClass(player_ptr).get_specific_data<sniper_data_type>();
+        if (player_ptr->energy_use && sniper_data && sniper_data->reset_concent)
             reset_concentration(player_ptr, true);
 
         if (player_ptr->leaving)
@@ -417,7 +421,7 @@ void process_player(player_type *player_ptr)
 /*!
  * @brief プレイヤーの行動エネルギーが充填される（＝プレイヤーのターンが回る）毎に行われる処理  / process the effects per 100 energy at player speed.
  */
-void process_upkeep_with_speed(player_type *player_ptr)
+void process_upkeep_with_speed(PlayerType *player_ptr)
 {
     if (!load && player_ptr->enchant_energy_need > 0 && !player_ptr->leaving) {
         player_ptr->enchant_energy_need -= SPEED_TO_ENERGY(player_ptr->pspeed);

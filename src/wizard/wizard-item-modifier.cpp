@@ -99,14 +99,14 @@ T clamp_cast(int val)
 }
 
 void wiz_restore_aware_flag_of_fixed_arfifact(ARTIFACT_IDX a_idx, bool aware = false);
-void wiz_modify_item_activation(player_type *player_ptr);
-void wiz_identify_full_inventory(player_type *player_ptr);
+void wiz_modify_item_activation(PlayerType *player_ptr);
+void wiz_identify_full_inventory(PlayerType *player_ptr);
 
 /*!
     * @brief ゲーム設定コマンドの入力を受け付ける
     * @param player_ptr プレイヤーの情報へのポインタ
        */
-void wizard_item_modifier(player_type *player_ptr)
+void wizard_item_modifier(PlayerType *player_ptr)
 {
     screen_save();
     display_wizard_sub_menu();
@@ -174,7 +174,7 @@ void wiz_restore_aware_flag_of_fixed_arfifact(ARTIFACT_IDX a_idx, bool aware)
 {
     if (a_idx <= 0) {
         char tmp[80] = "";
-        sprintf(tmp, "Artifact ID (1-%d): ", max_a_idx - 1);
+        sprintf(tmp, "Artifact ID (1-%d): ", static_cast<int>(a_info.size()) - 1);
         char tmp_val[10] = "";
         if (!get_string(tmp, tmp_val, 3))
             return;
@@ -182,8 +182,8 @@ void wiz_restore_aware_flag_of_fixed_arfifact(ARTIFACT_IDX a_idx, bool aware)
         a_idx = (ARTIFACT_IDX)atoi(tmp_val);
     }
 
-    if (a_idx <= 0 || a_idx >= max_a_idx) {
-        msg_format(_("番号は1から%dの間で指定して下さい。", "ID must be between 1 to %d."), max_a_idx - 1);
+    if (a_idx <= 0 || a_idx >= static_cast<ARTIFACT_IDX>(a_info.size())) {
+        msg_format(_("番号は1から%dの間で指定して下さい。", "ID must be between 1 to %d."), a_info.size() - 1);
         return;
     }
 
@@ -196,38 +196,31 @@ void wiz_restore_aware_flag_of_fixed_arfifact(ARTIFACT_IDX a_idx, bool aware)
  * @brief オブジェクトに発動を追加する/変更する
  * @param catser_ptr プレイヤー情報への参照ポインタ
  */
-void wiz_modify_item_activation(player_type *player_ptr)
+void wiz_modify_item_activation(PlayerType *player_ptr)
 {
-    concptr q = "Which object? ";
-    concptr s = "Nothing to do with.";
+    auto q = _("どのアイテムの発動を変更しますか？ ", "Which object? ");
+    auto s = _("発動を変更するアイテムがない。", "Nothing to do with.");
     OBJECT_IDX item;
     auto *o_ptr = choose_object(player_ptr, &item, q, s, USE_EQUIP | USE_INVEN | USE_FLOOR | IGNORE_BOTHHAND_SLOT);
-    if (!o_ptr)
-        return;
-
-    XTRA16 act_idx;
-    char tmp[80] = "";
-    sprintf(tmp, "Artifact ID (1-%d): ", ACT_MAX);
-    char tmp_val[10] = "";
-    if (!get_string(tmp, tmp_val, 3))
-        return;
-
-    act_idx = (XTRA16)atoi(tmp_val);
-
-    if (act_idx <= 0 || act_idx > ACT_MAX) {
-        msg_format(_("番号は1から%dの間で指定して下さい。", "ID must be between 1 to %d."), ACT_MAX - 1);
+    if (!o_ptr) {
         return;
     }
 
+    int val;
+    if (!get_value("Activation ID", enum2i(RandomArtActType::NONE), enum2i(RandomArtActType::MAX) - 1, &val)) {
+        return;
+    }
+
+    auto act_idx = i2enum<RandomArtActType>(val);
     o_ptr->art_flags.set(TR_ACTIVATE);
-    o_ptr->xtra2 = act_idx;
+    o_ptr->activation_id = act_idx;
 }
 
 /*!
  * @brief インベントリ内のアイテムを全て*鑑定*済みにする
  * @param catser_ptr プレイヤー情報への参照ポインタ
  */
-void wiz_identify_full_inventory(player_type *player_ptr)
+void wiz_identify_full_inventory(PlayerType *player_ptr)
 {
     for (int i = 0; i < INVEN_TOTAL; i++) {
         object_type *o_ptr = &player_ptr->inventory_list[i];
@@ -254,14 +247,11 @@ void wiz_identify_full_inventory(player_type *player_ptr)
  * @param row 表示列
  * @param col 表示行
  */
-static void prt_alloc(tval_type tval, OBJECT_SUBTYPE_VALUE sval, TERM_LEN row, TERM_LEN col)
+static void prt_alloc(ItemKindType tval, OBJECT_SUBTYPE_VALUE sval, TERM_LEN row, TERM_LEN col)
 {
-    uint32_t rarity[K_MAX_DEPTH];
-    (void)C_WIPE(rarity, K_MAX_DEPTH, uint32_t);
-    uint32_t total[K_MAX_DEPTH];
-    (void)C_WIPE(total, K_MAX_DEPTH, uint32_t);
-    int32_t display[22];
-    (void)C_WIPE(display, 22, int32_t);
+    uint32_t rarity[K_MAX_DEPTH] = {};
+    uint32_t total[K_MAX_DEPTH] = {};
+    int32_t display[22] = {};
 
     int home = 0;
     for (int i = 0; i < K_MAX_DEPTH; i++) {
@@ -330,7 +320,7 @@ static void prt_binary(BIT_FLAGS flags, const int row, int col)
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param o_ptr 詳細を表示するアイテム情報の参照ポインタ
  */
-static void wiz_display_item(player_type *player_ptr, object_type *o_ptr)
+static void wiz_display_item(PlayerType *player_ptr, object_type *o_ptr)
 {
     auto flgs = object_flags(o_ptr);
     auto get_seq_32bits = [](const TrFlags &flgs, uint start) {
@@ -354,7 +344,7 @@ static void wiz_display_item(player_type *player_ptr, object_type *o_ptr)
     prt(format("number = %-3d  wgt = %-6d  ac = %-5d    damage = %dd%d", o_ptr->number, o_ptr->weight, o_ptr->ac, o_ptr->dd, o_ptr->ds), 5, j);
     prt(format("pval = %-5d  toac = %-5d  tohit = %-4d  todam = %-4d", o_ptr->pval, o_ptr->to_a, o_ptr->to_h, o_ptr->to_d), 6, j);
     prt(format("name1 = %-4d  name2 = %-4d  cost = %ld", o_ptr->name1, o_ptr->name2, (long)object_value_real(o_ptr)), 7, j);
-    prt(format("ident = %04x  xtra1 = %-4d  xtra2 = %-4d  timeout = %-d", o_ptr->ident, o_ptr->xtra1, o_ptr->xtra2, o_ptr->timeout), 8, j);
+    prt(format("ident = %04x  xtra1 = %-4d  activation_id = %-4d  timeout = %-d", o_ptr->ident, o_ptr->xtra1, o_ptr->activation_id, o_ptr->timeout), 8, j);
     prt(format("xtra3 = %-4d  xtra4 = %-4d  xtra5 = %-4d  cursed  = %-d", o_ptr->xtra3, o_ptr->xtra4, o_ptr->xtra5, o_ptr->curse_flags), 9, j);
 
     prt("+------------FLAGS1------------+", 10, j);
@@ -401,7 +391,7 @@ static void wiz_display_item(player_type *player_ptr, object_type *o_ptr)
  * counter flags to prevent weirdness.  We use the items to collect
  * statistics on item creation relative to the initial item.
  */
-static void wiz_statistics(player_type *player_ptr, object_type *o_ptr)
+static void wiz_statistics(PlayerType *player_ptr, object_type *o_ptr)
 {
     concptr q = "Rolls: %ld  Correct: %ld  Matches: %ld  Better: %ld  Worse: %ld  Other: %ld";
     concptr p = "Enter number of items to roll: ";
@@ -437,7 +427,7 @@ static void wiz_statistics(player_type *player_ptr, object_type *o_ptr)
         sprintf(tmp_val, "%ld", (long int)test_roll);
         if (get_string(p, tmp_val, 10))
             test_roll = atol(tmp_val);
-        test_roll = MAX(1, test_roll);
+        test_roll = std::max<uint>(1, test_roll);
         msg_format("Creating a lot of %s items. Base level = %d.", quality, player_ptr->current_floor_ptr->dun_level);
         msg_print(nullptr);
 
@@ -490,7 +480,7 @@ static void wiz_statistics(player_type *player_ptr, object_type *o_ptr)
  * Apply magic to an item or turn it into an artifact. -Bernd-
  * @param o_ptr 再生成の対象となるアイテム情報の参照ポインタ
  */
-static void wiz_reroll_item(player_type *player_ptr, object_type *o_ptr)
+static void wiz_reroll_item(PlayerType *player_ptr, object_type *o_ptr)
 {
     if (o_ptr->is_artifact())
         return;
@@ -580,7 +570,7 @@ static void wiz_reroll_item(player_type *player_ptr, object_type *o_ptr)
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param o_ptr 調整するアイテムの参照ポインタ
  */
-static void wiz_tweak_item(player_type *player_ptr, object_type *o_ptr)
+static void wiz_tweak_item(PlayerType *player_ptr, object_type *o_ptr)
 {
     if (o_ptr->is_artifact())
         return;
@@ -641,7 +631,7 @@ static void wiz_quantity_item(object_type *o_ptr)
         o_ptr->number = (byte)tmp_int;
     }
 
-    if (o_ptr->tval == TV_ROD)
+    if (o_ptr->tval == ItemKindType::ROD)
         o_ptr->pval = o_ptr->pval * o_ptr->number / tmp_qnt;
 }
 
@@ -654,7 +644,7 @@ static void wiz_quantity_item(object_type *o_ptr)
  *   - Change properties (via wiz_tweak_item)<br>
  *   - Change the number of items (via wiz_quantity_item)<br>
  */
-void wiz_modify_item(player_type *player_ptr)
+void wiz_modify_item(PlayerType *player_ptr)
 {
     concptr q = "Play with which object? ";
     concptr s = "You have nothing to play with.";
@@ -716,14 +706,14 @@ void wiz_modify_item(player_type *player_ptr)
 /*!
  * @brief オブジェクトの装備スロットがエゴが有効なスロットかどうか判定
  */
-static int is_slot_able_to_be_ego(player_type *player_ptr, object_type *o_ptr)
+static int is_slot_able_to_be_ego(PlayerType *player_ptr, object_type *o_ptr)
 {
     int slot = wield_slot(player_ptr, o_ptr);
 
     if (slot > -1)
         return slot;
 
-    if ((o_ptr->tval == TV_SHOT) || (o_ptr->tval == TV_ARROW) || (o_ptr->tval == TV_BOLT))
+    if ((o_ptr->tval == ItemKindType::SHOT) || (o_ptr->tval == ItemKindType::ARROW) || (o_ptr->tval == ItemKindType::BOLT))
         return (INVEN_AMMO);
 
     return (-1);
@@ -747,7 +737,7 @@ static void wishing_puff_of_smoke(void)
  * @param confirm 願わない場合に確認するかどうか
  * @return 願った結果
  */
-WishResult do_cmd_wishing(player_type *player_ptr, int prob, bool allow_art, bool allow_ego, bool confirm)
+WishResultType do_cmd_wishing(PlayerType *player_ptr, int prob, bool allow_art, bool allow_ego, bool confirm)
 {
     concptr fixed_str[] = {
 #ifdef JP
@@ -776,9 +766,9 @@ WishResult do_cmd_wishing(player_type *player_ptr, int prob, bool allow_art, boo
     bool wish_randart = false;
     bool wish_ego = false;
     bool exam_base = true;
-    bool ok_art = (randint0(100) < prob) ? true : false;
-    bool ok_ego = (randint0(100) < 50 + prob) ? true : false;
-    bool must = (prob < 0) ? true : false;
+    bool ok_art = randint0(100) < prob;
+    bool ok_ego = randint0(100) < 50 + prob;
+    bool must = prob < 0;
     bool blessed = false;
     bool fixed = true;
 
@@ -789,7 +779,7 @@ WishResult do_cmd_wishing(player_type *player_ptr, int prob, bool allow_art, boo
             if (!get_check(_("何も願いません。本当によろしいですか？", "Do you wish nothing, really? ")))
                 continue;
         }
-        return WishResult::NOTHING;
+        return WishResultType::NOTHING;
     }
 
 #ifndef JP
@@ -840,12 +830,12 @@ WishResult do_cmd_wishing(player_type *player_ptr, int prob, bool allow_art, boo
 
     if (strlen(str) < 1) {
         msg_print(_("名前がない！", "What?"));
-        return WishResult::NOTHING;
+        return WishResultType::NOTHING;
     }
 
     if (!allow_art && wish_art) {
         msg_print(_("アーティファクトは願えない!", "You can not wish artifacts!"));
-        return WishResult::NOTHING;
+        return WishResultType::NOTHING;
     }
 
     if (cheat_xtra)
@@ -891,7 +881,7 @@ WishResult do_cmd_wishing(player_type *player_ptr, int prob, bool allow_art, boo
                 str_tolower(o_name);
 #endif
                 if (cheat_xtra)
-                    msg_format("mathcing ego no.%d %s...", e_ref.idx, o_name);
+                    msg_format("matching ego no.%d %s...", e_ref.idx, o_name);
 
                 if (_(!strncmp(str, o_name, strlen(o_name)), !strrncmp(str, o_name, strlen(o_name)))) {
                     if (is_slot_able_to_be_ego(player_ptr, o_ptr) != e_ref.slot)
@@ -976,26 +966,26 @@ WishResult do_cmd_wishing(player_type *player_ptr, int prob, bool allow_art, boo
         }
     }
 
-    if (w_ptr->wizard && (a_ids.size() > 1 || e_ids.size() > 1)) {
+    if ((a_ids.size() > 1) || (e_ids.size() > 1)) {
         msg_print(_("候補が多すぎる！", "Too many matches!"));
-        return WishResult::FAIL;
+        return WishResultType::FAIL;
     }
     
     if (a_ids.size() == 1) {
         ARTIFACT_IDX a_idx = a_ids.back();
         if (must || (ok_art && !a_info[a_idx].cur_num)) {
             create_named_art(player_ptr, a_idx, player_ptr->y, player_ptr->x);
-            if (!w_ptr->wizard)
-                a_info[a_idx].cur_num = 1;
-        }
-        else
+            a_info[a_idx].cur_num = 1;
+        } else {
             wishing_puff_of_smoke();
-        return WishResult::ARTIFACT;
+        }
+
+        return WishResultType::ARTIFACT;
     }
     
     if (!allow_ego && (wish_ego || e_ids.size() > 0)) {
         msg_print(_("エゴアイテムは願えない！", "Can not wish ego item."));
-        return WishResult::NOTHING;
+        return WishResultType::NOTHING;
     }
     
     if (k_ids.size() == 1) {
@@ -1004,7 +994,7 @@ WishResult do_cmd_wishing(player_type *player_ptr, int prob, bool allow_art, boo
 
         artifact_type *a_ptr;
         ARTIFACT_IDX a_idx = 0;
-        if (k_ptr->gen_flags.has(TRG::INSTA_ART)) {
+        if (k_ptr->gen_flags.has(ItemGenerationTraitType::INSTA_ART)) {
             for (const auto &a_ref : a_info) {
                 if (a_ref.idx == 0 || a_ref.tval != k_ptr->tval || a_ref.sval != k_ptr->sval)
                     continue;
@@ -1017,12 +1007,12 @@ WishResult do_cmd_wishing(player_type *player_ptr, int prob, bool allow_art, boo
             a_ptr = &a_info[a_idx];
             if (must || (ok_art && !a_ptr->cur_num)) {
                 create_named_art(player_ptr, a_idx, player_ptr->y, player_ptr->x);
-                if (!w_ptr->wizard)
-                    a_info[a_idx].cur_num = 1;
-            }
-            else
+                a_info[a_idx].cur_num = 1;    
+            } else {
                 wishing_puff_of_smoke();
-            return WishResult::ARTIFACT;
+            }
+
+            return WishResultType::ARTIFACT;
         }
 
         if (wish_randart) {
@@ -1037,10 +1027,10 @@ WishResult do_cmd_wishing(player_type *player_ptr, int prob, bool allow_art, boo
             } else {
                 wishing_puff_of_smoke();
             }
-            return WishResult::ARTIFACT;
+            return WishResultType::ARTIFACT;
         }
 
-        WishResult res = WishResult::NOTHING;
+        WishResultType res = WishResultType::NOTHING;
         if (allow_ego && (wish_ego || e_ids.size() > 0)) {
             if (must || ok_ego) {
                 if (e_ids.size() > 0) {
@@ -1074,14 +1064,14 @@ WishResult do_cmd_wishing(player_type *player_ptr, int prob, bool allow_art, boo
 
                     if (i == max_roll) {
                         msg_print(_("失敗！もう一度願ってみてください。", "Failed! Try again."));
-                        return WishResult::FAIL;
+                        return WishResultType::FAIL;
                     }
                 }
             } else {
                 wishing_puff_of_smoke();
             }
             
-            res = WishResult::EGO;
+            res = WishResultType::EGO;
         } else {
             for (int i = 0; i < 100; i++) {
                 o_ptr->prep(k_idx);
@@ -1089,7 +1079,7 @@ WishResult do_cmd_wishing(player_type *player_ptr, int prob, bool allow_art, boo
                 if (!o_ptr->is_cursed())
                     break;
             }
-            res = WishResult::NORMAL;
+            res = WishResultType::NORMAL;
         }
 
         if (blessed && wield_slot(player_ptr, o_ptr) != -1)
@@ -1106,5 +1096,5 @@ WishResult do_cmd_wishing(player_type *player_ptr, int prob, bool allow_art, boo
     }
 
     msg_print(_("うーん、そんなものは存在しないようだ。", "Ummmm, that is not existing..."));
-    return WishResult::FAIL;
+    return WishResultType::FAIL;
 }

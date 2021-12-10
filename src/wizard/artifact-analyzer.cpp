@@ -1,6 +1,7 @@
 ﻿#include "wizard/artifact-analyzer.h"
 #include "flavor/flavor-describer.h"
 #include "flavor/object-flavor-types.h"
+#include "locale/japanese.h"
 #include "object-enchant/object-ego.h"
 #include "object-enchant/trc-types.h"
 #include "object-enchant/trg-types.h"
@@ -9,6 +10,7 @@
 #include "system/artifact-type-definition.h"
 #include "system/object-type-definition.h"
 #include "util/bit-flags-calculator.h"
+#include "util/enum-range.h"
 #include "util/quarks.h"
 #include "wizard/spoiler-util.h"
 
@@ -46,7 +48,7 @@ static concptr *spoiler_flag_aux(const TrFlags &art_flags, const flag_desc *flag
  * @param o_ptr 記述を得たいオブジェクトの参照ポインタ
  * @param desc_ptr 記述内容を返すための文字列参照ポインタ
  */
-static void analyze_general(player_type *player_ptr, object_type *o_ptr, char *desc_ptr)
+static void analyze_general(PlayerType *player_ptr, object_type *o_ptr, char *desc_ptr)
 {
     describe_flavor(player_ptr, desc_ptr, o_ptr, OD_NAME_AND_ENCHANT | OD_STORE | OD_DEBUG);
 }
@@ -69,11 +71,9 @@ static void analyze_pval(object_type *o_ptr, pval_info_type *pi_ptr)
     auto flgs = object_flags(o_ptr);
     affects_list = pi_ptr->pval_affects;
     sprintf(pi_ptr->pval_desc, "%s%d", o_ptr->pval >= 0 ? "+" : "", o_ptr->pval);
-    if (flgs.has(TR_STR) && flgs.has(TR_INT) && flgs.has(TR_WIS) && flgs.has(TR_DEX) && flgs.has(TR_CON)
-        && flgs.has(TR_CHR)) {
+    if (flgs.has_all_of(EnumRange(TR_STR, TR_CHR))) {
         *affects_list++ = _("全能力", "All stats");
-    } else if (flgs.has(TR_STR) || flgs.has(TR_INT) || flgs.has(TR_WIS) || flgs.has(TR_DEX) || flgs.has(TR_CON)
-        || flgs.has(TR_CHR)) {
+    } else if (flgs.has_any_of(EnumRange(TR_STR, TR_CHR))) {
         affects_list = spoiler_flag_aux(flgs, stat_flags_desc, affects_list, N_ELEMENTS(stat_flags_desc));
     }
 
@@ -134,6 +134,19 @@ static void analyze_immune(object_type *o_ptr, concptr *immune_list)
 }
 
 /*!
+ * @brief アーティファクトの弱点付与を構造体に収める /
+ * Note the immunities granted by an object
+ * @param o_ptr オブジェクト構造体の参照ポインタ
+ * @param immune_list 弱点構造体の参照ポインタ
+ */
+static void analyze_vulnerable(object_type *o_ptr, concptr *vulnerable_list)
+{
+    auto flgs = object_flags(o_ptr);
+    vulnerable_list = spoiler_flag_aux(flgs, vulnerable_flags_desc, vulnerable_list, N_ELEMENTS(vulnerable_flags_desc));
+    *vulnerable_list = nullptr;
+}
+
+/*!
  * @brief アーティファクトの維持特性を構造体に収める /
  * Note which stats an object sustains
  * @param o_ptr オブジェクト構造体の参照ポインタ
@@ -142,11 +155,9 @@ static void analyze_immune(object_type *o_ptr, concptr *immune_list)
 static void analyze_sustains(object_type *o_ptr, concptr *sustain_list)
 {
     auto flgs = object_flags(o_ptr);
-    if (flgs.has(TR_SUST_STR) && flgs.has(TR_SUST_INT) && flgs.has(TR_SUST_WIS) && flgs.has(TR_SUST_DEX)
-        && flgs.has(TR_SUST_CON) && flgs.has(TR_SUST_CHR)) {
+    if (flgs.has_all_of(EnumRange(TR_SUST_STR, TR_SUST_CHR))) {
         *sustain_list++ = _("全能力", "All stats");
-    } else if (flgs.has(TR_SUST_STR) || flgs.has(TR_SUST_INT) || flgs.has(TR_SUST_WIS) || flgs.has(TR_SUST_DEX)
-        || flgs.has(TR_SUST_CON) || flgs.has(TR_SUST_CHR)) {
+    } else if (flgs.has_any_of(EnumRange(TR_SUST_STR, TR_SUST_CHR))) {
         sustain_list = spoiler_flag_aux(flgs, sustain_flags_desc, sustain_list, N_ELEMENTS(sustain_flags_desc));
     }
 
@@ -206,11 +217,11 @@ static void analyze_misc_magic(object_type *o_ptr, concptr *misc_list)
     if (flgs.has(TR_TY_CURSE))
         *misc_list++ = _("太古の怨念", "Ancient Curse");
 
-    if (o_ptr->curse_flags.has(TRC::PERMA_CURSE))
+    if (o_ptr->curse_flags.has(CurseTraitType::PERMA_CURSE))
         *misc_list++ = _("永遠の呪い", "Permanently Cursed");
-    else if (o_ptr->curse_flags.has(TRC::HEAVY_CURSE))
+    else if (o_ptr->curse_flags.has(CurseTraitType::HEAVY_CURSE))
         *misc_list++ = _("強力な呪い", "Heavily Cursed");
-    else if (o_ptr->curse_flags.has(TRC::CURSED))
+    else if (o_ptr->curse_flags.has(CurseTraitType::CURSED))
         *misc_list++ = _("呪い", "Cursed");
 
     if (flgs.has(TR_ADD_L_CURSE))
@@ -233,20 +244,20 @@ static void analyze_addition(object_type *o_ptr, char *addition)
     artifact_type *a_ptr = &a_info[o_ptr->name1];
     strcpy(addition, "");
 
-    if (a_ptr->gen_flags.has_all_of({ TRG::XTRA_POWER, TRG::XTRA_H_RES })) {
+    if (a_ptr->gen_flags.has_all_of({ ItemGenerationTraitType::XTRA_POWER, ItemGenerationTraitType::XTRA_H_RES })) {
         strcat(addition, _("能力and耐性", "Ability and Resistance"));
-    } else if (a_ptr->gen_flags.has(TRG::XTRA_POWER)) {
+    } else if (a_ptr->gen_flags.has(ItemGenerationTraitType::XTRA_POWER)) {
         strcat(addition, _("能力", "Ability"));
-        if (a_ptr->gen_flags.has(TRG::XTRA_RES_OR_POWER))
+        if (a_ptr->gen_flags.has(ItemGenerationTraitType::XTRA_RES_OR_POWER))
             strcat(addition, _("(1/2でand耐性)", "(plus Resistance about 1/2)"));
-    } else if (a_ptr->gen_flags.has(TRG::XTRA_H_RES)) {
+    } else if (a_ptr->gen_flags.has(ItemGenerationTraitType::XTRA_H_RES)) {
         strcat(addition, _("耐性", "Resistance"));
-        if (a_ptr->gen_flags.has(TRG::XTRA_RES_OR_POWER))
+        if (a_ptr->gen_flags.has(ItemGenerationTraitType::XTRA_RES_OR_POWER))
             strcat(addition, _("(1/2でand能力)", "(plus Ability about 1/2)"));
-    } else if (a_ptr->gen_flags.has(TRG::XTRA_RES_OR_POWER))
+    } else if (a_ptr->gen_flags.has(ItemGenerationTraitType::XTRA_RES_OR_POWER))
         strcat(addition, _("能力or耐性", "Ability or Resistance"));
 
-    if (a_ptr->gen_flags.has(TRG::XTRA_DICE)) {
+    if (a_ptr->gen_flags.has(ItemGenerationTraitType::XTRA_DICE)) {
         if (strlen(addition) > 0)
             strcat(addition, _("、", ", "));
         strcat(addition, _("ダイス数", "Dice number"));
@@ -264,7 +275,7 @@ static void analyze_misc(object_type *o_ptr, char *misc_desc)
 {
     artifact_type *a_ptr = &a_info[o_ptr->name1];
     sprintf(misc_desc, _("レベル %d, 希少度 %u, %d.%d kg, ＄%ld", "Level %d, Rarity %u, %d.%d lbs, %ld Gold"), (int)a_ptr->level, a_ptr->rarity,
-        _(lbtokg1(a_ptr->weight), a_ptr->weight / 10), _(lbtokg2(a_ptr->weight), a_ptr->weight % 10), (long int)a_ptr->cost);
+        _(lb_to_kg_integer(a_ptr->weight), a_ptr->weight / 10), _(lb_to_kg_fraction(a_ptr->weight), a_ptr->weight % 10), (long int)a_ptr->cost);
 }
 
 /*!
@@ -275,7 +286,7 @@ static void analyze_misc(object_type *o_ptr, char *misc_desc)
  * @param o_ptr オブジェクト構造体の参照ポインタ
  * @param desc_ptr 全アーティファクト情報を収める文字列参照ポインタ
  */
-void object_analyze(player_type *player_ptr, object_type *o_ptr, obj_desc_list *desc_ptr)
+void object_analyze(PlayerType *player_ptr, object_type *o_ptr, obj_desc_list *desc_ptr)
 {
     analyze_general(player_ptr, o_ptr, desc_ptr->description);
     analyze_pval(o_ptr, &desc_ptr->pval_info);
@@ -283,6 +294,7 @@ void object_analyze(player_type *player_ptr, object_type *o_ptr, obj_desc_list *
     analyze_slay(o_ptr, desc_ptr->slays);
     analyze_immune(o_ptr, desc_ptr->immunities);
     analyze_resist(o_ptr, desc_ptr->resistances);
+    analyze_vulnerable(o_ptr, desc_ptr->vulnerables);
     analyze_sustains(o_ptr, desc_ptr->sustains);
     analyze_misc_magic(o_ptr, desc_ptr->misc_magic);
     analyze_addition(o_ptr, desc_ptr->addition);
@@ -297,7 +309,7 @@ void object_analyze(player_type *player_ptr, object_type *o_ptr, obj_desc_list *
  * @param o_ptr ランダムアーティファクトのオブジェクト構造体参照ポインタ
  * @param desc_ptr 記述内容を収める構造体参照ポインタ
  */
-void random_artifact_analyze(player_type *player_ptr, object_type *o_ptr, obj_desc_list *desc_ptr)
+void random_artifact_analyze(PlayerType *player_ptr, object_type *o_ptr, obj_desc_list *desc_ptr)
 {
     analyze_general(player_ptr, o_ptr, desc_ptr->description);
     analyze_pval(o_ptr, &desc_ptr->pval_info);
@@ -305,9 +317,10 @@ void random_artifact_analyze(player_type *player_ptr, object_type *o_ptr, obj_de
     analyze_slay(o_ptr, desc_ptr->slays);
     analyze_immune(o_ptr, desc_ptr->immunities);
     analyze_resist(o_ptr, desc_ptr->resistances);
+    analyze_vulnerable(o_ptr, desc_ptr->vulnerables);
     analyze_sustains(o_ptr, desc_ptr->sustains);
     analyze_misc_magic(o_ptr, desc_ptr->misc_magic);
     desc_ptr->activation = activation_explanation(o_ptr);
-    sprintf(desc_ptr->misc_desc, _("重さ %d.%d kg", "Weight %d.%d lbs"), _(lbtokg1(o_ptr->weight), o_ptr->weight / 10),
-        _(lbtokg2(o_ptr->weight), o_ptr->weight % 10));
+    sprintf(desc_ptr->misc_desc, _("重さ %d.%d kg", "Weight %d.%d lbs"), _(lb_to_kg_integer(o_ptr->weight), o_ptr->weight / 10),
+        _(lb_to_kg_fraction(o_ptr->weight), o_ptr->weight % 10));
 }

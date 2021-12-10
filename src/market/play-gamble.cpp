@@ -18,7 +18,7 @@
  * @param cmd プレイするゲームID
  * @return プレイ成立やルール説明のみ等ならTRUE、賭け金不足で不成立ならFALSE
  */
-bool gamble_comm(player_type *player_ptr, int cmd)
+bool gamble_comm(PlayerType *player_ptr, int cmd)
 {
     int i;
     int roll1, roll2, roll3, choice, odds, win;
@@ -46,7 +46,7 @@ bool gamble_comm(player_type *player_ptr, int cmd)
 
     clear_bldg(5, 23);
     maxbet = player_ptr->lev * 200;
-    maxbet = MIN(maxbet, player_ptr->au);
+    maxbet = std::min(maxbet, player_ptr->au);
 
     strcpy(out_val, "");
     sprintf(tmp_str, _("賭け金 (1-%ld)？", "Your wager (1-%ld) ? "), (long int)maxbet);

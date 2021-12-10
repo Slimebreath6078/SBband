@@ -18,6 +18,7 @@
 #include "inventory/inventory-slot-types.h"
 #include "io/input-key-acceptor.h"
 #include "io/input-key-requester.h"
+#include "locale/japanese.h"
 #include "main/sound-definitions-table.h"
 #include "main/sound-of-music.h"
 #include "object-enchant/item-feeling.h"
@@ -27,10 +28,13 @@
 #include "object-hook/hook-weapon.h"
 #include "object/item-tester-hooker.h"
 #include "object/item-use-flags.h"
+#include "object/object-flags.h"
 #include "object/object-info.h"
 #include "object/object-mark-types.h"
 #include "perception/object-perception.h"
+#include "player-base/player-class.h"
 #include "player-info/equipment-info.h"
+#include "player-info/samurai-data-type.h"
 #include "player-status/player-energy.h"
 #include "player-status/player-hand-types.h"
 #include "player/attack-defense-types.h"
@@ -48,9 +52,43 @@
 #include "view/display-messages.h"
 
 /*!
+ * @brief 装備時にアイテムを呪う処理
+ */
+static void do_curse_on_equip(OBJECT_IDX slot, object_type *o_ptr, PlayerType *player_ptr)
+{
+    if (set_anubis_and_chariot(player_ptr) && ((slot == INVEN_MAIN_HAND) || (slot == INVEN_SUB_HAND))) {
+
+        object_type *anubis = &(player_ptr->inventory_list[INVEN_MAIN_HAND]);
+        object_type *chariot = &(player_ptr->inventory_list[INVEN_SUB_HAND]);
+
+        anubis->curse_flags.set(CurseTraitType::PERSISTENT_CURSE);
+        anubis->curse_flags.set(CurseTraitType::HEAVY_CURSE);
+        chariot->curse_flags.set(CurseTraitType::PERSISTENT_CURSE);
+        chariot->curse_flags.set(CurseTraitType::HEAVY_CURSE);
+        chariot->curse_flags.set(CurseTraitType::BERS_RAGE);
+        chariot->curse_flags.set(CurseTraitType::VUL_CURSE);
+        
+        msg_format(_("『銀の戦車』プラス『アヌビス神』二刀流ッ！", "*Silver Chariot* plus *Anubis God* Two Swords!"));
+        player_ptr->update |= (PU_BONUS);
+        return;
+    }
+
+    if ((object_flags(o_ptr).has(TR_PERSISTENT_CURSE) || o_ptr->curse_flags.has(CurseTraitType::PERSISTENT_CURSE)) 
+        && o_ptr->curse_flags.has_not(CurseTraitType::HEAVY_CURSE)) {
+
+        GAME_TEXT o_name[MAX_NLEN];
+        describe_flavor(player_ptr, o_name, o_ptr, (OD_OMIT_PREFIX | OD_NAME_ONLY));
+        o_ptr->curse_flags.set(CurseTraitType::HEAVY_CURSE);
+        msg_format(_("悪意に満ちた黒いオーラが%sをとりまいた...", "There is a malignant black aura surrounding your %s..."), o_name);
+        o_ptr->feeling = FEEL_NONE;
+        player_ptr->update |= (PU_BONUS);
+    }
+}
+
+/*!
  * @brief 装備一覧を表示するコマンドのメインルーチン / Display equipment
  */
-void do_cmd_equip(player_type *player_ptr)
+void do_cmd_equip(PlayerType *player_ptr)
 {
     char out_val[160];
     command_wrk = true;
@@ -59,13 +97,12 @@ void do_cmd_equip(player_type *player_ptr)
 
     screen_save();
     (void)show_equipment(player_ptr, 0, USE_FULL, AllMatchItemTester());
-    WEIGHT weight = calc_inventory_weight(player_ptr);
-    WEIGHT weight_lim = calc_weight_limit(player_ptr);
+    auto weight = calc_inventory_weight(player_ptr);
+    auto weight_lim = calc_weight_limit(player_ptr);
 #ifdef JP
-    sprintf(out_val, "装備： 合計 %3d.%1d kg (限界の%ld%%) コマンド: ", (int)lbtokg1(weight), (int)lbtokg2(weight), (long int)((weight * 100) / weight_lim));
+    sprintf(out_val, "装備： 合計 %3d.%1d kg (限界の%d%%) コマンド: ", lb_to_kg_integer(weight), lb_to_kg_fraction(weight), weight * 100 / weight_lim);
 #else
-    sprintf(out_val, "Equipment: carrying %d.%d pounds (%ld%% of capacity). Command: ", (int)(weight / 10), (int)(weight % 10),
-        (long int)((weight * 100) / weight_lim));
+    sprintf(out_val, "Equipment: carrying %d.%d pounds (%d%% of capacity). Command: ", weight / 10, weight % 10, weight * 100 / weight_lim);
 #endif
 
     prt(out_val, 0, 0);
@@ -87,7 +124,7 @@ void do_cmd_equip(player_type *player_ptr)
  * @brief 装備するコマンドのメインルーチン / Wield or wear a single item from the pack or floor
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void do_cmd_wield(player_type *player_ptr)
+void do_cmd_wield(PlayerType *player_ptr)
 {
     OBJECT_IDX item, slot;
     object_type forge;
@@ -96,8 +133,7 @@ void do_cmd_wield(player_type *player_ptr)
     concptr act;
     GAME_TEXT o_name[MAX_NLEN];
     OBJECT_IDX need_switch_wielding = 0;
-    if (player_ptr->special_defense & KATA_MUSOU)
-        set_action(player_ptr, ACTION_NONE);
+    PlayerClass(player_ptr).break_samurai_stance({ SamuraiStanceType::MUSOU });
 
     concptr q = _("どれを装備しますか? ", "Wear/Wield which item? ");
     concptr s = _("装備可能なアイテムがない。", "You have nothing you can wear or wield.");
@@ -111,9 +147,9 @@ void do_cmd_wield(player_type *player_ptr)
     const auto o_ptr_sh = &player_ptr->inventory_list[INVEN_SUB_HAND];
 
     switch (o_ptr->tval) {
-    case TV_CAPTURE:
-    case TV_SHIELD:
-    case TV_CARD:
+    case ItemKindType::CAPTURE:
+    case ItemKindType::SHIELD:
+    case ItemKindType::CARD:
         if (has_melee_weapon(player_ptr, INVEN_MAIN_HAND) && has_melee_weapon(player_ptr, INVEN_SUB_HAND)) {
             q = _("どちらの武器と取り替えますか?", "Replace which weapon? ");
             s = _("おっと。", "Oops.");
@@ -124,7 +160,8 @@ void do_cmd_wield(player_type *player_ptr)
                 need_switch_wielding = INVEN_SUB_HAND;
         } else if (has_melee_weapon(player_ptr, INVEN_SUB_HAND))
             slot = INVEN_MAIN_HAND;
-        else if (o_ptr_mh->k_idx && !o_ptr_mh->is_melee_weapon() && o_ptr_sh->k_idx && !o_ptr_sh->is_melee_weapon()) {
+        else if (o_ptr_mh->k_idx && o_ptr_sh->k_idx &&
+                 ((o_ptr->tval == ItemKindType::CAPTURE) || (!o_ptr_mh->is_melee_weapon() && !o_ptr_sh->is_melee_weapon()))) {
             q = _("どちらの手に装備しますか?", "Equip which hand? ");
             s = _("おっと。", "Oops.");
             if (!choose_object(player_ptr, &slot, q, s, (USE_EQUIP), FuncItemTester(&object_type::is_wieldable_in_etheir_hand)))
@@ -132,10 +169,10 @@ void do_cmd_wield(player_type *player_ptr)
         }
 
         break;
-    case TV_DIGGING:
-    case TV_HAFTED:
-    case TV_POLEARM:
-    case TV_SWORD:
+    case ItemKindType::DIGGING:
+    case ItemKindType::HAFTED:
+    case ItemKindType::POLEARM:
+    case ItemKindType::SWORD:
         if (slot == INVEN_SUB_HAND) {
             if (!get_check(_("二刀流で戦いますか？", "Dual wielding? ")))
                 slot = INVEN_MAIN_HAND;
@@ -153,7 +190,7 @@ void do_cmd_wield(player_type *player_ptr)
         }
 
         break;
-    case TV_RING:
+    case ItemKindType::RING:
         if (player_ptr->inventory_list[INVEN_SUB_RING].k_idx && player_ptr->inventory_list[INVEN_MAIN_RING].k_idx)
             q = _("どちらの指輪と取り替えますか?", "Replace which ring? ");
         else
@@ -183,9 +220,7 @@ void do_cmd_wield(player_type *player_ptr)
         return;
     }
 
-    if (confirm_wear
-        && ((o_ptr->is_cursed() && o_ptr->is_known())
-            || ((o_ptr->ident & IDENT_SENSE) && (FEEL_BROKEN <= o_ptr->feeling) && (o_ptr->feeling <= FEEL_CURSED)))) {
+    if (confirm_wear && ((o_ptr->is_cursed() && o_ptr->is_known()) || ((o_ptr->ident & IDENT_SENSE) && (FEEL_BROKEN <= o_ptr->feeling) && (o_ptr->feeling <= FEEL_CURSED)))) {
         char dummy[MAX_NLEN + 80];
         describe_flavor(player_ptr, o_name, o_ptr, (OD_OMIT_PREFIX | OD_NAME_ONLY));
         sprintf(dummy, _("本当に%s{呪われている}を使いますか？", "Really use the %s {cursed}? "), o_name);
@@ -194,8 +229,7 @@ void do_cmd_wield(player_type *player_ptr)
             return;
     }
 
-    if ((o_ptr->name1 == ART_STONEMASK) && o_ptr->is_known() && (player_ptr->prace != player_race_type::VAMPIRE)
-        && (player_ptr->prace != player_race_type::ANDROID)) {
+    if ((o_ptr->name1 == ART_STONEMASK) && o_ptr->is_known() && (player_ptr->prace != PlayerRaceType::VAMPIRE) && (player_ptr->prace != PlayerRaceType::ANDROID)) {
         char dummy[MAX_NLEN + 100];
         describe_flavor(player_ptr, o_name, o_ptr, (OD_OMIT_PREFIX | OD_NAME_ONLY));
         sprintf(dummy,
@@ -223,7 +257,7 @@ void do_cmd_wield(player_type *player_ptr)
     }
 
     check_find_art_quest_completion(player_ptr, o_ptr);
-    if (player_ptr->pseikaku == PERSONALITY_MUNCHKIN) {
+    if (player_ptr->ppersonality == PERSONALITY_MUNCHKIN) {
         identify_item(player_ptr, o_ptr);
         autopick_alter_item(player_ptr, item, false);
     }
@@ -286,8 +320,10 @@ void do_cmd_wield(player_type *player_ptr)
         o_ptr->ident |= (IDENT_SENSE);
     }
 
-    if ((o_ptr->name1 == ART_STONEMASK) && (player_ptr->prace != player_race_type::VAMPIRE) && (player_ptr->prace != player_race_type::ANDROID))
-        change_race(player_ptr, player_race_type::VAMPIRE, "");
+    do_curse_on_equip(slot, o_ptr, player_ptr);
+
+    if ((o_ptr->name1 == ART_STONEMASK) && (player_ptr->prace != PlayerRaceType::VAMPIRE) && (player_ptr->prace != PlayerRaceType::ANDROID))
+        change_race(player_ptr, PlayerRaceType::VAMPIRE, "");
 
     calc_android_exp(player_ptr);
     player_ptr->update |= PU_BONUS | PU_TORCH | PU_MANA;
@@ -298,12 +334,11 @@ void do_cmd_wield(player_type *player_ptr)
 /*!
  * @brief 装備を外すコマンドのメインルーチン / Take off an item
  */
-void do_cmd_takeoff(player_type *player_ptr)
+void do_cmd_takeoff(PlayerType *player_ptr)
 {
     OBJECT_IDX item;
     object_type *o_ptr;
-    if (player_ptr->special_defense & KATA_MUSOU)
-        set_action(player_ptr, ACTION_NONE);
+    PlayerClass(player_ptr).break_samurai_stance({ SamuraiStanceType::MUSOU });
 
     concptr q = _("どれを装備からはずしますか? ", "Take off which item? ");
     concptr s = _("はずせる装備がない。", "You are not wearing anything to take off.");
@@ -313,12 +348,12 @@ void do_cmd_takeoff(player_type *player_ptr)
 
     PlayerEnergy energy(player_ptr);
     if (o_ptr->is_cursed()) {
-        if (o_ptr->curse_flags.has(TRC::PERMA_CURSE) || (player_ptr->pclass != CLASS_BERSERKER)) {
+        if (o_ptr->curse_flags.has(CurseTraitType::PERMA_CURSE) || (player_ptr->pclass != PlayerClassType::BERSERKER)) {
             msg_print(_("ふーむ、どうやら呪われているようだ。", "Hmmm, it seems to be cursed."));
             return;
         }
 
-        if ((o_ptr->curse_flags.has(TRC::HEAVY_CURSE) && one_in_(7)) || one_in_(4)) {
+        if ((o_ptr->curse_flags.has(CurseTraitType::HEAVY_CURSE) && one_in_(7)) || one_in_(4)) {
             msg_print(_("呪われた装備を力づくで剥がした！", "You tore off a piece of cursed equipment by sheer strength!"));
             o_ptr->ident |= (IDENT_SENSE);
             o_ptr->curse_flags.clear();

@@ -34,7 +34,9 @@
 #include "mutation/mutation-flag-types.h"
 #include "object/item-use-flags.h"
 #include "player-attack/player-attack.h"
+#include "player-base/player-class.h"
 #include "player-info/equipment-info.h"
+#include "player-info/samurai-data-type.h"
 #include "player-status/player-energy.h"
 #include "player-status/player-hand-types.h"
 #include "player/attack-defense-types.h"
@@ -43,7 +45,7 @@
 #include "player/player-status-flags.h"
 #include "player/player-status.h"
 #include "player/special-defense-types.h"
-#include "spell/spell-types.h"
+#include "effect/attribute-types.h"
 #include "status/action-setter.h"
 #include "system/floor-type-definition.h"
 #include "system/grid-type-definition.h"
@@ -65,7 +67,7 @@
  * @param fear 攻撃を受けたモンスターが恐慌状態に陥ったかを返す参照ポインタ
  * @param mdeath 攻撃を受けたモンスターが死亡したかを返す参照ポインタ
  */
-static void natural_attack(player_type *player_ptr, MONSTER_IDX m_idx, MUTA attack, bool *fear, bool *mdeath)
+static void natural_attack(PlayerType *player_ptr, MONSTER_IDX m_idx, PlayerMutationType attack, bool *fear, bool *mdeath)
 {
     WEIGHT n_weight = 0;
     monster_type *m_ptr = &player_ptr->current_floor_ptr->m_list[m_idx];
@@ -74,31 +76,31 @@ static void natural_attack(player_type *player_ptr, MONSTER_IDX m_idx, MUTA atta
     int dice_num, dice_side;
     concptr atk_desc;
     switch (attack) {
-    case MUTA::SCOR_TAIL:
+    case PlayerMutationType::SCOR_TAIL:
         dice_num = 3;
         dice_side = 7;
         n_weight = 5;
         atk_desc = _("尻尾", "tail");
         break;
-    case MUTA::HORNS:
+    case PlayerMutationType::HORNS:
         dice_num = 2;
         dice_side = 6;
         n_weight = 15;
         atk_desc = _("角", "horns");
         break;
-    case MUTA::BEAK:
+    case PlayerMutationType::BEAK:
         dice_num = 2;
         dice_side = 4;
         n_weight = 5;
         atk_desc = _("クチバシ", "beak");
         break;
-    case MUTA::TRUNK:
+    case PlayerMutationType::TRUNK:
         dice_num = 1;
         dice_side = 4;
         n_weight = 35;
         atk_desc = _("象の鼻", "trunk");
         break;
-    case MUTA::TENTACLES:
+    case PlayerMutationType::TENTACLES:
         dice_num = 2;
         dice_side = 5;
         n_weight = 5;
@@ -139,16 +141,16 @@ static void natural_attack(player_type *player_ptr, MONSTER_IDX m_idx, MUTA atta
         anger_monster(player_ptr, m_ptr);
 
     switch (attack) {
-    case MUTA::SCOR_TAIL:
-        project(player_ptr, 0, 0, m_ptr->fy, m_ptr->fx, k, GF_POIS, PROJECT_KILL);
+    case PlayerMutationType::SCOR_TAIL:
+        project(player_ptr, 0, 0, m_ptr->fy, m_ptr->fx, k, AttributeType::POIS, PROJECT_KILL);
         *mdeath = (m_ptr->r_idx == 0);
         break;
-    case MUTA::HORNS:
-    case MUTA::BEAK:
-    case MUTA::TRUNK:
-    case MUTA::TENTACLES:
+    case PlayerMutationType::HORNS:
+    case PlayerMutationType::BEAK:
+    case PlayerMutationType::TRUNK:
+    case PlayerMutationType::TENTACLES:
     default: {
-        MonsterDamageProcessor mdp(player_ptr, m_idx, k, fear);
+        MonsterDamageProcessor mdp(player_ptr, m_idx, k, fear, AttributeType::ATTACK);
         *mdeath = mdp.mon_take_hit(nullptr);
         break;
     }
@@ -166,14 +168,14 @@ static void natural_attack(player_type *player_ptr, MONSTER_IDX m_idx, MUTA atta
  * @details
  * If no "weapon" is available, then "punch" the monster one time.
  */
-bool do_cmd_attack(player_type *player_ptr, POSITION y, POSITION x, combat_options mode)
+bool do_cmd_attack(PlayerType *player_ptr, POSITION y, POSITION x, combat_options mode)
 {
     grid_type *g_ptr = &player_ptr->current_floor_ptr->grid_array[y][x];
     monster_type *m_ptr = &player_ptr->current_floor_ptr->m_list[g_ptr->m_idx];
     monster_race *r_ptr = &r_info[m_ptr->r_idx];
     GAME_TEXT m_name[MAX_NLEN];
 
-    const std::initializer_list<MUTA> mutation_attack_methods = { MUTA::HORNS, MUTA::BEAK, MUTA::SCOR_TAIL, MUTA::TRUNK, MUTA::TENTACLES };
+    const std::initializer_list<PlayerMutationType> mutation_attack_methods = { PlayerMutationType::HORNS, PlayerMutationType::BEAK, PlayerMutationType::SCOR_TAIL, PlayerMutationType::TRUNK, PlayerMutationType::TENTACLES };
 
     disturb(player_ptr, false, true);
 
@@ -202,7 +204,7 @@ bool do_cmd_attack(player_type *player_ptr, POSITION y, POSITION x, combat_optio
         }
     }
 
-    if (d_info[player_ptr->dungeon_idx].flags.has(DF::NO_MELEE)) {
+    if (d_info[player_ptr->dungeon_idx].flags.has(DungeonFeatureType::NO_MELEE)) {
         msg_print(_("なぜか攻撃することができない。", "Something prevents you from attacking."));
         return false;
     }
@@ -219,7 +221,7 @@ bool do_cmd_attack(player_type *player_ptr, POSITION y, POSITION x, combat_optio
             chg_virtue(player_ptr, V_HONOUR, -1);
             chg_virtue(player_ptr, V_JUSTICE, -1);
             chg_virtue(player_ptr, V_COMPASSION, -1);
-        } else if (player_ptr->pclass != CLASS_BERSERKER) {
+        } else if (player_ptr->pclass != PlayerClassType::BERSERKER) {
             if (get_check(_("本当に攻撃しますか？", "Really hit it? "))) {
                 chg_virtue(player_ptr, V_INDIVIDUALISM, 1);
                 chg_virtue(player_ptr, V_HONOUR, -1);
@@ -250,43 +252,13 @@ bool do_cmd_attack(player_type *player_ptr, POSITION y, POSITION x, combat_optio
     }
 
     if (can_attack_with_main_hand(player_ptr) && can_attack_with_sub_hand(player_ptr)) {
-        if ((player_ptr->skill_exp[SKILL_TWO_WEAPON] < s_info[player_ptr->pclass].s_max[SKILL_TWO_WEAPON])
-            && ((player_ptr->skill_exp[SKILL_TWO_WEAPON] - 1000) / 200 < r_ptr->level)) {
-            if (player_ptr->skill_exp[SKILL_TWO_WEAPON] < WEAPON_EXP_BEGINNER)
-                player_ptr->skill_exp[SKILL_TWO_WEAPON] += 80;
-            else if (player_ptr->skill_exp[SKILL_TWO_WEAPON] < WEAPON_EXP_SKILLED)
-                player_ptr->skill_exp[SKILL_TWO_WEAPON] += 4;
-            else if (player_ptr->skill_exp[SKILL_TWO_WEAPON] < WEAPON_EXP_EXPERT)
-                player_ptr->skill_exp[SKILL_TWO_WEAPON] += 1;
-            else if (player_ptr->skill_exp[SKILL_TWO_WEAPON] < WEAPON_EXP_MASTER)
-                if (one_in_(3))
-                    player_ptr->skill_exp[SKILL_TWO_WEAPON] += 1;
-            player_ptr->update |= (PU_BONUS);
+        if (((player_ptr->skill_exp[PlayerSkillKindType::TWO_WEAPON] - 1000) / 200) < r_ptr->level) {
+            PlayerSkill(player_ptr).gain_two_weapon_skill_exp();
         }
     }
 
     if (player_ptr->riding) {
-        int cur = player_ptr->skill_exp[SKILL_RIDING];
-        int max = s_info[player_ptr->pclass].s_max[SKILL_RIDING];
-
-        if (cur < max) {
-            DEPTH ridinglevel = r_info[player_ptr->current_floor_ptr->m_list[player_ptr->riding].r_idx].level;
-            DEPTH targetlevel = r_ptr->level;
-            int inc = 0;
-
-            if ((cur / 200 - 5) < targetlevel)
-                inc += 1;
-
-            if ((cur / 100) < ridinglevel) {
-                if ((cur / 100 + 15) < ridinglevel)
-                    inc += 1 + (ridinglevel - (cur / 100 + 15));
-                else
-                    inc += 1;
-            }
-
-            player_ptr->skill_exp[SKILL_RIDING] = MIN(max, cur + inc);
-            player_ptr->update |= (PU_BONUS);
-        }
+        PlayerSkill(player_ptr).gain_riding_skill_exp_on_melee_attack(r_ptr);
     }
 
     player_ptr->riding_t_m_idx = g_ptr->m_idx;
@@ -310,7 +282,7 @@ bool do_cmd_attack(player_type *player_ptr, POSITION y, POSITION x, combat_optio
         msg_format(_("%^sは恐怖して逃げ出した！", "%^s flees in terror!"), m_name);
     }
 
-    if ((player_ptr->special_defense & KATA_IAI) && ((mode != HISSATSU_IAI) || mdeath)) {
+    if (PlayerClass(player_ptr).samurai_stance_is(SamuraiStanceType::IAI) && ((mode != HISSATSU_IAI) || mdeath)) {
         set_action(player_ptr, ACTION_NONE);
     }
 

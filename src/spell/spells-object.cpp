@@ -6,7 +6,6 @@
 
 #include "spell/spells-object.h"
 #include "avatar/avatar.h"
-#include "core/player-redraw-types.h"
 #include "core/player-update-types.h"
 #include "core/window-redrawer.h"
 #include "flavor/flavor-describer.h"
@@ -33,10 +32,7 @@
 #include "object/object-kind.h"
 #include "perception/object-perception.h"
 #include "player-info/class-info.h"
-#include "player/player-damage.h"
 #include "racial/racial-android.h"
-#include "spell-kind/spells-perception.h"
-#include "status/bad-status-setter.h"
 #include "sv-definition/sv-other-types.h"
 #include "sv-definition/sv-scroll-types.h"
 #include "sv-definition/sv-weapon-types.h"
@@ -50,7 +46,7 @@
 #include "view/display-messages.h"
 
 typedef struct {
-    tval_type tval;
+    ItemKindType tval;
     OBJECT_SUBTYPE_VALUE sval;
     PERCENTAGE prob;
     byte flag;
@@ -74,13 +70,13 @@ static int enchant_table[16] = { 0, 10, 50, 100, 200, 300, 400, 500, 650, 800, 9
 #define AMS_PILE 0x08 /* Drop 1-99 pile objects for one type */
 
 static amuse_type amuse_info[]
-    = { { TV_BOTTLE, SV_ANY, 5, AMS_NOTHING }, { TV_JUNK, SV_ANY, 3, AMS_MULTIPLE }, { TV_SPIKE, SV_ANY, 10, AMS_PILE }, { TV_STATUE, SV_ANY, 15, AMS_NOTHING },
-          { TV_CORPSE, SV_ANY, 15, AMS_NO_UNIQUE }, { TV_SKELETON, SV_ANY, 10, AMS_NO_UNIQUE }, { TV_FIGURINE, SV_ANY, 10, AMS_NO_UNIQUE },
-          { TV_PARCHMENT, SV_ANY, 1, AMS_NOTHING }, { TV_POLEARM, SV_TSURIZAO, 3, AMS_NOTHING }, // Fishing Pole of Taikobo
-          { TV_SWORD, SV_BROKEN_DAGGER, 3, AMS_FIXED_ART }, // Broken Dagger of Magician
-          { TV_SWORD, SV_BROKEN_DAGGER, 10, AMS_NOTHING }, { TV_SWORD, SV_BROKEN_SWORD, 5, AMS_NOTHING }, { TV_SCROLL, SV_SCROLL_AMUSEMENT, 10, AMS_NOTHING },
+    = { { ItemKindType::BOTTLE, SV_ANY, 5, AMS_NOTHING }, { ItemKindType::JUNK, SV_ANY, 3, AMS_MULTIPLE }, { ItemKindType::SPIKE, SV_ANY, 10, AMS_PILE }, { ItemKindType::STATUE, SV_ANY, 15, AMS_NOTHING },
+          { ItemKindType::CORPSE, SV_ANY, 15, AMS_NO_UNIQUE }, { ItemKindType::SKELETON, SV_ANY, 10, AMS_NO_UNIQUE }, { ItemKindType::FIGURINE, SV_ANY, 10, AMS_NO_UNIQUE },
+          { ItemKindType::PARCHMENT, SV_ANY, 1, AMS_NOTHING }, { ItemKindType::POLEARM, SV_TSURIZAO, 3, AMS_NOTHING }, // Fishing Pole of Taikobo
+          { ItemKindType::SWORD, SV_BROKEN_DAGGER, 3, AMS_FIXED_ART }, // Broken Dagger of Magician
+          { ItemKindType::SWORD, SV_BROKEN_DAGGER, 10, AMS_NOTHING }, { ItemKindType::SWORD, SV_BROKEN_SWORD, 5, AMS_NOTHING }, { ItemKindType::SCROLL, SV_SCROLL_AMUSEMENT, 10, AMS_NOTHING },
 
-          { TV_NONE, 0, 0, 0 } };
+          { ItemKindType::NONE, 0, 0, 0 } };
 
 /*!
  * @brief 誰得ドロップを行う。
@@ -90,10 +86,10 @@ static amuse_type amuse_info[]
  * @param num 誰得の処理回数
  * @param known TRUEならばオブジェクトが必ず＊鑑定＊済になる
  */
-void amusement(player_type *player_ptr, POSITION y1, POSITION x1, int num, bool known)
+void amusement(PlayerType *player_ptr, POSITION y1, POSITION x1, int num, bool known)
 {
     int t = 0;
-    for (int n = 0; amuse_info[n].tval != 0; n++) {
+    for (int n = 0; amuse_info[n].tval != ItemKindType::NONE; n++) {
         t += amuse_info[n].prob;
     }
 
@@ -121,14 +117,14 @@ void amusement(player_type *player_ptr, POSITION y1, POSITION x1, int num, bool 
             continue;
 
         /* Search an artifact index if need */
-        insta_art = k_info[k_idx].gen_flags.has(TRG::INSTA_ART);
+        insta_art = k_info[k_idx].gen_flags.has(ItemGenerationTraitType::INSTA_ART);
         fixed_art = (amuse_info[i].flag & AMS_FIXED_ART);
 
         if (insta_art || fixed_art) {
             for (const auto &a_ref : a_info) {
                 if (a_ref.idx == 0)
                     continue;
-                if (insta_art && !a_ref.gen_flags.has(TRG::INSTA_ART))
+                if (insta_art && !a_ref.gen_flags.has(ItemGenerationTraitType::INSTA_ART))
                     continue;
                 if (a_ref.tval != k_info[k_idx].tval)
                     continue;
@@ -136,10 +132,12 @@ void amusement(player_type *player_ptr, POSITION y1, POSITION x1, int num, bool 
                     continue;
                 if (a_ref.cur_num > 0)
                     continue;
+
+                a_idx = a_ref.idx;
                 break;
             }
 
-            if (a_idx >= max_a_idx)
+            if (a_idx >= static_cast<ARTIFACT_IDX>(a_info.size()))
                 continue;
         }
 
@@ -185,7 +183,7 @@ void amusement(player_type *player_ptr, POSITION y1, POSITION x1, int num, bool 
  * @param special TRUEならば必ず特別品を落とす
  * @param known TRUEならばオブジェクトが必ず＊鑑定＊済になる
  */
-void acquirement(player_type *player_ptr, POSITION y1, POSITION x1, int num, bool great, bool special, bool known)
+void acquirement(PlayerType *player_ptr, POSITION y1, POSITION x1, int num, bool great, bool special, bool known)
 {
     object_type *i_ptr;
     object_type object_type_body;
@@ -215,7 +213,7 @@ void acquirement(player_type *player_ptr, POSITION y1, POSITION x1, int num, boo
  * @return 何も持っていない場合を除き、常にTRUEを返す
  * @todo 元のreturnは間違っているが、修正後の↓文がどれくらい正しいかは要チェック
  */
-bool curse_armor(player_type *player_ptr)
+bool curse_armor(PlayerType *player_ptr)
 {
     /* Curse the body armor */
     object_type *o_ptr;
@@ -255,7 +253,7 @@ bool curse_armor(player_type *player_ptr)
     o_ptr->art_flags.clear();
 
     /* Curse it */
-    o_ptr->curse_flags.set(TRC::CURSED);
+    o_ptr->curse_flags.set(CurseTraitType::CURSED);
 
     /* Break it */
     o_ptr->ident |= (IDENT_BROKEN);
@@ -273,7 +271,7 @@ bool curse_armor(player_type *player_ptr)
  * @return 何も持っていない場合を除き、常にTRUEを返す
  * @todo 元のreturnは間違っているが、修正後の↓文がどれくらい正しいかは要チェック
  */
-bool curse_weapon_object(player_type *player_ptr, bool force, object_type *o_ptr)
+bool curse_weapon_object(PlayerType *player_ptr, bool force, object_type *o_ptr)
 {
     if (!o_ptr->k_idx)
         return false;
@@ -309,7 +307,7 @@ bool curse_weapon_object(player_type *player_ptr, bool force, object_type *o_ptr
     o_ptr->art_flags.clear();
 
     /* Curse it */
-    o_ptr->curse_flags.set(TRC::CURSED);
+    o_ptr->curse_flags.set(CurseTraitType::CURSED);
 
     /* Break it */
     o_ptr->ident |= (IDENT_BROKEN);
@@ -323,14 +321,14 @@ bool curse_weapon_object(player_type *player_ptr, bool force, object_type *o_ptr
  * Enchant some bolts
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void brand_bolts(player_type *player_ptr)
+void brand_bolts(PlayerType *player_ptr)
 {
     /* Use the first acceptable bolts */
     for (int i = 0; i < INVEN_PACK; i++) {
         object_type *o_ptr = &player_ptr->inventory_list[i];
 
         /* Skip non-bolts */
-        if (o_ptr->tval != TV_BOLT)
+        if (o_ptr->tval != ItemKindType::BOLT)
             continue;
 
         /* Skip artifacts and ego-items */
@@ -359,46 +357,6 @@ void brand_bolts(player_type *player_ptr)
 }
 
 /*!
- * @brief 知識の石の発動を実行する / Do activation of the stone of lore.
- * @param player_ptr プレイヤー情報への参照ポインタ
- * @return 実行したらTRUE、しなかったらFALSE
- * @details
- * 鑑定を実行した後HPを消費する。1/5で混乱し、1/20で追加ダメージ。
- * MPがある場合はさらにMPを20消費する。不足する場合は麻痺及び混乱。
- */
-bool perilous_secrets(player_type *player_ptr)
-{
-    if (!ident_spell(player_ptr, false))
-        return false;
-
-    BadStatusSetter bss(player_ptr);
-    if (player_ptr->msp > 0) {
-        if (20 <= player_ptr->csp) {
-            player_ptr->csp -= 20;
-        } else {
-            auto oops = 20 - player_ptr->csp;
-            player_ptr->csp = 0;
-            player_ptr->csp_frac = 0;
-            msg_print(_("石を制御できない！", "You are too weak to control the stone!"));
-            (void)bss.paralysis(player_ptr->paralyzed + randint1(5 * oops + 1));
-            (void)bss.confusion(player_ptr->confused + randint1(5 * oops + 1));
-        }
-
-        player_ptr->redraw |= (PR_MANA);
-    }
-
-    take_hit(player_ptr, DAMAGE_LOSELIFE, damroll(1, 12), _("危険な秘密", "perilous secrets"));
-
-    if (one_in_(5))
-        (void)bss.confusion(player_ptr->confused + randint1(10));
-
-    if (one_in_(20))
-        take_hit(player_ptr, DAMAGE_LOSELIFE, damroll(4, 10), _("危険な秘密", "perilous secrets"));
-
-    return true;
-}
-
-/*!
  * @brief 呪いの打ち破り処理 /
  * Break the curse of an item
  * @param o_ptr 呪い装備情報の参照ポインタ
@@ -406,7 +364,7 @@ bool perilous_secrets(player_type *player_ptr)
 static void break_curse(object_type *o_ptr)
 {
     BIT_FLAGS is_curse_broken
-        = o_ptr->is_cursed() && o_ptr->curse_flags.has_not(TRC::PERMA_CURSE) && o_ptr->curse_flags.has_not(TRC::HEAVY_CURSE) && (randint0(100) < 25);
+        = o_ptr->is_cursed() && o_ptr->curse_flags.has_not(CurseTraitType::PERMA_CURSE) && o_ptr->curse_flags.has_not(CurseTraitType::HEAVY_CURSE) && (randint0(100) < 25);
     if (!is_curse_broken) {
         return;
     }
@@ -441,13 +399,13 @@ static void break_curse(object_type *o_ptr)
  * the larger the pile, the lower the chance of success.
  * </pre>
  */
-bool enchant_equipment(player_type *player_ptr, object_type *o_ptr, int n, int eflag)
+bool enchant_equipment(PlayerType *player_ptr, object_type *o_ptr, int n, int eflag)
 {
     /* Large piles resist enchantment */
     int prob = o_ptr->number * 100;
 
     /* Missiles are easy to enchant */
-    if ((o_ptr->tval == TV_BOLT) || (o_ptr->tval == TV_ARROW) || (o_ptr->tval == TV_SHOT)) {
+    if ((o_ptr->tval == ItemKindType::BOLT) || (o_ptr->tval == ItemKindType::ARROW) || (o_ptr->tval == ItemKindType::SHOT)) {
         prob = prob / 20;
     }
 
@@ -543,7 +501,7 @@ bool enchant_equipment(player_type *player_ptr, object_type *o_ptr, int n, int e
  * Note that "num_ac" requires armour, else weapon
  * Returns TRUE if attempted, FALSE if cancelled
  */
-bool enchant_spell(player_type *player_ptr, HIT_PROB num_hit, HIT_POINT num_dam, ARMOUR_CLASS num_ac)
+bool enchant_spell(PlayerType *player_ptr, HIT_PROB num_hit, HIT_POINT num_dam, ARMOUR_CLASS num_ac)
 {
     /* Assume enchant weapon */
     FuncItemTester item_tester(&object_type::allow_enchant_weapon);
@@ -599,7 +557,7 @@ bool enchant_spell(player_type *player_ptr, HIT_PROB num_hit, HIT_POINT num_dam,
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param brand_type エゴ化ID(e_info.txtとは連動していない)
  */
-void brand_weapon(player_type *player_ptr, int brand_type)
+void brand_weapon(PlayerType *player_ptr, int brand_type)
 {
     concptr q = _("どの武器を強化しますか? ", "Enchant which weapon? ");
     concptr s = _("強化できる武器がない。", "You have nothing to enchant.");
@@ -611,8 +569,8 @@ void brand_weapon(player_type *player_ptr, int brand_type)
         return;
 
     bool is_special_item = o_ptr->k_idx && !o_ptr->is_artifact() && !o_ptr->is_ego() && !o_ptr->is_cursed()
-        && !((o_ptr->tval == TV_SWORD) && (o_ptr->sval == SV_POISON_NEEDLE)) && !((o_ptr->tval == TV_POLEARM) && (o_ptr->sval == SV_DEATH_SCYTHE))
-        && !((o_ptr->tval == TV_SWORD) && (o_ptr->sval == SV_DIAMOND_EDGE));
+        && !((o_ptr->tval == ItemKindType::SWORD) && (o_ptr->sval == SV_POISON_NEEDLE)) && !((o_ptr->tval == ItemKindType::POLEARM) && (o_ptr->sval == SV_DEATH_SCYTHE))
+        && !((o_ptr->tval == ItemKindType::SWORD) && (o_ptr->sval == SV_DIAMOND_EDGE));
     if (!is_special_item) {
         if (flush_failure)
             flush();
@@ -629,7 +587,7 @@ void brand_weapon(player_type *player_ptr, int brand_type)
     concptr act = nullptr;
     switch (brand_type) {
     case 17:
-        if (o_ptr->tval == TV_SWORD) {
+        if (o_ptr->tval == ItemKindType::SWORD) {
             act = _("は鋭さを増した！", "becomes very sharp!");
 
             o_ptr->name2 = EGO_SHARPNESS;

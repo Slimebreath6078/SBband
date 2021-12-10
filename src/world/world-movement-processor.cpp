@@ -24,15 +24,15 @@
  * @brief プレイヤーの現在ダンジョンIDと階層に応じて、ダンジョン内ランクエの自動放棄を行う
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void check_random_quest_auto_failure(player_type *player_ptr)
+void check_random_quest_auto_failure(PlayerType *player_ptr)
 {
     if (player_ptr->dungeon_idx != DUNGEON_ANGBAND) {
         return;
     }
     for (auto i = MIN_RANDOM_QUEST; i < MAX_RANDOM_QUEST + 1; i++) {
         auto q_ptr = &quest[i];
-        if ((q_ptr->type == QUEST_TYPE_RANDOM) && (q_ptr->status == QUEST_STATUS_TAKEN) && (q_ptr->level < player_ptr->current_floor_ptr->dun_level)) {
-            q_ptr->status = QUEST_STATUS_FAILED;
+        if ((q_ptr->type == QuestKindType::RANDOM) && (q_ptr->status == QuestStatusType::TAKEN) && (q_ptr->level < player_ptr->current_floor_ptr->dun_level)) {
+            q_ptr->status = QuestStatusType::FAILED;
             q_ptr->complev = (byte)player_ptr->lev;
             update_playtime();
             q_ptr->comptime = w_ptr->play_time;
@@ -49,7 +49,7 @@ void check_random_quest_auto_failure(player_type *player_ptr)
  * Autosave BEFORE resetting the recall counter (rr9)
  * The player is yanked up/down as soon as he loads the autosaved game.
  */
-void execute_recall(player_type *player_ptr)
+void execute_recall(PlayerType *player_ptr)
 {
     if (player_ptr->word_recall == 0)
         return;
@@ -125,7 +125,7 @@ void execute_recall(player_type *player_ptr)
  * / Handle involuntary movement once every 10 game turns
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void execute_floor_reset(player_type *player_ptr)
+void execute_floor_reset(PlayerType *player_ptr)
 {
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
     if (player_ptr->alter_reality == 0)

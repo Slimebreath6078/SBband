@@ -25,6 +25,8 @@
 #include "io/write-diary.h"
 #include "main/music-definitions-table.h"
 #include "main/sound-of-music.h"
+#include "player-base/player-class.h"
+#include "player-info/samurai-data-type.h"
 #include "player-status/player-energy.h"
 #include "player/attack-defense-types.h"
 #include "player/player-move.h"
@@ -42,7 +44,7 @@
 /*!
  * @brief 探索コマンドのメインルーチン / Simple command to "search" for one turn
  */
-void do_cmd_search(player_type *player_ptr)
+void do_cmd_search(PlayerType *player_ptr)
 {
     if (command_arg) {
         command_rep = command_arg - 1;
@@ -57,7 +59,7 @@ void do_cmd_search(player_type *player_ptr)
         search(player_ptr);
 }
 
-static bool exe_alter(player_type *player_ptr)
+static bool exe_alter(PlayerType *player_ptr)
 {
     DIRECTION dir;
     if (!get_rep_dir(player_ptr, &dir, true))
@@ -76,19 +78,19 @@ static bool exe_alter(player_type *player_ptr)
         return false;
     }
     
-    if (f_ptr->flags.has(FF::OPEN))
+    if (f_ptr->flags.has(FloorFeatureType::OPEN))
         return exe_open(player_ptr, y, x);
     
-    if (f_ptr->flags.has(FF::BASH))
+    if (f_ptr->flags.has(FloorFeatureType::BASH))
         return exe_bash(player_ptr, y, x, dir);
     
-    if (f_ptr->flags.has(FF::TUNNEL))
+    if (f_ptr->flags.has(FloorFeatureType::TUNNEL))
         return exe_tunnel(player_ptr, y, x);
     
-    if (f_ptr->flags.has(FF::CLOSE))
+    if (f_ptr->flags.has(FloorFeatureType::CLOSE))
         return exe_close(player_ptr, y, x);
     
-    if (f_ptr->flags.has(FF::DISARM))
+    if (f_ptr->flags.has(FloorFeatureType::DISARM))
         return exe_disarm(player_ptr, y, x, dir);
 
     msg_print(_("何もない空中を攻撃した。", "You attack the empty air."));
@@ -99,10 +101,9 @@ static bool exe_alter(player_type *player_ptr)
  * @brief 特定のマスに影響を及ぼすための汎用的コマンド / Manipulate an adjacent grid in some way
  * @details
  */
-void do_cmd_alter(player_type *player_ptr)
+void do_cmd_alter(PlayerType *player_ptr)
 {
-    if (player_ptr->special_defense & KATA_MUSOU)
-        set_action(player_ptr, ACTION_NONE);
+    PlayerClass(player_ptr).break_samurai_stance({ SamuraiStanceType::MUSOU });
 
     if (command_arg) {
         command_rep = command_arg - 1;
@@ -131,7 +132,7 @@ static bool decide_suicide(void)
     return i == '@';
 }
 
-static void accept_winner_message(player_type *player_ptr)
+static void accept_winner_message(PlayerType *player_ptr)
 {
     if (!w_ptr->total_winner || !last_words)
         return;
@@ -154,7 +155,7 @@ static void accept_winner_message(player_type *player_ptr)
  * commit suicide
  * @details
  */
-void do_cmd_suicide(player_type *player_ptr)
+void do_cmd_suicide(PlayerType *player_ptr)
 {
     flush();
     if (w_ptr->total_winner) {

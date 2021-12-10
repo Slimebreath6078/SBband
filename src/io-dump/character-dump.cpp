@@ -55,7 +55,7 @@
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param fff ファイルポインタ
  */
-static void dump_aux_pet(player_type *player_ptr, FILE *fff)
+static void dump_aux_pet(PlayerType *player_ptr, FILE *fff)
 {
     bool pet = false;
     bool pet_settings = false;
@@ -110,7 +110,7 @@ static void dump_aux_pet(player_type *player_ptr, FILE *fff)
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param fff ファイルポインタ
  */
-static void dump_aux_quest(player_type *player_ptr, FILE *fff)
+static void dump_aux_quest(PlayerType *player_ptr, FILE *fff)
 {
     fprintf(fff, _("\n\n  [クエスト情報]\n", "\n\n  [Quest Information]\n"));
     std::vector<QUEST_IDX> quest_num(max_q_idx);
@@ -131,14 +131,14 @@ static void dump_aux_quest(player_type *player_ptr, FILE *fff)
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param fff ファイルポインタ
  */
-static void dump_aux_last_message(player_type *player_ptr, FILE *fff)
+static void dump_aux_last_message(PlayerType *player_ptr, FILE *fff)
 {
     if (!player_ptr->is_dead)
         return;
 
     if (!w_ptr->total_winner) {
         fprintf(fff, _("\n  [死ぬ直前のメッセージ]\n\n", "\n  [Last Messages]\n\n"));
-        for (int i = MIN(message_num(), 30); i >= 0; i--) {
+        for (int i = std::min(message_num(), 30); i >= 0; i--) {
             fprintf(fff, "> %s\n", message_str((int16_t)i));
         }
 
@@ -235,7 +235,7 @@ static void dump_aux_options(FILE *fff)
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param fff ファイルポインタ
  */
-static void dump_aux_arena(player_type *player_ptr, FILE *fff)
+static void dump_aux_arena(PlayerType *player_ptr, FILE *fff)
 {
     if (lite_town || vanilla_town)
         return;
@@ -282,7 +282,7 @@ static void dump_aux_arena(player_type *player_ptr, FILE *fff)
  * @brief 撃破モンスターの情報をファイルにダンプする
  * @param fff ファイルポインタ
  */
-static void dump_aux_monsters(player_type *player_ptr, FILE *fff)
+static void dump_aux_monsters(PlayerType *player_ptr, FILE *fff)
 {
     fprintf(fff, _("\n  [倒したモンスター]\n\n", "\n  [Defeated Monsters]\n\n"));
 
@@ -291,7 +291,7 @@ static void dump_aux_monsters(player_type *player_ptr, FILE *fff)
     std::vector<MONRACE_IDX> who;
 
     /* Count monster kills */
-    long norm_total = 0;
+    auto norm_total = 0;
     for (const auto &r_ref : r_info) {
         /* Ignore unused index */
         if (r_ref.idx == 0 || r_ref.name.empty())
@@ -320,28 +320,28 @@ static void dump_aux_monsters(player_type *player_ptr, FILE *fff)
         return;
     }
 
-    const long uniq_total = who.size();
+    auto uniq_total = static_cast<int>(who.size());
     /* Defeated more than one normal monsters */
     if (uniq_total == 0) {
 #ifdef JP
-        fprintf(fff, "%ld体の敵を倒しています。\n", norm_total);
+        fprintf(fff, "%d体の敵を倒しています。\n", norm_total);
 #else
-        fprintf(fff, "You have defeated %ld %s.\n", norm_total, norm_total == 1 ? "enemy" : "enemies");
+        fprintf(fff, "You have defeated %d %s.\n", norm_total, norm_total == 1 ? "enemy" : "enemies");
 #endif
         return;
     }
 
     /* Defeated more than one unique monsters */
 #ifdef JP
-    fprintf(fff, "%ld体のユニーク・モンスターを含む、合計%ld体の敵を倒しています。\n", uniq_total, norm_total);
+    fprintf(fff, "%d体のユニーク・モンスターを含む、合計%d体の敵を倒しています。\n", uniq_total, norm_total);
 #else
-    fprintf(fff, "You have defeated %ld %s including %ld unique monster%s in total.\n", norm_total, norm_total == 1 ? "enemy" : "enemies", uniq_total,
+    fprintf(fff, "You have defeated %d %s including %d unique monster%s in total.\n", norm_total, norm_total == 1 ? "enemy" : "enemies", uniq_total,
         (uniq_total == 1 ? "" : "s"));
 #endif
 
     /* Sort the array by dungeon depth of monsters */
     ang_sort(player_ptr, who.data(), &why, uniq_total, ang_sort_comp_hook, ang_sort_swap_hook);
-    fprintf(fff, _("\n《上位%ld体のユニーク・モンスター》\n", "\n< Unique monsters top %ld >\n"), MIN(uniq_total, 10));
+    fprintf(fff, _("\n《上位%d体のユニーク・モンスター》\n", "\n< Unique monsters top %d >\n"), std::min(uniq_total, 10));
 
     char buf[80];
     for (auto it = who.rbegin(); it != who.rend() && std::distance(who.rbegin(), it) < 10; it++) {
@@ -361,7 +361,7 @@ static void dump_aux_monsters(player_type *player_ptr, FILE *fff)
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param fff ファイルポインタ
  */
-static void dump_aux_race_history(player_type *player_ptr, FILE *fff)
+static void dump_aux_race_history(PlayerType *player_ptr, FILE *fff)
 {
     if (!player_ptr->old_race1 && !player_ptr->old_race2)
         return;
@@ -389,7 +389,7 @@ static void dump_aux_race_history(player_type *player_ptr, FILE *fff)
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param fff ファイルポインタ
  */
-static void dump_aux_realm_history(player_type *player_ptr, FILE *fff)
+static void dump_aux_realm_history(PlayerType *player_ptr, FILE *fff)
 {
     if (player_ptr->old_realm == 0)
         return;
@@ -409,12 +409,11 @@ static void dump_aux_realm_history(player_type *player_ptr, FILE *fff)
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param fff ファイルポインタ
  */
-static void dump_aux_virtues(player_type *player_ptr, FILE *fff)
+static void dump_aux_virtues(PlayerType *player_ptr, FILE *fff)
 {
     fprintf(fff, _("\n\n  [自分に関する情報]\n\n", "\n\n  [HP-rate & Max stat & Virtues]\n\n"));
 
-    int percent
-        = (int)(((long)player_ptr->player_hp[PY_MAX_LEVEL - 1] * 200L) / (2 * player_ptr->hitdie + ((PY_MAX_LEVEL - 1 + 3) * (player_ptr->hitdie + 1))));
+    int percent = (int)(((long)player_ptr->player_hp[PY_MAX_LEVEL - 1] * 200L) / (2 * player_ptr->hitdie + ((PY_MAX_LEVEL - 1 + 3) * (player_ptr->hitdie + 1))));
 
 #ifdef JP
     if (player_ptr->knowledge & KNOW_HPRATE)
@@ -447,7 +446,7 @@ static void dump_aux_virtues(player_type *player_ptr, FILE *fff)
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param fff ファイルポインタ
  */
-static void dump_aux_mutations(player_type *player_ptr, FILE *fff)
+static void dump_aux_mutations(PlayerType *player_ptr, FILE *fff)
 {
     if (player_ptr->muta.any()) {
         fprintf(fff, _("\n\n  [突然変異]\n\n", "\n\n  [Mutations]\n\n"));
@@ -460,15 +459,14 @@ static void dump_aux_mutations(player_type *player_ptr, FILE *fff)
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param fff ファイルポインタ
  */
-static void dump_aux_equipment_inventory(player_type *player_ptr, FILE *fff)
+static void dump_aux_equipment_inventory(PlayerType *player_ptr, FILE *fff)
 {
     GAME_TEXT o_name[MAX_NLEN];
     if (player_ptr->equip_cnt) {
         fprintf(fff, _("  [キャラクタの装備]\n\n", "  [Character Equipment]\n\n"));
         for (int i = INVEN_MAIN_HAND; i < INVEN_TOTAL; i++) {
             describe_flavor(player_ptr, o_name, &player_ptr->inventory_list[i], 0);
-            if ((((i == INVEN_MAIN_HAND) && can_attack_with_sub_hand(player_ptr)) || ((i == INVEN_SUB_HAND) && can_attack_with_main_hand(player_ptr)))
-                && has_two_handed_weapons(player_ptr))
+            if ((((i == INVEN_MAIN_HAND) && can_attack_with_sub_hand(player_ptr)) || ((i == INVEN_SUB_HAND) && can_attack_with_main_hand(player_ptr))) && has_two_handed_weapons(player_ptr))
                 strcpy(o_name, _("(武器を両手持ち)", "(wielding with two-hands)"));
 
             fprintf(fff, "%c) %s\n", index_to_label(i), o_name);
@@ -493,10 +491,10 @@ static void dump_aux_equipment_inventory(player_type *player_ptr, FILE *fff)
  * @brief 我が家と博物館のオブジェクト情報をファイルにダンプする
  * @param fff ファイルポインタ
  */
-static void dump_aux_home_museum(player_type *player_ptr, FILE *fff)
+static void dump_aux_home_museum(PlayerType *player_ptr, FILE *fff)
 {
     store_type *store_ptr;
-    store_ptr = &town_info[1].store[STORE_HOME];
+    store_ptr = &town_info[1].store[enum2i(StoreSaleType::HOME)];
 
     GAME_TEXT o_name[MAX_NLEN];
     if (store_ptr->stock_num) {
@@ -513,7 +511,7 @@ static void dump_aux_home_museum(player_type *player_ptr, FILE *fff)
         fprintf(fff, "\n\n");
     }
 
-    store_ptr = &town_info[1].store[STORE_MUSEUM];
+    store_ptr = &town_info[1].store[enum2i(StoreSaleType::MUSEUM)];
 
     if (store_ptr->stock_num == 0)
         return;
@@ -555,7 +553,7 @@ static concptr get_check_sum(void)
  * @param fff ファイルポインタ
  * @return エラーコード
  */
-void make_character_dump(player_type *player_ptr, FILE *fff, display_player_pf display_player)
+void make_character_dump(PlayerType *player_ptr, FILE *fff, display_player_pf display_player)
 {
     char title[127];
     put_version(title);

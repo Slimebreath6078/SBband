@@ -22,20 +22,18 @@
 /*!
  * @brief プレイヤーの称号を表示する / Prints "title", including "wizard" or "winner" as needed.
  */
-void print_title(player_type *player_ptr)
+void print_title(PlayerType *player_ptr)
 {
     GAME_TEXT str[14];
     concptr p = "";
-    if (w_ptr->wizard) {
-        p = _("[ウィザード]", "[=-WIZARD-=]");
-    } else if (w_ptr->total_winner || (player_ptr->lev > PY_MAX_LEVEL)) {
-        if (player_ptr->arena_number > MAX_ARENA_MONS + 2) {
+    if (w_ptr->total_winner) {
+        if (player_ptr->is_true_winner()) {
             p = _("*真・勝利者*", "*TRUEWINNER*");
         } else {
             p = _("***勝利者***", "***WINNER***");
         }
     } else {
-        angband_strcpy(str, player_title[player_ptr->pclass][(player_ptr->lev - 1) / 5], sizeof(str));
+        angband_strcpy(str, player_titles[enum2i(player_ptr->pclass)][(player_ptr->lev - 1) / 5].data(), sizeof(str));
         p = str;
     }
 
@@ -45,7 +43,7 @@ void print_title(player_type *player_ptr)
 /*!
  * @brief プレイヤーのレベルを表示する / Prints level
  */
-void print_level(player_type *player_ptr)
+void print_level(PlayerType *player_ptr)
 {
     char tmp[32];
     sprintf(tmp, "%5d", player_ptr->lev);
@@ -61,11 +59,11 @@ void print_level(player_type *player_ptr)
 /*!
  * @brief プレイヤーの経験値を表示する / Display the experience
  */
-void print_exp(player_type *player_ptr)
+void print_exp(PlayerType *player_ptr)
 {
     char out_val[32];
 
-    if ((!exp_need) || (player_ptr->prace == player_race_type::ANDROID)) {
+    if ((!exp_need) || (player_ptr->prace == PlayerRaceType::ANDROID)) {
         (void)sprintf(out_val, "%8ld", (long)player_ptr->exp);
     } else {
         if (player_ptr->lev >= PY_MAX_LEVEL) {
@@ -76,7 +74,7 @@ void print_exp(player_type *player_ptr)
     }
 
     if (player_ptr->exp >= player_ptr->max_exp) {
-        if (player_ptr->prace == player_race_type::ANDROID)
+        if (player_ptr->prace == PlayerRaceType::ANDROID)
             put_str(_("強化 ", "Cst "), ROW_EXP, 0);
         else
             put_str(_("経験 ", "EXP "), ROW_EXP, 0);
@@ -90,7 +88,7 @@ void print_exp(player_type *player_ptr)
 /*!
  * @brief プレイヤーのACを表示する / Prints current AC
  */
-void print_ac(player_type *player_ptr)
+void print_ac(PlayerType *player_ptr)
 {
     char tmp[32];
 
@@ -109,7 +107,7 @@ void print_ac(player_type *player_ptr)
 /*!
  * @brief プレイヤーのHPを表示する / Prints Cur/Max hit points
  */
-void print_hp(player_type *player_ptr)
+void print_hp(PlayerType *player_ptr)
 {
     char tmp[32];
     put_str("HP", ROW_CURHP, COL_CURHP);
@@ -133,11 +131,11 @@ void print_hp(player_type *player_ptr)
 /*!
  * @brief プレイヤーのMPを表示する / Prints players max/cur spell points
  */
-void print_sp(player_type *player_ptr)
+void print_sp(PlayerType *player_ptr)
 {
     char tmp[32];
     byte color;
-    if (!mp_ptr->spell_book && mp_ptr->spell_first == SPELL_FIRST_NO_SPELL)
+    if ((mp_ptr->spell_book == ItemKindType::NONE) && mp_ptr->spell_first == SPELL_FIRST_NO_SPELL)
         return;
 
     put_str(_("MP", "SP"), ROW_CURSP, COL_CURSP);
@@ -161,7 +159,7 @@ void print_sp(player_type *player_ptr)
  * @brief プレイヤーの所持金を表示する / Prints current gold
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void print_gold(player_type *player_ptr)
+void print_gold(PlayerType *player_ptr)
 {
     char tmp[32];
     put_str(_("＄ ", "AU "), ROW_GOLD, COL_GOLD);
@@ -173,7 +171,7 @@ void print_gold(player_type *player_ptr)
  * @brief 現在のフロアの深さを表示する / Prints depth in stat area
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void print_depth(player_type *player_ptr)
+void print_depth(PlayerType *player_ptr)
 {
     char depths[32];
     TERM_COLOR attr = TERM_WHITE;
@@ -244,7 +242,7 @@ void print_depth(player_type *player_ptr)
  * @brief プレイヤーのステータスを一括表示する（左側部分） / Display basic info (mostly left of map)
  * @param player_ptr プレイヤーへの参照ポインタ
  */
-void print_frame_basic(player_type *player_ptr)
+void print_frame_basic(PlayerType *player_ptr)
 {
     if (player_ptr->mimic_form) {
         print_field(mimic_info[player_ptr->mimic_form].title, ROW_RACE, COL_RACE);
@@ -288,7 +286,7 @@ void print_frame_basic(player_type *player_ptr)
  * health-bar stops tracking any monster that "disappears".
  * </pre>
  */
-void health_redraw(player_type *player_ptr, bool riding)
+void health_redraw(PlayerType *player_ptr, bool riding)
 {
     int16_t health_who;
     int row, col;
@@ -306,7 +304,7 @@ void health_redraw(player_type *player_ptr, bool riding)
     monster_type *m_ptr;
     m_ptr = &player_ptr->current_floor_ptr->m_list[health_who];
 
-    if (w_ptr->wizard && player_ptr->phase_out) {
+    if (player_ptr->phase_out) {
         row = ROW_INFO - 1;
         col = COL_INFO + 2;
 

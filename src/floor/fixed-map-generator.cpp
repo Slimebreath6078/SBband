@@ -75,7 +75,7 @@ static void drop_here(floor_type *floor_ptr, object_type *j_ptr, POSITION y, POS
     g_ptr->o_idx_list.add(floor_ptr, o_idx);
 }
 
-static void generate_artifact(player_type *player_ptr, qtwg_type *qtwg_ptr, const ARTIFACT_IDX artifact_index)
+static void generate_artifact(PlayerType *player_ptr, qtwg_type *qtwg_ptr, const ARTIFACT_IDX artifact_index)
 {
     if (artifact_index == 0)
         return;
@@ -85,14 +85,14 @@ static void generate_artifact(player_type *player_ptr, qtwg_type *qtwg_ptr, cons
         return;
     }
 
-    KIND_OBJECT_IDX k_idx = lookup_kind(TV_SCROLL, SV_SCROLL_ACQUIREMENT);
+    KIND_OBJECT_IDX k_idx = lookup_kind(ItemKindType::SCROLL, SV_SCROLL_ACQUIREMENT);
     object_type forge;
     object_type *q_ptr = &forge;
     q_ptr->prep(k_idx);
     drop_here(player_ptr->current_floor_ptr, q_ptr, *qtwg_ptr->y, *qtwg_ptr->x);
 }
 
-static void parse_qtw_D(player_type *player_ptr, qtwg_type *qtwg_ptr, char *s)
+static void parse_qtw_D(PlayerType *player_ptr, qtwg_type *qtwg_ptr, char *s)
 {
     *qtwg_ptr->x = qtwg_ptr->xmin;
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
@@ -138,7 +138,7 @@ static void parse_qtw_D(player_type *player_ptr, qtwg_type *qtwg_ptr, char *s)
 
             place_monster_aux(player_ptr, 0, *qtwg_ptr->y, *qtwg_ptr->x, monster_index, (PM_ALLOW_SLEEP | PM_NO_KAGE));
             if (clone) {
-                floor_ptr->m_list[hack_m_idx_ii].mflag2.set(MFLAG2::CLONED);
+                floor_ptr->m_list[hack_m_idx_ii].mflag2.set(MonsterConstantFlagType::CLONED);
                 r_info[monster_index].cur_num = old_cur_num;
                 r_info[monster_index].max_num = old_max_num;
             }
@@ -177,7 +177,7 @@ static void parse_qtw_D(player_type *player_ptr, qtwg_type *qtwg_ptr, char *s)
             object_type tmp_object;
             object_type *o_ptr = &tmp_object;
             o_ptr->prep(object_index);
-            if (o_ptr->tval == TV_GOLD) {
+            if (o_ptr->tval == ItemKindType::GOLD) {
                 coin_type = object_index - OBJ_GOLD_LIST;
                 make_gold(player_ptr, o_ptr);
                 coin_type = 0;
@@ -206,7 +206,7 @@ static bool parse_qtw_QQ(quest_type *q_ptr, char **zz, int num)
     if (num < 9)
         return true;
 
-    q_ptr->type = static_cast<int16_t>(atoi(zz[2]));
+    q_ptr->type = i2enum<QuestKindType>(atoi(zz[2]));
     q_ptr->num_mon = (MONSTER_NUMBER)atoi(zz[3]);
     q_ptr->cur_num = (MONSTER_NUMBER)atoi(zz[4]);
     q_ptr->max_num = (MONSTER_NUMBER)atoi(zz[5]);
@@ -223,7 +223,7 @@ static bool parse_qtw_QQ(quest_type *q_ptr, char **zz, int num)
         r_ptr->flags1 |= RF1_QUESTOR;
 
     a_ptr = &a_info[q_ptr->k_idx];
-    a_ptr->gen_flags.set(TRG::QUESTITEM);
+    a_ptr->gen_flags.set(ItemGenerationTraitType::QUESTITEM);
     return true;
 }
 
@@ -253,9 +253,9 @@ static bool parse_qtw_QR(quest_type *q_ptr, char **zz, int num)
 
     if (reward_idx) {
         q_ptr->k_idx = (KIND_OBJECT_IDX)reward_idx;
-        a_info[reward_idx].gen_flags.set(TRG::QUESTITEM);
+        a_info[reward_idx].gen_flags.set(ItemGenerationTraitType::QUESTITEM);
     } else {
-        q_ptr->type = QUEST_TYPE_KILL_ALL;
+        q_ptr->type = QuestKindType::KILL_ALL;
     }
 
     return true;
@@ -312,7 +312,7 @@ static int parse_qtw_Q(qtwg_type *qtwg_ptr, char **zz)
     return PARSE_ERROR_GENERIC;
 }
 
-static bool parse_qtw_P(player_type *player_ptr, qtwg_type *qtwg_ptr, char **zz)
+static bool parse_qtw_P(PlayerType *player_ptr, qtwg_type *qtwg_ptr, char **zz)
 {
     if (qtwg_ptr->buf[0] != 'P')
         return false;
@@ -365,20 +365,6 @@ static bool parse_qtw_M(qtwg_type *qtwg_ptr, char **zz)
         max_towns = static_cast<int16_t>(atoi(zz[1]));
     } else if (zz[0][0] == 'Q') {
         max_q_idx = (QUEST_IDX)atoi(zz[1]);
-    } else if (zz[0][0] == 'R') {
-        max_r_idx = (MONRACE_IDX)atoi(zz[1]);
-    } else if (zz[0][0] == 'K') {
-        max_k_idx = (KIND_OBJECT_IDX)atoi(zz[1]);
-    } else if (zz[0][0] == 'V') {
-        max_v_idx = static_cast<int16_t>(atoi(zz[1]));
-    } else if (zz[0][0] == 'F') {
-        max_f_idx = (FEAT_IDX)atoi(zz[1]);
-    } else if (zz[0][0] == 'A') {
-        max_a_idx = (ARTIFACT_IDX)atoi(zz[1]);
-    } else if (zz[0][0] == 'E') {
-        max_e_idx = (EGO_IDX)atoi(zz[1]);
-    } else if (zz[0][0] == 'D') {
-        w_ptr->max_d_idx = (DUNGEON_IDX)atoi(zz[1]);
     } else if (zz[0][0] == 'O') {
         w_ptr->max_o_idx = (OBJECT_IDX)atoi(zz[1]);
     } else if (zz[0][0] == 'M') {
@@ -408,7 +394,7 @@ static bool parse_qtw_M(qtwg_type *qtwg_ptr, char **zz)
  * @return エラーコード
  * @todo クエスト情報のみを読み込む手段と実際にフロアデータまで読み込む処理は分離したい
  */
-parse_error_type generate_fixed_map_floor(player_type *player_ptr, qtwg_type *qtwg_ptr, process_dungeon_file_pf parse_fixed_map)
+parse_error_type generate_fixed_map_floor(PlayerType *player_ptr, qtwg_type *qtwg_ptr, process_dungeon_file_pf parse_fixed_map)
 {
     char *zz[33];
     if (!qtwg_ptr->buf[0])

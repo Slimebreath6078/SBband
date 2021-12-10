@@ -36,7 +36,7 @@
  * @param m_idx 逃走するモンスターの参照ID
  * @param mm 移動方向を返す方向IDの参照ポインタ
  */
-MonsterSweepGrid::MonsterSweepGrid(player_type *player_ptr, MONSTER_IDX m_idx, DIRECTION *mm)
+MonsterSweepGrid::MonsterSweepGrid(PlayerType *player_ptr, MONSTER_IDX m_idx, DIRECTION *mm)
     : player_ptr(player_ptr)
     , m_idx(m_idx)
     , mm(mm)
@@ -59,13 +59,11 @@ bool MonsterSweepGrid::get_movable_grid()
     auto y2 = this->player_ptr->y;
     auto x2 = this->player_ptr->x;
     this->will_run = this->mon_will_run();
-    auto no_flow = m_ptr->mflag2.has(MFLAG2::NOFLOW) && floor_ptr->grid_array[m_ptr->fy][m_ptr->fx].get_cost(r_ptr) > 2;
+    auto no_flow = m_ptr->mflag2.has(MonsterConstantFlagType::NOFLOW) && floor_ptr->grid_array[m_ptr->fy][m_ptr->fx].get_cost(r_ptr) > 2;
     this->can_pass_wall = any_bits(r_ptr->flags2, RF2_PASS_WALL) && ((this->m_idx != this->player_ptr->riding) || has_pass_wall(this->player_ptr));
     if (!this->will_run && m_ptr->target_y) {
         int t_m_idx = floor_ptr->grid_array[m_ptr->target_y][m_ptr->target_x].m_idx;
-        if ((t_m_idx > 0) && are_enemies(this->player_ptr, m_ptr, &floor_ptr->m_list[t_m_idx])
-            && los(this->player_ptr, m_ptr->fy, m_ptr->fx, m_ptr->target_y, m_ptr->target_x)
-            && projectable(this->player_ptr, m_ptr->fy, m_ptr->fx, m_ptr->target_y, m_ptr->target_x)) {
+        if ((t_m_idx > 0) && are_enemies(this->player_ptr, m_ptr, &floor_ptr->m_list[t_m_idx]) && los(this->player_ptr, m_ptr->fy, m_ptr->fx, m_ptr->target_y, m_ptr->target_x) && projectable(this->player_ptr, m_ptr->fy, m_ptr->fx, m_ptr->target_y, m_ptr->target_x)) {
             y = m_ptr->fy - m_ptr->target_y;
             x = m_ptr->fx - m_ptr->target_x;
             this->done = true;
@@ -141,8 +139,7 @@ void MonsterSweepGrid::check_hiding_grid(POSITION *y, POSITION *x, POSITION *y2,
         return;
     }
 
-    if ((!los(this->player_ptr, m_ptr->fy, m_ptr->fx, this->player_ptr->y, this->player_ptr->x)
-            || !projectable(this->player_ptr, m_ptr->fy, m_ptr->fx, this->player_ptr->y, this->player_ptr->x))) {
+    if ((!los(this->player_ptr, m_ptr->fy, m_ptr->fx, this->player_ptr->y, this->player_ptr->x) || !projectable(this->player_ptr, m_ptr->fy, m_ptr->fx, this->player_ptr->y, this->player_ptr->x))) {
         if (floor_ptr->grid_array[m_ptr->fy][m_ptr->fx].get_distance(r_ptr) >= MAX_SIGHT / 2) {
             return;
         }
@@ -286,7 +283,7 @@ void MonsterSweepGrid::sweep_movable_grid(POSITION *yp, POSITION *xp, bool no_fl
 bool MonsterSweepGrid::check_movable_grid(POSITION *yp, POSITION *xp, const bool no_flow)
 {
     auto *r_ptr = &r_info[this->player_ptr->current_floor_ptr->m_list[this->m_idx].r_idx];
-    if ((r_ptr->ability_flags.has_any_of(RF_ABILITY_ATTACK_MASK)) && (sweep_ranged_attack_grid(yp, xp))) {
+    if ((r_ptr->ability_flags.has_any_of(MonsterAbilityType_ATTACK_MASK)) && (sweep_ranged_attack_grid(yp, xp))) {
         return false;
     }
 
@@ -362,8 +359,7 @@ bool MonsterSweepGrid::is_best_cost(const POSITION y, const POSITION x, const in
     auto *floor_ptr = this->player_ptr->current_floor_ptr;
     auto *r_ptr = &r_info[floor_ptr->m_list[this->m_idx].r_idx];
     auto is_riding = this->m_idx == this->player_ptr->riding;
-    if ((none_bits(r_ptr->flags2, RF2_PASS_WALL) || (is_riding && !has_pass_wall(this->player_ptr)))
-        && (none_bits(r_ptr->flags2, RF2_KILL_WALL) || is_riding)) {
+    if ((none_bits(r_ptr->flags2, RF2_PASS_WALL) || (is_riding && !has_pass_wall(this->player_ptr))) && (none_bits(r_ptr->flags2, RF2_KILL_WALL) || is_riding)) {
         if (this->cost == 0) {
             return false;
         }

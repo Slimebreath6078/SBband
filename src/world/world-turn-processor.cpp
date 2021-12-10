@@ -43,7 +43,7 @@
 #include "world/world-movement-processor.h"
 #include "world/world.h"
 
-WorldTurnProcessor::WorldTurnProcessor(player_type *player_ptr)
+WorldTurnProcessor::WorldTurnProcessor(PlayerType *player_ptr)
     : player_ptr(player_ptr)
 {
 }
@@ -275,13 +275,13 @@ void WorldTurnProcessor::shuffle_shopkeeper()
     int n;
     do {
         n = randint0(MAX_STORES);
-        if ((n == STORE_HOME) || (n == STORE_MUSEUM)) {
+        if ((n == enum2i(StoreSaleType::HOME)) || (n == enum2i(StoreSaleType::MUSEUM))) {
             break;
         }
     } while (true);
 
     for (const auto &f_ref : f_info) {
-        if (f_ref.name.empty() || f_ref.flags.has_not(FF::STORE))
+        if (f_ref.name.empty() || f_ref.flags.has_not(FloorFeatureType::STORE))
             continue;
 
         if (f_ref.subtype != n) {
@@ -292,7 +292,7 @@ void WorldTurnProcessor::shuffle_shopkeeper()
             msg_format(_("%sの店主をシャッフルします。", "Shuffle a Shopkeeper of %s."), f_ref.name.c_str());
         }
 
-        store_shuffle(this->player_ptr, n);
+        store_shuffle(this->player_ptr, i2enum<StoreSaleType>(n));
         break;
     }
 }

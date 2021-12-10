@@ -68,7 +68,7 @@ DEPTH monster_level_idx(floor_type *floor_ptr, MONSTER_IDX m_idx)
  * @return 修正を行った結果のダメージ量
  * @details RES_ALL持ちはAC軽減後のダメージを1/100に補正する. 光の剣は無敵を無効化する. 一定確率で無敵は貫通できる.
  */
-HIT_POINT mon_damage_mod(player_type *player_ptr, monster_type *m_ptr, HIT_POINT dam, bool is_psy_spear)
+HIT_POINT mon_damage_mod(PlayerType *player_ptr, monster_type *m_ptr, HIT_POINT dam, bool is_psy_spear)
 {
     auto *r_ptr = &r_info[m_ptr->r_idx];
     if (r_ptr->resistance_flags.has(MonsterResistanceType::RESIST_ALL) && dam > 0) {
@@ -159,7 +159,7 @@ void mproc_init(floor_type *floor_ptr)
  * @param m_idx モンスター参照ID
  * @param mtimed_idx 更新するモンスターの時限ステータスID
  */
-static void process_monsters_mtimed_aux(player_type *player_ptr, MONSTER_IDX m_idx, int mtimed_idx)
+static void process_monsters_mtimed_aux(PlayerType *player_ptr, MONSTER_IDX m_idx, int mtimed_idx)
 {
     auto *m_ptr = &player_ptr->current_floor_ptr->m_list[m_idx];
     switch (mtimed_idx) {
@@ -342,7 +342,7 @@ static void process_monsters_mtimed_aux(player_type *player_ptr, MONSTER_IDX m_i
  * Process the counters of monsters (once per 10 game turns)\n
  * These functions are to process monsters' counters same as player's.
  */
-void process_monsters_mtimed(player_type *player_ptr, int mtimed_idx)
+void process_monsters_mtimed(PlayerType *player_ptr, int mtimed_idx)
 {
     auto *floor_ptr = player_ptr->current_floor_ptr;
     const auto &cur_mproc_list = floor_ptr->mproc_list[mtimed_idx];
@@ -363,7 +363,7 @@ void process_monsters_mtimed(player_type *player_ptr, int mtimed_idx)
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param m_idx 魔力消去を受けるモンスターの参照ID
  */
-void dispel_monster_status(player_type *player_ptr, MONSTER_IDX m_idx)
+void dispel_monster_status(PlayerType *player_ptr, MONSTER_IDX m_idx)
 {
     auto *m_ptr = &player_ptr->current_floor_ptr->m_list[m_idx];
     GAME_TEXT m_name[MAX_NLEN];
@@ -394,7 +394,7 @@ void dispel_monster_status(player_type *player_ptr, MONSTER_IDX m_idx)
  * @param m_idx 経験値を得るモンスターの参照ID
  * @param s_idx 撃破されたモンスター種族の参照ID
  */
-void monster_gain_exp(player_type *player_ptr, MONSTER_IDX m_idx, MONRACE_IDX s_idx)
+void monster_gain_exp(PlayerType *player_ptr, MONSTER_IDX m_idx, MONRACE_IDX s_idx)
 {
     if (m_idx <= 0 || s_idx <= 0) {
         return;
@@ -423,7 +423,7 @@ void monster_gain_exp(player_type *player_ptr, MONSTER_IDX m_idx, MONRACE_IDX s_
     }
 
     m_ptr->exp += new_exp;
-    if (m_ptr->mflag2.has(MFLAG2::CHAMELEON)) {
+    if (m_ptr->mflag2.has(MonsterConstantFlagType::CHAMELEON)) {
         return;
     }
 
@@ -456,7 +456,7 @@ void monster_gain_exp(player_type *player_ptr, MONSTER_IDX m_idx, MONRACE_IDX s_
     m_ptr->max_maxhp = any_bits(r_ptr->flags1, RF1_FORCE_MAXHP) ? maxroll(r_ptr->hdice, r_ptr->hside) : damroll(r_ptr->hdice, r_ptr->hside);
     if (ironman_nightmare) {
         auto hp = m_ptr->max_maxhp * 2;
-        m_ptr->max_maxhp = MIN(30000, hp);
+        m_ptr->max_maxhp = std::min(MONSTER_MAXHP, hp);
     }
 
     m_ptr->maxhp = m_ptr->max_maxhp;
@@ -490,7 +490,7 @@ void monster_gain_exp(player_type *player_ptr, MONSTER_IDX m_idx, MONRACE_IDX s_
             if (player_ptr->hallucinated) {
                 monster_race *hallu_race;
                 do {
-                    hallu_race = &r_info[randint1(max_r_idx - 1)];
+                    hallu_race = &r_info[randint1(r_info.size() - 1)];
                 } while (hallu_race->name.empty() || hallu_race->race_kind_flags.has(MonraceKindType::UNIQUE));
                 msg_format(_("%sは%sに進化した。", "%^s evolved into %s."), m_name, hallu_race->name.c_str());
             } else {

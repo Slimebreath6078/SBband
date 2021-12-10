@@ -87,7 +87,7 @@ MONSTER_IDX m_pop(floor_type *floor_ptr)
  * @param max_level 最大生成階
  * @return 選択されたモンスター生成種族
  */
-MONRACE_IDX get_mon_num(player_type *player_ptr, DEPTH min_level, DEPTH max_level, BIT_FLAGS option)
+MONRACE_IDX get_mon_num(PlayerType *player_ptr, DEPTH min_level, DEPTH max_level, BIT_FLAGS option)
 {
     int r_idx;
     monster_race *r_ptr;
@@ -104,15 +104,15 @@ MONRACE_IDX get_mon_num(player_type *player_ptr, DEPTH min_level, DEPTH max_leve
 
     /* +1 per day after the base date */
     /* base dates : day5(1F), day18(10F,0F), day34(30F), day53(60F), day69(90F) */
-    over_days = MAX(0, w_ptr->dungeon_turn / (TURNS_PER_TICK * 10000L) - delay / 20);
+    over_days = std::max<int>(0, w_ptr->dungeon_turn / (TURNS_PER_TICK * 10000L) - delay / 20);
 
     /* starts from 1/25, reaches 1/3 after 44days from a max_level dependent base date */
-    pls_kakuritu = MAX(NASTY_MON_MAX, NASTY_MON_BASE - over_days / 2);
+    pls_kakuritu = std::max(NASTY_MON_MAX, NASTY_MON_BASE - over_days / 2);
     /* starts from 0, reaches +25lv after 75days from a max_level dependent base date */
-    pls_max_level = MIN(NASTY_MON_PLUS_MAX, over_days / 3);
+    pls_max_level = std::min(NASTY_MON_PLUS_MAX, over_days / 3);
 
-    if (d_info[player_ptr->dungeon_idx].flags.has(DF::MAZE)) {
-        pls_kakuritu = MIN(pls_kakuritu / 2, pls_kakuritu - 10);
+    if (d_info[player_ptr->dungeon_idx].flags.has(DungeonFeatureType::MAZE)) {
+        pls_kakuritu = std::min(pls_kakuritu / 2, pls_kakuritu - 10);
         if (pls_kakuritu < 2)
             pls_kakuritu = 2;
         pls_max_level += 2;
@@ -120,7 +120,7 @@ MONRACE_IDX get_mon_num(player_type *player_ptr, DEPTH min_level, DEPTH max_leve
     }
 
     /* Boost the max_level */
-    if ((option & GMN_ARENA) || d_info[player_ptr->dungeon_idx].flags.has_not(DF::BEGINNER)) {
+    if ((option & GMN_ARENA) || d_info[player_ptr->dungeon_idx].flags.has_not(DungeonFeatureType::BEGINNER)) {
         /* Nightmare mode allows more out-of depth monsters */
         if (ironman_nightmare && !randint0(pls_kakuritu)) {
             /* What a bizarre calculation */
@@ -196,7 +196,7 @@ MONRACE_IDX get_mon_num(player_type *player_ptr, DEPTH min_level, DEPTH max_leve
  * @param r_idx モンスター種族ID
  * @return 対象にできるならtrueを返す
  */
-static bool monster_hook_chameleon_lord(player_type *player_ptr, MONRACE_IDX r_idx)
+static bool monster_hook_chameleon_lord(PlayerType *player_ptr, MONRACE_IDX r_idx)
 {
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
     monster_race *r_ptr = &r_info[r_idx];
@@ -208,11 +208,11 @@ static bool monster_hook_chameleon_lord(player_type *player_ptr, MONRACE_IDX r_i
     if (r_ptr->flags7 & (RF7_FRIENDLY | RF7_CHAMELEON))
         return false;
 
-    if (ABS(r_ptr->level - r_info[MON_CHAMELEON_K].level) > 5)
+    if (std::abs(r_ptr->level - r_info[MON_CHAMELEON_K].level) > 5)
         return false;
 
-    if ((r_ptr->blow[0].method == RBM_EXPLODE) || (r_ptr->blow[1].method == RBM_EXPLODE) || (r_ptr->blow[2].method == RBM_EXPLODE)
-        || (r_ptr->blow[3].method == RBM_EXPLODE))
+    if ((r_ptr->blow[0].method == RaceBlowMethodType::EXPLODE) || (r_ptr->blow[1].method == RaceBlowMethodType::EXPLODE) || (r_ptr->blow[2].method == RaceBlowMethodType::EXPLODE)
+        || (r_ptr->blow[3].method == RaceBlowMethodType::EXPLODE))
         return false;
 
     if (!monster_can_cross_terrain(player_ptr, floor_ptr->grid_array[m_ptr->fy][m_ptr->fx].feat, r_ptr, 0))
@@ -235,7 +235,7 @@ static bool monster_hook_chameleon_lord(player_type *player_ptr, MONRACE_IDX r_i
  * @return 対象にできるならtrueを返す
  * @todo グローバル変数対策の上 monster_hook.cへ移す。
  */
-static bool monster_hook_chameleon(player_type *player_ptr, MONRACE_IDX r_idx)
+static bool monster_hook_chameleon(PlayerType *player_ptr, MONRACE_IDX r_idx)
 {
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
     monster_race *r_ptr = &r_info[r_idx];
@@ -249,8 +249,8 @@ static bool monster_hook_chameleon(player_type *player_ptr, MONRACE_IDX r_idx)
     if (r_ptr->flags7 & (RF7_FRIENDLY | RF7_CHAMELEON))
         return false;
 
-    if ((r_ptr->blow[0].method == RBM_EXPLODE) || (r_ptr->blow[1].method == RBM_EXPLODE) || (r_ptr->blow[2].method == RBM_EXPLODE)
-        || (r_ptr->blow[3].method == RBM_EXPLODE))
+    if ((r_ptr->blow[0].method == RaceBlowMethodType::EXPLODE) || (r_ptr->blow[1].method == RaceBlowMethodType::EXPLODE) || (r_ptr->blow[2].method == RaceBlowMethodType::EXPLODE)
+        || (r_ptr->blow[3].method == RaceBlowMethodType::EXPLODE))
         return false;
 
     if (!monster_can_cross_terrain(player_ptr, floor_ptr->grid_array[m_ptr->fy][m_ptr->fx].feat, r_ptr, 0))
@@ -280,7 +280,7 @@ static bool monster_hook_chameleon(player_type *player_ptr, MONRACE_IDX r_idx)
  * @param born 生成時の初変身先指定ならばtrue
  * @param r_idx 旧モンスター種族のID
  */
-void choose_new_monster(player_type *player_ptr, MONSTER_IDX m_idx, bool born, MONRACE_IDX r_idx)
+void choose_new_monster(PlayerType *player_ptr, MONSTER_IDX m_idx, bool born, MONRACE_IDX r_idx)
 {
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
     monster_type *m_ptr = &floor_ptr->m_list[m_idx];
@@ -312,7 +312,7 @@ void choose_new_monster(player_type *player_ptr, MONSTER_IDX m_idx, bool born, M
         else
             level = floor_ptr->dun_level;
 
-        if (d_info[player_ptr->dungeon_idx].flags.has(DF::CHAMELEON))
+        if (d_info[player_ptr->dungeon_idx].flags.has(DungeonFeatureType::CHAMELEON))
             level += 2 + randint1(3);
 
         r_idx = get_mon_num(player_ptr, 0, level, 0);
@@ -364,8 +364,8 @@ void choose_new_monster(player_type *player_ptr, MONSTER_IDX m_idx, bool born, M
     }
 
     if (ironman_nightmare) {
-        uint32_t hp = m_ptr->max_maxhp * 2L;
-        m_ptr->max_maxhp = (HIT_POINT)MIN(30000, hp);
+        auto hp = m_ptr->max_maxhp * 2;
+        m_ptr->max_maxhp = std::min(MONSTER_MAXHP, hp);
     }
 
     m_ptr->maxhp = (long)(m_ptr->maxhp * m_ptr->max_maxhp) / oldmaxhp;

@@ -6,11 +6,11 @@
 /*
  * Gain experience
  */
-void gain_exp_64(player_type *player_ptr, int32_t amount, uint32_t amount_frac)
+void gain_exp_64(PlayerType *player_ptr, int32_t amount, uint32_t amount_frac)
 {
     if (player_ptr->is_dead)
         return;
-    if (player_ptr->prace == player_race_type::ANDROID)
+    if (player_ptr->prace == PlayerRaceType::ANDROID)
         return;
 
     s64b_add(&(player_ptr->exp), &(player_ptr->exp_frac), amount, amount_frac);
@@ -25,14 +25,14 @@ void gain_exp_64(player_type *player_ptr, int32_t amount, uint32_t amount_frac)
 /*
  * Gain experience
  */
-void gain_exp(player_type *player_ptr, int32_t amount) { gain_exp_64(player_ptr, amount, 0L); }
+void gain_exp(PlayerType *player_ptr, int32_t amount) { gain_exp_64(player_ptr, amount, 0L); }
 
 /*
  * Lose experience
  */
-void lose_exp(player_type *player_ptr, int32_t amount)
+void lose_exp(PlayerType *player_ptr, int32_t amount)
 {
-    if (player_ptr->prace == player_race_type::ANDROID)
+    if (player_ptr->prace == PlayerRaceType::ANDROID)
         return;
     if (amount > player_ptr->exp)
         amount = player_ptr->exp;
@@ -45,7 +45,7 @@ void lose_exp(player_type *player_ptr, int32_t amount)
 /*
  * Restores any drained experience
  */
-bool restore_level(player_type *player_ptr)
+bool restore_level(PlayerType *player_ptr)
 {
     if (player_ptr->exp < player_ptr->max_exp) {
         msg_print(_("経験値が戻ってきた気がする。", "You feel your experience returning."));
@@ -61,9 +61,9 @@ bool restore_level(player_type *player_ptr)
  * Drain experience
  * If resisted to draining, return FALSE
  */
-bool drain_exp(player_type *player_ptr, int32_t drain, int32_t slip, int hold_exp_prob)
+bool drain_exp(PlayerType *player_ptr, int32_t drain, int32_t slip, int hold_exp_prob)
 {
-    if (player_ptr->prace == player_race_type::ANDROID)
+    if (player_ptr->prace == PlayerRaceType::ANDROID)
         return false;
 
     if (player_ptr->hold_exp && (randint0(100) < hold_exp_prob)) {

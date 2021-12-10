@@ -1,8 +1,11 @@
 ﻿#include "player-ability/player-constitution.h"
 #include "mutation/mutation-flag-types.h"
 #include "object/object-flags.h"
+#include "player-base/player-class.h"
 #include "player-base/player-race.h"
 #include "player-info/class-info.h"
+#include "player-info/monk-data-type.h"
+#include "player-info/samurai-data-type.h"
 #include "player/player-personality.h"
 #include "player/race-info-table.h"
 #include "player/special-defense-types.h"
@@ -10,6 +13,11 @@
 #include "spell-realm/spells-hex.h"
 #include "system/player-type-definition.h"
 #include "util/bit-flags-calculator.h"
+
+PlayerConstitution::PlayerConstitution(PlayerType *player_ptr)
+    : PlayerBasicStatistics(player_ptr)
+{
+}
 
 void PlayerConstitution::set_locals()
 {
@@ -23,22 +31,12 @@ void PlayerConstitution::set_locals()
 /*!
  * @brief 耐久力補正計算 - 種族
  * @return 耐久力補正値
- * @details
- * * 種族による耐久力修正値。
- * * エントは別途レベル26,41,46到達ごとに加算(+1)
  */
 int16_t PlayerConstitution::race_value()
 {
     int16_t result = PlayerBasicStatistics::race_value();
 
-    if (PlayerRace(this->player_ptr).equals(player_race_type::ENT)) {
-        if (this->player_ptr->lev > 25)
-            result++;
-        if (this->player_ptr->lev > 40)
-            result++;
-        if (this->player_ptr->lev > 45)
-            result++;
-    }
+    result += PlayerRace(this->player_ptr).additional_constitution();
 
     return result;
 }
@@ -74,19 +72,20 @@ int16_t PlayerConstitution::time_effect_value()
  * * 朱雀の構えで減算(-2)
  * * ネオ・つよしスペシャル中で加算(+4)
  */
-int16_t PlayerConstitution::battleform_value()
+int16_t PlayerConstitution::stance_value()
 {
     int16_t result = 0;
 
-    if (any_bits(this->player_ptr->special_defense, KATA_KOUKIJIN)) {
+    PlayerClass pc(player_ptr);
+    if (pc.samurai_stance_is(SamuraiStanceType::KOUKIJIN)) {
         result += 5;
     }
 
-    if (any_bits(this->player_ptr->special_defense, KAMAE_BYAKKO)) {
+    if (pc.monk_stance_is(MonkStanceType::BYAKKO)) {
         result -= 3;
-    } else if (any_bits(this->player_ptr->special_defense, KAMAE_GENBU)) {
+    } else if (pc.monk_stance_is(MonkStanceType::GENBU)) {
         result += 3;
-    } else if (any_bits(this->player_ptr->special_defense, KAMAE_SUZAKU)) {
+    } else if (pc.monk_stance_is(MonkStanceType::SUZAKU)) {
         result -= 2;
     }
     if (this->player_ptr->tsuyoshi) {
@@ -111,19 +110,19 @@ int16_t PlayerConstitution::mutation_value()
     int16_t result = 0;
 
     if (this->player_ptr->muta.any()) {
-        if (this->player_ptr->muta.has(MUTA::RESILIENT)) {
+        if (this->player_ptr->muta.has(PlayerMutationType::RESILIENT)) {
             result += 4;
         }
 
-        if (this->player_ptr->muta.has(MUTA::ALBINO)) {
+        if (this->player_ptr->muta.has(PlayerMutationType::ALBINO)) {
             result -= 4;
         }
 
-        if (this->player_ptr->muta.has(MUTA::XTRA_FAT)) {
+        if (this->player_ptr->muta.has(PlayerMutationType::XTRA_FAT)) {
             result += 2;
         }
 
-        if (this->player_ptr->muta.has(MUTA::FLESH_ROT)) {
+        if (this->player_ptr->muta.has(PlayerMutationType::FLESH_ROT)) {
             result -= 2;
         }
     }

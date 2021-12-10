@@ -3,25 +3,26 @@
  * @brief 青魔法の呪い系処理定義
  */
 
-
 #include "blue-magic/blue-magic-spirit-curse.h"
 #include "blue-magic/blue-magic-util.h"
+#include "effect/attribute-types.h"
 #include "monster-race/race-ability-flags.h"
 #include "mspell/mspell-damage-calculator.h"
 #include "spell-kind/spells-launcher.h"
-#include "spell/spell-types.h"
 #include "system/player-type-definition.h"
 #include "target/target-getter.h"
 #include "view/display-messages.h"
 
-curse_caster::curse_caster(player_type *player_ptr, bmc_type *bmc_ptr, RF_ABILITY ms_type, EFFECT_ID typ)
+curse_caster::curse_caster(PlayerType *player_ptr, bmc_type *bmc_ptr, MonsterAbilityType ms_type, AttributeType typ)
     : player_ptr(player_ptr)
     , bmc_ptr(bmc_ptr)
     , ms_type(ms_type)
     , typ(typ)
-{}
+{
+}
 
-bool curse_caster::project(){
+bool curse_caster::project()
+{
     if (!get_aim_dir(this->player_ptr, &this->bmc_ptr->dir))
         return false;
 
@@ -30,30 +31,37 @@ bool curse_caster::project(){
     return true;
 }
 
-drain_mana_caster::drain_mana_caster(player_type *player_ptr, bmc_type *bmc_ptr)
-    : curse_caster(player_ptr, bmc_ptr, RF_ABILITY::DRAIN_MANA, GF_DRAIN_MANA)
-{}
+drain_mana_caster::drain_mana_caster(PlayerType *player_ptr, bmc_type *bmc_ptr)
+    : curse_caster(player_ptr, bmc_ptr, MonsterAbilityType::DRAIN_MANA, AttributeType::DRAIN_MANA)
+{
+}
 
-mind_blast_caster::mind_blast_caster(player_type *player_ptr, bmc_type *bmc_ptr)
-    : curse_caster(player_ptr, bmc_ptr, RF_ABILITY::MIND_BLAST, GF_MIND_BLAST)
-{}
+mind_blast_caster::mind_blast_caster(PlayerType *player_ptr, bmc_type *bmc_ptr)
+    : curse_caster(player_ptr, bmc_ptr, MonsterAbilityType::MIND_BLAST, AttributeType::MIND_BLAST)
+{
+}
 
-brain_smash_caster::brain_smash_caster(player_type *player_ptr, bmc_type *bmc_ptr)
-    : curse_caster(player_ptr, bmc_ptr, RF_ABILITY::BRAIN_SMASH, GF_BRAIN_SMASH)
-{}
+brain_smash_caster::brain_smash_caster(PlayerType *player_ptr, bmc_type *bmc_ptr)
+    : curse_caster(player_ptr, bmc_ptr, MonsterAbilityType::BRAIN_SMASH, AttributeType::BRAIN_SMASH)
+{
+}
 
-curse_1_caster::curse_1_caster(player_type *player_ptr, bmc_type *bmc_ptr)
-    : curse_caster(player_ptr, bmc_ptr, RF_ABILITY::CAUSE_1, GF_CAUSE_1)
-{}
+curse_1_caster::curse_1_caster(PlayerType *player_ptr, bmc_type *bmc_ptr)
+    : curse_caster(player_ptr, bmc_ptr, MonsterAbilityType::CAUSE_1, AttributeType::CAUSE_1)
+{
+}
 
-curse_2_caster::curse_2_caster(player_type *player_ptr, bmc_type *bmc_ptr)
-    : curse_caster(player_ptr, bmc_ptr, RF_ABILITY::CAUSE_2, GF_CAUSE_2)
-{}
+curse_2_caster::curse_2_caster(PlayerType *player_ptr, bmc_type *bmc_ptr)
+    : curse_caster(player_ptr, bmc_ptr, MonsterAbilityType::CAUSE_2, AttributeType::CAUSE_2)
+{
+}
 
-curse_3_caster::curse_3_caster(player_type *player_ptr, bmc_type *bmc_ptr)
-    : curse_caster(player_ptr, bmc_ptr, RF_ABILITY::CAUSE_3, GF_CAUSE_3)
-{}
+curse_3_caster::curse_3_caster(PlayerType *player_ptr, bmc_type *bmc_ptr)
+    : curse_caster(player_ptr, bmc_ptr, MonsterAbilityType::CAUSE_3, AttributeType::CAUSE_3)
+{
+}
 
-curse_4_caster::curse_4_caster(player_type *player_ptr, bmc_type *bmc_ptr)
-    : curse_caster(player_ptr, bmc_ptr, RF_ABILITY::CAUSE_4, GF_CAUSE_4)
-{}
+curse_4_caster::curse_4_caster(PlayerType *player_ptr, bmc_type *bmc_ptr)
+    : curse_caster(player_ptr, bmc_ptr, MonsterAbilityType::CAUSE_4, AttributeType::CAUSE_4)
+{
+}

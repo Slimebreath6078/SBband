@@ -171,7 +171,14 @@ enum tr_type : int32_t {
     TR_VUL_LITE = 156, //!< 閃光弱点
     TR_IM_DARK = 157, //!< 暗黒免疫
 
-    TR_FLAG_MAX = 158,
+    TR_SELF_FIRE = 158, //!< マイナスフラグ - 持続火炎ダメージ
+    TR_SELF_ELEC = 159, //!< マイナスフラグ - 持続電撃ダメージ
+    TR_SELF_COLD = 160, //!< マイナスフラグ - 持続冷気ダメージ
+
+    TR_PERSISTENT_CURSE = 161, //!< 頻繁に自身を呪いなおすフラグ
+    TR_VUL_CURSE = 162, //!< 呪力弱点
+
+    TR_FLAG_MAX = 163,
 };
 
 /** 能力値(STR,INT,WIS,DEX,CON,CHR)のpvalを増減させるフラグのリスト */
