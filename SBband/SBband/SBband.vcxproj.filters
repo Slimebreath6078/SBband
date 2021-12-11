@@ -2367,6 +2367,9 @@
     <ClCompile Include="..\..\src\load\monster\monster-loader-savefile1.cpp">
       <Filter>load\monster</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\calc\damage_calc.cpp">
+      <Filter>calc</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\combat\shoot.h">
@@ -5109,6 +5112,9 @@
     <ClInclude Include="..\..\src\load\monster\monster-loader-savefile1.h">
       <Filter>load\monster</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\calc\damage_calc.h">
+      <Filter>calc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\wall.bmp" />
@@ -5336,6 +5342,9 @@
     </Filter>
     <Filter Include="load\monster">
       <UniqueIdentifier>{3b09ea3f-35db-4082-86a9-cbc42a15a33a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="calc">
+      <UniqueIdentifier>{d64c51ed-2a91-4d47-ad94-76d57fa7fd82}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

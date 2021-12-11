@@ -17,45 +17,6 @@
 #include "util/bit-flags-calculator.h"
 
 /*!
- * @brief モンスターの使う呪文の威力を決定する /
- * @param dam 定数値
- * @param dice_num ダイス数
- * @param dice_side ダイス面
- * @param mult ダイス倍率
- * @param div ダイス倍率
- * @param TYPE  DAM_MAXで最大値を返し、DAM_MINで最小値を返す。DAM_ROLLはダイスを振って値を決定する。
- * @return 攻撃呪文のダメージを返す。攻撃呪文以外は-1を返す。
- */
-static HIT_POINT monspell_damage_roll(HIT_POINT dam, int dice_num, int dice_side, int mult, int div, int TYPE)
-{
-    switch (TYPE) {
-    case DAM_MAX:
-        dam += maxroll(dice_num, dice_side) * mult / div;
-        break;
-    case DAM_MIN:
-        dam += dice_num * 1 * mult / div;
-        break;
-    case DAM_ROLL:
-        dam += damroll(dice_num, dice_side) * mult / div;
-        break;
-    case DICE_NUM:
-        return dice_num;
-    case DICE_SIDE:
-        return dice_side;
-    case DICE_MULT:
-        return mult;
-    case DICE_DIV:
-        return div;
-    case BASE_DAM:
-        return dam;
-    }
-
-    if (dam < 1)
-        dam = 1;
-    return dam;
-}
-
-/*!
  * @brief モンスターの使う呪文の威力を返す /
  * @param player_ptr プレイヤーへの参照ポインタ (破滅の手用)
  * @param SPELL_NUM 呪文番号
