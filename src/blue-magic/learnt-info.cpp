@@ -30,11 +30,11 @@ PLAYER_LEVEL get_pseudo_monstetr_level(PlayerType *player_ptr)
  */
 static void set_bluemage_damage(PlayerType *player_ptr, MonsterAbilityType ms_type, PLAYER_LEVEL plev, concptr msg, char *tmp)
 {
-    int base_damage = monspell_bluemage_damage(player_ptr, ms_type, plev, BASE_DAM);
-    int dice_num = monspell_bluemage_damage(player_ptr, ms_type, plev, DICE_NUM);
-    int dice_side = monspell_bluemage_damage(player_ptr, ms_type, plev, DICE_SIDE);
-    int dice_mult = monspell_bluemage_damage(player_ptr, ms_type, plev, DICE_MULT);
-    int dice_div = monspell_bluemage_damage(player_ptr, ms_type, plev, DICE_DIV);
+    int base_damage = monspell_bluemage_damage(player_ptr, ms_type, plev, damage_flag_type::BASE_DAM);
+    int dice_num = monspell_bluemage_damage(player_ptr, ms_type, plev, damage_flag_type::DICE_NUM);
+    int dice_side = monspell_bluemage_damage(player_ptr, ms_type, plev, damage_flag_type::DICE_SIDE);
+    int dice_mult = monspell_bluemage_damage(player_ptr, ms_type, plev, damage_flag_type::DICE_MULT);
+    int dice_div = monspell_bluemage_damage(player_ptr, ms_type, plev, damage_flag_type::DICE_DIV);
     char dmg_str[80];
     dice_to_string(base_damage, dice_num, dice_side, dice_mult, dice_div, dmg_str);
     sprintf(tmp, " %s %s", msg, dmg_str);

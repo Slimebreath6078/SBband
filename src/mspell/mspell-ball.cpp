@@ -36,7 +36,7 @@ MonsterSpellResult BallProjector::project(POSITION y, POSITION x)
     if (view_message())
         play_sound();
 
-    const auto dam = monspell_damage(player_ptr, ms_type, m_idx, DAM_ROLL);
+    const auto dam = monspell_damage(player_ptr, ms_type, m_idx, damage_flag_type::DAM_ROLL);
     const auto proj_res = breath(player_ptr, y, x, m_idx, typ, dam, rad, false, TARGET_TYPE);
     if (TARGET_TYPE == MONSTER_TO_PLAYER)
         smart_learn();

@@ -65,7 +65,7 @@ static bool cast_blue_rocket(PlayerType *player_ptr, bmc_type *bmc_ptr)
         return false;
 
     msg_print(_("ロケットを発射した。", "You fire a rocket."));
-    bmc_ptr->damage = monspell_bluemage_damage(player_ptr, MonsterAbilityType::ROCKET, bmc_ptr->plev, DAM_ROLL);
+    bmc_ptr->damage = monspell_bluemage_damage(player_ptr, MonsterAbilityType::ROCKET, bmc_ptr->plev, damage_flag_type::DAM_ROLL);
     fire_rocket(player_ptr, AttributeType::ROCKET, bmc_ptr->dir, bmc_ptr->damage, 2);
     return true;
 }
@@ -76,7 +76,7 @@ static bool cast_blue_shoot(PlayerType *player_ptr, bmc_type *bmc_ptr)
         return false;
 
     msg_print(_("矢を放った。", "You fire an arrow."));
-    bmc_ptr->damage = monspell_bluemage_damage(player_ptr, MonsterAbilityType::SHOOT, bmc_ptr->plev, DAM_ROLL);
+    bmc_ptr->damage = monspell_bluemage_damage(player_ptr, MonsterAbilityType::SHOOT, bmc_ptr->plev, damage_flag_type::DAM_ROLL);
     fire_bolt(player_ptr, AttributeType::ARROW, bmc_ptr->dir, bmc_ptr->damage);
     return true;
 }
@@ -153,7 +153,7 @@ static bool cast_blue_psy_spear(PlayerType *player_ptr, bmc_type *bmc_ptr)
         return false;
 
     msg_print(_("光の剣を放った。", "You throw a psycho-spear."));
-    bmc_ptr->damage = monspell_bluemage_damage(player_ptr, MonsterAbilityType::PSY_SPEAR, bmc_ptr->plev, DAM_ROLL);
+    bmc_ptr->damage = monspell_bluemage_damage(player_ptr, MonsterAbilityType::PSY_SPEAR, bmc_ptr->plev, damage_flag_type::DAM_ROLL);
     (void)fire_beam(player_ptr, AttributeType::PSY_SPEAR, bmc_ptr->dir, bmc_ptr->damage);
     return true;
 }

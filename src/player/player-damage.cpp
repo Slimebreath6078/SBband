@@ -531,9 +531,9 @@ static void process_aura_damage(monster_type *m_ptr, PlayerType *player_ptr, boo
     handle_stuff(player_ptr);
 }
 
-static HIT_POINT calc_aura_damage(DEPTH level)
+HIT_POINT calc_aura_damage(DEPTH level, damage_flag_type TYPE)
 {
-    return damroll(1 + (level / 26), 1 + (level / 17));
+    return damage_roll(0, 1 + (level / 26), 1 + (level / 17), 1, 1, TYPE);
 }
 
 /*!
@@ -548,7 +548,7 @@ void touch_zap_player(monster_type *m_ptr, PlayerType *player_ptr)
 
     monster_desc(player_ptr, mon_name, m_ptr, MD_WRONGDOER_NAME);
 
-    process_aura_damage(m_ptr, player_ptr, has_immune_fire(player_ptr) != 0, MonsterAuraType::FIRE, fire_dam(player_ptr, calc_aura_damage(r_ptr->level), mon_name, true), _("突然とても熱くなった！", "You are suddenly very hot!"));
-    process_aura_damage(m_ptr, player_ptr, has_immune_cold(player_ptr) != 0, MonsterAuraType::COLD, cold_dam(player_ptr, calc_aura_damage(r_ptr->level), mon_name, true), _("突然とても寒くなった！", "You are suddenly very cold!"));
-    process_aura_damage(m_ptr, player_ptr, has_immune_elec(player_ptr) != 0, MonsterAuraType::ELEC, elec_dam(player_ptr, calc_aura_damage(r_ptr->level), mon_name, true), _("電撃をくらった！", "You get zapped!"));
+    process_aura_damage(m_ptr, player_ptr, has_immune_fire(player_ptr) != 0, MonsterAuraType::FIRE, fire_dam(player_ptr, calc_aura_damage(r_ptr->level, damage_flag_type::DAM_ROLL), mon_name, true), _("突然とても熱くなった！", "You are suddenly very hot!"));
+    process_aura_damage(m_ptr, player_ptr, has_immune_cold(player_ptr) != 0, MonsterAuraType::COLD, cold_dam(player_ptr, calc_aura_damage(r_ptr->level, damage_flag_type::DAM_ROLL), mon_name, true), _("突然とても寒くなった！", "You are suddenly very cold!"));
+    process_aura_damage(m_ptr, player_ptr, has_immune_elec(player_ptr) != 0, MonsterAuraType::ELEC, elec_dam(player_ptr, calc_aura_damage(r_ptr->level, damage_flag_type::DAM_ROLL), mon_name, true), _("電撃をくらった！", "You get zapped!"));
 }
