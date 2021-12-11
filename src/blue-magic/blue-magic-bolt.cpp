@@ -27,7 +27,7 @@ bool bolt_caster::project()
         return false;
 
     msg_print(msg);
-    bmc_ptr->damage = monspell_bluemage_damage(player_ptr, ms_type, bmc_ptr->plev, DAM_ROLL);
+    bmc_ptr->damage = monspell_bluemage_damage(player_ptr, ms_type, bmc_ptr->plev, damage_flag_type::DAM_ROLL);
     fire_bolt(player_ptr, typ, bmc_ptr->dir, bmc_ptr->damage);
     return true;
 }

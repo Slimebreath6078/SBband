@@ -26,7 +26,7 @@ bool curse_caster::project()
     if (!get_aim_dir(this->player_ptr, &this->bmc_ptr->dir))
         return false;
 
-    this->bmc_ptr->damage = monspell_bluemage_damage(this->player_ptr, this->ms_type, this->bmc_ptr->plev, DAM_ROLL);
+    this->bmc_ptr->damage = monspell_bluemage_damage(this->player_ptr, this->ms_type, this->bmc_ptr->plev, damage_flag_type::DAM_ROLL);
     fire_ball_hide(this->player_ptr, this->typ, this->bmc_ptr->dir, this->bmc_ptr->damage, 0);
     return true;
 }

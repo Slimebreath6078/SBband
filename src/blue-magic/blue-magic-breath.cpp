@@ -29,7 +29,7 @@ bool breath_caster::project()
         return false;
 
     msg_format(_("%sのブレスを吐いた。", "You breathe %s."), this->typ_name);
-    this->bmc_ptr->damage = monspell_bluemage_damage(this->player_ptr, this->ms_type, this->bmc_ptr->plev, DAM_ROLL);
+    this->bmc_ptr->damage = monspell_bluemage_damage(this->player_ptr, this->ms_type, this->bmc_ptr->plev, damage_flag_type::DAM_ROLL);
     fire_breath(this->player_ptr, this->typ, this->bmc_ptr->dir, this->bmc_ptr->damage, (this->bmc_ptr->plev > 40 ? 3 : 2));
     return true;
 }

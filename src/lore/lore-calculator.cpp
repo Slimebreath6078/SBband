@@ -115,11 +115,11 @@ bool know_damage(MONRACE_IDX r_idx, int i)
 void set_damage(PlayerType *player_ptr, lore_type *lore_ptr, MonsterAbilityType ms_type, concptr msg)
 {
     MONRACE_IDX r_idx = lore_ptr->r_idx;
-    int base_damage = monspell_race_damage(player_ptr, ms_type, r_idx, BASE_DAM);
-    int dice_num = monspell_race_damage(player_ptr, ms_type, r_idx, DICE_NUM);
-    int dice_side = monspell_race_damage(player_ptr, ms_type, r_idx, DICE_SIDE);
-    int dice_mult = monspell_race_damage(player_ptr, ms_type, r_idx, DICE_MULT);
-    int dice_div = monspell_race_damage(player_ptr, ms_type, r_idx, DICE_DIV);
+    int base_damage = monspell_race_damage(player_ptr, ms_type, r_idx, damage_flag_type::BASE_DAM);
+    int dice_num = monspell_race_damage(player_ptr, ms_type, r_idx, damage_flag_type::DICE_NUM);
+    int dice_side = monspell_race_damage(player_ptr, ms_type, r_idx, damage_flag_type::DICE_SIDE);
+    int dice_mult = monspell_race_damage(player_ptr, ms_type, r_idx, damage_flag_type::DICE_MULT);
+    int dice_div = monspell_race_damage(player_ptr, ms_type, r_idx, damage_flag_type::DICE_DIV);
     char dmg_str[80], dice_str[sizeof(dmg_str) + 10];
     char *tmp = lore_ptr->tmp_msg[lore_ptr->vn];
     dice_to_string(base_damage, dice_num, dice_side, dice_mult, dice_div, dmg_str);

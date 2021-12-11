@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "object/object-broken.h"
+#include "calc/damage_calc.h"
 #include "system/angband.h"
 #include <functional>
 #include <memory>
@@ -80,3 +81,4 @@ private:
 
 int take_hit(PlayerType *player_ptr, int damage_type, HIT_POINT damage, concptr kb_str);
 void touch_zap_player(monster_type *m_ptr, PlayerType *player_ptr);
+HIT_POINT calc_aura_damage(DEPTH level, damage_flag_type TYPE);

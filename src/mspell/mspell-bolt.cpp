@@ -150,7 +150,7 @@ MonsterSpellResult BoltProjector::project(POSITION y, POSITION x)
     if (view_message())
         play_sound();
 
-    const auto dam = monspell_damage(player_ptr, ms_type, m_idx, DAM_ROLL);
+    const auto dam = monspell_damage(player_ptr, ms_type, m_idx, damage_flag_type::DAM_ROLL);
     const auto proj_res = bolt(player_ptr, m_idx, y, x, typ, dam, TARGET_TYPE);
     if (TARGET_TYPE == MONSTER_TO_PLAYER)
         smart_learn();

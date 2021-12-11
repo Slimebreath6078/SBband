@@ -28,7 +28,7 @@ bool ball_caster::project()
         return false;
 
     msg_print(this->msg);
-    this->bmc_ptr->damage = monspell_bluemage_damage(this->player_ptr, this->ms_type, this->bmc_ptr->plev, DAM_ROLL);
+    this->bmc_ptr->damage = monspell_bluemage_damage(this->player_ptr, this->ms_type, this->bmc_ptr->plev, damage_flag_type::DAM_ROLL);
     fire_ball(this->player_ptr, this->typ, this->bmc_ptr->dir, bmc_ptr->damage, rad);
     return true;
 }
