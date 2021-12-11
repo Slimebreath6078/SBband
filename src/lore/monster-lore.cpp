@@ -165,6 +165,8 @@ void process_monster_lore(PlayerType *player_ptr, MONRACE_IDX r_idx, monster_lor
     }
 
     display_lore_this(player_ptr, lore_ptr);
+    lore_ptr->vn = 0;
+    set_monster_aura_types(lore_ptr);
     display_monster_aura(lore_ptr);
     if (lore_ptr->flags2 & RF2_REFLECTING)
         hooked_roff(format(_("%^sは矢の呪文を跳ね返す。", "%^s reflects bolt spells.  "), Who::who(lore_ptr->msex)));

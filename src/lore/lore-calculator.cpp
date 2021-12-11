@@ -6,6 +6,7 @@
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-kind-flags.h"
 #include "mspell/mspell-damage-calculator.h"
+#include "player/player-damage.h"
 #include "system/monster-race-definition.h"
 #include "system/player-type-definition.h"
 
@@ -129,6 +130,26 @@ void set_damage(PlayerType *player_ptr, lore_type *lore_ptr, MonsterAbilityType 
         sprintf(tmp, msg, dice_str);
     else
         sprintf(tmp, msg, "");
+}
+
+void set_aura_damage(lore_type *lore_ptr, char* buff, concptr msg)
+{
+
+    MONRACE_IDX r_idx = lore_ptr->r_idx;
+    DEPTH level = lore_ptr->r_ptr->level;
+    int base_damage = calc_aura_damage(r_idx, level, damage_flag_type::BASE_DAM);
+    int dice_num = calc_aura_damage(r_idx, level, damage_flag_type::DICE_NUM);
+    int dice_side = calc_aura_damage(r_idx, level, damage_flag_type::DICE_SIDE);
+    int dice_mult = calc_aura_damage(r_idx, level, damage_flag_type::DICE_MULT);
+    int dice_div = calc_aura_damage(r_idx, level, damage_flag_type::DICE_DIV);
+    char dmg_str[80], dice_str[sizeof(dmg_str) + 10];
+    dice_to_string(base_damage, dice_num, dice_side, dice_mult, dice_div, dmg_str);
+    sprintf(dice_str, "(%s)", dmg_str);
+
+    if (know_armour(r_idx, lore_ptr->know_everything))
+        sprintf(buff, msg, dice_str);
+    else
+        sprintf(buff, msg, "");
 }
 
 void set_drop_flags(lore_type *lore_ptr)

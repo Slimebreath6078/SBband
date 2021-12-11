@@ -471,7 +471,7 @@ void hit_trap(PlayerType *player_ptr, bool break_trap)
     case TRAP_ACID: {
         msg_print(_("酸が吹きかけられた！", "You are splashed with acid!"));
         dam = damroll(4, 6);
-        (void)acid_dam(player_ptr, dam, _("酸のトラップ", "an acid trap")).process();
+        (void)acid_dam(player_ptr, dam, _("酸のトラップ", "an acid trap"), false).process();
         break;
     }
 

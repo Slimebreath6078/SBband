@@ -262,16 +262,7 @@ void effect_player_shards(PlayerType *player_ptr, EffectPlayerType *ep_ptr)
     if (player_ptr->blind)
         msg_print(_("何か鋭いもので攻撃された！", "You are hit by something sharp!"));
 
-    ep_ptr->dam = ep_ptr->dam * calc_shards_damage_rate(player_ptr, CALC_RAND) / 100;
-
-    if (!has_resist_shard(player_ptr) && !check_multishadow(player_ptr)) {
-        (void)BadStatusSetter(player_ptr).mod_cut(static_cast<TIME_EFFECT>(ep_ptr->dam));
-    }
-
-    if (!has_resist_shard(player_ptr) || one_in_(13))
-        inventory_damage(player_ptr, BreakerCold(), 2);
-
-    ep_ptr->get_damage = take_hit(player_ptr, DAMAGE_ATTACK, ep_ptr->dam, ep_ptr->killer);
+    shards_dam(player_ptr, ep_ptr->dam, ep_ptr->killer, false);
 }
 
 void effect_player_sound(PlayerType *player_ptr, EffectPlayerType *ep_ptr)

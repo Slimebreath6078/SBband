@@ -11,3 +11,4 @@ bool know_armour(MONRACE_IDX r_idx, const bool know_everything);
 bool know_damage(MONRACE_IDX r_idx, int i);
 void set_damage(PlayerType *player_ptr, lore_type *lore_ptr, MonsterAbilityType ms_type, concptr msg);
 void set_drop_flags(lore_type *lore_ptr);
+void set_aura_damage(lore_type *lore_ptr, char* buff, concptr msg);

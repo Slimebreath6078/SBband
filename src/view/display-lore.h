@@ -17,6 +17,7 @@ void display_monster_never_move(lore_type *lore_ptr);
 void display_monster_kind(lore_type *lore_ptr);
 void display_monster_alignment(lore_type *lore_ptr);
 void display_monster_exp(PlayerType *player_ptr, lore_type *lore_ptr);
+void set_monster_aura_types(lore_type *lore_ptr);
 void display_monster_aura(lore_type *lore_ptr);
 void display_lore_this(PlayerType *player_ptr, lore_type *lore_ptr);
 void display_monster_collective(lore_type *lore_ptr);

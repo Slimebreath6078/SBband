@@ -1,7 +1,8 @@
 ﻿#pragma once
 
-#include "object/object-broken.h"
 #include "calc/damage_calc.h"
+#include "object/object-broken.h"
+#include "player/player-status-resist.h"
 #include "system/angband.h"
 #include <functional>
 #include <memory>
@@ -19,13 +20,14 @@ class PlayerType;
 
 class attribute_dam {
 protected:
+    attribute_dam(PlayerType *player_ptr, concptr kb_str, HIT_POINT dam, bool aura, std::function<PERCENTAGE(PlayerType *player_ptr, rate_calc_type_mode mode)> calc_damage_rate);
     attribute_dam(PlayerType *player_ptr, concptr kb_str, HIT_POINT dam, bool aura, std::function<PERCENTAGE(PlayerType *player_ptr)> calc_damage_rate);
     attribute_dam() = delete;
     PlayerType *player_ptr;
     concptr kb_str;
     HIT_POINT dam;
     bool aura;
-    const std::function<PERCENTAGE(PlayerType *player_ptr)> calc_damage_rate;
+    const std::function<PERCENTAGE(PlayerType *player_ptr, rate_calc_type_mode mode)> calc_damage_rate;
     virtual void effect(HIT_POINT &damage) = 0;
 
 public:
@@ -36,7 +38,7 @@ public:
 
 class acid_dam : public attribute_dam {
 public:
-    acid_dam(PlayerType *player_ptr, HIT_POINT dam, concptr kb_str);
+    acid_dam(PlayerType *player_ptr, HIT_POINT dam, concptr kb_str, bool aura);
     acid_dam() = delete;
     virtual ~acid_dam() = default;
 
@@ -79,6 +81,17 @@ private:
     cold_dam operator=(cold_dam) = delete;
 };
 
+class shards_dam : public attribute_dam {
+public:
+    shards_dam(PlayerType *player_ptr, HIT_POINT dam, concptr kb_str, bool aura);
+    shards_dam() = delete;
+    virtual ~shards_dam() = default;
+
+private:
+    void effect(HIT_POINT &damage);
+    shards_dam operator=(shards_dam) = delete;
+};
+
 int take_hit(PlayerType *player_ptr, int damage_type, HIT_POINT damage, concptr kb_str);
 void touch_zap_player(monster_type *m_ptr, PlayerType *player_ptr);
-HIT_POINT calc_aura_damage(DEPTH level, damage_flag_type TYPE);
+HIT_POINT calc_aura_damage(MONRACE_IDX r_idx, DEPTH level, damage_flag_type TYPE);
