@@ -34,6 +34,7 @@
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags2.h"
 #include "monster-race/race-flags3.h"
+#include "monster-race/race-indice-types.h"
 #include "monster/monster-describer.h"
 #include "monster/monster-description-types.h"
 #include "monster/monster-info.h"
@@ -560,6 +561,10 @@ HIT_POINT calc_aura_damage(MONRACE_IDX r_idx, DEPTH level, damage_flag_type TYPE
 {
     int dam = 0, dice_num = 0, dice_side = 0, mult = 1, div = 1;
     switch (r_idx) {
+    case MON_COCOA:
+        dice_num = (1 + (level / 26)) * 3;
+        dice_side = 1 + (level / 17);
+        break;
     default:
         dice_num = 1 + (level / 26);
         dice_side = 1 + (level / 17);
