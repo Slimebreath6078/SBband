@@ -70,12 +70,21 @@
 #include "view/display-messages.h"
 #include "world/world.h"
 
-attribute_dam::attribute_dam(PlayerType *player_ptr, concptr kb_str, HIT_POINT dam, bool aura, std::function<PERCENTAGE(PlayerType *player_ptr)> calc_damage_rate)
+attribute_dam::attribute_dam(PlayerType *player_ptr, concptr kb_str, HIT_POINT dam, bool aura, std::function<PERCENTAGE(PlayerType *player_ptr, rate_calc_type_mode mode)> calc_damage_rate)
     : player_ptr(player_ptr)
     , kb_str(kb_str)
     , dam(dam)
     , aura(aura)
     , calc_damage_rate(calc_damage_rate)
+{
+}
+
+attribute_dam::attribute_dam(PlayerType *player_ptr, concptr kb_str, HIT_POINT dam, bool aura, std::function<PERCENTAGE(PlayerType *player_ptr)> calc_damage_rate)
+    : player_ptr(player_ptr)
+    , kb_str(kb_str)
+    , dam(dam)
+    , aura(aura)
+    , calc_damage_rate([f = std::move(calc_damage_rate)](PlayerType *ptr, rate_calc_type_mode) { return f(ptr); })
 {
 }
 
@@ -101,7 +110,7 @@ cold_dam::cold_dam(PlayerType *player_ptr, HIT_POINT dam, concptr kb_str, bool a
 
 HIT_POINT attribute_dam::process()
 {
-    HIT_POINT dam = this->dam * this->calc_damage_rate(this->player_ptr) / 100;
+    HIT_POINT dam = this->dam * this->calc_damage_rate(this->player_ptr, CALC_RAND) / 100;
 
     if (this->dam <= 0)
         return 0;
