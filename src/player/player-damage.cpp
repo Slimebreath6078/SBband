@@ -55,6 +55,7 @@
 #include "player/special-defense-types.h"
 #include "racial/racial-android.h"
 #include "save/save.h"
+#include "status/bad-status-setter.h"
 #include "status/base-status.h"
 #include "status/element-resistance.h"
 #include "system/building-type-definition.h"
@@ -88,8 +89,8 @@ attribute_dam::attribute_dam(PlayerType *player_ptr, concptr kb_str, HIT_POINT d
 {
 }
 
-acid_dam::acid_dam(PlayerType *player_ptr, HIT_POINT dam, concptr kb_str)
-    : attribute_dam(player_ptr, kb_str, dam, false, calc_acid_damage_rate)
+acid_dam::acid_dam(PlayerType *player_ptr, HIT_POINT dam, concptr kb_str, bool aura)
+    : attribute_dam(player_ptr, kb_str, dam, aura, calc_acid_damage_rate)
 {
 }
 
@@ -105,6 +106,11 @@ fire_dam::fire_dam(PlayerType *player_ptr, HIT_POINT dam, concptr kb_str, bool a
 
 cold_dam::cold_dam(PlayerType *player_ptr, HIT_POINT dam, concptr kb_str, bool aura)
     : attribute_dam(player_ptr, kb_str, dam, aura, calc_cold_damage_rate)
+{
+}
+
+shards_dam::shards_dam(PlayerType *player_ptr, HIT_POINT dam, concptr kb_str, bool aura)
+    : attribute_dam(player_ptr, kb_str, dam, aura, calc_shards_damage_rate)
 {
 }
 
@@ -172,6 +178,16 @@ void cold_dam::effect(HIT_POINT &damage)
 
     if (!double_resist && has_resist_cold(this->player_ptr) == FLAG_CAUSE_NONE)
         inventory_damage(this->player_ptr, BreakerCold(), inv);
+}
+
+void shards_dam::effect(HIT_POINT &damage)
+{
+    if (!has_resist_shard(this->player_ptr) && !check_multishadow(this->player_ptr)) {
+        (void)BadStatusSetter(this->player_ptr).mod_cut(static_cast<TIME_EFFECT>(damage));
+    }
+
+    if (!has_resist_shard(this->player_ptr) || one_in_(13))
+        inventory_damage(this->player_ptr, BreakerCold(), 2);
 }
 
 /*!
@@ -540,9 +556,15 @@ static void process_aura_damage(monster_type *m_ptr, PlayerType *player_ptr, boo
     handle_stuff(player_ptr);
 }
 
-HIT_POINT calc_aura_damage(DEPTH level, damage_flag_type TYPE)
+HIT_POINT calc_aura_damage(MONRACE_IDX r_idx, DEPTH level, damage_flag_type TYPE)
 {
-    return damage_roll(0, 1 + (level / 26), 1 + (level / 17), 1, 1, TYPE);
+    int dam = 0, dice_num = 0, dice_side = 0, mult = 1, div = 1;
+    switch (r_idx) {
+    default:
+        dice_num = 1 + (level / 26);
+        dice_side = 1 + (level / 17);
+    }
+    return damage_roll(dam, dice_num, dice_side, mult, div, TYPE);
 }
 
 /*!
@@ -552,12 +574,15 @@ HIT_POINT calc_aura_damage(DEPTH level, damage_flag_type TYPE)
  */
 void touch_zap_player(monster_type *m_ptr, PlayerType *player_ptr)
 {
-    monster_race *r_ptr = &r_info[m_ptr->r_idx];
+    MONRACE_IDX r_idx = m_ptr->r_idx;
+    monster_race *r_ptr = &r_info[r_idx];
     GAME_TEXT mon_name[MAX_NLEN];
 
     monster_desc(player_ptr, mon_name, m_ptr, MD_WRONGDOER_NAME);
 
-    process_aura_damage(m_ptr, player_ptr, has_immune_fire(player_ptr) != 0, MonsterAuraType::FIRE, fire_dam(player_ptr, calc_aura_damage(r_ptr->level, damage_flag_type::DAM_ROLL), mon_name, true), _("突然とても熱くなった！", "You are suddenly very hot!"));
-    process_aura_damage(m_ptr, player_ptr, has_immune_cold(player_ptr) != 0, MonsterAuraType::COLD, cold_dam(player_ptr, calc_aura_damage(r_ptr->level, damage_flag_type::DAM_ROLL), mon_name, true), _("突然とても寒くなった！", "You are suddenly very cold!"));
-    process_aura_damage(m_ptr, player_ptr, has_immune_elec(player_ptr) != 0, MonsterAuraType::ELEC, elec_dam(player_ptr, calc_aura_damage(r_ptr->level, damage_flag_type::DAM_ROLL), mon_name, true), _("電撃をくらった！", "You get zapped!"));
+    process_aura_damage(m_ptr, player_ptr, has_immune_fire(player_ptr) != 0, MonsterAuraType::FIRE, fire_dam(player_ptr, calc_aura_damage(r_idx, r_ptr->level, damage_flag_type::DAM_ROLL), mon_name, true), _("突然とても熱くなった！", "You are suddenly very hot!"));
+    process_aura_damage(m_ptr, player_ptr, has_immune_cold(player_ptr) != 0, MonsterAuraType::COLD, cold_dam(player_ptr, calc_aura_damage(r_idx, r_ptr->level, damage_flag_type::DAM_ROLL), mon_name, true), _("突然とても寒くなった！", "You are suddenly very cold!"));
+    process_aura_damage(m_ptr, player_ptr, has_immune_elec(player_ptr) != 0, MonsterAuraType::ELEC, elec_dam(player_ptr, calc_aura_damage(r_idx, r_ptr->level, damage_flag_type::DAM_ROLL), mon_name, true), _("電撃をくらった！", "You get zapped!"));
+    process_aura_damage(m_ptr, player_ptr, has_immune_acid(player_ptr) != 0, MonsterAuraType::ACID, acid_dam(player_ptr, calc_aura_damage(r_idx, r_ptr->level, damage_flag_type::DAM_ROLL), mon_name, true), _("突然体が腐食しだした！", "You are suddenly rotten!"));
+    process_aura_damage(m_ptr, player_ptr, false, MonsterAuraType::SHARDS, shards_dam(player_ptr, calc_aura_damage(r_idx, r_ptr->level, damage_flag_type::DAM_ROLL), mon_name, true), _("体に傷を負った！", "You get cut!"));
 }

@@ -456,26 +456,58 @@ void display_monster_exp(PlayerType *player_ptr, lore_type *lore_ptr)
 #endif
 }
 
+void set_monster_aura_types(lore_type *lore_ptr)
+{
+    if (lore_ptr->aura_flags.has(MonsterAuraType::FIRE)) {
+        lore_ptr->vp[lore_ptr->vn] = _("炎", "flames");
+        lore_ptr->color[lore_ptr->vn++] = TERM_RED;
+    }
+    if (lore_ptr->aura_flags.has(MonsterAuraType::COLD)) {
+        lore_ptr->vp[lore_ptr->vn] = _("氷", "ice");
+        lore_ptr->color[lore_ptr->vn++] = TERM_BLUE;
+    }
+    if (lore_ptr->aura_flags.has(MonsterAuraType::ELEC)) {
+        lore_ptr->vp[lore_ptr->vn] = _("スパーク", "electricity");
+        lore_ptr->color[lore_ptr->vn++] = TERM_L_BLUE;
+    }
+    if (lore_ptr->aura_flags.has(MonsterAuraType::ACID)) {
+        lore_ptr->vp[lore_ptr->vn] = _("酸", "acid");
+        lore_ptr->color[lore_ptr->vn++] = TERM_L_GREEN;
+    }
+    if (lore_ptr->aura_flags.has(MonsterAuraType::SHARDS)) {
+        lore_ptr->vp[lore_ptr->vn] = _("鋭いもの", "something sharp");
+        lore_ptr->color[lore_ptr->vn++] = TERM_WHITE;
+    }
+}
+
 void display_monster_aura(lore_type *lore_ptr)
 {
-    auto has_fire_aura = lore_ptr->aura_flags.has(MonsterAuraType::FIRE);
-    auto has_elec_aura = lore_ptr->aura_flags.has(MonsterAuraType::ELEC);
-    auto has_cold_aura = lore_ptr->aura_flags.has(MonsterAuraType::COLD);
-    if (has_fire_aura && has_elec_aura && has_cold_aura)
-        hook_c_roff(
-            TERM_VIOLET, format(_("%^sは炎と氷とスパークに包まれている。", "%^s is surrounded by flames, ice and electricity.  "), Who::who(lore_ptr->msex)));
-    else if (has_fire_aura && has_elec_aura)
-        hook_c_roff(TERM_L_RED, format(_("%^sは炎とスパークに包まれている。", "%^s is surrounded by flames and electricity.  "), Who::who(lore_ptr->msex)));
-    else if (has_fire_aura && has_cold_aura)
-        hook_c_roff(TERM_BLUE, format(_("%^sは炎と氷に包まれている。", "%^s is surrounded by flames and ice.  "), Who::who(lore_ptr->msex)));
-    else if (has_cold_aura && has_elec_aura)
-        hook_c_roff(TERM_L_GREEN, format(_("%^sは氷とスパークに包まれている。", "%^s is surrounded by ice and electricity.  "), Who::who(lore_ptr->msex)));
-    else if (has_fire_aura)
-        hook_c_roff(TERM_RED, format(_("%^sは炎に包まれている。", "%^s is surrounded by flames.  "), Who::who(lore_ptr->msex)));
-    else if (has_cold_aura)
-        hook_c_roff(TERM_BLUE, format(_("%^sは氷に包まれている。", "%^s is surrounded by ice.  "), Who::who(lore_ptr->msex)));
-    else if (has_elec_aura)
-        hook_c_roff(TERM_L_BLUE, format(_("%^sはスパークに包まれている。", "%^s is surrounded by electricity.  "), Who::who(lore_ptr->msex)));
+    if (lore_ptr->vn <= 0)
+        return;
+
+    hooked_roff(format(_("%^sは", "%^s"), Who::who(lore_ptr->msex)));
+    for (int n = 0; n < lore_ptr->vn; n++) {
+#ifdef JP
+        if (n != 0)
+            hooked_roff("と");
+#else
+        if (n == 0)
+            hooked_roff(" is surrounded ");
+        else if (n < lore_ptr->vn - 1)
+            hooked_roff(", ");
+        else
+            hooked_roff(" and ");
+#endif
+        hook_c_roff(lore_ptr->color[n], lore_ptr->vp[n]);
+    }
+
+#ifdef JP
+    hooked_roff("に包まれている");
+#endif
+
+    char msg[256];
+    set_aura_damage(lore_ptr, msg, _("%s。", "%s.  "));
+    hooked_roff(msg);
 }
 
 void display_lore_this(PlayerType *player_ptr, lore_type *lore_ptr)
