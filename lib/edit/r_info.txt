@@ -26808,3 +26808,38 @@ D:魔王の執事になるよう所望したものの、
 D:その容姿からメイドを推薦されて結局なっちゃった男の娘のメイド長。
 D:せっかく夢幻の塔を抜けたその次の夢でまた物騒なところに迷い込んで…
 D:とんだ災難だ。
+
+#「常世ノ塔」のラスボスの1体。
+#初登場作品は不明だが、
+#pixivのとあるイラストのキャプションによると
+#「クローン兵だが、普通は３０日しかない
+#寿命が何かのミスで人並みに伸び、
+#死にビビってるので
+#「欠陥品」扱いされている」
+#とのこと。
+#浮遊するロボットを従えている剣士っぽい敵。
+#戦場や行動パターンはロックマン風らしい。
+N:1356:しにぞこないの『ナナハ』
+E:Nanaha, the immortal
+G:p:B
+I:130:70d100:30:120:0
+W:70:2:0:40000:0:0
+B:SHOOT:HURT:12d12
+B:SLASH:HURT:15d15
+B:HIT:HURT:6d7
+B:HIT:HURT:8d8
+F:UNIQUE | CAN_SPEAK | DROP_2D2 | DROP_GREAT | EVIL | HUMAN
+F:FEMALE | FORCE_MAXHP | POWERFUL | NO_STUN | NO_CONF | NO_SLEEP
+F:IM_FIRE | RES_TIME | OPEN_DOOR | BASH_DOOR | MOVE_BODY | HAS_LITE_1
+F:ESCORT
+S:1_IN_4
+S:BA_FIRE | ROCKET | SHOOT | BO_LITE | SHRIEK | SLOW
+S:BLINK | TPORT | SPECIAL
+D:$Clone armies are short-life ones fearlessly fight,
+D:$ but she fears her death because her life is as long as humans.
+D:$ It causes she is said a failure. 
+D:$ She seriously kills you, probably it is for her life...
+D:クローン兵とは死を恐れず戦う短命のものだが、
+D:何かの間違いで人並みに伸びた寿命故に死に恐怖したため、
+D:欠陥品として扱われた。
+D:彼女は死にたくないが故かあなたを本気で殺そうとしてくる…

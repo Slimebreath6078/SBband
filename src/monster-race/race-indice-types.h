@@ -206,4 +206,5 @@ enum monster_race_type {
     MON_RF_AYANAMI = 1338,
     MON_ERROR = 1353,
     MON_COCOA = 1355,
+    MON_NANAHA = 1356,
 };
