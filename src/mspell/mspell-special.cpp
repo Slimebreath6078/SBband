@@ -239,6 +239,7 @@ MonsterSpellResult spell_RF6_SPECIAL(PlayerType *player_ptr, POSITION y, POSITIO
         return spell_RF6_SPECIAL_BANORLUPART(player_ptr, m_idx);
 
     case MON_ROLENTO:
+    case MON_NANAHA:
         return spell_RF6_SPECIAL_ROLENTO(player_ptr, y, x, m_idx, t_idx, TARGET_TYPE);
         break;
 
