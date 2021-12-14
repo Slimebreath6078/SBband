@@ -160,7 +160,7 @@ bool BA_FIRE_Projector::view_message()
     mspell_cast_msg_blind msg;
 
     //else以外では特殊メッセージを表示する
-    if (m_ptr->r_idx == MON_ROLENTO) {
+    if (m_ptr->r_idx == MON_ROLENTO || m_ptr->r_idx == MON_NANAHA) {
         msg.blind = _("%sが何かを投げた。", "%^s throws something.");
         msg.to_player = _("%sは手榴弾を投げた。", "%^s throws a hand grenade.");
         msg.to_mons = _("%^sが%^sに向かって手榴弾を投げた。", "%^s throws a hand grenade.");
