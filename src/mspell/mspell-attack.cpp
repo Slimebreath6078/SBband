@@ -251,6 +251,7 @@ static bool check_thrown_mspell(PlayerType *player_ptr, msa_type *msa_ptr)
     case MonsterAbilityType::FORGET:
     case MonsterAbilityType::BO_LITE:
     case MonsterAbilityType::BO_DARK:
+    case MonsterAbilityType::DRAIN_LIFE:
         return false;
     default:
         return true;

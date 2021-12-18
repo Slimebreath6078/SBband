@@ -277,6 +277,7 @@ ProjectResult breath(PlayerType *player_ptr, POSITION y, POSITION x, MONSTER_IDX
     case AttributeType::CAUSE_3:
     case AttributeType::CAUSE_4:
     case AttributeType::HAND_DOOM:
+    case AttributeType::DRAIN_LIFE:
         flg |= (PROJECT_HIDE | PROJECT_AIMED);
         break;
     default:

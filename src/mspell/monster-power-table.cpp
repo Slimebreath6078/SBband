@@ -108,6 +108,7 @@ const std::map<MonsterAbilityType, const monster_power> monster_powers = {
     { MonsterAbilityType::S_UNIQUE, { 50, 150, 95, 0, 50, A_INT, _("ユニークモンスターの召喚", "summon Unique Monsters") } },
     { MonsterAbilityType::BO_LITE, { 20, 25, 75, 300, 65, A_INT, _("スターライトアロー", "starlight arrow") } },
     { MonsterAbilityType::BO_DARK, { 15, 15, 65, 300, 60, A_INT, _("暗黒の矢", "dark bolt") } },
+    { MonsterAbilityType::DRAIN_LIFE, { 38, 60, 60, 150, 60, A_INT, _("生命力吸収", "drain life") } },
 };
 
 /*!

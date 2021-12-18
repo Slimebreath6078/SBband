@@ -74,3 +74,10 @@ public:
     curse_4_caster() = delete;
     ~curse_4_caster() = default;
 };
+
+class drain_life_caster : public curse_caster {
+public:
+    drain_life_caster(PlayerType *player_ptr, bmc_type *bmc_ptr);
+    drain_life_caster() = delete;
+    ~drain_life_caster() = default;
+};

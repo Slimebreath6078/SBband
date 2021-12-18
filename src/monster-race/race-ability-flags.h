@@ -101,5 +101,6 @@ enum class MonsterAbilityType {
     S_UNIQUE = 95, /* Summon Unique Monster */
     BO_LITE = 96, /*!< モンスター能力: スターライトアロー / Starlight Arrow */
     BO_DARK = 97, /*!< モンスター能力: 暗黒の矢 / Dark Bolt */
+    DRAIN_LIFE = 98, /*!< モンスター能力: 生命力吸収 / Drain Life */
     MAX,
 };

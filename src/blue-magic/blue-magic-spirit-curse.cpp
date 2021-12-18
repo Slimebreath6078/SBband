@@ -65,3 +65,8 @@ curse_4_caster::curse_4_caster(PlayerType *player_ptr, bmc_type *bmc_ptr)
     : curse_caster(player_ptr, bmc_ptr, MonsterAbilityType::CAUSE_4, AttributeType::CAUSE_4)
 {
 }
+
+drain_life_caster::drain_life_caster(PlayerType *player_ptr, bmc_type *bmc_ptr)
+    : curse_caster(player_ptr, bmc_ptr, MonsterAbilityType::DRAIN_LIFE, AttributeType::DRAIN_LIFE)
+{
+}

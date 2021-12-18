@@ -24,4 +24,5 @@ enum drs_type {
     DRS_FREE = 30,
     DRS_MANA = 31,
     DRS_REFLECT = 32,
+    DRS_EXP = 33,
 };

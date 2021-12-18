@@ -71,7 +71,7 @@ static bool restrict_monster_to_dungeon(PlayerType *player_ptr, MONRACE_IDX r_id
         if (r_idx == MON_CHAMELEON)
             return true;
         if (r_ptr->ability_flags.has_none_of(MonsterAbilityType_BOLT_MASK | MonsterAbilityType_BEAM_MASK | MonsterAbilityType_BALL_MASK) && r_ptr->ability_flags.has_none_of(
-                                                                                                                                                { MonsterAbilityType::CAUSE_1, MonsterAbilityType::CAUSE_2, MonsterAbilityType::CAUSE_3, MonsterAbilityType::CAUSE_4, MonsterAbilityType::MIND_BLAST, MonsterAbilityType::BRAIN_SMASH }))
+                                                                                                                                                { MonsterAbilityType::CAUSE_1, MonsterAbilityType::CAUSE_2, MonsterAbilityType::CAUSE_3, MonsterAbilityType::CAUSE_4, MonsterAbilityType::MIND_BLAST, MonsterAbilityType::BRAIN_SMASH, MonsterAbilityType::DRAIN_LIFE }))
             return false;
     }
 

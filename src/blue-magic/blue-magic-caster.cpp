@@ -383,6 +383,8 @@ static bool switch_cast_blue_magic(PlayerType *player_ptr, bmc_type *bmc_ptr, Mo
         return bolt_lite_caster(player_ptr, bmc_ptr).project();
     case MonsterAbilityType::BO_DARK:
         return bolt_dark_caster(player_ptr, bmc_ptr).project();
+    case MonsterAbilityType::DRAIN_LIFE:
+        return drain_life_caster(player_ptr, bmc_ptr).project();
     default:
         msg_print("hoge?");
         return true;

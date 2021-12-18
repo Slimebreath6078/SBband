@@ -100,6 +100,7 @@ const std::map<MonsterAbilityType, AttributeType> Attribute_of_Ability = {
     { MonsterAbilityType::S_UNIQUE, AttributeType::NONE },
     { MonsterAbilityType::BO_LITE, AttributeType::LITE },
     { MonsterAbilityType::BO_DARK, AttributeType::DARK },
+    { MonsterAbilityType::DRAIN_LIFE, AttributeType::DRAIN_LIFE },
 };
 
 AttributeType get_ability_attribute(MonsterAbilityType ability);

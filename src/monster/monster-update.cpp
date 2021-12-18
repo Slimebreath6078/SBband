@@ -674,6 +674,10 @@ void update_smart_learn(PlayerType *player_ptr, MONSTER_IDX m_idx, int what)
             m_ptr->smart.set(MonsterSmartLearnType::IMM_REFLECT);
 
         break;
+    case DRS_EXP:
+        if (has_hold_exp(player_ptr))
+            m_ptr->smart.set(MonsterSmartLearnType::HOLD_EXP);
+        break;
     default:
         break;
     }

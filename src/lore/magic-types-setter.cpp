@@ -273,6 +273,12 @@ void set_particular_types(PlayerType *player_ptr, lore_type *lore_ptr)
         lore_ptr->vp[lore_ptr->vn] = lore_ptr->tmp_msg[lore_ptr->vn];
         lore_ptr->color[lore_ptr->vn++] = TERM_L_WHITE;
     }
+
+    if (lore_ptr->ability_flags.has(MonsterAbilityType::DRAIN_LIFE)) {
+        set_damage(player_ptr, lore_ptr, MonsterAbilityType::DRAIN_LIFE, _("生命力吸収%s", "drain life%s"));
+        lore_ptr->vp[lore_ptr->vn] = lore_ptr->tmp_msg[lore_ptr->vn];
+        lore_ptr->color[lore_ptr->vn++] = TERM_L_UMBER;
+    }
 }
 
 void set_bolt_types(PlayerType *player_ptr, lore_type *lore_ptr)

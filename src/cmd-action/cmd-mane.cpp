@@ -978,6 +978,10 @@ static bool use_mane(PlayerType *player_ptr, MonsterAbilityType spell)
         if (!mane_bolt(player_ptr, _("暗黒の矢の呪文を唱えた。", "You cast a dark bolt."), AttributeType::DARK).fire())
             return false;
         break;
+    case MonsterAbilityType::DRAIN_LIFE:
+        if (!mane_ball_hide(player_ptr, nullptr, AttributeType::DRAIN_LIFE, 0).fire())
+            return false;
+        break;
     default:
         msg_print("hoge?");
     }

@@ -132,6 +132,7 @@ void learnt_info(PlayerType *player_ptr, char *p, MonsterAbilityType power)
         set_bluemage_damage(player_ptr, power, plev, KWD_DAM, p);
         break;
     case MonsterAbilityType::DRAIN_MANA:
+    case MonsterAbilityType::DRAIN_LIFE:
         set_bluemage_damage(player_ptr, power, plev, KWD_HEAL, p);
         break;
     case MonsterAbilityType::MIND_BLAST:
