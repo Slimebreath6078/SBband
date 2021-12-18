@@ -161,7 +161,8 @@ bool affect_feature(PlayerType *player_ptr, MONSTER_IDX who, POSITION r, POSITIO
     case AttributeType::CHAOS:
     case AttributeType::MANA:
     case AttributeType::SEEKER:
-    case AttributeType::SUPER_RAY: {
+    case AttributeType::SUPER_RAY:
+    case AttributeType::DRAIN_LIFE: {
         break;
     }
     case AttributeType::KILL_TRAP: {

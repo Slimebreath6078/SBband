@@ -35,3 +35,4 @@ void effect_player_psy_spear(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
 void effect_player_meteor(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
 void effect_player_icee(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
 void effect_player_hand_doom(PlayerType *player_ptr, EffectPlayerType *ep_ptr);
+void effect_player_drain_life(PlayerType *player_ptr, EffectPlayerType *ep_ptr);

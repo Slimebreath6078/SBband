@@ -9,6 +9,7 @@
 #include "effect/effect-monster-switcher.h"
 #include "avatar/avatar.h"
 #include "cmd-action/cmd-attack.h"
+#include "effect/attribute-types.h"
 #include "effect/effect-monster-charm.h"
 #include "effect/effect-monster-curse.h"
 #include "effect/effect-monster-evil.h"
@@ -31,7 +32,6 @@
 #include "monster/monster-status.h"
 #include "player/player-damage.h"
 #include "spell-kind/spells-genocide.h"
-#include "effect/attribute-types.h"
 #include "system/grid-type-definition.h"
 #include "system/monster-race-definition.h"
 #include "system/monster-type-definition.h"
@@ -88,8 +88,7 @@ process_result effect_monster_death_ray(PlayerType *player_ptr, effect_monster_t
         return PROCESS_CONTINUE;
     }
 
-    if ((em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) && (randint1(888) != 666))
-        || (((em_ptr->r_ptr->level + randint1(20)) > randint1((em_ptr->caster_lev / 2) + randint1(10))) && randint1(100) != 66)) {
+    if ((em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) && (randint1(888) != 666)) || (((em_ptr->r_ptr->level + randint1(20)) > randint1((em_ptr->caster_lev / 2) + randint1(10))) && randint1(100) != 66)) {
         em_ptr->note = _("には耐性がある！", " resists!");
         em_ptr->obvious = false;
         em_ptr->dam = 0;
@@ -467,6 +466,8 @@ process_result switch_effects_monster(PlayerType *player_ptr, effect_monster_typ
         return effect_monster_void(player_ptr, em_ptr);
     case AttributeType::ABYSS:
         return effect_monster_abyss(player_ptr, em_ptr);
+    case AttributeType::DRAIN_LIFE:
+        return effect_monster_drain_life(player_ptr, em_ptr);
     default: {
         em_ptr->skipped = true;
         em_ptr->dam = 0;

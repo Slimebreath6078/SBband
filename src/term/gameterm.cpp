@@ -523,6 +523,8 @@ static TERM_COLOR spell_color(AttributeType type)
             return (0x0F);
         case AttributeType::PHOTO:
             return (0x06);
+        case AttributeType::DRAIN_LIFE:
+            return (0x0F);
         default:
             break;
         }

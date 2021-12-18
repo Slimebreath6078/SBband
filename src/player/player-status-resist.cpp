@@ -124,7 +124,7 @@ PERCENTAGE calc_fire_damage_rate(PlayerType *player_ptr)
 {
     PERCENTAGE per = 100;
 
-    if (has_immune_fire(player_ptr)){
+    if (has_immune_fire(player_ptr)) {
         return 0;
     }
 
@@ -155,7 +155,7 @@ PERCENTAGE calc_cold_damage_rate(PlayerType *player_ptr)
 {
     PERCENTAGE per = 100;
 
-    if(has_immune_cold(player_ptr)){
+    if (has_immune_cold(player_ptr)) {
         return 0;
     }
 
@@ -509,6 +509,20 @@ PERCENTAGE calc_abyss_damage_rate(PlayerType *player_ptr, rate_calc_type_mode mo
         per /= randrate(4, 7, mode);
     } else if (!player_ptr->levitation && player_ptr->anti_tele) {
         per = (per * 5) / 4;
+    }
+    return per;
+}
+
+/*!
+ * @brief 生命力吸収攻撃に対するダメージ倍率計算
+ */
+PERCENTAGE calc_life_drain_damage_rate(PlayerType *player_ptr, rate_calc_type_mode mode)
+{
+    PERCENTAGE per = 100;
+
+    if (has_hold_exp(player_ptr) != 0) {
+        per *= 800;
+        per /= randrate(9, 12, mode);
     }
     return per;
 }

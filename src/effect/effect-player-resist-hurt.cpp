@@ -12,6 +12,7 @@
 #include "main/sound-of-music.h"
 #include "mind/mind-mirror-master.h"
 #include "monster-race/race-indice-types.h"
+#include "monster/monster-describer.h"
 #include "mutation/mutation-investor-remover.h"
 #include "object-enchant/object-curse.h"
 #include "object/object-broken.h"
@@ -28,6 +29,7 @@
 #include "status/element-resistance.h"
 #include "status/experience.h"
 #include "status/shape-changer.h"
+#include "system/monster-type-definition.h"
 #include "system/object-type-definition.h"
 #include "system/player-type-definition.h"
 #include "view/display-messages.h"
@@ -681,4 +683,30 @@ void effect_player_abyss(PlayerType *player_ptr, EffectPlayerType *ep_ptr)
     if (!has_resist_fear(player_ptr)) {
         (void)bss.mod_afraidness(randint1(10));
     }
+}
+
+void effect_player_drain_life(PlayerType *player_ptr, EffectPlayerType *ep_ptr)
+{
+    ep_ptr->dam = ep_ptr->dam * calc_life_drain_damage_rate(player_ptr, CALC_RAND) / 100;
+
+    ep_ptr->get_damage = take_hit(player_ptr, DAMAGE_ATTACK, ep_ptr->dam, ep_ptr->killer);
+
+    if (ep_ptr->m_ptr == nullptr)
+        return;
+
+    if (ep_ptr->m_ptr->hp >= ep_ptr->m_ptr->maxhp)
+        return;
+
+    ep_ptr->m_ptr->hp += ep_ptr->dam * 2 / 3 + damroll(1, ep_ptr->dam / 3);
+    if (ep_ptr->m_ptr->hp > ep_ptr->m_ptr->maxhp)
+        ep_ptr->m_ptr->hp = ep_ptr->m_ptr->maxhp;
+
+    if (player_ptr->health_who == ep_ptr->who)
+        player_ptr->redraw |= (PR_HEALTH);
+
+    if (player_ptr->riding == ep_ptr->who)
+        player_ptr->redraw |= (PR_UHEALTH);
+
+    if (ep_ptr->m_ptr->ml)
+        msg_format(_("%^sは気分が良さそうだ。", "%^s appears healthier."), ep_ptr->killer);
 }

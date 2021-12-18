@@ -110,4 +110,5 @@ const named_num gf_desc[MAX_NAMED_NUM] = {
     { "GF_VOID", AttributeType::VOID_MAGIC },
     { "GF_ABYSS", AttributeType::ABYSS },
     { "GF_HUNGRY", AttributeType::HUNGRY },
+    { "GF_DRAIN_LIFE", AttributeType::DRAIN_LIFE },
 };
