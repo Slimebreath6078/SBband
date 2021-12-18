@@ -1,0 +1,27 @@
+﻿#pragma once
+
+enum class MonraceIndividualityType {
+    FORCE_DEPTH = 0,
+    FORCE_MAXHP = 1,
+    HAS_FRIENDS = 2,
+    ESCORT = 3,
+    MORE_ESCORT = 4,
+    CAN_SPEAK = 5,
+    RIDING = 6,
+    INVISIBLE = 7,
+    COLD_BLOOD = 8,
+    KAGE = 9,
+    TANUKI = 10,
+    CHAMELEON = 11,
+    NO_QUEST = 12,
+    ELDRITCH_HORROR = 13,
+    MULTIPLY = 14,
+    REGENERATE = 15,
+    POWERFUL = 16,
+    REFLECTING = 17,
+    NO_FEAR = 18,
+    NO_STUN = 19,
+    NO_CONF = 20,
+    NO_SLEEP = 21,
+    MAX,
+};
