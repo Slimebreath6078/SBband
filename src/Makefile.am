@@ -524,6 +524,7 @@ SBband_SOURCES = \
 	mspell/monster-power-table.cpp mspell/monster-power-table.h \
 	mspell/mspell-attack.cpp mspell/mspell-attack.h \
 	mspell/mspell-attack-util.cpp mspell/mspell-attack-util.h \
+	mspell/mspell-attribute.cpp mspell/mspell-attribute.h \
 	mspell/mspell-breath.cpp mspell/mspell-breath.h \
 	mspell/mspell-ball.cpp mspell/mspell-ball.h \
 	mspell/mspell-bolt.cpp mspell/mspell-bolt.h \

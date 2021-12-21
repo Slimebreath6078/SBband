@@ -279,6 +279,7 @@
     <ClCompile Include="..\..\src\load\monster\monster-loader-savefile1.cpp" />
     <ClCompile Include="..\..\src\load\player-class-specific-data-loader.cpp" />
     <ClCompile Include="..\..\src\monster-race\race-resistance-mask.cpp" />
+    <ClCompile Include="..\..\src\mspell\mspell-attribute.cpp" />
     <ClCompile Include="..\..\src\object-enchant\object-smith.cpp" />
     <ClCompile Include="..\..\src\object-enchant\smith-info.cpp" />
     <ClCompile Include="..\..\src\object-enchant\smith-tables.cpp" />
@@ -996,6 +997,7 @@
     <ClInclude Include="..\..\src\monster-race\race-resistance-mask.h" />
     <ClInclude Include="..\..\src\monster-race\race-kind-flags.h" />
     <ClInclude Include="..\..\src\monster\monster-damage.h" />
+    <ClInclude Include="..\..\src\mspell\mspell-attribute.h" />
     <ClInclude Include="..\..\src\object-enchant\apply-magic-amulet.h" />
     <ClInclude Include="..\..\src\object-enchant\abstract-protector-enchanter.h" />
     <ClInclude Include="..\..\src\object-enchant\apply-magic-boots.h" />
