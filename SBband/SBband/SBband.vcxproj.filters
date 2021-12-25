@@ -2370,6 +2370,9 @@
     <ClCompile Include="..\..\src\calc\damage_calc.cpp">
       <Filter>calc</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\mspell\mspell-attribute.cpp">
+      <Filter>mspell</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\combat\shoot.h">
@@ -5114,6 +5117,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\calc\damage_calc.h">
       <Filter>calc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\mspell\mspell-attribute.h">
+      <Filter>mspell</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -8,6 +8,8 @@
 #include "blue-magic/blue-magic-checker.h"
 #include "effect/attribute-types.h"
 #include "monster-race/race-ability-flags.h"
+#include "monster/monster-status.h"
+#include "mspell/mspell-attribute.h"
 #include "mspell/mspell-ball.h"
 #include "mspell/mspell-bolt.h"
 #include "mspell/mspell-breath.h"
@@ -32,61 +34,79 @@ static MonsterSpellResult monspell_to_player_impl(PlayerType *player_ptr, Monste
     case MonsterAbilityType::XXX1: break;   /* RF4_XXX1 */
     case MonsterAbilityType::DISPEL: return spell_RF4_DISPEL(m_idx, player_ptr, 0, MONSTER_TO_PLAYER); /* RF4_DISPEL */
     case MonsterAbilityType::ROCKET: return spell_RF4_ROCKET(player_ptr, y, x, m_idx, 0, MONSTER_TO_PLAYER);  /* RF4_ROCKET */
-    case MonsterAbilityType::SHOOT: return SHOOT_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x);   /* RF4_SHOOT */
     case MonsterAbilityType::XXX2: break;   /* RF4_XXX2 */
     case MonsterAbilityType::XXX3: break;   /* RF4_XXX3 */
     case MonsterAbilityType::XXX4: break;   /* RF4_XXX4 */
-    case MonsterAbilityType::BR_ACID: return spell_RF4_BREATH(player_ptr, AttributeType::ACID, y, x, m_idx, 0, MONSTER_TO_PLAYER); /* RF4_BR_ACID */
-    case MonsterAbilityType::BR_ELEC: return spell_RF4_BREATH(player_ptr, AttributeType::ELEC, y, x, m_idx, 0, MONSTER_TO_PLAYER); /* RF4_BR_ELEC */
-    case MonsterAbilityType::BR_FIRE: return spell_RF4_BREATH(player_ptr, AttributeType::FIRE, y, x, m_idx, 0, MONSTER_TO_PLAYER); /* RF4_BR_FIRE */
-    case MonsterAbilityType::BR_COLD: return spell_RF4_BREATH(player_ptr, AttributeType::COLD, y, x, m_idx, 0, MONSTER_TO_PLAYER); /* RF4_BR_COLD */
-    case MonsterAbilityType::BR_POIS: return spell_RF4_BREATH(player_ptr, AttributeType::POIS, y, x, m_idx, 0, MONSTER_TO_PLAYER); /* RF4_BR_POIS */
-    case MonsterAbilityType::BR_NETH: return spell_RF4_BREATH(player_ptr, AttributeType::NETHER, y, x, m_idx, 0, MONSTER_TO_PLAYER);   /* RF4_BR_NETH */
-    case MonsterAbilityType::BR_LITE: return spell_RF4_BREATH(player_ptr, AttributeType::LITE, y, x, m_idx, 0, MONSTER_TO_PLAYER); /* RF4_BR_LITE */
-    case MonsterAbilityType::BR_DARK: return spell_RF4_BREATH(player_ptr, AttributeType::DARK, y, x, m_idx, 0, MONSTER_TO_PLAYER); /* RF4_BR_DARK */
-    case MonsterAbilityType::BR_CONF: return spell_RF4_BREATH(player_ptr, AttributeType::CONFUSION, y, x, m_idx, 0, MONSTER_TO_PLAYER); /* RF4_BR_CONF */
-    case MonsterAbilityType::BR_SOUN: return spell_RF4_BREATH(player_ptr, AttributeType::SOUND, y, x, m_idx, 0, MONSTER_TO_PLAYER); /* RF4_BR_SOUN */
-    case MonsterAbilityType::BR_CHAO: return spell_RF4_BREATH(player_ptr, AttributeType::CHAOS, y, x, m_idx, 0, MONSTER_TO_PLAYER); /* RF4_BR_CHAO */
-    case MonsterAbilityType::BR_DISE: return spell_RF4_BREATH(player_ptr, AttributeType::DISENCHANT, y, x, m_idx, 0, MONSTER_TO_PLAYER);   /* RF4_BR_DISE */
-    case MonsterAbilityType::BR_NEXU: return spell_RF4_BREATH(player_ptr, AttributeType::NEXUS, y, x, m_idx, 0, MONSTER_TO_PLAYER); /* RF4_BR_NEXU */
-    case MonsterAbilityType::BR_TIME: return spell_RF4_BREATH(player_ptr, AttributeType::TIME, y, x, m_idx, 0, MONSTER_TO_PLAYER); /* RF4_BR_TIME */
-    case MonsterAbilityType::BR_INER: return spell_RF4_BREATH(player_ptr, AttributeType::INERTIAL, y, x, m_idx, 0, MONSTER_TO_PLAYER);  /* RF4_BR_INER */
-    case MonsterAbilityType::BR_GRAV: return spell_RF4_BREATH(player_ptr, AttributeType::GRAVITY, y, x, m_idx, 0, MONSTER_TO_PLAYER);  /* RF4_BR_GRAV */
-    case MonsterAbilityType::BR_SHAR: return spell_RF4_BREATH(player_ptr, AttributeType::SHARDS, y, x, m_idx, 0, MONSTER_TO_PLAYER);   /* RF4_BR_SHAR */
-    case MonsterAbilityType::BR_PLAS: return spell_RF4_BREATH(player_ptr, AttributeType::PLASMA, y, x, m_idx, 0, MONSTER_TO_PLAYER);   /* RF4_BR_PLAS */
-    case MonsterAbilityType::BR_FORC: return spell_RF4_BREATH(player_ptr, AttributeType::FORCE, y, x, m_idx, 0, MONSTER_TO_PLAYER); /* RF4_BR_WALL */
-    case MonsterAbilityType::BR_MANA: return spell_RF4_BREATH(player_ptr, AttributeType::MANA, y, x, m_idx, 0, MONSTER_TO_PLAYER); /* RF4_BR_MANA */
-    case MonsterAbilityType::BA_NUKE: return BA_NUKE_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF4_BA_NUKE */
-    case MonsterAbilityType::BR_NUKE: return spell_RF4_BREATH(player_ptr, AttributeType::NUKE, y, x, m_idx, 0, MONSTER_TO_PLAYER); /* RF4_BR_NUKE */
-    case MonsterAbilityType::BA_CHAO: return BA_CHAO_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF4_BA_CHAO */
-    case MonsterAbilityType::BR_DISI: return spell_RF4_BREATH(player_ptr, AttributeType::DISINTEGRATE, y, x, m_idx, 0, MONSTER_TO_PLAYER); /* RF4_BR_DISI */
-    case MonsterAbilityType::BA_ACID: return BA_ACID_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF5_BA_ACID */
-    case MonsterAbilityType::BA_ELEC: return BA_ELEC_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF5_BA_ELEC */
-    case MonsterAbilityType::BA_FIRE: return BA_FIRE_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF5_BA_FIRE */
-    case MonsterAbilityType::BA_COLD: return BA_COLD_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF5_BA_COLD */
-    case MonsterAbilityType::BA_POIS: return BA_POIS_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF5_BA_POIS */
-    case MonsterAbilityType::BA_NETH: return BA_NETH_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF5_BA_NETH */
-    case MonsterAbilityType::BA_WATE: return BA_WATE_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF5_BA_WATE */
-    case MonsterAbilityType::BA_MANA: return BA_MANA_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF5_BA_MANA */
-    case MonsterAbilityType::BA_DARK: return BA_DARK_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF5_BA_DARK */
+    
+
+    case MonsterAbilityType::BR_ACID:
+    case MonsterAbilityType::BR_ELEC:
+    case MonsterAbilityType::BR_FIRE:
+    case MonsterAbilityType::BR_COLD:
+    case MonsterAbilityType::BR_POIS:
+    case MonsterAbilityType::BR_NETH:
+    case MonsterAbilityType::BR_LITE:
+    case MonsterAbilityType::BR_DARK:
+    case MonsterAbilityType::BR_CONF:
+    case MonsterAbilityType::BR_SOUN:
+    case MonsterAbilityType::BR_CHAO:
+    case MonsterAbilityType::BR_DISE:
+    case MonsterAbilityType::BR_NEXU:
+    case MonsterAbilityType::BR_TIME:
+    case MonsterAbilityType::BR_INER:
+    case MonsterAbilityType::BR_GRAV:
+    case MonsterAbilityType::BR_SHAR:
+    case MonsterAbilityType::BR_PLAS:
+    case MonsterAbilityType::BR_FORC:
+    case MonsterAbilityType::BR_MANA: 
+    case MonsterAbilityType::BR_NUKE:
+    case MonsterAbilityType::BR_DISI:
+        return spell_RF4_BREATH(player_ptr, get_ability_attribute(ms_type), y, x, m_idx, 0, MONSTER_TO_PLAYER); /* RF4_BR_**** */
+
+
+    case MonsterAbilityType::BA_ACID: 
+    case MonsterAbilityType::BA_ELEC: 
+    case MonsterAbilityType::BA_FIRE: 
+    case MonsterAbilityType::BA_COLD: 
+        return BallProjector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER, monster_is_powerful(player_ptr->current_floor_ptr, m_idx) ? 4 : 2, ms_type).project(y, x); /* BA_****(Elemental) */
+
+    case MonsterAbilityType::BA_NUKE:
+    case MonsterAbilityType::BA_POIS:
+    case MonsterAbilityType::BA_NETH:
+        return BallProjector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER, 2, ms_type).project(y, x); /* BA_****(Small) */
+
+    case MonsterAbilityType::BA_CHAO: 
+    case MonsterAbilityType::BA_WATE: 
+    case MonsterAbilityType::BA_MANA: 
+    case MonsterAbilityType::BA_DARK:
+    case MonsterAbilityType::BA_LITE:
+        return BallProjector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER, 4, ms_type).project(y, x); /* BA_****(Big) */
+
     case MonsterAbilityType::DRAIN_MANA: return spell_RF5_DRAIN_MANA(player_ptr, y, x, m_idx, 0, MONSTER_TO_PLAYER);  /* RF5_DRAIN_MANA */
     case MonsterAbilityType::MIND_BLAST: return spell_RF5_MIND_BLAST(player_ptr, y, x, m_idx, 0, MONSTER_TO_PLAYER);  /* RF5_MIND_BLAST */
     case MonsterAbilityType::BRAIN_SMASH: return spell_RF5_BRAIN_SMASH(player_ptr, y, x, m_idx, 0, MONSTER_TO_PLAYER); /* RF5_MIND_BLAST */
-    case MonsterAbilityType::CAUSE_1: return CAUSE_1_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF5_CAUSE_1 */
-    case MonsterAbilityType::CAUSE_2: return CAUSE_2_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF5_CAUSE_2 */
-    case MonsterAbilityType::CAUSE_3: return CAUSE_3_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF5_CAUSE_3 */
-    case MonsterAbilityType::CAUSE_4: return CAUSE_4_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF5_CAUSE_4 */
-    case MonsterAbilityType::BO_ACID: return BO_ACID_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF5_BO_ACID */
-    case MonsterAbilityType::BO_ELEC: return BO_ELEC_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF5_BO_ELEC */
-    case MonsterAbilityType::BO_FIRE: return BO_FIRE_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF5_BO_FIRE */
-    case MonsterAbilityType::BO_COLD: return BO_COLD_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF5_BO_COLD */
-    case MonsterAbilityType::BA_LITE: return BA_LITE_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF5_BA_LITE */
-    case MonsterAbilityType::BO_NETH: return BO_NETH_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF5_BO_NETH */
-    case MonsterAbilityType::BO_WATE: return BO_WATE_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF5_BO_WATE */
-    case MonsterAbilityType::BO_MANA: return BO_MANA_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF5_BO_MANA */
-    case MonsterAbilityType::BO_PLAS: return BO_PLAS_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF5_BO_PLAS */
-    case MonsterAbilityType::BO_ICEE: return BO_ICEE_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF5_BO_ICEE */
-    case MonsterAbilityType::MISSILE: return MISSILE_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* RF5_MISSILE */
+
+    case MonsterAbilityType::CAUSE_1:
+    case MonsterAbilityType::CAUSE_2:
+    case MonsterAbilityType::CAUSE_3:
+    case MonsterAbilityType::CAUSE_4: 
+        return CAUSE_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER, ms_type).project(y, x); /* RF5_CAUSE_# */
+
+    case MonsterAbilityType::SHOOT:
+    case MonsterAbilityType::BO_ACID:
+    case MonsterAbilityType::BO_ELEC:
+    case MonsterAbilityType::BO_FIRE:
+    case MonsterAbilityType::BO_COLD:
+    case MonsterAbilityType::BO_NETH:
+    case MonsterAbilityType::BO_WATE:
+    case MonsterAbilityType::BO_MANA:
+    case MonsterAbilityType::BO_PLAS:
+    case MonsterAbilityType::BO_ICEE:
+    case MonsterAbilityType::MISSILE:
+    case MonsterAbilityType::BO_LITE:
+    case MonsterAbilityType::BO_DARK:
+         return BoltProjector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER, ms_type).project(y, x); /* RF5_BO_**** & RF4_SHOOT */
+
     case MonsterAbilityType::SCARE: return spell_RF5_SCARE(m_idx, player_ptr, 0, MONSTER_TO_PLAYER); /* RF5_SCARE */
     case MonsterAbilityType::BLIND: return spell_RF5_BLIND(m_idx, player_ptr, 0, MONSTER_TO_PLAYER); /* RF5_BLIND */
     case MonsterAbilityType::CONF: return spell_RF5_CONF(m_idx, player_ptr, 0, MONSTER_TO_PLAYER); /* RF5_CONF */
@@ -124,8 +144,6 @@ static MonsterSpellResult monspell_to_player_impl(PlayerType *player_ptr, Monste
     case MonsterAbilityType::S_HI_DRAGON: return spell_RF6_S_HI_DRAGON(player_ptr, y, x, m_idx, 0, MONSTER_TO_PLAYER); /* RF6_S_HI_DRAGON */
     case MonsterAbilityType::S_AMBERITES: return spell_RF6_S_AMBERITES(player_ptr, y, x, m_idx, 0, MONSTER_TO_PLAYER); /* RF6_S_AMBERITES */
     case MonsterAbilityType::S_UNIQUE: return spell_RF6_S_UNIQUE(player_ptr, y, x, m_idx, 0, MONSTER_TO_PLAYER); /* RF6_S_UNIQUE */
-    case MonsterAbilityType::BO_LITE: return BO_LITE_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* BO_LITE */
-    case MonsterAbilityType::BO_DARK: return BO_DARK_Projector(player_ptr, m_idx, 0, MONSTER_TO_PLAYER).project(y, x); /* BO_DARK */
     default: break;
     }
     // clang-format on
@@ -142,61 +160,77 @@ static MonsterSpellResult monspell_to_monster_impl(
     case MonsterAbilityType::XXX1: break;   /* RF4_XXX1 */
     case MonsterAbilityType::DISPEL: return spell_RF4_DISPEL(m_idx, player_ptr, t_idx, MONSTER_TO_MONSTER); /* RF4_DISPEL */
     case MonsterAbilityType::ROCKET: return spell_RF4_ROCKET(player_ptr, y, x, m_idx, t_idx, MONSTER_TO_MONSTER); /* RF4_ROCKET */
-    case MonsterAbilityType::SHOOT: return SHOOT_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x);  /* RF4_SHOOT */
     case MonsterAbilityType::XXX2: break;   /* RF4_XXX2 */
     case MonsterAbilityType::XXX3: break;   /* RF4_XXX3 */
     case MonsterAbilityType::XXX4: break;   /* RF4_XXX4 */
-    case MonsterAbilityType::BR_ACID: return spell_RF4_BREATH(player_ptr, AttributeType::ACID, y, x, m_idx, t_idx, MONSTER_TO_MONSTER); /* RF4_BR_ACID */
-    case MonsterAbilityType::BR_ELEC: return spell_RF4_BREATH(player_ptr, AttributeType::ELEC, y, x, m_idx, t_idx, MONSTER_TO_MONSTER); /* RF4_BR_ELEC */
-    case MonsterAbilityType::BR_FIRE: return spell_RF4_BREATH(player_ptr, AttributeType::FIRE, y, x, m_idx, t_idx, MONSTER_TO_MONSTER); /* RF4_BR_FIRE */
-    case MonsterAbilityType::BR_COLD: return spell_RF4_BREATH(player_ptr, AttributeType::COLD, y, x, m_idx, t_idx, MONSTER_TO_MONSTER); /* RF4_BR_COLD */
-    case MonsterAbilityType::BR_POIS: return spell_RF4_BREATH(player_ptr, AttributeType::POIS, y, x, m_idx, t_idx, MONSTER_TO_MONSTER); /* RF4_BR_POIS */
-    case MonsterAbilityType::BR_NETH: return spell_RF4_BREATH(player_ptr, AttributeType::NETHER, y, x, m_idx, t_idx, MONSTER_TO_MONSTER);  /* RF4_BR_NETH */
-    case MonsterAbilityType::BR_LITE: return spell_RF4_BREATH(player_ptr, AttributeType::LITE, y, x, m_idx, t_idx, MONSTER_TO_MONSTER); /* RF4_BR_LITE */
-    case MonsterAbilityType::BR_DARK: return spell_RF4_BREATH(player_ptr, AttributeType::DARK, y, x, m_idx, t_idx, MONSTER_TO_MONSTER); /* RF4_BR_DARK */
-    case MonsterAbilityType::BR_CONF: return spell_RF4_BREATH(player_ptr, AttributeType::CONFUSION, y, x, m_idx, t_idx, MONSTER_TO_MONSTER);   /* RF4_BR_CONF */
-    case MonsterAbilityType::BR_SOUN: return spell_RF4_BREATH(player_ptr, AttributeType::SOUND, y, x, m_idx, t_idx, MONSTER_TO_MONSTER);   /* RF4_BR_SOUN */
-    case MonsterAbilityType::BR_CHAO: return spell_RF4_BREATH(player_ptr, AttributeType::CHAOS, y, x, m_idx, t_idx, MONSTER_TO_MONSTER);   /* RF4_BR_CHAO */
-    case MonsterAbilityType::BR_DISE: return spell_RF4_BREATH(player_ptr, AttributeType::DISENCHANT, y, x, m_idx, t_idx, MONSTER_TO_MONSTER);  /* RF4_BR_DISE */
-    case MonsterAbilityType::BR_NEXU: return spell_RF4_BREATH(player_ptr, AttributeType::NEXUS, y, x, m_idx, t_idx, MONSTER_TO_MONSTER);   /* RF4_BR_NEXU */
-    case MonsterAbilityType::BR_TIME: return spell_RF4_BREATH(player_ptr, AttributeType::TIME, y, x, m_idx, t_idx, MONSTER_TO_MONSTER); /* RF4_BR_TIME */
-    case MonsterAbilityType::BR_INER: return spell_RF4_BREATH(player_ptr, AttributeType::INERTIAL, y, x, m_idx, t_idx, MONSTER_TO_MONSTER); /* RF4_BR_INER */
-    case MonsterAbilityType::BR_GRAV: return spell_RF4_BREATH(player_ptr, AttributeType::GRAVITY, y, x, m_idx, t_idx, MONSTER_TO_MONSTER); /* RF4_BR_GRAV */
-    case MonsterAbilityType::BR_SHAR: return spell_RF4_BREATH(player_ptr, AttributeType::SHARDS, y, x, m_idx, t_idx, MONSTER_TO_MONSTER);  /* RF4_BR_SHAR */
-    case MonsterAbilityType::BR_PLAS: return spell_RF4_BREATH(player_ptr, AttributeType::PLASMA, y, x, m_idx, t_idx, MONSTER_TO_MONSTER);  /* RF4_BR_PLAS */
-    case MonsterAbilityType::BR_FORC: return spell_RF4_BREATH(player_ptr, AttributeType::FORCE, y, x, m_idx, t_idx, MONSTER_TO_MONSTER);   /* RF4_BR_WALL */
-    case MonsterAbilityType::BR_MANA: return spell_RF4_BREATH(player_ptr, AttributeType::MANA, y, x, m_idx, t_idx, MONSTER_TO_MONSTER); /* RF4_BR_MANA */
-    case MonsterAbilityType::BA_NUKE: return BA_NUKE_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF4_BA_NUKE */
-    case MonsterAbilityType::BR_NUKE: return spell_RF4_BREATH(player_ptr, AttributeType::NUKE, y, x, m_idx, t_idx, MONSTER_TO_MONSTER); /* RF4_BR_NUKE */
-    case MonsterAbilityType::BA_CHAO: return BA_CHAO_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF4_BA_CHAO */
-    case MonsterAbilityType::BR_DISI: return spell_RF4_BREATH(player_ptr, AttributeType::DISINTEGRATE, y, x, m_idx, t_idx, MONSTER_TO_MONSTER); /* RF4_BR_DISI */
-    case MonsterAbilityType::BA_ACID: return BA_ACID_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF5_BA_ACID */
-    case MonsterAbilityType::BA_ELEC: return BA_ELEC_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF5_BA_ELEC */
-    case MonsterAbilityType::BA_FIRE: return BA_FIRE_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF5_BA_FIRE */
-    case MonsterAbilityType::BA_COLD: return BA_COLD_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF5_BA_COLD */
-    case MonsterAbilityType::BA_POIS: return BA_POIS_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF5_BA_POIS */
-    case MonsterAbilityType::BA_NETH: return BA_NETH_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF5_BA_NETH */
-    case MonsterAbilityType::BA_WATE: return BA_WATE_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF5_BA_WATE */
-    case MonsterAbilityType::BA_MANA: return BA_MANA_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF5_BA_MANA */
-    case MonsterAbilityType::BA_DARK: return BA_DARK_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF5_BA_DARK */
+
+    case MonsterAbilityType::BR_ACID:
+    case MonsterAbilityType::BR_ELEC:
+    case MonsterAbilityType::BR_FIRE:
+    case MonsterAbilityType::BR_COLD:
+    case MonsterAbilityType::BR_POIS:
+    case MonsterAbilityType::BR_NETH:
+    case MonsterAbilityType::BR_LITE:
+    case MonsterAbilityType::BR_DARK:
+    case MonsterAbilityType::BR_CONF:
+    case MonsterAbilityType::BR_SOUN:
+    case MonsterAbilityType::BR_CHAO:
+    case MonsterAbilityType::BR_DISE:
+    case MonsterAbilityType::BR_NEXU:
+    case MonsterAbilityType::BR_TIME:
+    case MonsterAbilityType::BR_INER:
+    case MonsterAbilityType::BR_GRAV:
+    case MonsterAbilityType::BR_SHAR:
+    case MonsterAbilityType::BR_PLAS:
+    case MonsterAbilityType::BR_FORC:
+    case MonsterAbilityType::BR_MANA: 
+    case MonsterAbilityType::BR_NUKE:
+    case MonsterAbilityType::BR_DISI:
+        return spell_RF4_BREATH(player_ptr, get_ability_attribute(ms_type), y, x, m_idx, t_idx, MONSTER_TO_MONSTER); /* RF4_BR_**** */
+
+    case MonsterAbilityType::BA_ACID: 
+    case MonsterAbilityType::BA_ELEC: 
+    case MonsterAbilityType::BA_FIRE: 
+    case MonsterAbilityType::BA_COLD: 
+        return BallProjector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER, monster_is_powerful(player_ptr->current_floor_ptr, m_idx) ? 4 : 2, ms_type).project(y, x); /* BA_****(Elemental) */
+
+    case MonsterAbilityType::BA_NUKE:
+    case MonsterAbilityType::BA_POIS:
+    case MonsterAbilityType::BA_NETH:
+        return BallProjector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER, 2, ms_type).project(y, x); /* BA_****(Small) */
+
+    case MonsterAbilityType::BA_CHAO: 
+    case MonsterAbilityType::BA_WATE: 
+    case MonsterAbilityType::BA_MANA: 
+    case MonsterAbilityType::BA_DARK:
+    case MonsterAbilityType::BA_LITE:
+        return BallProjector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER, 4, ms_type).project(y, x); /* BA_****(Big) */
+
     case MonsterAbilityType::DRAIN_MANA: return spell_RF5_DRAIN_MANA(player_ptr, y, x, m_idx, t_idx, MONSTER_TO_MONSTER); /* RF5_DRAIN_MANA */
     case MonsterAbilityType::MIND_BLAST: return spell_RF5_MIND_BLAST(player_ptr, y, x, m_idx, t_idx, MONSTER_TO_MONSTER); /* RF5_MIND_BLAST */
     case MonsterAbilityType::BRAIN_SMASH: return spell_RF5_BRAIN_SMASH(player_ptr, y, x, m_idx, t_idx, MONSTER_TO_MONSTER); /* RF5_BRAIN_SMASH */
-    case MonsterAbilityType::CAUSE_1: return CAUSE_1_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF5_CAUSE_1 */
-    case MonsterAbilityType::CAUSE_2: return CAUSE_2_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF5_CAUSE_2 */
-    case MonsterAbilityType::CAUSE_3: return CAUSE_3_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF5_CAUSE_3 */
-    case MonsterAbilityType::CAUSE_4: return CAUSE_4_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF5_CAUSE_4 */
-    case MonsterAbilityType::BO_ACID: return BO_ACID_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF5_BO_ACID */
-    case MonsterAbilityType::BO_ELEC: return BO_ELEC_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF5_BO_ELEC */
-    case MonsterAbilityType::BO_FIRE: return BO_FIRE_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF5_BO_FIRE */
-    case MonsterAbilityType::BO_COLD: return BO_COLD_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF5_BO_COLD */
-    case MonsterAbilityType::BA_LITE: return BA_LITE_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF5_BA_LITE */
-    case MonsterAbilityType::BO_NETH: return BO_NETH_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF5_BO_NETH */
-    case MonsterAbilityType::BO_WATE: return BO_WATE_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF5_BO_WATE */
-    case MonsterAbilityType::BO_MANA: return BO_MANA_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF5_BO_MANA */
-    case MonsterAbilityType::BO_PLAS: return BO_PLAS_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF5_BO_PLAS */
-    case MonsterAbilityType::BO_ICEE: return BO_ICEE_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF5_BO_ICEE */
-    case MonsterAbilityType::MISSILE: return MISSILE_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* RF5_MISSILE */
+    
+    case MonsterAbilityType::CAUSE_1:
+    case MonsterAbilityType::CAUSE_2:
+    case MonsterAbilityType::CAUSE_3:
+    case MonsterAbilityType::CAUSE_4:
+        return CAUSE_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER, ms_type).project(y, x); /* RF5_CAUSE_# */
+
+    case MonsterAbilityType::SHOOT:
+    case MonsterAbilityType::BO_ACID:
+    case MonsterAbilityType::BO_ELEC:
+    case MonsterAbilityType::BO_FIRE:
+    case MonsterAbilityType::BO_COLD:
+    case MonsterAbilityType::BO_NETH:
+    case MonsterAbilityType::BO_WATE:
+    case MonsterAbilityType::BO_MANA:
+    case MonsterAbilityType::BO_PLAS:
+    case MonsterAbilityType::BO_ICEE:
+    case MonsterAbilityType::MISSILE:
+    case MonsterAbilityType::BO_LITE:
+    case MonsterAbilityType::BO_DARK:
+         return BoltProjector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER, ms_type).project(y, x); /* RF5_BO_**** & RF4_SHOOT */
+
     case MonsterAbilityType::SCARE: return spell_RF5_SCARE(m_idx, player_ptr, t_idx, MONSTER_TO_MONSTER); /* RF5_SCARE */
     case MonsterAbilityType::BLIND: return spell_RF5_BLIND(m_idx, player_ptr, t_idx, MONSTER_TO_MONSTER); /* RF5_BLIND */
     case MonsterAbilityType::CONF: return spell_RF5_CONF(m_idx, player_ptr, t_idx, MONSTER_TO_MONSTER); /* RF5_CONF */
@@ -234,8 +268,6 @@ static MonsterSpellResult monspell_to_monster_impl(
     case MonsterAbilityType::S_HI_DRAGON: return spell_RF6_S_HI_DRAGON(player_ptr, y, x, m_idx, t_idx, MONSTER_TO_MONSTER); /* RF6_S_HI_DRAGON */
     case MonsterAbilityType::S_AMBERITES: return spell_RF6_S_AMBERITES(player_ptr, y, x, m_idx, t_idx, MONSTER_TO_MONSTER); /* RF6_S_AMBERITES */
     case MonsterAbilityType::S_UNIQUE: return spell_RF6_S_UNIQUE(player_ptr, y, x, m_idx, t_idx, MONSTER_TO_MONSTER); /* RF6_S_UNIQUE */
-    case MonsterAbilityType::BO_LITE: return BO_LITE_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* BO_LITE */
-    case MonsterAbilityType::BO_DARK: return BO_DARK_Projector(player_ptr, m_idx, t_idx, MONSTER_TO_MONSTER).project(y, x); /* BO_DARK */
     default: break;
     }
     // clang-format on
