@@ -382,6 +382,13 @@ static HIT_POINT monspell_damage_base(
         dice_num = 1;
         dice_side = powerful ? rlev * 4 : rlev * 2;
         break;
+    case MonsterAbilityType::DRAIN_LIFE:
+        mult = powerful ? 3 : 2;
+        div = 2;
+        dam = rlev / 2 * (mult / div);
+        dice_num = 10;
+        dice_side = 10;
+        break;
     case MonsterAbilityType::MAX:
         return -1;
     }

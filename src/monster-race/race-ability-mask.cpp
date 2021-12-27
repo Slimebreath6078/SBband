@@ -83,7 +83,7 @@ const EnumClassFlagGroup<MonsterAbilityType> MonsterAbilityType_ATTACK_MASK =
     MonsterAbilityType::CAUSE_1, MonsterAbilityType::CAUSE_2, MonsterAbilityType::CAUSE_3, MonsterAbilityType::CAUSE_4,
     MonsterAbilityType::SCARE, MonsterAbilityType::BLIND, MonsterAbilityType::CONF, MonsterAbilityType::SLOW, MonsterAbilityType::HOLD,
     MonsterAbilityType::HAND_DOOM, MonsterAbilityType::TELE_TO, MonsterAbilityType::TELE_AWAY, MonsterAbilityType::TELE_LEVEL,
-    MonsterAbilityType::DARKNESS, MonsterAbilityType::TRAPS, MonsterAbilityType::FORGET,
+    MonsterAbilityType::DARKNESS, MonsterAbilityType::TRAPS, MonsterAbilityType::FORGET, MonsterAbilityType::DRAIN_LIFE,
 });
 
 /* "indirect" spells Including "summon" spells */

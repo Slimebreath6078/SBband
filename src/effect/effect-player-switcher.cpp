@@ -151,6 +151,9 @@ void switch_effects_player(PlayerType *player_ptr, EffectPlayerType *ep_ptr)
     case AttributeType::HAND_DOOM:
         effect_player_hand_doom(player_ptr, ep_ptr);
         return;
+    case AttributeType::DRAIN_LIFE:
+        effect_player_drain_life(player_ptr, ep_ptr);
+        return;
     default: {
         ep_ptr->dam = 0;
         return;

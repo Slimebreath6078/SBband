@@ -125,6 +125,10 @@ static bool spell_annoy(MonsterAbilityType spell)
     if (spell_in_between(spell, MonsterAbilityType::TRAPS, MonsterAbilityType::RAISE_DEAD))
         return true;
 
+    /* Drain-Life */
+    if (spell == MonsterAbilityType::DRAIN_LIFE)
+        return true;
+
     /* Doesn't annoy */
     return false;
 }

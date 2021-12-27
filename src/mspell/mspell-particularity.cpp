@@ -17,6 +17,7 @@
 #include "monster-race/race-flags3.h"
 #include "monster-race/race-kind-flags.h"
 #include "monster/monster-update.h"
+#include "mspell/mspell-attribute.h"
 #include "mspell/mspell-checker.h"
 #include "mspell/mspell-damage-calculator.h"
 #include "mspell/mspell-util.h"
@@ -117,6 +118,37 @@ MonsterSpellResult spell_RF6_PSY_SPEAR(PlayerType *player_ptr, POSITION y, POSIT
 
     const auto dam = monspell_damage(player_ptr, MonsterAbilityType::PSY_SPEAR, m_idx, damage_flag_type::DAM_ROLL);
     const auto proj_res = beam(player_ptr, m_idx, y, x, AttributeType::PSY_SPEAR, dam, MONSTER_TO_PLAYER);
+
+    auto res = MonsterSpellResult::make_valid(dam);
+    res.learnable = proj_res.affected_player;
+
+    return res;
+}
+
+/*!
+ * @brief DRAIN_LIFEの処理。生命力吸収。 /
+ * @param player_ptr プレイヤーへの参照ポインタ
+ * @param y 対象の地点のy座標
+ * @param x 対象の地点のx座標
+ * @param m_idx 呪文を唱えるモンスターID
+ * @param t_idx 呪文を受けるモンスターID。プレイヤーの場合はdummyで0とする。
+ * @param TARGET_TYPE プレイヤーを対象とする場合MONSTER_TO_PLAYER、モンスターを対象とする場合MONSTER_TO_MONSTER
+ *
+ * プレイヤーに当たったらラーニング可。
+ */
+MonsterSpellResult spell_DRAIN_LIFE(PlayerType *player_ptr, POSITION y, POSITION x, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int TARGET_TYPE)
+{
+
+    mspell_cast_msg_blind msg(_("%^sが何かをつぶやいた。", "%^s mumbles."), _("%^sが生命力を吸収している。", "%^s is sucking your lives."),
+        _("%^sは%sの生命力を吸収している。", "%^s is sucking a %s's lives."));
+
+    monspell_message(player_ptr, m_idx, t_idx, msg, TARGET_TYPE);
+
+    const auto dam = monspell_damage(player_ptr, MonsterAbilityType::DRAIN_LIFE, m_idx, damage_flag_type::DAM_ROLL);
+    const auto proj_res = breath(player_ptr, y, x, m_idx, get_ability_attribute(MonsterAbilityType::DRAIN_LIFE), dam, 0, false, TARGET_TYPE);
+
+    if (TARGET_TYPE == MONSTER_TO_PLAYER)
+        update_smart_learn(player_ptr, m_idx, DRS_EXP);
 
     auto res = MonsterSpellResult::make_valid(dam);
     res.learnable = proj_res.affected_player;

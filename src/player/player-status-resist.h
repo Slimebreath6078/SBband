@@ -3,7 +3,7 @@
 #include "system/angband.h"
 
 enum rate_calc_type_mode {
-	CALC_RAND = 0,
+    CALC_RAND = 0,
     CALC_AVERAGE = 1,
     CALC_MIN = 2,
     CALC_MAX = 3,
@@ -34,3 +34,4 @@ PERCENTAGE calc_hell_fire_damage_rate(PlayerType *player_ptr, rate_calc_type_mod
 PERCENTAGE calc_gravity_damage_rate(PlayerType *player_ptr, rate_calc_type_mode mode);
 PERCENTAGE calc_void_damage_rate(PlayerType *player_ptr, rate_calc_type_mode mode);
 PERCENTAGE calc_abyss_damage_rate(PlayerType *player_ptr, rate_calc_type_mode mode);
+PERCENTAGE calc_life_drain_damage_rate(PlayerType *player_ptr, rate_calc_type_mode mode);

@@ -50,6 +50,9 @@ void add_cheat_remove_flags_others(PlayerType *player_ptr, msr_type *msr_ptr)
 
     if (!player_ptr->msp)
         msr_ptr->smart.set(MonsterSmartLearnType::IMM_MANA);
+
+    if (has_hold_exp(player_ptr))
+        msr_ptr->smart.set(MonsterSmartLearnType::HOLD_EXP);
 }
 
 static void check_nether_resistance(PlayerType *player_ptr, msr_type *msr_ptr)
@@ -217,4 +220,7 @@ void check_high_resistances(PlayerType *player_ptr, msr_type *msr_ptr)
 
     if (msr_ptr->smart.has(MonsterSmartLearnType::IMM_MANA))
         msr_ptr->ability_flags.reset(MonsterAbilityType::DRAIN_MANA);
+
+    if (msr_ptr->smart.has(MonsterSmartLearnType::HOLD_EXP))
+        msr_ptr->ability_flags.reset(MonsterAbilityType::DRAIN_LIFE);
 }

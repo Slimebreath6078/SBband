@@ -285,6 +285,7 @@ const std::unordered_map<std::string_view, MonsterAbilityType> r_info_ability_fl
 	{"S_UNIQUE", MonsterAbilityType::S_UNIQUE },
 	{"BO_LITE", MonsterAbilityType::BO_LITE },
 	{"BO_DARK", MonsterAbilityType::BO_DARK },
+    {"DRAIN_LIFE", MonsterAbilityType::DRAIN_LIFE },
 };
 /* clang-format on */
 
