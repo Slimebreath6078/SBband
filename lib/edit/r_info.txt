@@ -26843,3 +26843,29 @@ D:クローン兵とは死を恐れず戦う短命のものだが、
 D:何かの間違いで人並みに伸びた寿命故に死に恐怖したため、
 D:欠陥品として扱われた。
 D:彼女は死にたくないが故かあなたを本気で殺そうとしてくる…
+
+#「常世ノ塔」のラスボスの1体。
+#恐らく「常世ノ塔」初登場。
+#作者曰く「暗い星のクーシャ」が初登場のようだが、作品の存在は不明。
+#マザーブレイン風の戦場で戦う相手。
+#暗い星じゃないと生体マナが切れてしまうらしく、
+#相手から搾取しようとしてくる。
+#セリフを見るに相手の血肉が生体マナになるそう。
+N:1357:暗い星の『ルゥラ』
+E:Lura, in the Dark Star
+G:V:u
+I:130:60d100:20:150:0
+W:80:3:0:72000:0:0
+F:UNIQUE | CAN_SPEAK | DROP_2D2 | DROP_GREAT | EVIL | FEMALE
+F:NEVER_BLOW | FORCE_MAXHP | POWERFUL | NO_STUN | NO_FEAR | NO_CONF
+F:NO_SLEEP | HURT_LITE | IM_FIRE | IM_COLD | IM_POIS | RES_DARK
+F:RES_NETH | RES_TIME | RES_TELE | NEVER_MOVE | ESCORT
+S:1_IN_2
+S:BR_NETH | BR_LITE | BA_NETH | BA_DARK | HAND_DOOM | MIND_BLAST
+S:BRAIN_SMASH | CAUSE_4 | DRAIN_LIFE | BO_MANA | BO_LITE | BO_DARK
+S:S_DEMON | S_UNDEAD | S_HI_UNDEAD
+D:$She is an administrator of the Dark Star.
+D:$She attempts to absorb your body for her life-mana!
+D:暗い星の管理をしている者だ。
+D:生体マナを維持するために、
+D:あなたから一滴も残らず血肉を貪らんとしてくる！
