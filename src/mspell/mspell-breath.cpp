@@ -41,7 +41,7 @@ static bool spell_RF4_BREATH_special_message(MONSTER_IDX r_idx, AttributeType GF
             msg_format(_("%^s「受けてみい！！天将奔烈！！！」", "%^s says, 'Tensho-Honretsu!!'"), m_name);
         return true;
     }
-    if (r_idx == MON_ERROR && GF_TYPE == AttributeType::LITE) {
+    if ((r_idx == MON_ERROR || r_idx == MON_LURA) && GF_TYPE == AttributeType::LITE) {
         msg_format(_("%^sはレーザーを放った。", "$^s fired a death ray."), m_name);
         return true;
     }
