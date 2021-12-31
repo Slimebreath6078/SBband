@@ -26869,3 +26869,48 @@ D:$She attempts to absorb your body for her life-mana!
 D:暗い星の管理をしている者だ。
 D:生体マナを維持するために、
 D:あなたから一滴も残らず血肉を貪らんとしてくる！
+
+N:1358:カコデーモン
+E:Cacodemon
+G:u:R
+I:110:27d19:25:70:15
+W:30:1:0:250:0:0
+B:BITE:HURT:6d4
+B:BITE:HURT:6d4
+B:BITE:HURT:6d4
+F:DROP_60 | ONLY_ITEM | DROP_CORPSE | EVIL | DEMON | POWERFUL
+F:RIDING | IM_FIRE | RES_PLAS | BASH_DOOR | CAN_FLY | WILD_OCEAN
+F:WILD_VOLCANO | WILD_MOUNTAIN | WILD_TOWN | WILD_ALL
+S:1_IN_8
+S:BO_FIRE
+D:$It is floating and one-eyed demon.
+D:$It is very round, and has six spines on upper body and two on lower.
+D:$Its wide mouth breathes a plasma ball.
+D:それはとても丸っこくて体の上部に6本、下部に2本のトゲがあり、浮遊する一つ目の悪魔だ。
+D:その裂けたような口からプラズマの弾を発射してくる。
+
+N:1359:マンキュバス
+E:Mancubus
+G:U:U
+I:110:45d50:15:90:10
+W:39:2:0:2000:0:0
+F:DROP_1D2 | ONLY_ITEM | DROP_CORPSE | EVIL | DEMON | NEVER_BLOW | FORCE_MAXHP
+F:POWERFUL | IM_FIRE | RES_TELE | BASH_DOOR | WILD_VOLCANO | WILD_TOWN
+F:WILD_ALL
+S:1_IN_2
+S:BA_FIRE
+D:$This is fatso has twin gun-arms.
+D:$Its fire balls are just nightmare.
+D:この両腕に砲がある太っちょが出す火の弾は悪夢そのものだ。
+
+N:1360:アラクノトロン
+E:Arachnotron
+G:S:U
+I:115:50d30:20:100:0
+W:45:2:0:10000:0:0
+F:DROP_1D2 | ONLY_ITEM | DROP_GOOD | DROP_CORPSE | EVIL | DEMON | NEVER_BLOW
+F:FORCE_MAXHP | NO_FEAR | RES_PLAS | BASH_DOOR | KILL_BODY
+S:1_IN_1
+S:BO_PLAS
+D:$It has spider-like machine legs and carries a monster that looks spider-like.
+D:蜘蛛のような機械の脚を持っている敵で、脳みそのような生き物を載せている。
