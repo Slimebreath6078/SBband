@@ -11,40 +11,41 @@ Q:20:Q:6:0:0:0:25:0:0:0:6
 
 # Description for quest
 ?:[LEQ $QUEST20 2]
-Q:$20:T:Something curious has taken root beneath our Inn.  Celebor,
-Q:$20:T:the innkeeper, has reported strange vapors and auras in the
-Q:$20:T:basement that drive out all living things.  A caged canary was
-Q:$20:T:placed there to test the air quality; it died within minutes,
-Q:$20:T:though the strange scents had vanished when the investigators
-Q:$20:T:returned.  Then, suddenly, it was as if the air itself attacked!
-Q:$20:T:Please see if you can detect what is amiss.
-Q:20:T:何か奇妙なことが宿屋の地下で起こっているようです。
-Q:20:T:宿屋の主人ケレボールは、地下室の中の奇妙な蒸気とオーラが
-Q:20:T:生きているもの全てを追い出したと言っています。カナリアを
-Q:20:T:鳥カゴに入れて置いてみたところ、ものの数分で死んでしまいました。
-Q:20:T:奇妙な臭いは調査員が戻った時には消えてしまいましたが、その時突然
-Q:20:T:あたかも空気そのものが襲ってきたと感じたそうです！どうか、何が起
-Q:20:T:きているのか確かめてきて下さい。
+Q:$20:T:Our base looks happening an emergency...
+Q:$20:T:Strange vapors assault at basement shelter in the headquarters.
+Q:$20:T:It makes no one can go to the basement.
+Q:$20:T:We can destroy the vapors because they can be attacked.
+Q:$20:T:But because no one wants to consume resources for that,
+Q:$20:T:can you destroy them?
+Q:20:T:最近基地で大変なことが起きてるみたいなんだよね…。
+Q:20:T:司令部の地下シェルターで奇妙な蒸気が襲いかかってくるようになっちゃって
+Q:20:T:みんな地下に行けなくなっちゃったみたい。
+Q:20:T:蒸気に攻撃はできるみたいだから、
+Q:20:T:サラトガちゃん達が行って解決することもできなくはないけど…。
+Q:20:T:みんなそこに物資を割くことはなるべく避けたいらしいから
+Q:20:T:あなたに頼んでもいいかな？
 ?:1
 
 # Description for quest reward
 ?:[EQU $QUEST20 3]
-Q:$20:T:Strange tidings indeed.  Where eldritch vapors gather, more 
-Q:$20:T:dangerous creatures are often nearby.  Perhaps this is an ill
-Q:$20:T:omen of dangers yet to come...  We may be in need of your services
-Q:$20:T:again soon; the gift waiting outside may help you detect what
-Q:$20:T:evils plague this land.
-Q:20:T:全く奇妙な話です。おどろおどろしい気が集まる場所には、更に恐ろしい
-Q:20:T:魔物がいるものです。おそらく今回の件は来たるべき危機の凶兆なので
-Q:20:T:しょう。あなたの助けが再び必要となる日がそのうち来ると思います。
-Q:20:T:外に置いてあるお礼は、この地に広がろうとしている邪悪なものを見つける
-Q:20:T:のに役立つでしょう。
+Q:$20:T:Where did that strange vapors fog up from...
+Q:$20:T:The vapors are unknown, though investigative teams search the basement
+Q:$20:T:after you destroyed them.
+Q:$20:T:Well, i put the reward at outside now.
+Q:$20:T:It is magic tool that searches greater than the radar.
+Q:$20:T:Surely useful.
+Q:20:T:あの奇妙な霧はどこから出たんだろうね…。
+Q:20:T:あなたが解決した後に調査隊の人達が調べたけど何もわかんなかったらしいよ。
+Q:20:T:あ、お礼は外に置いておいたよ。
+Q:20:T:周りの状況をレーダーよりも感じ取れる不思議な道具だけど、
+Q:20:T:きっと役立つはずよ。
 ?:1
 
 # Description for quest failed
 ?:[EQU $QUEST20 5]
-Q:$20:T:I've sent out someone else to do the job.  Now leave me alone!
-Q:20:T:既に他の者に仕事を任せてあります。しばらく私を一人にさせてください！
+Q:$20:T:Uh oh...
+Q:$20:T:Okay, I'll request this job to someone else.
+Q:20:T:あらら…じゃあ別の人にこの仕事は頼んでおくわね。
 ?:1
 
 # Floor with Space Monster

@@ -11,39 +11,44 @@ Q:21:Q:6:0:0:0:55:0:0:0:6
 
 # Description for quest
 ?:[LEQ $QUEST21 2]
-Q:$21:T:A strange hole in reality has opened up on the edge of our
-Q:$21:T:town, near the dungeon entrance, and appears to be even more 
-Q:$21:T:dangerous than the hole reported in Angwil.  Five of our 
-Q:$21:T:strongest knights ventured within -- only one returned, 
-Q:$21:T:scorched by fire and babbling incoherently.  We have not the 
-Q:$21:T:resources to deal with this threat.  Do you?
-Q:21:T:魔界に通じる穴が、この街のはずれに現れました。
-Q:21:T:アングウィルで報告されたものよりもさらに危険なもののようです。
-Q:21:T:この街の騎士団で一番強い五人の騎士が中を探索しましたが、一人しか
-Q:21:T:帰ってきませんでした。彼はひどい火傷を負い、意味不明な言葉を
-Q:21:T:わめいていました。我々にはもうこの危機に対処する術がありません。
-Q:21:T:あなたなら、なんとか出来ますか？
+Q:$21:T:Seriously, the teleporter that is made on our base connected
+Q:$21:T:to a hell.
+Q:$21:T:And there demons are stronger than the hell reported by Royal.
+Q:$21:T:We will go to destroy them. Can you destroy together?
+Q:$21:T:Go to the hell from teleporter, and defeat monsters on there.
+Q:$21:T:The monsters are strong, go when you are ready.
+Q:21:T:大変、基地に作ったテレポーターが地獄に繋がっちゃったみたい！
+Q:21:T:しかもロイヤルが報告したところよりも強力な悪魔がたくさんいる地帯に
+Q:21:T:繋がっちゃってるんだって。これから私達は鎮静に向かうんだけど、
+Q:21:T:あなたにも協力してもらってもいいかな？
+Q:21:T:テレポーターから地獄に行ってそこにいる敵を倒してもらえばいいわ。
+Q:21:T:敵は結構強いからしっかり準備はしておいてね？
 ?:1
 
 # Description for quest reward
 ?:[EQU $QUEST21 3]
-Q:$21:T:Gods be praised, you have returned alive!  When the last
-Q:$21:T:demon fell, we felt an evil aura depart from this town,
-Q:$21:T:letting all breathe easier again.  Please accept our 
-Q:$21:T:sincerest thanks for saving our lives -- and a powerful
-Q:$21:T:gift from our armory.  May you find it useful in your 
-Q:$21:T:questing.
-Q:21:T:神よ喜び給え！彼は生きて帰ってきました。最後の悪魔が倒れた時、
-Q:21:T:邪悪なオーラがこの街を去り、息苦しさがなくなりました。
-Q:21:T:我々の命を救って下さったことに心から感謝しています。
-Q:21:T:そして我々の武器庫からお礼として強力なアイテムを差し上げます。
-Q:21:T:これからの冒険のお役に立つことを願っています。
+Q:$21:T:Thank you! We defeat the demons early because your action.
+Q:$21:T:Do you have no wound?
+Q:$21:T:I put tools that recover your injury strongly.
+Q:$21:T:Please recover with it.
+Q:$21:T:This is as able to use as mana and rechargeable. 
+Q:$21:T:It will be useful in your questing ;)
+Q:21:T:ありがとう！あなたのおかげで早く鎮静ができたわ。
+Q:21:T:さっきの戦闘で体が傷ついてない？
+Q:21:T:報酬は外に傷を癒す強力な道具を置いておいたから無理せず治してちょうだい。
+Q:21:T:魔力を補充すれば何回でも使えるからこれからの冒険でも役に立ってくれるはずよ♪
 ?:1
 
 # Description for quest failed
 ?:[EQU $QUEST21 5]
-Q:$21:T:I've sent out someone else to do the job.  Now leave me alone!
-Q:21:T:既に他の者に仕事を任せてあります。しばらく私を一人にさせてください！
+Q:$21:T:What!? Are you failed!?
+Q:$21:T:We could destroyed demons. But we consumed
+Q:$21:T:more resources than we planed, and my commander
+Q:$21:T:is annoyed it...
+Q:$21:T:I'm afraid, but I can give no reward to you.
+Q:21:T:ちょっとちょっと！倒し損ねちゃったの！？
+Q:21:T:鎮静はできたけど予定以上に物資がかかっちゃって指揮官も頭を抱えているわ…
+Q:21:T:悪いけどこれはちょっと報酬はあげられないかな…
 ?:1
 
 # Floor with Manes
