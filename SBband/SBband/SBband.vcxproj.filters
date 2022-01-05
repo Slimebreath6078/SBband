@@ -5124,6 +5124,9 @@
     <ClInclude Include="..\..\src\system\s-basic.h">
       <Filter>system</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\monster-race\race-wild-flags.h">
+      <Filter>monster-race</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\wall.bmp" />

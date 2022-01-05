@@ -996,6 +996,7 @@
     <ClInclude Include="..\..\src\main-win\wav-reader.h" />
     <ClInclude Include="..\..\src\monster-race\race-resistance-mask.h" />
     <ClInclude Include="..\..\src\monster-race\race-kind-flags.h" />
+    <ClInclude Include="..\..\src\monster-race\race-wild-flags.h" />
     <ClInclude Include="..\..\src\monster\monster-damage.h" />
     <ClInclude Include="..\..\src\mspell\mspell-attribute.h" />
     <ClInclude Include="..\..\src\object-enchant\apply-magic-amulet.h" />
