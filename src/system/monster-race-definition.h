@@ -7,6 +7,7 @@
 #include "monster-race/race-drop-flags.h"
 #include "monster-race/race-flags-resistance.h"
 #include "monster-race/race-kind-flags.h"
+#include "monster-race/race-sex-types.h"
 #include "system/angband.h"
 #include "util/flag-group.h"
 #include <string>
@@ -58,6 +59,7 @@ struct monster_race {
     EXP mexp{}; //!< 殺害時基本経験値 / Exp value for kill
     BIT_FLAGS16 extra{}; //!< 未使用 /  Unused (for now)
     RARITY freq_spell{}; //!< 魔法＆特殊能力仕様頻度(1/n) /  Spell frequency
+    MonsterSexType sex; //!< 性別 (Sex)
     BIT_FLAGS flags1{}; //!< Flags 1 (general)
     BIT_FLAGS flags2{}; //!< Flags 2 (abilities)
     BIT_FLAGS flags3{}; //!< Flags 3 (race/resist)

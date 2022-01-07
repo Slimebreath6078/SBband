@@ -997,6 +997,7 @@
     <ClInclude Include="..\..\src\monster-race\race-drop-flags.h" />
     <ClInclude Include="..\..\src\monster-race\race-resistance-mask.h" />
     <ClInclude Include="..\..\src\monster-race\race-kind-flags.h" />
+    <ClInclude Include="..\..\src\monster-race\race-sex-types.h" />
     <ClInclude Include="..\..\src\monster\monster-damage.h" />
     <ClInclude Include="..\..\src\mspell\mspell-attribute.h" />
     <ClInclude Include="..\..\src\object-enchant\apply-magic-amulet.h" />

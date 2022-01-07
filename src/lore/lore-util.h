@@ -42,7 +42,7 @@ typedef struct lore_type {
     bool reinforce;
     bool know_everything;
     BIT_FLAGS mode;
-    monster_sex msex;
+    MonsterSexType msex;
     bool old;
     MONRACE_IDX r_idx;
     int vn;
