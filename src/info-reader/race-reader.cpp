@@ -287,6 +287,15 @@ errr parse_r_info(std::string_view buf, angband_header *)
             return PARSE_ERROR_TOO_FEW_ARGUMENTS;
 
         info_set_value(r_ptr->arena_ratio, tokens[1]);
+    } else if (tokens[0] == "X") {
+        if (tokens.size() < 2)
+            return PARSE_ERROR_TOO_FEW_ARGUMENTS;
+
+        auto sex = r_info_sex.find(tokens[1]);
+        if (sex == r_info_sex.end())
+            return PARSE_ERROR_INVALID_FLAG;
+
+        r_ptr->sex = sex->second;
     } else
         return PARSE_ERROR_UNDEFINED_DIRECTIVE;
 

@@ -4,6 +4,7 @@
 #include "monster-race/race-ability-flags.h"
 #include "monster-race/race-drop-flags.h"
 #include "monster-race/race-kind-flags.h"
+#include "monster-race/race-sex-types.h"
 
 /*!
   * モンスターの打撃手段トークンの定義 /
@@ -83,14 +84,23 @@ const std::unordered_map<std::string_view, RaceBlowEffectType> r_info_blow_effec
 };
 
 /*!
+ * モンスターの性別トークンの定義 /
+ * Monster Sex
+ */
+const std::unordered_map<std::string_view, MonsterSexType> r_info_sex = {
+    { "NONE", MonsterSexType::NONE },
+    { "MALE", MonsterSexType::MALE },
+    { "FEMALE", MonsterSexType::FEMALE },
+    { "BOTH", MonsterSexType::BOTH },
+};
+
+/*!
  * モンスター特性トークンの定義1 /
  * Monster race flags
  */
 const std::unordered_map<std::string_view, race_flags1> r_info_flags1 = {
     { "UNIQUE", RF1_UNIQUE },
     { "QUESTOR", RF1_QUESTOR },
-    { "MALE", RF1_MALE },
-    { "FEMALE", RF1_FEMALE },
     { "CHAR_CLEAR", RF1_CHAR_CLEAR },
     { "SHAPECHANGER", RF1_SHAPECHANGER },
     { "ATTR_CLEAR", RF1_ATTR_CLEAR },

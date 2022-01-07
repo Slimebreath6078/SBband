@@ -3,8 +3,8 @@
 enum race_flags1 {
     RF1_UNIQUE = 0x00000001, /*!< モンスター特性: ユニーク / Unique Monster */
     RF1_QUESTOR = 0x00000002, /*!< モンスター特性: クエストモンスター / Quest Monster */
-    RF1_MALE = 0x00000004, /*!< モンスター特性: 男性 / Male gender */
-    RF1_FEMALE = 0x00000008, /*!< モンスター特性: 女性 / Female gender */
+    FLAGS1_XX3 = 0x00000004, /*!< モンスター特性: 男性…だったもの / Male gender... in the past */
+    FLAGS1_XX4 = 0x00000008, /*!< モンスター特性: 女性…だったもの / Female gender... in the past */
     RF1_CHAR_CLEAR = 0x00000010, /*!< モンスター特性: シンボルが完全に透明 / Absorbs symbol */
     RF1_SHAPECHANGER = 0x00000020, /*!< モンスター特性: シンボルアルファベットがランダムになる / TY: shapechanger */
     RF1_ATTR_CLEAR = 0x00000040, /*!< モンスター特性: シンボルカラーが透明色になる(地形と同じ色になる) / Absorbs color */
