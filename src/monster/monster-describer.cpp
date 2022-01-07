@@ -54,9 +54,9 @@ void monster_desc(PlayerType *player_ptr, char *desc, monster_type *m_ptr, BIT_F
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
     if (!seen || pron) {
         int kind = 0x00;
-        if (r_ptr->flags1 & (RF1_FEMALE))
+        if (r_ptr->sex == MonsterSexType::FEMALE)
             kind = 0x20;
-        else if (r_ptr->flags1 & (RF1_MALE))
+        else if (r_ptr->sex == MonsterSexType::MALE)
             kind = 0x10;
 
         if (!m_ptr || !pron)
@@ -145,9 +145,9 @@ void monster_desc(PlayerType *player_ptr, char *desc, monster_type *m_ptr, BIT_F
     /* Handle visible monsters, "reflexive" request */
     if ((mode & (MD_POSSESSIVE | MD_OBJECTIVE)) == (MD_POSSESSIVE | MD_OBJECTIVE)) {
         /* The monster is visible, so use its gender */
-        if (r_ptr->flags1 & (RF1_FEMALE))
+        if (r_ptr->sex == MonsterSexType::FEMALE)
             strcpy(desc, _("彼女自身", "herself"));
-        else if (r_ptr->flags1 & (RF1_MALE))
+        else if (r_ptr->sex == MonsterSexType::MALE)
             strcpy(desc, _("彼自身", "himself"));
         else
             strcpy(desc, _("それ自身", "itself"));

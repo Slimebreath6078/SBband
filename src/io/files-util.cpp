@@ -123,10 +123,10 @@ errr get_rnd_line(concptr file_name, int entry, char *output)
         if (buf[2] == '*') {
             break;
         } else if (buf[2] == 'M') {
-            if (r_info[entry].flags1 & RF1_MALE)
+            if (r_info[entry].sex == MonsterSexType::MALE)
                 break;
         } else if (buf[2] == 'F') {
-            if (r_info[entry].flags1 & RF1_FEMALE)
+            if (r_info[entry].sex == MonsterSexType::FEMALE)
                 break;
         } else if (sscanf(&(buf[2]), "%d", &test) != EOF) {
             if (test == entry)

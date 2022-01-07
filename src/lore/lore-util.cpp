@@ -9,18 +9,24 @@
 const who_word_definition Who::words = {
     { WHO_WORD_TYPE::WHO,
         {
-            { false, { { MSEX_NONE, _("それ", "it") }, { MSEX_MALE, _("彼", "he") }, { MSEX_FEMALE, _("彼女", "she") } } },
-            { true, { { MSEX_NONE, _("それら", "they") }, { MSEX_MALE, _("彼ら", "they") }, { MSEX_FEMALE, _("彼女ら", "they") } } },
+            { false, { { MonsterSexType::NONE, _("それ", "it") }, { MonsterSexType::MALE, _("彼", "he") },
+                         { MonsterSexType::FEMALE, _("彼女", "she") }, { MonsterSexType::BOTH, _("それ", "it") } } },
+            { true, { { MonsterSexType::NONE, _("それら", "they") }, { MonsterSexType::MALE, _("彼ら", "they") },
+                        { MonsterSexType::FEMALE, _("彼女ら", "they") }, { MonsterSexType::BOTH, _("それら", "they") } } },
         } },
     { WHO_WORD_TYPE::WHOSE,
         {
-            { false, { { MSEX_NONE, _("それの", "its") }, { MSEX_MALE, _("彼の", "his") }, { MSEX_FEMALE, _("彼女の", "her") } } },
-            { true, { { MSEX_NONE, _("それらの", "their") }, { MSEX_MALE, _("彼らの", "their") }, { MSEX_FEMALE, _("彼女らの", "their") } } },
+            { false, { { MonsterSexType::NONE, _("それの", "its") }, { MonsterSexType::MALE, _("彼の", "his") },
+                         { MonsterSexType::FEMALE, _("彼女の", "her") }, { MonsterSexType::BOTH, _("それの", "its") } } },
+            { true, { { MonsterSexType::NONE, _("それらの", "their") }, { MonsterSexType::MALE, _("彼らの", "their") },
+                        { MonsterSexType::FEMALE, _("彼女らの", "their") }, { MonsterSexType::BOTH, _("それらの", "their") } } },
         } },
     { WHO_WORD_TYPE::WHOM,
         {
-            { false, { { MSEX_NONE, _("それ", "it") }, { MSEX_MALE, _("彼", "him") }, { MSEX_FEMALE, _("彼女", "her") } } },
-            { true, { { MSEX_NONE, _("それら", "them") }, { MSEX_MALE, _("彼ら", "them") }, { MSEX_FEMALE, _("彼女ら", "them") } } },
+            { false, { { MonsterSexType::NONE, _("それ", "it") }, { MonsterSexType::MALE, _("彼", "him") },
+                         { MonsterSexType::FEMALE, _("彼女", "her") }, { MonsterSexType::BOTH, _("それ", "it") } } },
+            { true, { { MonsterSexType::NONE, _("それら", "them") }, { MonsterSexType::MALE, _("彼ら", "them") },
+                        { MonsterSexType::FEMALE, _("彼女ら", "them") }, { MonsterSexType::BOTH, _("それら", "them") } } },
         } },
 };
 
@@ -59,4 +65,7 @@ lore_type *initialize_lore_type(lore_type *lore_ptr, MONRACE_IDX r_idx, monster_
  * @brief モンスターの思い出メッセージをあらかじめ指定された関数ポインタに基づき出力する
  * @param str 出力文字列
  */
-void hooked_roff(concptr str) { hook_c_roff(TERM_WHITE, str); }
+void hooked_roff(concptr str)
+{
+    hook_c_roff(TERM_WHITE, str);
+}
