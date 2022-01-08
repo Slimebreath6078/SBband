@@ -96,9 +96,9 @@
 ?:[EQU $QUEST_NUMBER 23]
 %:q0000023.txt
 
-# The Rise and Fall of Micro$oft
+# Doom Quest 3
 ?:[EQU $QUEST_NUMBER 24]
-%:q00000ms.txt
+%:qdoom_3.txt
 
 # Haunted House
 ?:[EQU $QUEST_NUMBER 25]

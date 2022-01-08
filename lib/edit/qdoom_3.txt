@@ -1,54 +1,48 @@
 # q00000ms.txt
 
 # Name
-Q:$24:N:The Rise and Fall of Micro$oft
-Q:24:N:マイクロンフトの興亡
+Q:$24:N:Doom Quest 3
+Q:24:N:破滅のクエスト３
 
 # type:num_mon:cur_num:max_num:level:r_idx:k_idx
-Q:$24:Q:1:0:0:1:50:732:0:0:6
-Q:24:Q:1:0:0:1:50:732:0:0:6
+Q:$24:Q:1:0:0:1:70:816:0:0:6
+Q:24:Q:1:0:0:1:70:816:0:0:6
 
 # Description for quest
 ?:[LEQ $QUEST24 2]
-Q:$24:T:A mysterious building has appeared, with the eldritch runes "M$"
-Q:$24:T:inscribed in its walls. An aura of evil radiates from this building.
-Q:$24:T:People in nearby villages have lost their money and sanity, and
-Q:$24:T:turned into mindless zombies. Beware -- it is rumoured that the
-Q:$24:T:Dark Lord who dwells inside this mansion of vast evil is the
-Q:$24:T:Apocalyptic Beast himself! Who knows what unspeakable secrets lurk
-Q:$24:T:inside?
-Q:24:T:壁におどろおどろしい「Ｍ＄」というルーン文字が刻まれている、謎の
-Q:24:T:建物が現れました。この建物は悪のオーラを発しています。
-Q:24:T:近くの村の人々は金と理性を失い、心を持たぬゾンビとなってしまい
-Q:24:T:ました。気をつけて下さい！あの巨大な悪の城に棲む暗黒の帝王は
-Q:24:T:黙示録の獣そのものであると噂されています。そしてあの建物の中にどんな
-Q:24:T:言うもおぞましい秘密が潜んでいるのかは誰も知りません。
+Q:$24:T:An one of members of the lab cheated us and opened the teleporter.
+Q:$24:T:There connected to the hell again.
+Q:$24:T:We went to the hell.
+Q:$24:T:But the demon that fires rockets,and we were defeated.
+Q:$24:T:We are annoying it...
+Q:$24:T:Though that, our base will be ruinned sometime!
+Q:$24:T:Can you go to the hell and defeat the demon?
+Q:24:T:研究員の一人が裏切ってテレポーターを開けちゃってまた地獄へ繋がっちゃった。
+Q:24:T:私達も向かったけど、ロケットを放つ悪魔にみんな歯が立たなくて困っているの…
+Q:24:T:でもこのままじゃ基地が危ない！
+Q:24:T:あなたが地獄へ行ってその悪魔を倒してきてくれないかな？
 ?:1
 
 # Description for quest reward
 ?:[EQU $QUEST24 3]
-Q:$24:T:Thank you for killing the demon! A small reward awaits you outside.
-Q:24:T:悪魔を打ち倒してくれてありがとうございます！ささやかなお礼を
-Q:24:T:外に置いておきました。
+Q:$24:T:Oh! Did you defeat? Thank you!
+Q:$24:T:This is a reward from Union.
+Q:$24:T:I listened that is the scythe able to change special enchants.
+Q:$24:T:Though the changing is unselectable, this is very strong.
+Q:$24:T:Please master this weapon!
+Q:24:T:え、倒してきてくれたの！？ありがとう！
+Q:24:T:これはユニオンからのお礼よ。
+Q:24:T:なんとも特殊な能力を変えられる鎌だとか。
+Q:24:T:変える能力は制御できないみたいだけど、上手く使えばとっても強力だから
+Q:24:T:ぜひ使いこなしてくれると嬉しいな！
 ?:1
 
 # Description for quest failed
 ?:[EQU $QUEST24 5]
-Q:$24:T:You have brought a terrible thing upon us! Now Micro$oft has 
-Q:$24:T:an absolute monopoly on everything in this town, this country,
-Q:$24:T:this world! Every item sold anywhere is now M$-licenced and
-Q:$24:T:M$ gets a part of the profit. And there's no guarantee that
-Q:$24:T:the overall quality of the wares will improve...
-Q:$24:T:I notice that you have not received the Official M$ Licence 
-Q:$24:T:number on your forehead yet. I don't know if anyone will sell
-Q:$24:T:you anything before you get one.
-Q:24:T:あなたは恐ろしいことをしてしまった！マイクロンフトは今この
-Q:24:T:街、いやこの国、いや全世界で全ての市場を独占している！
-Q:24:T:あらゆる場所のあらゆる商品はＭ＄のライセンス商品となり、
-Q:24:T:Ｍ＄が利益を徴収している。しかも将来品質が改善される
-Q:24:T:保証は全く無いのだ！あなたはまだ額にマイクロンフトの
-Q:24:T:公式ライセンス番号をつけてないようだが、番号をもらわない内は
-Q:24:T:きっと誰もあなたに物を売ってくれないよ。
+Q:$24:T:Oh my god, are you failed?
+Q:$24:T:How we defeat the demon...
+Q:24:T:あちゃ～、ダメだったか…
+Q:24:T:なんとかあの悪魔を倒す方法はないかな～…
 ?:1
 
 # Trap
@@ -67,42 +61,33 @@ F:6:DEEP_LAVA:12
 # Shallow lava, no tele
 F:l:SHALLOW_LAVA:12
 
-# Software bug
-F:a:FLOOR:8:246
+# Zombie
+F:a:FLOOR:8:125
 
-# Novice rogue
-F:b:FLOOR:8:44
-F:c:FLOOR:8:44
+# Imp
+F:b:FLOOR:8:296
+F:c:FLOOR:8:296
 
 # Door
 F:+:CLOSED_DOOR:8
 
-# Bandit
-F:d:FLOOR:8:150
+# Flying skull
+F:d:FLOOR:8:273
 
-# Master rogue
-F:e:FLOOR:8:376
+# Arch-vile
+F:e:FLOOR:8:357
 
-# Master thief
-F:f:FLOOR:8:516 
+# Cacodemon
+F:f:FLOOR:8:1358 
 
-# Gates himself
-F:g:FLOOR:12:732
+# Cyberdemon
+F:g:FLOOR:12:816
 
-# Chronium edge
-F:h:FLOOR:8:1245
+# Arachnotron
+F:h:FLOOR:8:1360
 
-# Internet Exploder + no tele
-F:i:FLOOR:12:921
-
-# Money
-F:$:FLOOR:8:0:488
-
-# Money + Master Thief
-F:%:FLOOR:8:516:488
-
-# Money + Software bug
-F:&:FLOOR:8:246:488
+# Hell knight + no tele
+F:i:FLOOR:12:609
 
 # Junk & Cursed items
 
@@ -130,7 +115,7 @@ F:I:SHALLOW_LAVA:12
 F:J:SHALLOW_LAVA:12
 
 
-# Micro$oft HQ
+# Doom Map
 D:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 D:Xa.A......AAXtttttttttttttttttttttttttttttttttttttttttttttttttttXABAA.........X
 D:X.......B.XXXtttttXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX+XXAAAA.........X
@@ -176,13 +161,13 @@ D:X.XbXtXtX............lllllllllllllllXXXXX#XXXXXlllllllllllllll............XtXt
 D:XAXbXtXtX.............llllllllllllllll5lllll5llllllllllllllll.............XtXtX
 D:X.XbXtXtX.......h......lllllllllllllll55lll55lllllllllllllll....h.........XtXtX
 D:X.XbXtXtXX..............lllllllllllllll5lll5lllllllllllllll..............XX+XtX
-D:X.XbXtXtXXXX..............lllllllllllll55l55lllllllllllll..............XXX$$XtX
-D:XAXcXtXtX$$XX................lllllllllll555lllllllllll................XX$$$$XtX
-D:X.XcXtXtX$$$XXX.................lllllllll5lllllllll.................XXX$$$$$XtX
-D:X.XcXtX+XX&&$XXXX...................lllllllllll...................XXXX$&$$$$XtX
-D:X.XdXtX$$$%%%$$XXXXX.....................h.....................XXXXX$$&%%$$$XtX
-D:X.XXXtX$$$$$$$$$$$XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX$$$$$$$$$$$XtX
-D:XA.AXtX$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$XtX
+D:X.XbXtXtXXXX..............lllllllllllll55l55lllllllllllll..............XXX..XtX
+D:XAXcXtXtX..XX................lllllllllll555lllllllllll................XX....XtX
+D:X.XcXtXtX...XXX.................lllllllll5lllllllll.................XXX.....XtX
+D:X.XcXtX+XXaa.XXXX...................lllllllllll...................XXXX.a....XtX
+D:X.XdXtX...fff..XXXXX.....................h.....................XXXXX..aff...XtX
+D:X.XXXtX...........XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX...........XtX
+D:XA.AXtX.....................................................................XtX
 D:XX+XXtXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXtX
 D:X<..XtttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttX
 D:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX

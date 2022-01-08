@@ -1,6 +1,5 @@
 F:@:TREE:3
 F:~:FLOOR:3
-F:':FLOOR:3
 F:q:PERMANENT:3
 F:r:FLOOR:3
 F:s:FLOOR:3
@@ -27,67 +26,28 @@ F:f:BUILDING_5:3:0:0:0:0:NONE:20
 F:f:BUILDING_5:3:0:0:0:0:NONE:24
 F:~:FLOOR:3:0:375
 
-# Quest 20 finished, continue with quest 24
-?:[EQU $QUEST20 4]
-F:f:BUILDING_5:3:0:0:0:0:NONE:24
+# Continue with "Quest 21 - Doom Quest 2
+# "Quest 24 - The Rise and Fall of Micro$oft" and
+# "Quest 19 - Doom Quest 1" have to be finished first
+?:[AND [EQU $QUEST20 4] [GEQ $QUEST19 4] ]
+F:f:BUILDING_5:3:0:0:0:0:NONE:21
+
+# "Quest 19 - Doom Quest 1" has to be finished first
+?:[AND [EQU $QUEST20 4] [LEQ $QUEST19 3] ]
+F:f:BUILDING_5:3
 
 # Quest 20 failed
 ?:[EQU $QUEST20 5]
 F:f:BUILDING_5:3:0:0:0:0:NONE:20
 
-# Quest 20 failed but done, continue with quest 24
-?:[EQU $QUEST20 6]
-F:f:BUILDING_5:3:0:0:0:0:NONE:24
-
-?:1
-
-############### Quest 24 - The Rise and Fall of Micro$oft ###############
-
-# Quest 24 untaken
-#?:[EQU $QUEST24 0]
-#F:b:BUILDING_4:3:0:0:0:0:NONE:24
-
-# Quest 24 assigned, entrance is quest entrance
-?:[EQU $QUEST24 1]
-F:':PERMANENT:3
-F:r:QUEST_ENTER:3:0:0:0:0:NONE:24
-F:f:BUILDING_5:3:0:0:0:0:NONE:24
-
-# Quest 24 completed
-?:[EQU $QUEST24 2]
-F:f:BUILDING_5:3:0:0:0:0:NONE:24
-
-# Quest 24 rewarding, reward is ring of disenchantment resistance
-# (Adjust reward as needed; I think this quest is tough enough, and
-#  Artifact Creation scrolls are flaky enough to not be an automatic
-#  huge reward.  Besides, they're cool when they turn up.)
-?:[EQU $QUEST24 3]
-F:~:FLOOR:3:0:432
-
 # Continue with "Quest 21 - Doom Quest 2
 # "Quest 24 - The Rise and Fall of Micro$oft" and
 # "Quest 19 - Doom Quest 1" have to be finished first
-?:[AND [EQU $QUEST24 3 4] [GEQ $QUEST19 4] ]
+?:[AND [EQU $QUEST20 6] [GEQ $QUEST19 4] ]
 F:f:BUILDING_5:3:0:0:0:0:NONE:21
 
 # "Quest 19 - Doom Quest 1" has to be finished first
-?:[AND [EQU $QUEST24 3 4] [LEQ $QUEST19 3] ]
-F:f:BUILDING_5:3
-
-?:[EQU $QUEST24 5]
-F:':PERMANENT:3
-F:r:PERMANENT:3
-
-# "Quest 24 - The Rise and Fall of Micro$oft" failed
-# "Quest 19 - Doom Quest 1" already finished
-# Continue with "Quest 21 - Doom Quest 2
-?:[AND [EQU $QUEST24 5 6] ] [GEQ $QUEST19 4] ]
-F:f:BUILDING_5:3:0:0:0:0:NONE:21
-
-# "Quest 24 - The Rise and Fall of Micro$oft" failed
-# "Quest 19 - Doom Quest 1" unfinished
-# No new quest available
-?:[AND [EQU $QUEST24 5 6] [LEQ $QUEST19 3] ]
+?:[AND [EQU $QUEST20 6] [LEQ $QUEST19 3] ]
 F:f:BUILDING_5:3
 
 ?:1
@@ -112,16 +72,57 @@ F:f:BUILDING_5:3:0:0:0:0:NONE:21
 F:f:BUILDING_5:3
 F:~:FLOOR:3:0:329
 
-# Quest 21 finished, no new quest available
-?:[EQU $QUEST21 4]
+# Continue with "Quest 21 - Doom Quest 2
+# "Quest 21 - Doom Quest 2" and
+# "Quest 19 - Doom Quest 1" have to be finished first
+?:[AND [EQU $QUEST21 4] [GEQ $QUEST21 4] ]
+F:f:BUILDING_5:3:0:0:0:0:NONE:24
+
+# "Quest 21 - Doom Quest 2" has to be finished first
+?:[AND [EQU $QUEST21 4] [LEQ $QUEST21 3] ]
 F:f:BUILDING_5:3
 
 # Quest 21 failed
 ?:[EQU $QUEST21 5]
 F:f:BUILDING_5:3:0:0:0:0:NONE:21
 
-# Quest 21 failed but done, no new quest available
-?:[EQU $QUEST21 6]
+# Continue with "Quest 21 - Doom Quest 2
+# "Quest 21 - Doom Quest 2" and
+# "Quest 19 - Doom Quest 1" have to be finished first
+?:[AND [EQU $QUEST21 6] [GEQ $QUEST21 4] ]
+F:f:BUILDING_5:3:0:0:0:0:NONE:24
+
+# "Quest 21 - Doom Quest 2" has to be finished first
+?:[AND [EQU $QUEST21 6] [LEQ $QUEST21 3] ]
+F:f:BUILDING_5:3
+
+?:1
+
+############### Quest 24 - Doom Quest 3 ###############
+
+# Quest 24 assigned, entrance is quest entrance
+?:[EQU $QUEST24 1]
+F:s:QUEST_ENTER:3:0:0:0:0:NONE:24
+F:f:BUILDING_5:3:0:0:0:0:NONE:24
+
+# Quest 24 completed
+?:[EQU $QUEST24 2]
+F:f:BUILDING_5:3:0:0:0:0:NONE:24
+
+# Quest 24 rewarding, reward is ring of disenchantment resistance
+# (Adjust reward as needed; I think this quest is tough enough, and
+#  Artifact Creation scrolls are flaky enough to not be an automatic
+#  huge reward.  Besides, they're cool when they turn up.)
+?:[EQU $QUEST24 3]
+F:~:FLOOR:3:0:0:0:199
+
+?:[EQU $QUEST24 4]
+F:f:BUILDING:3
+
+?:[EQU $QUEST24 5]
+F:f:BUILDING_5:3:24
+
+?:[EQU $QUEST24 6]
 F:f:BUILDING_5:3
 
 ?:1
@@ -323,14 +324,14 @@ D:WWWWWWWWWWW......################..#########.#######..........................
 D:WWWWWWWWWWW......###...............#########.#######............................................................................##......##........WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
 D:WWWWWWWWWWW......###g############..###q#####.#######............................................................................##########........WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
 D:WWWWWWWWWWW......################............#######............................................................................##########........WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
-D:WWWWWWWWWWW......################..#########.d######..................''''........................................................................WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
-D:WWWWWWWWWWW......################..#########.8######.................''''''.......................................................................WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
-D:WWWWWWWWWWW......###~..............#########.#######................''''''''......................................................................WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
-D:WWWWWWWWWWW......###f###############################................''''''''.....................................................#...#............WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
-D:WWWWWWWWWWW......###################################................''''''''......................................................................WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
-D:WWWWWWWWWWW......###################################................''''''''.......................................................s..............WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
-D:WWWWWWWWWWW..........................................................''''''.......................................................................WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
-D:WWWWWWWWWWW...........................................................'r''.......................................................#...#............WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW......################..#########.d######..............................................................................................WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW......################..#########.8######..............................................................................................WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW......###~..............#########.#######..............................................................................................WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW......###f###############################.............................................................................#...#............WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW......###################################..............................................................................................WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW......###################################...............................................................................s..............WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW.......................................................................................................................................WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW......................................................................................................................#...#............WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
 D:WWWWWWWWWWW.......................................................................................................................................WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
 D:WWWWWWWWWWW.......................................................................................................................................WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
 D:WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.....WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW......WWWWWWWWWWWWWWWWWWWWWW
