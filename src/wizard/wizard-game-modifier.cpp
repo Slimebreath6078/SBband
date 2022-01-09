@@ -118,11 +118,11 @@ void wiz_enter_quest(PlayerType *player_ptr)
         return;
 
     init_flags = i2enum<init_flags_type>(INIT_SHOW_TEXT | INIT_ASSIGN);
-    player_ptr->current_floor_ptr->quest_number = (QUEST_IDX)tmp_int;
+    player_ptr->current_floor_ptr->quest_number = i2enum<quest_id>(tmp_int);
     parse_fixed_map(player_ptr, "q_info.txt", 0, 0, 0, 0);
     quest[tmp_int].status = QuestStatusType::TAKEN;
     if (quest[tmp_int].dungeon == 0)
-        exe_enter_quest(player_ptr, (QUEST_IDX)tmp_int);
+        exe_enter_quest(player_ptr, i2enum<quest_id>(tmp_int));
 }
 
 /*!
@@ -131,13 +131,13 @@ void wiz_enter_quest(PlayerType *player_ptr)
  */
 void wiz_complete_quest(PlayerType *player_ptr)
 {
-    if (!player_ptr->current_floor_ptr->quest_number) {
+    if (player_ptr->current_floor_ptr->quest_number == quest_id::NONE) {
         msg_print("No current quest");
         msg_print(nullptr);
         return;
     }
 
-    if (quest[player_ptr->current_floor_ptr->quest_number].status == QuestStatusType::TAKEN)
+    if (quest[enum2i(player_ptr->current_floor_ptr->quest_number)].status == QuestStatusType::TAKEN)
         complete_quest(player_ptr, player_ptr->current_floor_ptr->quest_number);
 }
 

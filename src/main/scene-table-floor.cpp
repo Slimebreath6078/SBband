@@ -43,11 +43,11 @@ static bool scene_basic(PlayerType *player_ptr, scene_type *value)
 
 static bool scene_quest(PlayerType *player_ptr, scene_type *value)
 {
-    const QUEST_IDX quest_id = quest_number(player_ptr, player_ptr->current_floor_ptr->dun_level);
-    const bool enable = (quest_id > 0);
+    const quest_id quest_id = quest_number(player_ptr, player_ptr->current_floor_ptr->dun_level);
+    const bool enable = (quest_id != quest_id::NONE);
     if (enable) {
         value->type = TERM_XTRA_MUSIC_QUEST;
-        value->val = quest_id;
+        value->val = enum2i(quest_id);
     }
 
     return enable;
@@ -55,8 +55,8 @@ static bool scene_quest(PlayerType *player_ptr, scene_type *value)
 
 static bool scene_quest_basic(PlayerType *player_ptr, scene_type *value)
 {
-    const QUEST_IDX quest_id = quest_number(player_ptr, player_ptr->current_floor_ptr->dun_level);
-    const bool enable = (quest_id > 0);
+    const quest_id quest_id = quest_number(player_ptr, player_ptr->current_floor_ptr->dun_level);
+    const bool enable = (quest_id != quest_id::NONE);
     if (enable) {
         value->type = TERM_XTRA_MUSIC_BASIC;
         value->val = MUSIC_BASIC_QUEST;

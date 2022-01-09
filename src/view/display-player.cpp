@@ -192,15 +192,15 @@ static bool search_death_cause(PlayerType *player_ptr, char *statmsg)
         return true;
     }
 
-    if (floor_ptr->quest_number && quest_type::is_fixed(floor_ptr->quest_number)) {
+    if (floor_ptr->quest_number != quest_id::NONE && quest_type::is_fixed(enum2i(floor_ptr->quest_number))) {
         /* Get the quest text */
         /* Bewere that INIT_ASSIGN resets the cur_num. */
         init_flags = INIT_NAME_ONLY;
         parse_fixed_map(player_ptr, "q_info.txt", 0, 0, 0, 0);
 #ifdef JP
-        sprintf(statmsg, "…あなたは、クエスト「%s」で%sに殺された。", quest[floor_ptr->quest_number].name, player_ptr->died_from);
+        sprintf(statmsg, "…あなたは、クエスト「%s」で%sに殺された。", quest[enum2i(floor_ptr->quest_number)].name, player_ptr->died_from);
 #else
-        sprintf(statmsg, "...You were killed by %s in the quest '%s'.", player_ptr->died_from, quest[floor_ptr->quest_number].name);
+        sprintf(statmsg, "...You were killed by %s in the quest '%s'.", player_ptr->died_from, quest[enum2i(floor_ptr->quest_number)].name);
 #endif
         return true;
     }
@@ -223,7 +223,7 @@ static bool search_death_cause(PlayerType *player_ptr, char *statmsg)
 static bool decide_death_in_quest(PlayerType *player_ptr, char *statmsg)
 {
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
-    if (!floor_ptr->quest_number || !quest_type::is_fixed(floor_ptr->quest_number))
+    if (floor_ptr->quest_number == quest_id::NONE || !quest_type::is_fixed(enum2i(floor_ptr->quest_number)))
         return false;
 
     for (int i = 0; i < 10; i++)
@@ -232,7 +232,7 @@ static bool decide_death_in_quest(PlayerType *player_ptr, char *statmsg)
     quest_text_line = 0;
     init_flags = INIT_NAME_ONLY;
     parse_fixed_map(player_ptr, "q_info.txt", 0, 0, 0, 0);
-    sprintf(statmsg, _("…あなたは現在、 クエスト「%s」を遂行中だ。", "...Now, you are in the quest '%s'."), quest[floor_ptr->quest_number].name);
+    sprintf(statmsg, _("…あなたは現在、 クエスト「%s」を遂行中だ。", "...Now, you are in the quest '%s'."), quest[enum2i(floor_ptr->quest_number)].name);
     return true;
 }
 

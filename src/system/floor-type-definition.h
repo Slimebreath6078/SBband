@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include "dungeon/quest.h"
 #include "floor/floor-base-definitions.h"
 #include "floor/sight-definitions.h"
 #include "monster/monster-timed-effect-types.h"
@@ -52,7 +53,7 @@ typedef struct floor_type {
     POSITION redraw_x[REDRAW_MAX];
 
     bool monster_noise;
-    QUEST_IDX quest_number; /* Inside quest level */
+    quest_id quest_number; /* Inside quest level */
     bool inside_arena; /* Is character inside on_defeat_arena_monster? */
 
 } floor_type;

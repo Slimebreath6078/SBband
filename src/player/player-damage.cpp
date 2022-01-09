@@ -356,7 +356,7 @@ int take_hit(PlayerType *player_ptr, int damage_type, HIT_POINT damage, concptr 
             if (record_arena)
                 exe_write_diary(player_ptr, DIARY_ARENA, -1 - player_ptr->arena_number, m_name);
         } else {
-            QUEST_IDX q_idx = quest_number(player_ptr, player_ptr->current_floor_ptr->dun_level);
+            quest_id q_idx = quest_number(player_ptr, player_ptr->current_floor_ptr->dun_level);
             bool seppuku = streq(hit_from, "Seppuku");
             bool winning_seppuku = w_ptr->total_winner && seppuku;
 
@@ -393,7 +393,7 @@ int take_hit(PlayerType *player_ptr, int damage_type, HIT_POINT damage, concptr 
                     strcpy(buf, _("アリーナ", "in the Arena"));
                 else if (!is_in_dungeon(player_ptr))
                     strcpy(buf, _("地上", "on the surface"));
-                else if (q_idx && (quest_type::is_fixed(q_idx) && !((q_idx == QUEST_OBERON) || (q_idx == QUEST_SERPENT))))
+                else if (q_idx != quest_id::NONE && (quest_type::is_fixed(enum2i(q_idx)) && !((q_idx == quest_id::OBERON) || (q_idx == quest_id::SERPENT))))
                     strcpy(buf, _("クエスト", "in a quest"));
                 else
                     sprintf(buf, _("%d階", "level %d"), (int)player_ptr->current_floor_ptr->dun_level);

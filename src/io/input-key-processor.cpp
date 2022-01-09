@@ -258,7 +258,7 @@ void process_command(PlayerType *player_ptr)
         break;
     }
     case '<': {
-        if (!player_ptr->wild_mode && !floor_ptr->dun_level && !floor_ptr->inside_arena && !floor_ptr->quest_number) {
+        if (!player_ptr->wild_mode && !floor_ptr->dun_level && !floor_ptr->inside_arena && floor_ptr->quest_number == quest_id::NONE) {
             if (vanilla_town)
                 break;
 
