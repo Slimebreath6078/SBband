@@ -29,4 +29,7 @@
 /* ゲーム調整値はこちらに */
 #include "system/gamevalue.h"
 
+/* By SBband SBband用のヘッダ*/
+#include "system/s-basic.h"
+
 #endif

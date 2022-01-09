@@ -5121,6 +5121,9 @@
     <ClInclude Include="..\..\src\mspell\mspell-attribute.h">
       <Filter>mspell</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\system\s-basic.h">
+      <Filter>system</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\wall.bmp" />
