@@ -51,8 +51,7 @@
 bool is_teleport_level_ineffective(PlayerType *player_ptr, MONSTER_IDX idx)
 {
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
-    bool is_special_floor
-        = floor_ptr->inside_arena || player_ptr->phase_out || (floor_ptr->inside_quest && !random_quest_number(player_ptr, floor_ptr->dun_level));
+    bool is_special_floor = floor_ptr->inside_arena || player_ptr->phase_out || (floor_ptr->quest_number && !random_quest_number(player_ptr, floor_ptr->dun_level));
     bool is_invalid_floor = idx <= 0;
     is_invalid_floor &= quest_number(player_ptr, floor_ptr->dun_level) || (floor_ptr->dun_level >= d_info[player_ptr->dungeon_idx].maxdepth);
     is_invalid_floor &= player_ptr->current_floor_ptr->dun_level >= 1;
@@ -133,8 +132,7 @@ void teleport_level(PlayerType *player_ptr, MONSTER_IDX m_idx)
 
             player_ptr->leaving = true;
         }
-    } else if (quest_number(player_ptr, player_ptr->current_floor_ptr->dun_level)
-        || (player_ptr->current_floor_ptr->dun_level >= d_info[player_ptr->dungeon_idx].maxdepth)) {
+    } else if (quest_number(player_ptr, player_ptr->current_floor_ptr->dun_level) || (player_ptr->current_floor_ptr->dun_level >= d_info[player_ptr->dungeon_idx].maxdepth)) {
 #ifdef JP
         if (see_m)
             msg_format("%^sは天井を突き破って宙へ浮いていく。", m_name);
@@ -153,7 +151,7 @@ void teleport_level(PlayerType *player_ptr, MONSTER_IDX m_idx)
             prepare_change_floor_mode(player_ptr, CFM_SAVE_FLOORS | CFM_UP | CFM_RAND_PLACE | CFM_RAND_CONNECT);
 
             leave_quest_check(player_ptr);
-            player_ptr->current_floor_ptr->inside_quest = 0;
+            player_ptr->current_floor_ptr->quest_number = 0;
             player_ptr->leaving = true;
         }
     } else if (go_up) {
@@ -234,8 +232,7 @@ bool teleport_level_other(PlayerType *player_ptr)
     monster_desc(player_ptr, m_name, m_ptr, 0);
     msg_format(_("%^sの足を指さした。", "You gesture at %^s's feet."), m_name);
 
-    if (r_ptr->resistance_flags.has_any_of(RFR_EFF_RESIST_NEXUS_MASK) || r_ptr->resistance_flags.has(MonsterResistanceType::RESIST_TELEPORT) || (r_ptr->flags1 & RF1_QUESTOR)
-        || (r_ptr->level + randint1(50) > player_ptr->lev + randint1(60))) {
+    if (r_ptr->resistance_flags.has_any_of(RFR_EFF_RESIST_NEXUS_MASK) || r_ptr->resistance_flags.has(MonsterResistanceType::RESIST_TELEPORT) || (r_ptr->flags1 & RF1_QUESTOR) || (r_ptr->level + randint1(50) > player_ptr->lev + randint1(60))) {
         msg_format(_("しかし効果がなかった！", "%^s is unaffected!"), m_name);
     } else {
         teleport_level(player_ptr, target_m_idx);
@@ -295,8 +292,7 @@ bool tele_town(PlayerType *player_ptr)
 
         else if ((i < 'a') || (i > ('a' + max_towns - 2)))
             continue;
-        else if (((i - 'a' + 1) == player_ptr->town_num) || ((i - 'a' + 1) == NO_TOWN) || ((i - 'a' + 1) == SECRET_TOWN)
-            || !(player_ptr->visit & (1UL << (i - 'a'))))
+        else if (((i - 'a' + 1) == player_ptr->town_num) || ((i - 'a' + 1) == NO_TOWN) || ((i - 'a' + 1) == SECRET_TOWN) || !(player_ptr->visit & (1UL << (i - 'a'))))
             continue;
         break;
     }
@@ -360,7 +356,7 @@ bool recall_player(PlayerType *player_ptr, TIME_EFFECT turns)
 
     bool is_special_floor = is_in_dungeon(player_ptr);
     is_special_floor &= max_dlv[player_ptr->dungeon_idx] > player_ptr->current_floor_ptr->dun_level;
-    is_special_floor &= !player_ptr->current_floor_ptr->inside_quest;
+    is_special_floor &= !player_ptr->current_floor_ptr->quest_number;
     is_special_floor &= !player_ptr->word_recall;
     if (is_special_floor) {
         if (get_check(_("ここは最深到達階より浅い階です。この階に戻って来ますか？ ", "Reset recall depth? "))) {
@@ -413,9 +409,8 @@ bool free_level_recall(PlayerType *player_ptr)
 
     player_ptr->word_recall = 1;
     player_ptr->recall_dungeon = select_dungeon;
-    max_dlv[player_ptr->recall_dungeon]
-        = ((amt > d_info[select_dungeon].maxdepth) ? d_info[select_dungeon].maxdepth
-                                                   : ((amt < d_info[select_dungeon].mindepth) ? d_info[select_dungeon].mindepth : amt));
+    max_dlv[player_ptr->recall_dungeon] = ((amt > d_info[select_dungeon].maxdepth) ? d_info[select_dungeon].maxdepth
+                                                                                   : ((amt < d_info[select_dungeon].mindepth) ? d_info[select_dungeon].mindepth : amt));
     if (record_maxdepth)
         exe_write_diary(player_ptr, DIARY_TRUMP, select_dungeon, _("トランプタワーで", "at Trump Tower"));
 
