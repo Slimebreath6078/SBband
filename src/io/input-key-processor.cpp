@@ -258,7 +258,7 @@ void process_command(PlayerType *player_ptr)
         break;
     }
     case '<': {
-        if (!player_ptr->wild_mode && !floor_ptr->dun_level && !floor_ptr->inside_arena && !floor_ptr->inside_quest) {
+        if (!player_ptr->wild_mode && !floor_ptr->dun_level && !floor_ptr->inside_arena && floor_ptr->quest_number == quest_id::NONE) {
             if (vanilla_town)
                 break;
 
@@ -319,8 +319,7 @@ void process_command(PlayerType *player_ptr)
         break;
     }
     case 'b': {
-        if ((player_ptr->pclass == PlayerClassType::MINDCRAFTER) || (player_ptr->pclass == PlayerClassType::BERSERKER) || (player_ptr->pclass == PlayerClassType::NINJA)
-            || (player_ptr->pclass == PlayerClassType::MIRROR_MASTER))
+        if ((player_ptr->pclass == PlayerClassType::MINDCRAFTER) || (player_ptr->pclass == PlayerClassType::BERSERKER) || (player_ptr->pclass == PlayerClassType::NINJA) || (player_ptr->pclass == PlayerClassType::MIRROR_MASTER))
             do_cmd_mind_browse(player_ptr);
         else if (player_ptr->pclass == PlayerClassType::ELEMENTALIST)
             do_cmd_element_browse(player_ptr);
@@ -345,8 +344,7 @@ void process_command(PlayerType *player_ptr)
             break;
         }
 
-        if (floor_ptr->dun_level && d_info[player_ptr->dungeon_idx].flags.has(DungeonFeatureType::NO_MAGIC) && (player_ptr->pclass != PlayerClassType::BERSERKER)
-            && (player_ptr->pclass != PlayerClassType::SMITH)) {
+        if (floor_ptr->dun_level && d_info[player_ptr->dungeon_idx].flags.has(DungeonFeatureType::NO_MAGIC) && (player_ptr->pclass != PlayerClassType::BERSERKER) && (player_ptr->pclass != PlayerClassType::SMITH)) {
             msg_print(_("ダンジョンが魔法を吸収した！", "The dungeon absorbs all attempted magic!"));
             msg_print(nullptr);
             break;
@@ -390,8 +388,7 @@ void process_command(PlayerType *player_ptr)
             break;
         }
 
-        if ((player_ptr->pclass == PlayerClassType::MINDCRAFTER) || (player_ptr->pclass == PlayerClassType::BERSERKER) || (player_ptr->pclass == PlayerClassType::NINJA)
-            || (player_ptr->pclass == PlayerClassType::MIRROR_MASTER))
+        if ((player_ptr->pclass == PlayerClassType::MINDCRAFTER) || (player_ptr->pclass == PlayerClassType::BERSERKER) || (player_ptr->pclass == PlayerClassType::NINJA) || (player_ptr->pclass == PlayerClassType::MIRROR_MASTER))
             do_cmd_mind(player_ptr);
         else if (player_ptr->pclass == PlayerClassType::ELEMENTALIST)
             do_cmd_element(player_ptr);

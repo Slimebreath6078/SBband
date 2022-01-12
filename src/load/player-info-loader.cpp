@@ -151,7 +151,7 @@ static void set_imitation()
 static void rd_phase_out(PlayerType *player_ptr)
 {
     player_ptr->current_floor_ptr->inside_arena = rd_s16b() != 0;
-    player_ptr->current_floor_ptr->inside_quest = rd_s16b();
+    player_ptr->current_floor_ptr->quest_number = i2enum<quest_id>(rd_s16b());
     player_ptr->phase_out = rd_s16b() != 0;
 }
 

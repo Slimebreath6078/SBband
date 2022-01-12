@@ -129,7 +129,7 @@ static void decide_tval_show(flavor_type *flavor_ptr)
 
 static void describe_weapon_dice(PlayerType *player_ptr, flavor_type *flavor_ptr)
 {
-    if (!flavor_ptr->known && object_is_quest_target(player_ptr->current_floor_ptr->inside_quest, flavor_ptr->o_ptr))
+    if (!flavor_ptr->known && object_is_quest_target(player_ptr->current_floor_ptr->quest_number, flavor_ptr->o_ptr))
         return;
 
     flavor_ptr->t = object_desc_chr(flavor_ptr->t, ' ');
@@ -478,9 +478,7 @@ static void decide_item_feeling(flavor_type *flavor_ptr)
         return;
     }
 
-    if (((flavor_ptr->o_ptr->tval == ItemKindType::RING) || (flavor_ptr->o_ptr->tval == ItemKindType::AMULET) || (flavor_ptr->o_ptr->tval == ItemKindType::LITE)
-            || (flavor_ptr->o_ptr->tval == ItemKindType::FIGURINE))
-        && flavor_ptr->aware && !flavor_ptr->known && !(flavor_ptr->o_ptr->ident & IDENT_SENSE)) {
+    if (((flavor_ptr->o_ptr->tval == ItemKindType::RING) || (flavor_ptr->o_ptr->tval == ItemKindType::AMULET) || (flavor_ptr->o_ptr->tval == ItemKindType::LITE) || (flavor_ptr->o_ptr->tval == ItemKindType::FIGURINE)) && flavor_ptr->aware && !flavor_ptr->known && !(flavor_ptr->o_ptr->ident & IDENT_SENSE)) {
         strcpy(flavor_ptr->fake_insc_buf, _("未鑑定", "unidentified"));
         return;
     }

@@ -399,7 +399,7 @@ static void effect_monster_captured(PlayerType *player_ptr, effect_monster_type 
 process_result effect_monster_capture(PlayerType *player_ptr, effect_monster_type *em_ptr)
 {
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
-    if ((floor_ptr->inside_quest && (quest[floor_ptr->inside_quest].type == QuestKindType::KILL_ALL) && !is_pet(em_ptr->m_ptr)) || em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || em_ptr->r_ptr->flags1 & RF1_QUESTOR || any_bits(em_ptr->r_ptr->flags7, RF7_NAZGUL | RF7_UNIQUE2) || em_ptr->m_ptr->parent_m_idx) {
+    if ((floor_ptr->quest_number != quest_id::NONE && (quest[enum2i(floor_ptr->quest_number)].type == QuestKindType::KILL_ALL) && !is_pet(em_ptr->m_ptr)) || em_ptr->r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE) || em_ptr->r_ptr->flags1 & RF1_QUESTOR || any_bits(em_ptr->r_ptr->flags7, RF7_NAZGUL | RF7_UNIQUE2) || em_ptr->m_ptr->parent_m_idx) {
         msg_format(_("%sには効果がなかった。", "%s is unaffected."), em_ptr->m_name);
         em_ptr->skipped = true;
         return PROCESS_CONTINUE;

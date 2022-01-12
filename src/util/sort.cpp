@@ -312,9 +312,9 @@ bool ang_sort_comp_quest_num(PlayerType *player_ptr, vptr u, vptr v, int a, int 
     (void)player_ptr;
     (void)v;
 
-    QUEST_IDX *q_num = (QUEST_IDX *)u;
-    quest_type *qa = &quest[q_num[a]];
-    quest_type *qb = &quest[q_num[b]];
+    quest_id *q_num = (quest_id *)u;
+    quest_type *qa = &quest[enum2i(q_num[a])];
+    quest_type *qb = &quest[enum2i(q_num[b])];
     return (qa->comptime != qb->comptime) ? (qa->comptime < qb->comptime) : (qa->level <= qb->level);
 }
 
@@ -324,8 +324,8 @@ void ang_sort_swap_quest_num(PlayerType *player_ptr, vptr u, vptr v, int a, int 
     (void)player_ptr;
     (void)v;
 
-    QUEST_IDX *q_num = (QUEST_IDX *)u;
-    QUEST_IDX tmp = q_num[a];
+    quest_id *q_num = (quest_id *)u;
+    quest_id tmp = q_num[a];
     q_num[a] = q_num[b];
     q_num[b] = tmp;
 }

@@ -38,10 +38,10 @@
 #include "world/world.h"
 
 std::vector<quest_type> quest; /*!< Quest info */
-QUEST_IDX max_q_idx; /*!< Maximum number of quests */
+int16_t max_q_idx; /*!< Maximum number of quests */
 char quest_text[10][80]; /*!< Quest text */
 int quest_text_line; /*!< Current line of the quest text */
-int leaving_quest = 0;
+quest_id leaving_quest = quest_id::NONE;
 
 /*!
  * @brief クエスト突入時のメッセージテーブル / Array of places to find an inscription
@@ -59,7 +59,7 @@ static concptr find_quest[] = {
  * @param quest_idx クエストID
  * @return 固定クエストならばTRUEを返す
  */
-bool quest_type::is_fixed(short quest_idx)
+bool quest_type::is_fixed(int16_t quest_idx)
 {
     return ((quest_idx) < MIN_RANDOM_QUEST) || ((quest_idx) > MAX_RANDOM_QUEST);
 }
@@ -71,7 +71,6 @@ bool quest_type::is_fixed(short quest_idx)
 void determine_random_questor(PlayerType *player_ptr, quest_type *q_ptr)
 {
     get_mon_num_prep(player_ptr, mon_hook_quest, nullptr);
-
     MONRACE_IDX r_idx;
     while (true) {
         /*
@@ -129,18 +128,18 @@ void record_quest_final_status(quest_type *q_ptr, PLAYER_LEVEL lev, QuestStatusT
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param quest_num 達成状態にしたいクエストのID
  */
-void complete_quest(PlayerType *player_ptr, QUEST_IDX quest_num)
+void complete_quest(PlayerType *player_ptr, quest_id quest_num)
 {
-    quest_type *const q_ptr = &quest[quest_num];
+    quest_type *const q_ptr = &quest[enum2i(quest_num)];
 
     switch (q_ptr->type) {
     case QuestKindType::RANDOM:
         if (record_rand_quest)
-            exe_write_diary(player_ptr, DIARY_RAND_QUEST_C, quest_num, nullptr);
+            exe_write_diary(player_ptr, DIARY_RAND_QUEST_C, enum2i(quest_num), nullptr);
         break;
     default:
         if (record_fix_quest)
-            exe_write_diary(player_ptr, DIARY_FIX_QUEST_C, quest_num, nullptr);
+            exe_write_diary(player_ptr, DIARY_FIX_QUEST_C, enum2i(quest_num), nullptr);
         break;
     }
 
@@ -163,9 +162,9 @@ void complete_quest(PlayerType *player_ptr, QUEST_IDX quest_num)
 void check_find_art_quest_completion(PlayerType *player_ptr, object_type *o_ptr)
 {
     /* Check if completed a quest */
-    for (QUEST_IDX i = 0; i < max_q_idx; i++) {
+    for (int16_t i = 0; i < max_q_idx; i++) {
         if ((quest[i].type == QuestKindType::FIND_ARTIFACT) && (quest[i].status == QuestStatusType::TAKEN) && (quest[i].k_idx == o_ptr->name1)) {
-            complete_quest(player_ptr, i);
+            complete_quest(player_ptr, i2enum<quest_id>(i));
         }
     }
 }
@@ -174,13 +173,13 @@ void check_find_art_quest_completion(PlayerType *player_ptr, object_type *o_ptr)
  * @brief クエストの導入メッセージを表示する / Discover quest
  * @param q_idx 開始されたクエストのID
  */
-void quest_discovery(QUEST_IDX q_idx)
+void quest_discovery(quest_id q_idx)
 {
-    quest_type *q_ptr = &quest[q_idx];
+    quest_type *q_ptr = &quest[enum2i(q_idx)];
     monster_race *r_ptr = &r_info[q_ptr->r_idx];
     MONSTER_NUMBER q_num = q_ptr->max_num;
 
-    if (!q_idx)
+    if (q_idx == quest_id::NONE)
         return;
 
     GAME_TEXT name[MAX_NLEN];
@@ -216,19 +215,18 @@ void quest_discovery(QUEST_IDX q_idx)
  * @param level 検索対象になる階
  * @return クエストIDを返す。該当がない場合0を返す。
  */
-QUEST_IDX quest_number(PlayerType *player_ptr, DEPTH level)
+quest_id quest_number(PlayerType *player_ptr, DEPTH level)
 {
     floor_type *floor_ptr = player_ptr->current_floor_ptr;
-    if (floor_ptr->inside_quest)
-        return (floor_ptr->inside_quest);
+    if (floor_ptr->quest_number != quest_id::NONE)
+        return (floor_ptr->quest_number);
 
-    for (QUEST_IDX i = 0; i < max_q_idx; i++) {
+    for (int16_t i = 0; i < max_q_idx; i++) {
         if (quest[i].status != QuestStatusType::TAKEN)
             continue;
 
-        if ((quest[i].type == QuestKindType::KILL_LEVEL) && !(quest[i].flags & QUEST_FLAG_PRESET) && (quest[i].level == level)
-            && (quest[i].dungeon == player_ptr->dungeon_idx))
-            return i;
+        if ((quest[i].type == QuestKindType::KILL_LEVEL) && !(quest[i].flags & QUEST_FLAG_PRESET) && (quest[i].level == level) && (quest[i].dungeon == player_ptr->dungeon_idx))
+            return i2enum<quest_id>(i);
     }
 
     return random_quest_number(player_ptr, level);
@@ -240,19 +238,18 @@ QUEST_IDX quest_number(PlayerType *player_ptr, DEPTH level)
  * @param level 検索対象になる階
  * @return クエストIDを返す。該当がない場合0を返す。
  */
-QUEST_IDX random_quest_number(PlayerType *player_ptr, DEPTH level)
+quest_id random_quest_number(PlayerType *player_ptr, DEPTH level)
 {
     if (player_ptr->dungeon_idx != DUNGEON_ANGBAND)
-        return 0;
+        return quest_id::NONE;
 
-    for (QUEST_IDX i = MIN_RANDOM_QUEST; i < MAX_RANDOM_QUEST + 1; i++) {
-        if ((quest[i].type == QuestKindType::RANDOM) && (quest[i].status == QuestStatusType::TAKEN) && (quest[i].level == level)
-            && (quest[i].dungeon == DUNGEON_ANGBAND)) {
-            return i;
+    for (int16_t i = MIN_RANDOM_QUEST; i < MAX_RANDOM_QUEST + 1; i++) {
+        if ((quest[i].type == QuestKindType::RANDOM) && (quest[i].status == QuestStatusType::TAKEN) && (quest[i].level == level) && (quest[i].dungeon == DUNGEON_ANGBAND)) {
+            return i2enum<quest_id>(i);
         }
     }
 
-    return 0;
+    return quest_id::NONE;
 }
 
 /*!
@@ -261,11 +258,11 @@ QUEST_IDX random_quest_number(PlayerType *player_ptr, DEPTH level)
  */
 void leave_quest_check(PlayerType *player_ptr)
 {
-    leaving_quest = player_ptr->current_floor_ptr->inside_quest;
-    if (!leaving_quest)
+    leaving_quest = player_ptr->current_floor_ptr->quest_number;
+    if (leaving_quest == quest_id::NONE)
         return;
 
-    quest_type *const q_ptr = &quest[leaving_quest];
+    quest_type *const q_ptr = &quest[enum2i<quest_id>(leaving_quest)];
     bool is_one_time_quest = ((q_ptr->flags & QUEST_FLAG_ONCE) || (q_ptr->type == QuestKindType::RANDOM)) && (q_ptr->status == QuestStatusType::TAKEN);
     if (!is_one_time_quest)
         return;
@@ -275,8 +272,8 @@ void leave_quest_check(PlayerType *player_ptr)
     /* Additional settings */
     switch (q_ptr->type) {
     case QuestKindType::TOWER:
-        quest[QUEST_TOWER1].status = QuestStatusType::FAILED;
-        quest[QUEST_TOWER1].complev = player_ptr->lev;
+        quest[enum2i(quest_id::TOWER1)].status = QuestStatusType::FAILED;
+        quest[enum2i(quest_id::TOWER1)].complev = player_ptr->lev;
         break;
     case QuestKindType::FIND_ARTIFACT:
         a_info[q_ptr->k_idx].gen_flags.reset(ItemGenerationTraitType::QUESTITEM);
@@ -292,12 +289,12 @@ void leave_quest_check(PlayerType *player_ptr)
     /* Record finishing a quest */
     if (q_ptr->type == QuestKindType::RANDOM) {
         if (record_rand_quest)
-            exe_write_diary(player_ptr, DIARY_RAND_QUEST_F, leaving_quest, nullptr);
+            exe_write_diary(player_ptr, DIARY_RAND_QUEST_F, enum2i<quest_id>(leaving_quest), nullptr);
         return;
     }
 
     if (record_fix_quest)
-        exe_write_diary(player_ptr, DIARY_FIX_QUEST_F, leaving_quest, nullptr);
+        exe_write_diary(player_ptr, DIARY_FIX_QUEST_F, enum2i<quest_id>(leaving_quest), nullptr);
 }
 
 /*!
@@ -305,29 +302,29 @@ void leave_quest_check(PlayerType *player_ptr)
  */
 void leave_tower_check(PlayerType *player_ptr)
 {
-    leaving_quest = player_ptr->current_floor_ptr->inside_quest;
-    bool is_leaving_from_tower = leaving_quest != 0;
-    is_leaving_from_tower &= quest[leaving_quest].type == QuestKindType::TOWER;
-    is_leaving_from_tower &= quest[QUEST_TOWER1].status != QuestStatusType::COMPLETED;
+    leaving_quest = player_ptr->current_floor_ptr->quest_number;
+    bool is_leaving_from_tower = leaving_quest != quest_id::NONE;
+    is_leaving_from_tower &= quest[enum2i<quest_id>(leaving_quest)].type == QuestKindType::TOWER;
+    is_leaving_from_tower &= quest[enum2i(quest_id::TOWER1)].status != QuestStatusType::COMPLETED;
     if (!is_leaving_from_tower)
         return;
-    if (quest[leaving_quest].type != QuestKindType::TOWER)
+    if (quest[enum2i<quest_id>(leaving_quest)].type != QuestKindType::TOWER)
         return;
 
-    quest[QUEST_TOWER1].status = QuestStatusType::FAILED;
-    quest[QUEST_TOWER1].complev = player_ptr->lev;
+    quest[enum2i(quest_id::TOWER1)].status = QuestStatusType::FAILED;
+    quest[enum2i(quest_id::TOWER1)].complev = player_ptr->lev;
     update_playtime();
-    quest[QUEST_TOWER1].comptime = w_ptr->play_time;
+    quest[enum2i(quest_id::TOWER1)].comptime = w_ptr->play_time;
 }
 
 /*! 
  * @brief Player enters a new quest
  */
-void exe_enter_quest(PlayerType *player_ptr, QUEST_IDX quest_idx)
+void exe_enter_quest(PlayerType *player_ptr, quest_id quest_idx)
 {
-    if (quest[quest_idx].type != QuestKindType::RANDOM)
+    if (quest[enum2i<quest_id>(quest_idx)].type != QuestKindType::RANDOM)
         player_ptr->current_floor_ptr->dun_level = 1;
-    player_ptr->current_floor_ptr->inside_quest = quest_idx;
+    player_ptr->current_floor_ptr->quest_number = quest_idx;
 
     player_ptr->leaving = true;
 }
@@ -360,5 +357,5 @@ void do_cmd_quest(PlayerType *player_ptr)
     player_ptr->oldpx = 0;
     leave_quest_check(player_ptr);
 
-    exe_enter_quest(player_ptr, player_ptr->current_floor_ptr->grid_array[player_ptr->y][player_ptr->x].special);
+    exe_enter_quest(player_ptr, i2enum<quest_id>(player_ptr->current_floor_ptr->grid_array[player_ptr->y][player_ptr->x].special));
 }
