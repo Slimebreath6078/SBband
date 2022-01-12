@@ -5121,6 +5121,9 @@
     <ClInclude Include="..\..\src\mspell\mspell-attribute.h">
       <Filter>mspell</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\monster-race\race-individuality-flags.h">
+      <Filter>monster-race</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\system\s-basic.h">
       <Filter>system</Filter>
     </ClInclude>
