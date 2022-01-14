@@ -1,0 +1,9 @@
+N:1351:巨大戦艦『グレート・シング』
+WARNING!! A HUGE BATTLESHIP GREAT THING IS APPROACHING FAST!
+
+N:1348:『ミズノアオイ』
+N:1355:魔界のメイド長『ココア』
+この階の%sを倒せば膨大な報酬と共に次の階への道が開かれるだろう！
+
+N:*:Default line
+注意せよ！この階は%sによって守られている！
