@@ -994,6 +994,7 @@
     <ClInclude Include="..\..\src\main-win\graphics-win.h" />
     <ClInclude Include="..\..\src\main-win\main-win-term.h" />
     <ClInclude Include="..\..\src\main-win\wav-reader.h" />
+    <ClInclude Include="..\..\src\monster-race\race-population-flags.h" />
     <ClInclude Include="..\..\src\monster-race\race-resistance-mask.h" />
     <ClInclude Include="..\..\src\monster-race\race-kind-flags.h" />
     <ClInclude Include="..\..\src\monster\monster-damage.h" />
