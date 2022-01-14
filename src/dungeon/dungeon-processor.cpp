@@ -127,7 +127,7 @@ void process_dungeon(PlayerType *player_ptr, bool load_game)
     if (!player_ptr->playing || player_ptr->is_dead)
         return;
 
-    if (floor_ptr->quest_number != quest_id::NONE && (player_ptr->dungeon_idx == DUNGEON_ANGBAND)) {
+    if (floor_ptr->quest_number == quest_id::NONE && (player_ptr->dungeon_idx == DUNGEON_ANGBAND)) {
         quest_discovery(random_quest_number(player_ptr, floor_ptr->dun_level));
         floor_ptr->quest_number = random_quest_number(player_ptr, floor_ptr->dun_level);
     }
