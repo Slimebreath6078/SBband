@@ -46,5 +46,6 @@ enum fixed_artifact_type {
     ART_ROBINTON = 251,
     ART_ICINGDEATH = 259,
     ART_TWINKLE = 260,
-    ART_FROZEN_SWORDFISH = 269
+    ART_FROZEN_SWORDFISH = 269,
+    ART_CLAUDETTE = 271,
 };
