@@ -11,6 +11,7 @@
 #include "monster/monster-status.h"
 #include "player-base/player-class.h"
 #include "player-info/ninja-data-type.h"
+#include "player/player-status.h"
 #include "player/special-defense-types.h"
 #include "system/floor-type-definition.h"
 #include "system/grid-type-definition.h"
@@ -173,8 +174,7 @@ void update_mon_lite(PlayerType *player_ptr)
 
             FloorFeatureType f_flag;
             if (rad > 0) {
-                if (!(r_ptr->flags7 & (RF7_SELF_LITE_1 | RF7_SELF_LITE_2))
-                    && (monster_csleep_remaining(m_ptr) || (!floor_ptr->dun_level && is_daytime()) || player_ptr->phase_out))
+                if (!(r_ptr->flags7 & (RF7_SELF_LITE_1 | RF7_SELF_LITE_2)) && (monster_csleep_remaining(m_ptr) || (!floor_ptr->dun_level && is_daytime()) || player_ptr->phase_out))
                     continue;
 
                 if (d_info[player_ptr->dungeon_idx].flags.has(DungeonFeatureType::DARKNESS))
@@ -309,8 +309,8 @@ void update_mon_lite(PlayerType *player_ptr)
 
     player_ptr->update |= PU_DELAY_VIS;
     player_ptr->monlite = (floor_ptr->grid_array[player_ptr->y][player_ptr->x].info & CAVE_MNLT) != 0;
-    auto ninja_data = PlayerClass(player_ptr).get_specific_data<ninja_data_type>();
-    if (!ninja_data || !ninja_data->s_stealth) {
+
+    if (!is_superstealth(player_ptr)) {
         player_ptr->old_monlite = player_ptr->monlite;
         return;
     }

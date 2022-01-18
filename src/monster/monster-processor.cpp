@@ -58,6 +58,7 @@
 #include "player/player-move.h"
 #include "player/player-skill.h"
 #include "player/player-status-flags.h"
+#include "player/player-status.h"
 #include "player/special-defense-types.h"
 #include "spell-realm/spells-hex.h"
 #include "spell/summon-types.h"
@@ -192,8 +193,7 @@ void process_monster(PlayerType *player_ptr, MONSTER_IDX m_idx)
  */
 bool process_stealth(PlayerType *player_ptr, MONSTER_IDX m_idx)
 {
-    auto ninja_data = PlayerClass(player_ptr).get_specific_data<ninja_data_type>();
-    if (!ninja_data || !ninja_data->s_stealth)
+    if (!is_superstealth(player_ptr))
         return true;
 
     monster_type *m_ptr = &player_ptr->current_floor_ptr->m_list[m_idx];

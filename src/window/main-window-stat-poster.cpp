@@ -413,8 +413,7 @@ static void add_hex_status_flags(PlayerType *player_ptr, BIT_FLAGS *bar_flags)
         ADD_BAR_FLAG(BAR_ANTIMAGIC);
     }
 
-    if (spell_hex.is_spelling_specific(HEX_CURE_LIGHT) || spell_hex.is_spelling_specific(HEX_CURE_SERIOUS)
-        || spell_hex.is_spelling_specific(HEX_CURE_CRITICAL)) {
+    if (spell_hex.is_spelling_specific(HEX_CURE_LIGHT) || spell_hex.is_spelling_specific(HEX_CURE_SERIOUS) || spell_hex.is_spelling_specific(HEX_CURE_CRITICAL)) {
         ADD_BAR_FLAG(BAR_CURE);
     }
 
@@ -584,7 +583,7 @@ void print_status(PlayerType *player_ptr)
         ADD_BAR_FLAG(BAR_ATTKACID);
     if (player_ptr->special_attack & ATTACK_POIS)
         ADD_BAR_FLAG(BAR_ATTKPOIS);
-    if (ninja_data && ninja_data->s_stealth)
+    if (is_superstealth(player_ptr))
         ADD_BAR_FLAG(BAR_SUPERSTEALTH);
 
     if (player_ptr->tim_sh_fire)
