@@ -4521,7 +4521,7 @@ D:(勇者オリオン，JNethack)
 N:271:クローデット・モレルの茶色い皮ジャケット
 E:Brown Leather Jacket of Claudette Morel
 I:36:12:10
-W:40:20:60:80000
+W:40:20:100:80000
 P:12:0d0:0:0:0
 F:REGEN | SLOW_DIGEST | STEALTH | FULL_NAME
 D:$It is very great for stealth.
