@@ -115,6 +115,10 @@ static void invest_special_artifact_abilities(PlayerType *player_ptr, object_typ
     case ART_MILIM:
         milim_swimsuit(player_ptr, o_ptr);
         return;
+    case ART_CLAUDETTE:
+        if (player_ptr->pclass == PlayerClassType::NINJA)
+            o_ptr->art_flags.set(TR_SPEED);
+        return;
     default:
         break;
     }
