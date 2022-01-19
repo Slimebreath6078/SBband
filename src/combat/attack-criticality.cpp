@@ -87,6 +87,10 @@ static void ninja_critical(PlayerType *player_ptr, player_attack_type *pa_ptr)
 {
     monster_race *r_ptr = &r_info[pa_ptr->m_ptr->r_idx];
     int maxhp = pa_ptr->m_ptr->maxhp;
+
+    if (player_ptr->pclass != PlayerClassType::NINJA)
+        return;
+
     if (one_in_(pa_ptr->backstab ? 13 : (pa_ptr->stab_fleeing || pa_ptr->surprise_attack) ? 15
                                                                                           : 27)) {
         pa_ptr->attack_damage *= 5;

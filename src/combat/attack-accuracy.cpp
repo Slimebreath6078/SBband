@@ -1,4 +1,5 @@
 ﻿#include "combat/attack-accuracy.h"
+#include "artifact/fixed-art-types.h"
 #include "combat/combat-options-type.h"
 #include "inventory/inventory-slot-types.h"
 #include "main/sound-definitions-table.h"
@@ -124,7 +125,9 @@ static bool decide_attack_hit(PlayerType *player_ptr, player_attack_type *pa_ptr
             n *= 2;
 
         success_hit = one_in_(n);
-    } else if ((player_ptr->pclass == PlayerClassType::NINJA) && ((pa_ptr->backstab || pa_ptr->surprise_attack) && r_ptr->resistance_flags.has_not(MonsterResistanceType::RESIST_ALL)))
+    } else if ((player_ptr->pclass == PlayerClassType::NINJA || player_ptr->inventory_list[INVEN_BODY].name1 == ART_CLAUDETTE) && ((pa_ptr->backstab || pa_ptr->surprise_attack) && r_ptr->resistance_flags.has_not(MonsterResistanceType::RESIST_ALL)))
+        success_hit = true;
+    else if (player_ptr->inventory_list[INVEN_BODY].name1 == ART_CLAUDETTE && pa_ptr->surprise_attack && r_ptr->resistance_flags.has_not(MonsterResistanceType::RESIST_ALL))
         success_hit = true;
     else
         success_hit = test_hit_norm(player_ptr, chance, r_ptr->ac, pa_ptr->m_ptr->ml);

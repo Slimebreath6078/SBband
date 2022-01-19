@@ -269,7 +269,11 @@ void calc_surprise_attack_damage(PlayerType *player_ptr, player_attack_type *pa_
     }
 
     if (pa_ptr->surprise_attack) {
-        pa_ptr->attack_damage = pa_ptr->attack_damage * (5 + (player_ptr->lev * 2 / 25)) / 2;
+        if (player_ptr->pclass == PlayerClassType::NINJA)
+            pa_ptr->attack_damage = pa_ptr->attack_damage * (5 + (player_ptr->lev * 2 / 25)) / 2;
+        else
+            pa_ptr->attack_damage = pa_ptr->attack_damage * (4 + (player_ptr->lev / 25)) / 2;
+
         return;
     }
 
