@@ -260,6 +260,8 @@ static void set_timed_effects(PlayerType *player_ptr)
     player_ptr->tim_sh_holy = rd_s16b();
     player_ptr->tim_eyeeye = rd_s16b();
 
+    player_ptr->superstealth = (bool)rd_byte();
+
     player_ptr->tim_reflect = rd_s16b();
     player_ptr->multishadow = rd_s16b();
     player_ptr->dustrobe = rd_s16b();

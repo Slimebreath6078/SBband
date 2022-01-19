@@ -16,7 +16,6 @@
 #include "inventory/inventory-slot-types.h"
 #include "io/write-diary.h"
 #include "mind/mind-mirror-master.h"
-#include "mind/mind-ninja.h"
 #include "monster-floor/monster-lite.h"
 #include "monster-floor/monster-remover.h"
 #include "monster-race/monster-race.h"

@@ -4517,3 +4517,14 @@ D:それはいつかなされるだろう，しかし，その前にお前がビ
 D:イェンダーの魔除けを取り戻すことができれば，我々は永遠に安泰だ．
 D:「ダイアナの長弓を持って行くがいい．魔除けを探す冒険の助けとなるだろう．」
 D:(勇者オリオン，JNethack)
+
+N:271:クローデット・モレルの茶色い皮ジャケット
+E:Brown Leather Jacket of Claudette Morel
+I:36:12:10
+W:40:20:60:80000
+P:12:0d0:0:0:0
+F:REGEN | SLOW_DIGEST | STEALTH | FULL_NAME
+D:$It is very great for stealth.
+D:$If you wear this, no one can find you in the darkness.
+D:それはとても隠密性が高そうだ。
+D:これを着て暗闇に入れば誰もあなたを見つけられないだろう。

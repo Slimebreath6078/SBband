@@ -45,6 +45,7 @@
 #include "player/player-damage.h"
 #include "player/player-skill.h"
 #include "player/player-status-flags.h"
+#include "player/player-status.h"
 #include "realm/realm-hex-numbers.h"
 #include "spell-kind/earthquake.h"
 #include "spell-realm/spells-hex.h"
@@ -133,6 +134,32 @@ static void get_weapon_exp(PlayerType *player_ptr, player_attack_type *pa_ptr)
     auto *o_ptr = &player_ptr->inventory_list[INVEN_MAIN_HAND + pa_ptr->hand];
 
     PlayerSkill(player_ptr).gain_melee_weapon_exp(o_ptr);
+}
+
+static void process_surprise_attack_without_ninja(PlayerType *player_ptr, player_attack_type *pa_ptr)
+{
+    auto *r_ptr = &r_info[pa_ptr->m_ptr->r_idx];
+    if (!has_melee_weapon(player_ptr, INVEN_MAIN_HAND + pa_ptr->hand))
+        return;
+
+    int tmp = player_ptr->lev * 6 + (player_ptr->skill_stl + 10) * 4;
+    if (player_ptr->monlite)
+        tmp /= 3;
+    if (has_aggravate(player_ptr))
+        tmp /= 2;
+    if (r_ptr->level > (player_ptr->lev * player_ptr->lev / 20 + 10))
+        tmp /= 3;
+
+    if (is_superstealth(player_ptr) && (randint0(tmp) > (r_ptr->level + 20)) &&
+        pa_ptr->m_ptr->ml && r_ptr->resistance_flags.has_not(MonsterResistanceType::RESIST_ALL)) {
+        pa_ptr->surprise_attack = true;
+    }
+}
+
+static void attack_artifact(PlayerType *player_ptr, player_attack_type *pa_ptr)
+{
+    if (player_ptr->inventory_list[INVEN_BODY].name1 == ART_CLAUDETTE && player_ptr->pclass != PlayerClassType::NINJA)
+        process_surprise_attack_without_ninja(player_ptr, pa_ptr);
 }
 
 /*!
@@ -322,8 +349,7 @@ static void process_weapon_attack(PlayerType *player_ptr, player_attack_type *pa
 
     auto do_impact = does_weapon_has_flag(player_ptr->impact, pa_ptr);
     if ((!(o_ptr->tval == ItemKindType::SWORD) || !(o_ptr->sval == SV_POISON_NEEDLE)) && !(pa_ptr->mode == HISSATSU_KYUSHO))
-        pa_ptr->attack_damage
-            = critical_norm(player_ptr, o_ptr->weight, o_ptr->to_h, pa_ptr->attack_damage, player_ptr->to_h[pa_ptr->hand], pa_ptr->mode, do_impact);
+        pa_ptr->attack_damage = critical_norm(player_ptr, o_ptr->weight, o_ptr->to_h, pa_ptr->attack_damage, player_ptr->to_h[pa_ptr->hand], pa_ptr->mode, do_impact);
 
     pa_ptr->drain_result = pa_ptr->attack_damage;
     process_vorpal_attack(player_ptr, pa_ptr, vorpal_cut, vorpal_chance);
@@ -466,8 +492,7 @@ static void apply_actual_attack(
     pa_ptr->magical_effect = select_magical_brand_effect(player_ptr, pa_ptr);
     decide_blood_sucking(player_ptr, pa_ptr);
 
-    bool vorpal_cut = (pa_ptr->flags.has(TR_VORPAL) || SpellHex(player_ptr).is_spelling_specific(HEX_RUNESWORD)) && (randint1(vorpal_chance * 3 / 2) == 1)
-        && !is_zantetsu_nullified;
+    bool vorpal_cut = (pa_ptr->flags.has(TR_VORPAL) || SpellHex(player_ptr).is_spelling_specific(HEX_RUNESWORD)) && (randint1(vorpal_chance * 3 / 2) == 1) && !is_zantetsu_nullified;
     calc_attack_damage(player_ptr, pa_ptr, do_quake, vorpal_cut, vorpal_chance);
     apply_damage_bonus(player_ptr, pa_ptr);
     apply_damage_negative_effect(pa_ptr, is_zantetsu_nullified, is_ej_nullified);
@@ -523,6 +548,7 @@ void exe_player_attack_to_monster(PlayerType *player_ptr, POSITION y, POSITION x
 
     attack_classify(player_ptr, pa_ptr);
     get_attack_exp(player_ptr, pa_ptr);
+    attack_artifact(player_ptr, pa_ptr);
 
     /* Disturb the monster */
     (void)set_monster_csleep(player_ptr, pa_ptr->m_idx, 0);

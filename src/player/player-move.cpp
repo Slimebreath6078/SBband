@@ -6,6 +6,7 @@
  */
 
 #include "player/player-move.h"
+#include "artifact/fixed-art-types.h"
 #include "core/disturbance.h"
 #include "core/player-redraw-types.h"
 #include "core/player-update-types.h"
@@ -170,7 +171,7 @@ bool move_player_effect(PlayerType *player_ptr, POSITION ny, POSITION nx, BIT_FL
         if (mpe_mode & MPE_HANDLE_STUFF)
             handle_stuff(player_ptr);
 
-        if (player_ptr->pclass == PlayerClassType::NINJA) {
+        if (player_ptr->pclass == PlayerClassType::NINJA || player_ptr->inventory_list[INVEN_BODY].name1 == ART_CLAUDETTE) {
             if (g_ptr->info & (CAVE_GLOW))
                 set_superstealth(player_ptr, false);
             else if (player_ptr->cur_lite <= 0)

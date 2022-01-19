@@ -17,7 +17,6 @@
 #include "grid/feature.h"
 #include "grid/grid.h"
 #include "main/sound-of-music.h"
-#include "mind/mind-ninja.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-kind-flags.h"
@@ -30,6 +29,7 @@
 #include "object/object-mark-types.h"
 #include "object/object-value.h"
 #include "perception/object-perception.h"
+#include "player/player-status.h"
 #include "player/special-defense-types.h"
 #include "sv-definition/sv-amulet-types.h"
 #include "sv-definition/sv-protector-types.h"
@@ -246,8 +246,7 @@ void update_dungeon_feeling(PlayerType *player_ptr)
         return;
 
     auto quest_num = quest_number(player_ptr, floor_ptr->dun_level);
-    if ((quest_num != quest_id::NONE)
-        && (quest_type::is_fixed(enum2i(quest_num)) && !((quest_num == quest_id::OBERON) || (quest_num == quest_id::SERPENT) || !(quest[enum2i(quest_num)].flags & QUEST_FLAG_PRESET))))
+    if ((quest_num != quest_id::NONE) && (quest_type::is_fixed(enum2i(quest_num)) && !((quest_num == quest_id::OBERON) || (quest_num == quest_id::SERPENT) || !(quest[enum2i(quest_num)].flags & QUEST_FLAG_PRESET))))
         return;
 
     byte new_feeling = get_dungeon_feeling(player_ptr);
