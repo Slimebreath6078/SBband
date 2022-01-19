@@ -1,4 +1,5 @@
 ﻿#include "inventory/inventory-object.h"
+#include "artifact/fixed-art-types.h"
 #include "core/player-update-types.h"
 #include "core/window-redrawer.h"
 #include "flavor/flavor-describer.h"
@@ -10,6 +11,7 @@
 #include "object/object-stack.h"
 #include "object/object-value.h"
 #include "player-info/equipment-info.h"
+#include "player/player-status.h"
 #include "spell-realm/spells-craft.h"
 #include "system/object-type-definition.h"
 #include "system/player-type-definition.h"
@@ -415,6 +417,9 @@ INVENTORY_IDX inven_takeoff(PlayerType *player_ptr, INVENTORY_IDX item, ITEM_NUM
 #else
     msg_format("%s %s (%c).", act, o_name, index_to_label(slot));
 #endif
+
+    if (q_ptr->name1 == ART_CLAUDETTE)
+        set_claudette_stealth(player_ptr, false);
 
     return slot;
 }
