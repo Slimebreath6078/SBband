@@ -3037,7 +3037,7 @@ bool set_superstealth_status(PlayerType *player_ptr, bool set, bool &superstealt
 
 bool set_claudette_stealth(PlayerType *player_ptr, bool set)
 {
-    if (player_ptr->inventory_list[INVEN_BODY].name1 != ART_CLAUDETTE || player_ptr->is_dead)
+    if (player_ptr->is_dead)
         return false;
     return set_superstealth_status(player_ptr, set, player_ptr->superstealth);
 }
