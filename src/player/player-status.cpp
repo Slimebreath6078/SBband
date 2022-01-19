@@ -309,6 +309,7 @@ static void update_bonuses(PlayerType *player_ptr)
     player_ptr->can_swim = has_can_swim(player_ptr);
     player_ptr->slow_digest = has_slow_digest(player_ptr);
     player_ptr->regenerate = has_regenerate(player_ptr);
+    player_ptr->superstealth = (player_ptr->superstealth && player_ptr->inventory_list[INVEN_BODY].name1 == ART_CLAUDETTE);
     update_curses(player_ptr);
     player_ptr->impact = has_impact(player_ptr);
     player_ptr->earthquake = has_earthquake(player_ptr);
@@ -2932,8 +2933,9 @@ bool is_chargeman(PlayerType *player_ptr)
 bool is_superstealth(PlayerType *player_ptr)
 {
     auto ninja_data = PlayerClass(player_ptr).get_specific_data<ninja_data_type>();
+    bool superstealth = player_ptr->superstealth;
 
-    if (!ninja_data || !ninja_data->s_stealth)
+    if ((!ninja_data || !ninja_data->s_stealth) && !superstealth)
         return false;
 
     return true;
@@ -2997,4 +2999,54 @@ bool set_icing_and_twinkle(PlayerType *player_ptr)
 bool set_anubis_and_chariot(PlayerType *player_ptr)
 {
     return (player_ptr->inventory_list[INVEN_MAIN_HAND].name1 == ART_ANUBIS) && (player_ptr->inventory_list[INVEN_SUB_HAND].name1 == ART_SILVER_CHARIOT);
+}
+
+bool set_superstealth_status(PlayerType *player_ptr, bool set, bool &superstealth)
+{
+    bool notice = false;
+
+    if (set) {
+        if (!superstealth) {
+            if (player_ptr->current_floor_ptr->grid_array[player_ptr->y][player_ptr->x].info & CAVE_MNLT) {
+                msg_print(_("敵の目から薄い影の中に覆い隠された。", "You are mantled in weak shadow from ordinary eyes."));
+                player_ptr->monlite = player_ptr->old_monlite = true;
+            } else {
+                msg_print(_("敵の目から影の中に覆い隠された！", "You are mantled in shadow from ordinary eyes!"));
+                player_ptr->monlite = player_ptr->old_monlite = false;
+            }
+
+            notice = true;
+            superstealth = true;
+        }
+    } else {
+        if (superstealth) {
+            msg_print(_("再び敵の目にさらされるようになった。", "You are exposed to common sight once more."));
+            notice = true;
+            superstealth = false;
+        }
+    }
+
+    if (!notice)
+        return false;
+    player_ptr->redraw |= (PR_STATUS);
+
+    if (disturb_state)
+        disturb(player_ptr, false, false);
+    return true;
+}
+
+bool set_claudette_stealth(PlayerType *player_ptr, bool set)
+{
+    if (player_ptr->inventory_list[INVEN_BODY].name1 != ART_CLAUDETTE || player_ptr->is_dead)
+        return false;
+    return set_superstealth_status(player_ptr, set, player_ptr->superstealth);
+}
+
+bool set_superstealth(PlayerType *player_ptr, bool set)
+{
+    if (player_ptr->pclass == PlayerClassType::NINJA)
+        return set_ninja_superstealth(player_ptr, set);
+    else if (player_ptr->inventory_list[INVEN_BODY].name1 == ART_CLAUDETTE)
+        return set_claudette_stealth(player_ptr, set);
+    return false;
 }

@@ -5,12 +5,14 @@
  */
 
 #include "mspell/mspell-floor.h"
+#include "artifact/fixed-art-types.h"
 #include "blue-magic/blue-magic-checker.h"
 #include "core/disturbance.h"
 #include "core/player-update-types.h"
 #include "effect/attribute-types.h"
 #include "effect/effect-characteristics.h"
 #include "effect/effect-processor.h"
+#include "inventory/inventory-slot-types.h"
 #include "mind/drs-types.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-ability-flags.h"
@@ -40,6 +42,7 @@
 #include "system/floor-type-definition.h"
 #include "system/monster-race-definition.h"
 #include "system/monster-type-definition.h"
+#include "system/object-type-definition.h"
 #include "system/player-type-definition.h"
 #include "view/display-messages.h"
 
@@ -384,7 +387,7 @@ MonsterSpellResult spell_RF6_DARKNESS(PlayerType *player_ptr, POSITION y, POSITI
     GAME_TEXT t_name[MAX_NLEN];
     monster_name(player_ptr, t_idx, t_name);
 
-    if ((player_ptr->pclass == PlayerClassType::NINJA) && r_ptr->race_kind_flags.has_not(MonraceKindType::UNDEAD) && r_ptr->resistance_flags.has_not(MonsterResistanceType::HURT_LITE) && !(r_ptr->flags7 & RF7_DARK_MASK))
+    if ((player_ptr->pclass == PlayerClassType::NINJA || player_ptr->inventory_list[INVEN_BODY].name1 == ART_CLAUDETTE) && r_ptr->race_kind_flags.has_not(MonraceKindType::UNDEAD) && r_ptr->resistance_flags.has_not(MonsterResistanceType::HURT_LITE) && !(r_ptr->flags7 & RF7_DARK_MASK))
         can_use_lite_area = true;
 
     if (monster_to_monster && !is_hostile(t_ptr))

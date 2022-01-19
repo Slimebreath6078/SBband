@@ -192,6 +192,7 @@ void wr_player(PlayerType *player_ptr)
     wr_s16b(player_ptr->tim_sh_fire);
     wr_s16b(player_ptr->tim_sh_holy);
     wr_s16b(player_ptr->tim_eyeeye);
+    wr_byte(player_ptr->superstealth);
 
     wr_s16b(player_ptr->tim_reflect);
     wr_s16b(player_ptr->multishadow);

@@ -5,12 +5,14 @@
  */
 
 #include "mspell/mspell-lite.h"
+#include "artifact/fixed-art-types.h"
 #include "dungeon/dungeon-flag-types.h"
 #include "dungeon/dungeon.h"
 #include "floor/cave.h"
 #include "floor/geometry.h"
 #include "floor/line-of-sight.h"
 #include "grid/feature.h"
+#include "inventory/inventory-slot-types.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-ability-mask.h"
 #include "monster-race/race-flags2.h"
@@ -24,6 +26,7 @@
 #include "system/grid-type-definition.h"
 #include "system/monster-race-definition.h"
 #include "system/monster-type-definition.h"
+#include "system/object-type-definition.h"
 #include "system/player-type-definition.h"
 #include "target/projection-path-calculator.h"
 #include "util/bit-flags-calculator.h"
@@ -186,7 +189,7 @@ void decide_lite_area(PlayerType *player_ptr, msa_type *msa_ptr)
     if (msa_ptr->ability_flags.has_not(MonsterAbilityType::DARKNESS))
         return;
 
-    bool can_use_lite_area = (player_ptr->pclass == PlayerClassType::NINJA) && msa_ptr->r_ptr->race_kind_flags.has_not(MonraceKindType::UNDEAD) &&
+    bool can_use_lite_area = (player_ptr->pclass == PlayerClassType::NINJA || player_ptr->inventory_list[INVEN_BODY].name1 == ART_CLAUDETTE) && msa_ptr->r_ptr->race_kind_flags.has_not(MonraceKindType::UNDEAD) &&
                              msa_ptr->r_ptr->resistance_flags.has_not(MonsterResistanceType::HURT_LITE) && ((msa_ptr->r_ptr->flags7 & RF7_DARK_MASK) == 0);
 
     if ((msa_ptr->r_ptr->flags2 & RF2_STUPID) != 0)
@@ -197,6 +200,6 @@ void decide_lite_area(PlayerType *player_ptr, msa_type *msa_ptr)
         return;
     }
 
-    if ((player_ptr->pclass == PlayerClassType::NINJA) && !can_use_lite_area)
+    if ((player_ptr->pclass == PlayerClassType::NINJA || player_ptr->inventory_list[INVEN_BODY].name1 == ART_CLAUDETTE) && !can_use_lite_area)
         msa_ptr->ability_flags.reset(MonsterAbilityType::DARKNESS);
 }

@@ -34,6 +34,7 @@
 #include "player-status/player-energy.h"
 #include "player/attack-defense-types.h"
 #include "player/player-status-flags.h"
+#include "player/player-status.h"
 #include "player/special-defense-types.h"
 #include "spell-kind/spells-detection.h"
 #include "spell-kind/spells-fetcher.h"
@@ -308,42 +309,13 @@ bool hayagake(PlayerType *player_ptr)
  * @param set TRUEならば超隠密状態になる。
  * @return ステータスに影響を及ぼす変化があった場合TRUEを返す。
  */
-bool set_superstealth(PlayerType *player_ptr, bool set)
+bool set_ninja_superstealth(PlayerType *player_ptr, bool set)
 {
-    bool notice = false;
-
     auto ninja_data = PlayerClass(player_ptr).get_specific_data<ninja_data_type>();
     if (!ninja_data || player_ptr->is_dead)
         return false;
 
-    if (set) {
-        if (!ninja_data->s_stealth) {
-            if (player_ptr->current_floor_ptr->grid_array[player_ptr->y][player_ptr->x].info & CAVE_MNLT) {
-                msg_print(_("敵の目から薄い影の中に覆い隠された。", "You are mantled in weak shadow from ordinary eyes."));
-                player_ptr->monlite = player_ptr->old_monlite = true;
-            } else {
-                msg_print(_("敵の目から影の中に覆い隠された！", "You are mantled in shadow from ordinary eyes!"));
-                player_ptr->monlite = player_ptr->old_monlite = false;
-            }
-
-            notice = true;
-            ninja_data->s_stealth = true;
-        }
-    } else {
-        if (ninja_data->s_stealth) {
-            msg_print(_("再び敵の目にさらされるようになった。", "You are exposed to common sight once more."));
-            notice = true;
-            ninja_data->s_stealth = false;
-        }
-    }
-
-    if (!notice)
-        return false;
-    player_ptr->redraw |= (PR_STATUS);
-
-    if (disturb_state)
-        disturb(player_ptr, false, false);
-    return true;
+    return set_superstealth_status(player_ptr, set, ninja_data->s_stealth);
 }
 
 /*!

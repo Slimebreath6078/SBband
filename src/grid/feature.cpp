@@ -7,8 +7,8 @@
 #include "game-option/map-screen-options.h"
 #include "grid/grid.h"
 #include "grid/lighting-colors-table.h"
-#include "mind/mind-ninja.h"
 #include "monster/monster-update.h"
+#include "player/player-status.h"
 #include "player/special-defense-types.h"
 #include "room/door-definition.h"
 #include "system/floor-type-definition.h"
@@ -122,9 +122,9 @@ FEAT_IDX feat_ground_type[100], feat_wall_type[100];
  */
 bool is_trap(PlayerType *player_ptr, FEAT_IDX feat)
 {
-	/* 関数ポインタの都合 */
-	(void)player_ptr;
-	return f_info[feat].flags.has(FloorFeatureType::TRAP);
+    /* 関数ポインタの都合 */
+    (void)player_ptr;
+    return f_info[feat].flags.has(FloorFeatureType::TRAP);
 }
 
 /*!
@@ -134,12 +134,12 @@ bool is_trap(PlayerType *player_ptr, FEAT_IDX feat)
  */
 bool is_closed_door(PlayerType *player_ptr, FEAT_IDX feat)
 {
-	/* 関数ポインタの都合 */
-	(void)player_ptr;
-	feature_type *f_ptr = &f_info[feat];
+    /* 関数ポインタの都合 */
+    (void)player_ptr;
+    feature_type *f_ptr = &f_info[feat];
 
-	return (f_ptr->flags.has(FloorFeatureType::OPEN) || f_ptr->flags.has(FloorFeatureType::BASH)) &&
-		f_ptr->flags.has_not(FloorFeatureType::MOVE);
+    return (f_ptr->flags.has(FloorFeatureType::OPEN) || f_ptr->flags.has(FloorFeatureType::BASH)) &&
+           f_ptr->flags.has_not(FloorFeatureType::MOVE);
 }
 
 /*!
@@ -169,12 +169,18 @@ void apply_default_feat_lighting(TERM_COLOR *f_attr, SYMBOL_CODE *f_char)
 /*
  * Not using graphical tiles for this feature?
  */
-bool is_ascii_graphics(char x) { return (x & 0x80) == 0; }
+bool is_ascii_graphics(char x)
+{
+    return (x & 0x80) == 0;
+}
 
 /*
  * Determine if a "feature" is "permanent wall"
  */
-bool permanent_wall(feature_type *f_ptr) { return f_ptr->flags.has_all_of({FloorFeatureType::WALL, FloorFeatureType::PERMANENT}); }
+bool permanent_wall(feature_type *f_ptr)
+{
+    return f_ptr->flags.has_all_of({ FloorFeatureType::WALL, FloorFeatureType::PERMANENT });
+}
 
 FEAT_IDX feat_locked_door_random(int door_type)
 {

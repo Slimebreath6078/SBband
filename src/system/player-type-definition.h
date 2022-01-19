@@ -296,6 +296,8 @@ public:
     bool sutemi{};
     bool counter{};
 
+    bool superstealth{}; /* アーティファクトの効果で隠密状態になっているかどうか */
+
     int alignment{}; /* Good/evil/neutral */
     POSITION run_py{};
     POSITION run_px{};

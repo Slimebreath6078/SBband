@@ -44,3 +44,6 @@ bool set_quick_and_tiny(PlayerType *player_ptr);
 bool set_musasi(PlayerType *player_ptr);
 bool set_icing_and_twinkle(PlayerType *player_ptr);
 bool set_anubis_and_chariot(PlayerType *player_ptr);
+bool set_superstealth_status(PlayerType *player_ptr, bool set, bool &superstealth);
+bool set_claudette_stealth(PlayerType *player_ptr, bool set);
+bool set_superstealth(PlayerType *player_ptr, bool set);
