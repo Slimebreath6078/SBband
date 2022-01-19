@@ -87965,6 +87965,102 @@
         "ja": "特異現象捜査部の数少ない部員。掴みどころのない人物だが、異常なレベルに暑がりなこととかなり効率的に行動をしているのは確かだ。ただでさえ露出の多い服を着ておきながら、肌寒い中でも暑がってすぐ服を脱ぎたがるのが見受けられる。",
         "en": "A few member of Super Phenomenon Task Force. She is fuzzy, but she is unusually sensitive to the heat and acts quite efficiently. There seems she feels the heat even in the chilly weather and take her clothes off, even though she wears very revealing clothes!"
       }
+    },
+    {
+      "id": 1372,
+      "name": {
+        "ja": "究極の絶対秘神『摩多羅隠岐奈』",
+        "en": "Okina Matara, Ultimate Absolute Secret Kami"
+      },
+      "symbol": {
+        "character": "p",
+        "color": "Yellow"
+      },
+      "speed": 25,
+      "hit_point": "80d80",
+      "vision": 20,
+      "armor_class": 150,
+      "alertness": 25,
+      "level": 85,
+      "rarity": 4,
+      "exp": 50000,
+      "blows": [
+        {
+          "method": "TOUCH",
+          "effect": "PARALYZE",
+          "damage_dice": "9d9"
+        },
+        {
+          "method": "TOUCH",
+          "effect": "FIRE",
+          "damage_dice": "20d20"
+        },
+        {
+          "method": "TOUCH",
+          "effect": "TIME",
+          "damage_dice": "8d8"
+        },
+        {
+          "method": "TOUCH",
+          "effect": "COLD",
+          "damage_dice": "20d20"
+        }
+      ],
+      "flags": [
+        "UNIQUE",
+        "FORCE_MAXHP",
+        "GOOD",
+        "EVIL",
+        "QUANTUM",
+        "POWERFUL",
+        "TAKE_ITEM",
+        "OPEN_DOOR",
+        "CAN_FLY",
+        "IM_ELEC",
+        "IM_FIRE",
+        "IM_COLD",
+        "IM_POIS",
+        "RES_LITE",
+        "RES_DARK",
+        "RES_SOUN",
+        "RES_CHAO",
+        "RES_NEXU",
+        "RES_DISE",
+        "RES_TIME",
+        "RES_GRAV",
+        "RES_TELE",
+        "NO_SLEEP",
+        "NO_CONF",
+        "DROP_3D2",
+        "DROP_GREAT"
+      ],
+      "skill": {
+        "probability": "1_IN_2",
+        "list": [
+          "S_MONSTER",
+          "S_UNIQUE",
+          "HAND_DOOM",
+          "BA_FIRE",
+          "BA_COLD",
+          "BO_ICEE",
+          "BA_MANA",
+          "BO_MANA",
+          "BA_NETH",
+          "BA_CHAO",
+          "PSY_SPEAR",
+          "BLINK",
+          "TPORT",
+          "TELE_AWAY",
+          "TELE_LEVEL",
+          "TELE_TO",
+          "HOLD"
+        ]
+      },
+      "sex": "FEMALE",
+      "flavor": {
+        "ja": "後戸の国に住んでいる、彼女が幻想郷を創造した賢者の一人である。ありとあらゆるところに扉を作って移動したり、生命力や精神力をコントロールすることさえできる。あなたの背中にも扉がいつの間にできているかもしれない…",
+        "en": "She is a person of sages who created Gensokyo. She lives in Ushirodo world, the door world. She can create a door anywhere and moves. Even she can control a vitality, a mind power or both. A door might have created on your back without your knowledge..."
+      }
     }
   ]
 }
