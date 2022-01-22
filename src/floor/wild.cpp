@@ -394,7 +394,7 @@ void wilderness_gen(PlayerType *player_ptr)
     generate_area(player_ptr, y + 1, x, true, false);
     for (int i = 1; i < MAX_WID - 1; i++)
         border.south[i] = floor_ptr->grid_array[1][i].feat;
-    
+
     /* West border */
     generate_area(player_ptr, y, x - 1, true, false);
     for (int i = 1; i < MAX_HGT - 1; i++)
@@ -466,7 +466,7 @@ void wilderness_gen(PlayerType *player_ptr)
 
             feature_type *f_ptr;
             f_ptr = &f_info[g_ptr->get_feat_mimic()];
-            if (!g_ptr->is_mirror() && f_ptr->flags.has_none_of({FloorFeatureType::QUEST_ENTER, FloorFeatureType::ENTRANCE})) {
+            if (!g_ptr->is_mirror() && f_ptr->flags.has_none_of({ FloorFeatureType::QUEST_ENTER, FloorFeatureType::ENTRANCE })) {
                 g_ptr->info &= ~(CAVE_GLOW);
                 if (f_ptr->flags.has_not(FloorFeatureType::REMEMBER))
                     g_ptr->info &= ~(CAVE_MARK);
@@ -710,8 +710,7 @@ parse_error_type parse_line_wilderness(PlayerType *player_ptr, char *buf, int xm
         player_ptr->wilderness_y = atoi(zz[0]);
         player_ptr->wilderness_x = atoi(zz[1]);
 
-        if ((player_ptr->wilderness_x < 1) || (player_ptr->wilderness_x > w_ptr->max_wild_x) || (player_ptr->wilderness_y < 1)
-            || (player_ptr->wilderness_y > w_ptr->max_wild_y)) {
+        if ((player_ptr->wilderness_x < 1) || (player_ptr->wilderness_x > w_ptr->max_wild_x) || (player_ptr->wilderness_y < 1) || (player_ptr->wilderness_y > w_ptr->max_wild_y)) {
             return PARSE_ERROR_OUT_OF_BOUNDS;
         }
 
@@ -825,6 +824,7 @@ void init_wilderness_terrains(void)
         TERRAIN_DEEP_LAVA, feat_deep_lava, "abcd", feat_dirt, 3, feat_shallow_lava, 3, feat_deep_lava, 10, feat_mountain, MAX_FEAT_IN_TERRAIN - 16);
     init_terrain_table(TERRAIN_MOUNTAIN, feat_mountain, "abcdef", feat_floor, 1, feat_brake, 1, feat_grass, 2, feat_dirt, 2, feat_tree, 2, feat_mountain,
         MAX_FEAT_IN_TERRAIN - 8);
+    init_terrain_table(TERRAIN_ICE_SHEET, feat_ice, "abc", feat_deep_water, 4, feat_shallow_water, 1, feat_ice, MAX_FEAT_IN_TERRAIN - 5);
 }
 
 /*!
