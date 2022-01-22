@@ -263,6 +263,8 @@ monsterrace_hook_type get_monster_hook(PlayerType *player_ptr)
         return (monsterrace_hook_type)mon_hook_volcano;
     case TERRAIN_MOUNTAIN:
         return (monsterrace_hook_type)mon_hook_mountain;
+    case TERRAIN_ICE_SHEET:
+        return (monsterrace_hook_type)mon_hook_ice;
     default:
         return (monsterrace_hook_type)mon_hook_dungeon;
     }

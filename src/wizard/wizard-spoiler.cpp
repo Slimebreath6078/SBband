@@ -161,6 +161,10 @@ SpoilerOutputResultType spoil_categorized_mon_desc()
     }
 
     if (status == SpoilerOutputResultType::SPOILER_OUTPUT_SUCCESS) {
+        status = spoil_mon_desc("mon-desc-ice.txt", [](const monster_race *r_ptr) { return any_bits(r_ptr->flags8, RF8_WILD_ICE); });
+    }
+
+    if (status == SpoilerOutputResultType::SPOILER_OUTPUT_SUCCESS) {
         status = spoil_mon_desc("mon-desc-wildall.txt", [](const monster_race *r_ptr) { return any_bits(r_ptr->flags8, RF8_WILD_ALL); });
     }
 

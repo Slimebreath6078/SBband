@@ -295,6 +295,20 @@ bool mon_hook_lava(PlayerType *player_ptr, MONRACE_IDX r_idx)
 }
 
 /*!
+ * @brief モンスターが氷床地形に出現するかどうかを返す
+ * @param r_idx 判定するモンスターの種族ID
+ * @return 氷床地形に出現するならばTRUEを返す
+ */
+bool mon_hook_ice(PlayerType *player_ptr, MONRACE_IDX r_idx)
+{
+    monster_race *r_ptr = &r_info[r_idx];
+    if (!mon_hook_dungeon(player_ptr, r_idx))
+        return false;
+
+    return any_bits(r_ptr->flags8, RF8_WILD_ICE | RF8_WILD_OCEAN) && r_ptr->aura_flags.has_not(MonsterAuraType::FIRE);
+}
+
+/*!
  * @brief モンスターが通常の床地形に出現するかどうかを返す
  * @param r_idx 判定するモンスターの種族ID
  * @return 通常の床地形に出現するならばTRUEを返す

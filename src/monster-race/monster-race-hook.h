@@ -25,6 +25,7 @@ bool mon_hook_grass(PlayerType *player_ptr, MONRACE_IDX r_idx);
 bool mon_hook_deep_water(PlayerType *player_ptr, MONRACE_IDX r_idx);
 bool mon_hook_shallow_water(PlayerType *player_ptr, MONRACE_IDX r_idx);
 bool mon_hook_lava(PlayerType *player_ptr, MONRACE_IDX r_idx);
+bool mon_hook_ice(PlayerType *player_ptr, MONRACE_IDX r_idx);
 bool mon_hook_floor(PlayerType *player_ptr, MONRACE_IDX r_idx);
 
 void vault_prep_clone(PlayerType *player_ptr);

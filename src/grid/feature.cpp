@@ -105,6 +105,7 @@ FEAT_IDX feat_flower;
 FEAT_IDX feat_brake;
 FEAT_IDX feat_tree;
 FEAT_IDX feat_mountain;
+FEAT_IDX feat_ice;
 FEAT_IDX feat_swamp;
 
 /* Unknown grid (not detected) */

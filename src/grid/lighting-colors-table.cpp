@@ -1,7 +1,6 @@
 ﻿#include "grid/lighting-colors-table.h"
 #include "term/term-color-types.h"
 
-
 /*!
  * 照明の表現を行うための色合いの関係を{暗闇時, 照明時} で定義する /
  * This array lists the effects of "brightness" on various "base" colours.\n
@@ -55,7 +54,7 @@ TERM_COLOR lighting_colours[MAX_COLORS][MAX_TIME_ZONES] = {
     { TERM_L_GREEN, TERM_GREEN },
 
     /* TERM_L_BLUE */
-    { TERM_L_BLUE, TERM_L_BLUE },
+    { TERM_L_BLUE, TERM_BLUE },
 
     /* TERM_L_UMBER */
     { TERM_L_UMBER, TERM_UMBER }
