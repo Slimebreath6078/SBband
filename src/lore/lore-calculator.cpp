@@ -3,6 +3,7 @@
 #include "lore/lore-util.h"
 #include "monster-race/monster-race.h"
 #include "monster-race/race-ability-flags.h"
+#include "monster-race/race-drop-flags.h"
 #include "monster-race/race-flags1.h"
 #include "monster-race/race-kind-flags.h"
 #include "mspell/mspell-damage-calculator.h"
@@ -157,12 +158,12 @@ void set_drop_flags(lore_type *lore_ptr)
     if (!lore_ptr->know_everything)
         return;
 
-    lore_ptr->drop_gold = lore_ptr->drop_item = (((lore_ptr->r_ptr->flags1 & RF1_DROP_4D2) ? 8 : 0) + ((lore_ptr->r_ptr->flags1 & RF1_DROP_3D2) ? 6 : 0) + ((lore_ptr->r_ptr->flags1 & RF1_DROP_2D2) ? 4 : 0) + ((lore_ptr->r_ptr->flags1 & RF1_DROP_1D2) ? 2 : 0) + ((lore_ptr->r_ptr->flags1 & RF1_DROP_90) ? 1 : 0) + ((lore_ptr->r_ptr->flags1 & RF1_DROP_60) ? 1 : 0));
+    lore_ptr->drop_gold = lore_ptr->drop_item = ((lore_ptr->r_ptr->drop_flags.has(MonraceDropType::DROP_4D2) ? 8 : 0) + (lore_ptr->r_ptr->drop_flags.has(MonraceDropType::DROP_3D2) ? 6 : 0) + (lore_ptr->r_ptr->drop_flags.has(MonraceDropType::DROP_2D2) ? 4 : 0) + (lore_ptr->r_ptr->drop_flags.has(MonraceDropType::DROP_1D2) ? 2 : 0) + (lore_ptr->r_ptr->drop_flags.has(MonraceDropType::DROP_90) ? 1 : 0) + (lore_ptr->r_ptr->drop_flags.has(MonraceDropType::DROP_60) ? 1 : 0));
 
-    if (lore_ptr->r_ptr->flags1 & RF1_ONLY_GOLD)
+    if (lore_ptr->r_ptr->drop_flags.has(MonraceDropType::ONLY_GOLD))
         lore_ptr->drop_item = 0;
 
-    if (lore_ptr->r_ptr->flags1 & RF1_ONLY_ITEM)
+    if (lore_ptr->r_ptr->drop_flags.has(MonraceDropType::ONLY_ITEM))
         lore_ptr->drop_gold = 0;
 
     lore_ptr->flags1 = lore_ptr->r_ptr->flags1;

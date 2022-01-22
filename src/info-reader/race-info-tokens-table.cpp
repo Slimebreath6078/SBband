@@ -2,6 +2,7 @@
 #include "monster-attack/monster-attack-effect.h"
 #include "monster-attack/monster-attack-types.h"
 #include "monster-race/race-ability-flags.h"
+#include "monster-race/race-drop-flags.h"
 #include "monster-race/race-kind-flags.h"
 
 /*!
@@ -452,4 +453,22 @@ const std::unordered_map<std::string_view, MonsterAuraType> r_info_aura_flags = 
     { "AURA_GRAVITY", MonsterAuraType::GRAVITY },
     { "AURA_VOIDS", MonsterAuraType::VOIDS },
     { "AURA_ABYSS", MonsterAuraType::ABYSS },
+};
+/*!
+ * モンスター特性トークンの定義(種族・徳など)) /
+ * Monster race flags
+ */
+const std::unordered_map<std::string_view, MonraceDropType> r_info_drop_flags = {
+    { "ONLY_GOLD", MonraceDropType::ONLY_GOLD },
+    { "ONLY_ITEM", MonraceDropType::ONLY_ITEM },
+    { "DROP_GOOD", MonraceDropType::DROP_GOOD },
+    { "DROP_GREAT", MonraceDropType::DROP_GREAT },
+    { "DROP_CORPSE", MonraceDropType::DROP_CORPSE },
+    { "DROP_SKELETON", MonraceDropType::DROP_SKELETON },
+    { "DROP_60", MonraceDropType::DROP_60 },
+    { "DROP_90", MonraceDropType::DROP_90 },
+    { "DROP_1D2", MonraceDropType::DROP_1D2 },
+    { "DROP_2D2", MonraceDropType::DROP_2D2 },
+    { "DROP_3D2", MonraceDropType::DROP_3D2 },
+    { "DROP_4D2", MonraceDropType::DROP_4D2 },
 };
