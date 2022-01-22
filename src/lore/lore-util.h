@@ -6,16 +6,11 @@
 #include "monster-race/race-drop-flags.h"
 #include "monster-race/race-flags-resistance.h"
 #include "monster-race/race-kind-flags.h"
+#include "monster-race/race-sex-types.h"
 #include "system/angband.h"
 #include "util/flag-group.h"
 #include <string>
 #include <unordered_map>
-
-enum monster_sex {
-    MSEX_NONE = 0,
-    MSEX_MALE = 1,
-    MSEX_FEMALE = 2,
-};
 
 struct monster_race;
 typedef struct lore_type {
@@ -42,7 +37,7 @@ typedef struct lore_type {
     bool reinforce;
     bool know_everything;
     BIT_FLAGS mode;
-    monster_sex msex;
+    MonsterSexType msex;
     bool old;
     MONRACE_IDX r_idx;
     int vn;
@@ -79,7 +74,7 @@ void hooked_roff(concptr str);
 enum WHO_WORD_TYPE { WHO = 0,
     WHOSE = 1,
     WHOM = 2 };
-using who_word_definition = std::unordered_map<WHO_WORD_TYPE, const std::unordered_map<bool, const std::unordered_map<monster_sex, std::string>>>;
+using who_word_definition = std::unordered_map<WHO_WORD_TYPE, const std::unordered_map<bool, const std::unordered_map<MonsterSexType, std::string>>>;
 
 class Who {
 public:
@@ -90,7 +85,7 @@ public:
      * @param msex モンスターの性別
      * @return 主語
      */
-    static concptr who(monster_sex msex)
+    static concptr who(MonsterSexType msex)
     {
         return who(msex, false);
     }
@@ -101,7 +96,7 @@ public:
      * @param multi 複数かどうか
      * @return 主語
      */
-    static concptr who(monster_sex msex, bool multi)
+    static concptr who(MonsterSexType msex, bool multi)
     {
         return words.at(WHO_WORD_TYPE::WHO).at(multi).at(msex).data();
     }
@@ -111,7 +106,7 @@ public:
      * @param msex モンスターの性別
      * @return 所有格
      */
-    static concptr whose(monster_sex msex)
+    static concptr whose(MonsterSexType msex)
     {
         return whose(msex, false);
     }
@@ -122,7 +117,7 @@ public:
      * @param multi 複数かどうか
      * @return 所有格
      */
-    static concptr whose(monster_sex msex, bool multi)
+    static concptr whose(MonsterSexType msex, bool multi)
     {
         return words.at(WHO_WORD_TYPE::WHOSE).at(multi).at(msex).data();
     }
@@ -132,7 +127,7 @@ public:
      * @param msex モンスターの性別
      * @return 目的語
      */
-    static concptr whom(monster_sex msex)
+    static concptr whom(MonsterSexType msex)
     {
         return whom(msex, false);
     }
@@ -143,7 +138,7 @@ public:
      * @param multi 複数かどうか
      * @return 目的語
      */
-    static concptr whom(monster_sex msex, bool multi)
+    static concptr whom(MonsterSexType msex, bool multi)
     {
         return words.at(WHO_WORD_TYPE::WHOM).at(multi).at(msex).data();
     }

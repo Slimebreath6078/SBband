@@ -25,29 +25,11 @@
 #include "view/display-lore-status.h"
 #include "view/display-lore.h"
 
-static void set_msex_flags(lore_type *lore_ptr)
-{
-    lore_ptr->msex = MSEX_NONE;
-    if (lore_ptr->r_ptr->flags1 & RF1_FEMALE) {
-        lore_ptr->msex = MSEX_FEMALE;
-        return;
-    }
-
-    if (lore_ptr->r_ptr->flags1 & RF1_MALE)
-        lore_ptr->msex = MSEX_MALE;
-}
-
 static void set_flags1(lore_type *lore_ptr)
 {
 
     if (lore_ptr->r_ptr->flags1 & RF1_QUESTOR)
         lore_ptr->flags1 |= (RF1_QUESTOR);
-
-    if (lore_ptr->r_ptr->flags1 & RF1_MALE)
-        lore_ptr->flags1 |= (RF1_MALE);
-
-    if (lore_ptr->r_ptr->flags1 & RF1_FEMALE)
-        lore_ptr->flags1 |= (RF1_FEMALE);
 
     if (lore_ptr->r_ptr->flags1 & RF1_FRIENDS)
         lore_ptr->flags1 |= (RF1_FRIENDS);
@@ -139,7 +121,7 @@ void process_monster_lore(PlayerType *player_ptr, MONRACE_IDX r_idx, monster_lor
         lore_ptr->know_everything = true;
 
     set_drop_flags(lore_ptr);
-    set_msex_flags(lore_ptr);
+    lore_ptr->msex = lore_ptr->r_ptr->sex;
     set_flags1(lore_ptr);
     set_race_flags(lore_ptr);
     display_kill_numbers(lore_ptr);

@@ -13,6 +13,7 @@
 #include "monster-race/race-flags8.h"
 #include "monster-race/race-flags9.h"
 #include "monster-race/race-kind-flags.h"
+#include "monster-race/race-sex-types.h"
 #include "system/angband.h"
 
 #include <string_view>
@@ -22,6 +23,7 @@ enum class MonsterAbilityType;
 
 extern const std::unordered_map<std::string_view, RaceBlowMethodType> r_info_blow_method;
 extern const std::unordered_map<std::string_view, RaceBlowEffectType> r_info_blow_effect;
+extern const std::unordered_map<std::string_view, MonsterSexType> r_info_sex;
 extern const std::unordered_map<std::string_view, race_flags1> r_info_flags1;
 extern const std::unordered_map<std::string_view, race_flags2> r_info_flags2;
 extern const std::unordered_map<std::string_view, race_flags3> r_info_flags3;

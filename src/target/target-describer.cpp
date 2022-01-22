@@ -222,9 +222,9 @@ static void describe_monster_person(eg_type *eg_ptr)
 {
     monster_race *ap_r_ptr = &r_info[eg_ptr->m_ptr->ap_r_idx];
     eg_ptr->s1 = _("それは", "It is ");
-    if (ap_r_ptr->flags1 & RF1_FEMALE)
+    if (ap_r_ptr->sex == MonsterSexType::FEMALE)
         eg_ptr->s1 = _("彼女は", "She is ");
-    else if (ap_r_ptr->flags1 & RF1_MALE)
+    else if (ap_r_ptr->sex == MonsterSexType::MALE)
         eg_ptr->s1 = _("彼は", "He is ");
 
 #ifdef JP
