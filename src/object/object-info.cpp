@@ -311,7 +311,7 @@ TERM_COLOR object_attr(object_type *o_ptr)
 {
     return ((k_info[o_ptr->k_idx].flavor)
                 ? (k_info[k_info[o_ptr->k_idx].flavor].x_attr)
-                : ((!o_ptr->k_idx || (o_ptr->tval != ItemKindType::CORPSE) || (o_ptr->sval != enum2i(CorpseSubType::CORPSE)) || (k_info[o_ptr->k_idx].x_attr != TERM_DARK))
+                : ((!o_ptr->k_idx || (!o_ptr->is_corpse()) || (k_info[o_ptr->k_idx].x_attr != TERM_DARK))
                           ? (k_info[o_ptr->k_idx].x_attr)
                           : (r_info[o_ptr->pval].x_attr)));
 }

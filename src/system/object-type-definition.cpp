@@ -527,3 +527,29 @@ bool object_type::is_activatable() const
     auto flags = object_flags(this);
     return flags.has(TR_ACTIVATE);
 }
+
+bool object_type::is_corpse() const
+{
+    if (tval != ItemKindType::CORPSE)
+        return false;
+    switch (sval) {
+    case enum2i(CorpseSubType::CORPSE):
+    case enum2i(CorpseSubType::BROKEN_DOWN):
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool object_type::is_skeleton() const
+{
+    if (tval != ItemKindType::CORPSE)
+        return false;
+    switch (sval) {
+    case enum2i(CorpseSubType::SKELETON):
+    case enum2i(CorpseSubType::FRAGMENT):
+        return true;
+    default:
+        return false;
+    }
+}

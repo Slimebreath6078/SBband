@@ -69,7 +69,7 @@ bool exchange_cash(PlayerType *player_ptr)
 
     for (INVENTORY_IDX i = 0; i < INVEN_PACK; i++) {
         o_ptr = &player_ptr->inventory_list[i];
-        if ((o_ptr->tval == ItemKindType::CORPSE) && (o_ptr->sval == enum2i(CorpseSubType::CORPSE)) && (o_ptr->pval == MON_TSUCHINOKO)) {
+        if (o_ptr->is_corpse() && (o_ptr->pval == MON_TSUCHINOKO)) {
             char buf[MAX_NLEN + 32];
             describe_flavor(player_ptr, o_name, o_ptr, 0);
             sprintf(buf, _("%s を換金しますか？", "Convert %s into money? "), o_name);
@@ -86,7 +86,7 @@ bool exchange_cash(PlayerType *player_ptr)
 
     for (INVENTORY_IDX i = 0; i < INVEN_PACK; i++) {
         o_ptr = &player_ptr->inventory_list[i];
-        if ((o_ptr->tval == ItemKindType::CORPSE) && (o_ptr->sval == enum2i(CorpseSubType::SKELETON)) && (o_ptr->pval == MON_TSUCHINOKO)) {
+        if (o_ptr->is_skeleton() && (o_ptr->pval == MON_TSUCHINOKO)) {
             char buf[MAX_NLEN + 32];
             describe_flavor(player_ptr, o_name, o_ptr, 0);
             sprintf(buf, _("%s を換金しますか？", "Convert %s into money? "), o_name);
@@ -103,7 +103,7 @@ bool exchange_cash(PlayerType *player_ptr)
 
     for (INVENTORY_IDX i = 0; i < INVEN_PACK; i++) {
         o_ptr = &player_ptr->inventory_list[i];
-        if ((o_ptr->tval == ItemKindType::CORPSE) && (o_ptr->sval == enum2i(CorpseSubType::CORPSE)) && (streq(r_info[o_ptr->pval].name.c_str(), r_info[w_ptr->today_mon].name.c_str()))) {
+        if (o_ptr->is_corpse() && (streq(r_info[o_ptr->pval].name.c_str(), r_info[w_ptr->today_mon].name.c_str()))) {
             char buf[MAX_NLEN + 32];
             describe_flavor(player_ptr, o_name, o_ptr, 0);
             sprintf(buf, _("%s を換金しますか？", "Convert %s into money? "), o_name);
@@ -122,7 +122,7 @@ bool exchange_cash(PlayerType *player_ptr)
     for (INVENTORY_IDX i = 0; i < INVEN_PACK; i++) {
         o_ptr = &player_ptr->inventory_list[i];
 
-        if ((o_ptr->tval == ItemKindType::CORPSE) && (o_ptr->sval == enum2i(CorpseSubType::SKELETON)) && (streq(r_info[o_ptr->pval].name.c_str(), r_info[w_ptr->today_mon].name.c_str()))) {
+        if (o_ptr->is_skeleton() && (streq(r_info[o_ptr->pval].name.c_str(), r_info[w_ptr->today_mon].name.c_str()))) {
             char buf[MAX_NLEN + 32];
             describe_flavor(player_ptr, o_name, o_ptr, 0);
             sprintf(buf, _("%s を換金しますか？", "Convert %s into money? "), o_name);
@@ -201,14 +201,25 @@ void today_target(PlayerType *player_ptr)
 {
     char buf[160];
     monster_race *r_ptr = &r_info[w_ptr->today_mon];
+    concptr corpse;
+    concptr skeleton;
 
     clear_bldg(4, 18);
     c_put_str(TERM_YELLOW, _("本日の賞金首", "Wanted monster that changes from day to day"), 5, 10);
     sprintf(buf, _("ターゲット： %s", "target: %s"), r_ptr->name.c_str());
     c_put_str(TERM_YELLOW, buf, 6, 10);
-    sprintf(buf, _("死体 ---- $%d", "corpse   ---- $%d"), (int)r_ptr->level * 50 + 100);
+
+    if (r_ptr->race_kind_flags.has_any_of({ MonraceKindType::KAN_SEN, MonraceKindType::MINERAL })) {
+        corpse = _("全体 ---- $%d", "body     ---- $%d");
+        skeleton = _("欠片 ---- $%d", "fragment ---- $%d");
+    } else {
+        corpse = _("死体 ---- $%d", "corpse   ---- $%d");
+        skeleton = _("骨   ---- $%d", "skeleton ---- $%d");
+    }
+
+    sprintf(buf, corpse, (int)r_ptr->level * 50 + 100);
     prt(buf, 8, 10);
-    sprintf(buf, _("骨   ---- $%d", "skeleton ---- $%d"), (int)r_ptr->level * 30 + 60);
+    sprintf(buf, skeleton, (int)r_ptr->level * 30 + 60);
     prt(buf, 9, 10);
     player_ptr->today_mon = w_ptr->today_mon;
 }
