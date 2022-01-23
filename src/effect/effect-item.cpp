@@ -16,6 +16,7 @@
 #include "object/object-mark-types.h"
 #include "perception/object-perception.h"
 #include "spell-kind/spells-perception.h"
+#include "sv-definition/sv-corpse-types.h"
 #include "sv-definition/sv-other-types.h"
 #include "sv-definition/sv-scroll-types.h"
 #include "system/floor-type-definition.h"
@@ -118,7 +119,7 @@ bool affect_item(PlayerType *player_ptr, MONSTER_IDX who, POSITION r, POSITION y
 
             if (BreakerElec().hates(o_ptr)) {
                 note_kill = _("壊れてしまった！", (plural ? " are destroyed!" : " is destroyed!"));
-                    ignore = true;
+                ignore = true;
             }
 
             break;
@@ -133,7 +134,7 @@ bool affect_item(PlayerType *player_ptr, MONSTER_IDX who, POSITION r, POSITION y
 
             if (BreakerCold().hates(o_ptr)) {
                 note_kill = _("砕け散ってしまった！", (plural ? " shatter!" : " shatters!"));
-                    ignore = true;
+                ignore = true;
             }
 
             break;
@@ -214,7 +215,7 @@ bool affect_item(PlayerType *player_ptr, MONSTER_IDX who, POSITION r, POSITION y
                 mode |= PM_FORCE_PET;
 
             for (int i = 0; i < o_ptr->number; i++) {
-                if (((o_ptr->sval == SV_CORPSE) && (randint1(100) > 80)) || ((o_ptr->sval == SV_SKELETON) && (randint1(100) > 60))) {
+                if (((o_ptr->sval == enum2i(CorpseSubType::CORPSE)) && (randint1(100) > 80)) || ((o_ptr->sval == enum2i(CorpseSubType::SKELETON)) && (randint1(100) > 60))) {
                     if (!note_kill) {
                         note_kill = _("灰になった。", (plural ? " become dust." : " becomes dust."));
                     }

@@ -9,6 +9,7 @@
 #include "perception/object-perception.h"
 #include "player-base/player-race.h"
 #include "player-info/mimic-info-table.h"
+#include "sv-definition/sv-corpse-types.h"
 #include "sv-definition/sv-lite-types.h"
 #include "sv-definition/sv-other-types.h"
 #include "system/monster-race-definition.h"
@@ -32,7 +33,7 @@ bool item_tester_hook_eatable(PlayerType *player_ptr, const object_type *o_ptr)
         if (o_ptr->tval == ItemKindType::STAFF || o_ptr->tval == ItemKindType::WAND)
             return true;
     } else if (food_type == PlayerRaceFoodType::CORPSE) {
-        if (o_ptr->tval == ItemKindType::CORPSE && o_ptr->sval == SV_CORPSE && angband_strchr("pht", r_info[o_ptr->pval].d_char))
+        if (o_ptr->tval == ItemKindType::CORPSE && o_ptr->sval == enum2i(CorpseSubType::CORPSE) && angband_strchr("pht", r_info[o_ptr->pval].d_char))
             return true;
     }
 

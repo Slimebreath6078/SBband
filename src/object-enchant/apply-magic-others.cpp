@@ -21,6 +21,7 @@
 #include "object-enchant/trc-types.h"
 #include "object/object-kind.h"
 #include "perception/object-perception.h"
+#include "sv-definition/sv-corpse-types.h"
 #include "sv-definition/sv-lite-types.h"
 #include "sv-definition/sv-other-types.h"
 #include "system/floor-type-definition.h"
@@ -158,9 +159,9 @@ void apply_magic_others(PlayerType *player_ptr, object_type *o_ptr, int power)
         int check;
         auto match = MonraceDropType::MAX;
         monster_race *r_ptr;
-        if (o_ptr->sval == SV_SKELETON) {
+        if (o_ptr->sval == enum2i(CorpseSubType::SKELETON)) {
             match = MonraceDropType::DROP_SKELETON;
-        } else if (o_ptr->sval == SV_CORPSE) {
+        } else if (o_ptr->sval == enum2i(CorpseSubType::CORPSE)) {
             match = MonraceDropType::DROP_CORPSE;
         }
 

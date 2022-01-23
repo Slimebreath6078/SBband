@@ -11,6 +11,7 @@
 #include "monster-race/race-kind-flags.h"
 #include "object-enchant/trg-types.h"
 #include "object/object-kind.h"
+#include "sv-definition/sv-corpse-types.h"
 #include "system/monster-race-definition.h"
 #include "system/object-type-definition.h"
 #ifdef JP
@@ -65,12 +66,20 @@ static void describe_corpse(flavor_type *flavor_ptr)
     monster_race *r_ptr = &r_info[flavor_ptr->o_ptr->pval];
     flavor_ptr->modstr = r_ptr->name.c_str();
 #ifdef JP
-    flavor_ptr->basenm = "#%";
-#else
-    if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE))
-        flavor_ptr->basenm = "& % of #";
+    if (flavor_ptr->o_ptr->sval == enum2i(CorpseSubType::BROKEN_DOWN))
+        flavor_ptr->basenm = "%#";
     else
-        flavor_ptr->basenm = "& # %";
+        flavor_ptr->basenm = "#%";
+
+#else
+    if (flavor_ptr->o_ptr->sval == enum2i(CorpseSubType::BROKEN_DOWN)) {
+        flavor_ptr->basenm = "& % #~";
+    } else {
+        if (r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE))
+            flavor_ptr->basenm = "& % of #";
+        else
+            flavor_ptr->basenm = "& # %";
+    }
 #endif
 }
 

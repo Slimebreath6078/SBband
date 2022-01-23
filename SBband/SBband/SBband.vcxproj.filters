@@ -5127,6 +5127,9 @@
     <ClInclude Include="..\..\src\system\s-basic.h">
       <Filter>system</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\sv-definition\sv-corpse-types.h">
+      <Filter>sv-definition</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\wall.bmp" />

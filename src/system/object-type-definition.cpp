@@ -18,6 +18,7 @@
 #include "object/object-flags.h"
 #include "object/object-kind.h"
 #include "sv-definition/sv-armor-types.h"
+#include "sv-definition/sv-corpse-types.h"
 #include "sv-definition/sv-lite-types.h"
 #include "sv-definition/sv-other-types.h"
 #include "sv-definition/sv-protector-types.h"
@@ -291,7 +292,7 @@ bool object_type::is_ammo() const
 bool object_type::is_convertible() const
 {
     auto is_convertible = ((this->tval == ItemKindType::JUNK) || (this->tval == ItemKindType::SKELETON));
-    is_convertible |= ((this->tval == ItemKindType::CORPSE) && (this->sval == SV_SKELETON));
+    is_convertible |= ((this->tval == ItemKindType::CORPSE) && (this->sval == enum2i(CorpseSubType::SKELETON)));
     return is_convertible;
 }
 
@@ -506,7 +507,7 @@ bool object_type::is_rechargeable() const
  */
 bool object_type::is_offerable() const
 {
-    if ((this->tval != ItemKindType::CORPSE) || (this->sval != SV_CORPSE)) {
+    if ((this->tval != ItemKindType::CORPSE) || (this->sval != enum2i(CorpseSubType::CORPSE))) {
         return false;
     }
 

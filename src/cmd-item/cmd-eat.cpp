@@ -43,6 +43,7 @@
 #include "status/base-status.h"
 #include "status/element-resistance.h"
 #include "status/experience.h"
+#include "sv-definition/sv-corpse-types.h"
 #include "sv-definition/sv-food-types.h"
 #include "sv-definition/sv-other-types.h"
 #include "system/monster-race-definition.h"
@@ -277,7 +278,7 @@ void exe_eat_food(PlayerType *player_ptr, INVENTORY_IDX item)
     auto food_type = PlayerRace(player_ptr).food();
 
     /* Balrogs change humanoid corpses to energy */
-    if (food_type == PlayerRaceFoodType::CORPSE && (o_ptr->tval == ItemKindType::CORPSE && o_ptr->sval == SV_CORPSE && angband_strchr("pht", r_info[o_ptr->pval].d_char))) {
+    if (food_type == PlayerRaceFoodType::CORPSE && (o_ptr->tval == ItemKindType::CORPSE && o_ptr->sval == enum2i(CorpseSubType::CORPSE) && angband_strchr("pht", r_info[o_ptr->pval].d_char))) {
         GAME_TEXT o_name[MAX_NLEN];
         describe_flavor(player_ptr, o_name, o_ptr, (OD_OMIT_PREFIX | OD_NAME_ONLY));
         msg_format(_("%sは燃え上り灰になった。精力を吸収した気がする。", "%^s is burnt to ashes.  You absorb its vitality!"), o_name);
