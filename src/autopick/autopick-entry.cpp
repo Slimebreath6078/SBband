@@ -199,6 +199,8 @@ bool autopick_new_entry(autopick_type *entry, concptr str, bool allow_default)
             ADD_FLG(FLG_UNIQUE);
         if (MATCH_KEY(KEY_HUMAN))
             ADD_FLG(FLG_HUMAN);
+        if (MATCH_KEY(KEY_MINERAL))
+            ADD_FLG(FLG_MINERAL);
         if (MATCH_KEY(KEY_UNREADABLE))
             ADD_FLG(FLG_UNREADABLE);
         if (MATCH_KEY(KEY_REALM1))
@@ -391,6 +393,10 @@ void autopick_entry_from_object(PlayerType *player_ptr, autopick_type *entry, ob
         ADD_FLG(FLG_HUMAN);
     }
 
+    if (o_ptr->tval == ItemKindType::CORPSE && r_info[o_ptr->pval].race_kind_flags.has_any_of({ MonraceKindType::KAN_SEN, MonraceKindType::MINERAL })) {
+        ADD_FLG(FLG_MINERAL);
+    }
+
     if (o_ptr->tval >= ItemKindType::LIFE_BOOK && !check_book_realm(player_ptr, o_ptr->tval, o_ptr->sval)) {
         ADD_FLG(FLG_UNREADABLE);
         if (o_ptr->tval != ItemKindType::ARCANE_BOOK)
@@ -534,6 +540,8 @@ concptr autopick_line_from_entry(autopick_type *entry)
         ADD_KEY(KEY_UNIQUE);
     if (IS_FLG(FLG_HUMAN))
         ADD_KEY(KEY_HUMAN);
+    if (IS_FLG(FLG_MINERAL))
+        ADD_KEY(KEY_MINERAL);
     if (IS_FLG(FLG_WORTHLESS))
         ADD_KEY(KEY_WORTHLESS);
     if (IS_FLG(FLG_GOOD))

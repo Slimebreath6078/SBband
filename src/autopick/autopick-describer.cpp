@@ -113,6 +113,11 @@ static void describe_autpick_jp(char *buff, autopick_type *entry, autopick_descr
         describer->body_str = "死体や骨";
     }
 
+    if (IS_FLG(FLG_MINERAL)) {
+        before_str[describer->before_n++] = "武器修復で使うための艦船やゴーレムの";
+        describer->body_str = "壊れた身体や欠片";
+    }
+
     if (IS_FLG(FLG_UNIQUE)) {
         before_str[describer->before_n++] = "ユニークモンスターの";
         describer->body_str = "死体や骨";

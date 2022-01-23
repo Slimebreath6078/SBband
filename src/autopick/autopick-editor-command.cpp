@@ -703,6 +703,9 @@ ape_quittance do_editor_command(PlayerType *player_ptr, text_body_type *tb, int 
     case EC_OK_HUMAN:
         toggle_keyword(tb, FLG_HUMAN);
         break;
+    case EC_OK_MINERAL:
+        toggle_keyword(tb, FLG_MINERAL);
+        break;
     case EC_OK_UNREADABLE:
         toggle_keyword(tb, FLG_UNREADABLE);
         add_keyword(tb, FLG_SPELLBOOKS);

@@ -77,6 +77,7 @@
 #define MN_WANTED _("賞金首の (死体)", "wanted (corpse)")
 #define MN_UNIQUE _("ユニーク・モンスターの (死体)", "unique (corpse)")
 #define MN_HUMAN _("人間の (死体)", "human (corpse)")
+#define MN_MINERAL _("鉱物の (残骸)", "mineral (body)")
 #define MN_UNREADABLE _("読めない (魔法書)", "unreadable (spellbooks)")
 #define MN_REALM1 _("第一領域の (魔法書)", "realm1 (spellbooks)")
 #define MN_REALM2 _("第二領域の (魔法書)", "realm2 (spellbooks)")
@@ -143,6 +144,8 @@ concptr KEY_WANTED = MKEY_WANTED;
 concptr KEY_UNIQUE = MKEY_UNIQUE;
 #define MKEY_HUMAN _("人間の", "human")
 concptr KEY_HUMAN = MKEY_HUMAN;
+#define MKEY_MINERAL _("鉱物の", "Mineral")
+concptr KEY_MINERAL = MKEY_MINERAL;
 #define MKEY_UNREADABLE _("読めない", "unreadable")
 concptr KEY_UNREADABLE = MKEY_UNREADABLE;
 #define MKEY_REALM1 _("第一領域の", "first realm's")
@@ -222,8 +225,8 @@ command_menu_type menu_data[MENU_DATA_NUM] = { { MN_HELP, 0, -1, EC_HELP }, { MN
 
     { MN_ADJECTIVE_SPECIAL, 0, -1, -1 }, { MN_BOOSTED, 1, -1, EC_OK_BOOSTED }, { MN_MORE_DICE, 1, -1, EC_OK_MORE_DICE },
     { MN_MORE_BONUS, 1, -1, EC_OK_MORE_BONUS }, { MN_WANTED, 1, -1, EC_OK_WANTED }, { MN_UNIQUE, 1, -1, EC_OK_UNIQUE }, { MN_HUMAN, 1, -1, EC_OK_HUMAN },
-    { MN_UNREADABLE, 1, -1, EC_OK_UNREADABLE }, { MN_REALM1, 1, -1, EC_OK_REALM1 }, { MN_REALM2, 1, -1, EC_OK_REALM2 }, { MN_FIRST, 1, -1, EC_OK_FIRST },
-    { MN_SECOND, 1, -1, EC_OK_SECOND }, { MN_THIRD, 1, -1, EC_OK_THIRD }, { MN_FOURTH, 1, -1, EC_OK_FOURTH },
+    { MN_MINERAL, 1, -1, EC_OK_MINERAL }, { MN_UNREADABLE, 1, -1, EC_OK_UNREADABLE }, { MN_REALM1, 1, -1, EC_OK_REALM1 }, { MN_REALM2, 1, -1, EC_OK_REALM2 },
+    { MN_FIRST, 1, -1, EC_OK_FIRST }, { MN_SECOND, 1, -1, EC_OK_SECOND }, { MN_THIRD, 1, -1, EC_OK_THIRD }, { MN_FOURTH, 1, -1, EC_OK_FOURTH },
 
     { MN_NOUN, 0, -1, -1 }, { MKEY_WEAPONS, 1, -1, EC_KK_WEAPONS }, { MKEY_FAVORITE_WEAPONS, 1, -1, EC_KK_FAVORITE_WEAPONS },
     { MKEY_ARMORS, 1, -1, EC_KK_ARMORS }, { MKEY_MISSILES, 1, -1, EC_KK_MISSILES }, { MKEY_DEVICES, 1, -1, EC_KK_DEVICES },
