@@ -411,10 +411,14 @@ SBband_SOURCES = \
 	market/building-service.cpp market/building-service.h \
 	market/building-craft-weapon.cpp market/building-craft-weapon.h \
 	market/building-craft-armor.cpp market/building-craft-armor.h \
-	market/building-craft-fix.cpp market/building-craft-fix.h \
 	market/building-monster.cpp market/building-monster.h \
 	market/building-enchanter.cpp market/building-enchanter.h \
 	market/building-actions-table.h \
+	\
+	market/Fix/building-craft-fix.cpp market/Fix/building-craft-fix.h \
+	market/Fix/flag-checker.cpp market/Fix/flag-checker.h \
+	market/Fix/pow-check.cpp market/Fix/pow-check.h \
+	market/Fix/weapon-kansen.cpp market/Fix/weapon-kansen.h \
 	\
 	melee/monster-attack-monster.cpp melee/monster-attack-monster.h \
 	melee/melee-postprocess.cpp melee/melee-postprocess.h \

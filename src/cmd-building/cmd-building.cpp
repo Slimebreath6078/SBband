@@ -33,11 +33,11 @@
 #include "io/input-key-requester.h"
 #include "main/music-definitions-table.h"
 #include "main/sound-of-music.h"
+#include "market/Fix/building-craft-fix.h"
 #include "market/arena.h"
 #include "market/bounty.h"
 #include "market/building-actions-table.h"
 #include "market/building-craft-armor.h"
-#include "market/building-craft-fix.h"
 #include "market/building-craft-weapon.h"
 #include "market/building-enchanter.h"
 #include "market/building-monster.h"
@@ -111,9 +111,7 @@ static void bldg_process_command(PlayerType *player_ptr, building_type *bldg, in
     }
 
     auto bact = bldg->actions[i];
-    if ((bact != BACT_RECHARGE)
-        && (((bldg->member_costs[i] > player_ptr->au) && is_owner(player_ptr, bldg))
-            || ((bldg->other_costs[i] > player_ptr->au) && !is_owner(player_ptr, bldg)))) {
+    if ((bact != BACT_RECHARGE) && (((bldg->member_costs[i] > player_ptr->au) && is_owner(player_ptr, bldg)) || ((bldg->other_costs[i] > player_ptr->au) && !is_owner(player_ptr, bldg)))) {
         msg_print(_("お金が足りません！", "You do not have the gold!"));
         return;
     }

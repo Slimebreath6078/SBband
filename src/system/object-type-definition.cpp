@@ -553,3 +553,20 @@ bool object_type::is_skeleton() const
         return false;
     }
 }
+
+/*!
+ * @brief 武器匠の「残骸」対象になるかを判定する。/ Hook to specify "body"
+ * @return 対象になるならtrueを返す。
+ */
+bool object_type::is_fragment_or_broken() const
+{
+    if (this->tval == ItemKindType::CORPSE)
+        return sval == enum2i(CorpseSubType::BROKEN_DOWN) || sval == enum2i(CorpseSubType::FRAGMENT);
+
+    return false;
+}
+
+bool object_type::is_material() const
+{
+    return this->is_fragment_or_broken() || this->is_orthodox_melee_weapons();
+}

@@ -599,9 +599,6 @@
     <ClCompile Include="..\..\src\market\building-craft-armor.cpp">
       <Filter>market</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\market\building-craft-fix.cpp">
-      <Filter>market</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\market\building-monster.cpp">
       <Filter>market</Filter>
     </ClCompile>
@@ -2373,6 +2370,18 @@
     <ClCompile Include="..\..\src\mspell\mspell-attribute.cpp">
       <Filter>mspell</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\market\Fix\building-craft-fix.cpp">
+      <Filter>market\Fix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\market\Fix\weapon-kansen.cpp">
+      <Filter>market\Fix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\market\Fix\flag-checker.cpp">
+      <Filter>market\Fix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\market\Fix\pow-check.cpp">
+      <Filter>market\Fix</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\combat\shoot.h">
@@ -3018,9 +3027,6 @@
       <Filter>market</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\market\building-craft-armor.h">
-      <Filter>market</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\market\building-craft-fix.h">
       <Filter>market</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\market\building-monster.h">
@@ -5130,6 +5136,18 @@
     <ClInclude Include="..\..\src\sv-definition\sv-corpse-types.h">
       <Filter>sv-definition</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\market\Fix\building-craft-fix.h">
+      <Filter>market\Fix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\market\Fix\weapon-kansen.h">
+      <Filter>market\Fix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\market\Fix\flag-checker.h">
+      <Filter>market\Fix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\market\Fix\pow-check.h">
+      <Filter>market\Fix</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\wall.bmp" />
@@ -5360,6 +5378,9 @@
     </Filter>
     <Filter Include="calc">
       <UniqueIdentifier>{d64c51ed-2a91-4d47-ad94-76d57fa7fd82}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="market\Fix">
+      <UniqueIdentifier>{298387fe-9fc7-4f1d-96cd-cec297e31b40}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

@@ -110,4 +110,6 @@ typedef struct object_type {
     bool is_activatable() const;
     bool is_corpse() const;
     bool is_skeleton() const;
+    bool is_fragment_or_broken() const;
+    bool is_material() const;
 } object_type;
