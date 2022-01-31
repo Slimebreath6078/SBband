@@ -70,7 +70,7 @@ static const auto all_resistance = {
     TR_RES_BLIND
 };
 
-static const std::unordered_map<tr_type, std::vector<tr_type>> duplicate_list = {
+static const sb_std::unordered_map<tr_type, std::vector<tr_type>> duplicate_list = {
     { TR_SLAY_ANIMAL, { TR_KILL_ANIMAL } },
     { TR_SLAY_DEMON, { TR_KILL_DEMON } },
     { TR_SLAY_DRAGON, { TR_KILL_DRAGON } },

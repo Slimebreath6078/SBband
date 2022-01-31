@@ -50,7 +50,7 @@ static const std::vector<MonsterAbilityType> summon_dragon_mask = {
     MonsterAbilityType::S_HI_DRAGON,
 };
 
-static const std::unordered_map<tr_type, std::shared_ptr<monster_flag_checker_abstrct>> flag_pow_up = {
+static const sb_std::unordered_map<tr_type, std::shared_ptr<monster_flag_checker_abstrct>> flag_pow_up = {
     { TR_SLAY_EVIL, make_general_flag_checker(MonraceKindType::GOOD) },
     { TR_SLAY_GOOD, make_general_flag_checker(MonraceKindType::EVIL) },
     { TR_SLAY_UNDEAD, make_general_flag_checker(lite_ability_mask) },
@@ -70,7 +70,7 @@ static const std::unordered_map<tr_type, std::shared_ptr<monster_flag_checker_ab
     { TR_BRAND_MAGIC, std::make_shared<monster_flag_checker_with_func>(can_cast_spell) }
 };
 
-static const std::unordered_map<tr_type, std::shared_ptr<monster_flag_checker_abstrct>> flag_pow_down = {
+static const sb_std::unordered_map<tr_type, std::shared_ptr<monster_flag_checker_abstrct>> flag_pow_down = {
     { TR_SLAY_EVIL, make_general_flag_checker(MonraceKindType::EVIL) },
     { TR_SLAY_GOOD, make_general_flag_checker(MonraceKindType::GOOD) },
     { TR_KILL_EVIL, make_general_flag_checker(MonraceKindType::EVIL) },
