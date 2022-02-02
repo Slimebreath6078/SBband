@@ -278,6 +278,8 @@
     <ClCompile Include="..\..\src\load\monster\monster-loader-factory.cpp" />
     <ClCompile Include="..\..\src\load\monster\monster-loader-savefile1.cpp" />
     <ClCompile Include="..\..\src\load\player-class-specific-data-loader.cpp" />
+    <ClCompile Include="..\..\src\market\Fix\pow-check.cpp" />
+    <ClCompile Include="..\..\src\market\Fix\weapon-kansen.cpp" />
     <ClCompile Include="..\..\src\monster-race\race-resistance-mask.cpp" />
     <ClCompile Include="..\..\src\mspell\mspell-attribute.cpp" />
     <ClCompile Include="..\..\src\object-enchant\object-smith.cpp" />
@@ -651,7 +653,7 @@
     <ClCompile Include="..\..\src\market\bounty-prize-table.cpp" />
     <ClCompile Include="..\..\src\market\bounty.cpp" />
     <ClCompile Include="..\..\src\market\building-craft-armor.cpp" />
-    <ClCompile Include="..\..\src\market\building-craft-fix.cpp" />
+    <ClCompile Include="..\..\src\market\Fix\building-craft-fix.cpp" />
     <ClCompile Include="..\..\src\market\building-craft-weapon.cpp" />
     <ClCompile Include="..\..\src\market\building-enchanter.cpp" />
     <ClCompile Include="..\..\src\market\building-monster.cpp" />
@@ -921,6 +923,7 @@
     <ClCompile Include="..\..\src\wizard\tval-descriptions-table.cpp" />
     <ClCompile Include="..\..\src\load\quest-loader.cpp" />
     <ClCompile Include="..\..\src\view\display-store.cpp" />
+    <ClCompile Include="..\..\src\market\Fix\flag-checker.cpp" />
     <ClInclude Include="..\..\src\action\action-limited.h" />
     <ClInclude Include="..\..\src\action\activation-execution.h" />
     <ClInclude Include="..\..\src\action\mutation-execution.h" />
@@ -994,6 +997,8 @@
     <ClInclude Include="..\..\src\main-win\graphics-win.h" />
     <ClInclude Include="..\..\src\main-win\main-win-term.h" />
     <ClInclude Include="..\..\src\main-win\wav-reader.h" />
+    <ClInclude Include="..\..\src\market\Fix\pow-check.h" />
+    <ClInclude Include="..\..\src\market\Fix\weapon-kansen.h" />
     <ClInclude Include="..\..\src\monster-race\race-drop-flags.h" />
     <ClInclude Include="..\..\src\monster-race\race-resistance-mask.h" />
     <ClInclude Include="..\..\src\monster-race\race-kind-flags.h" />
@@ -1318,6 +1323,7 @@
     <ClInclude Include="..\..\src\store\purchase-order.h" />
     <ClInclude Include="..\..\src\store\sell-order.h" />
     <ClInclude Include="..\..\src\store\service-checker.h" />
+    <ClInclude Include="..\..\src\sv-definition\sv-corpse-types.h" />
     <ClInclude Include="..\..\src\system\alloc-entries.h" />
     <ClInclude Include="..\..\src\system\dungeon-data-definition.h" />
     <ClInclude Include="..\..\src\system\floor-type-definition.h" />
@@ -1413,7 +1419,7 @@
     <ClInclude Include="..\..\src\market\bounty.h" />
     <ClInclude Include="..\..\src\market\building-actions-table.h" />
     <ClInclude Include="..\..\src\market\building-craft-armor.h" />
-    <ClInclude Include="..\..\src\market\building-craft-fix.h" />
+    <ClInclude Include="..\..\src\market\Fix\building-craft-fix.h" />
     <ClInclude Include="..\..\src\market\building-craft-weapon.h" />
     <ClInclude Include="..\..\src\market\building-enchanter.h" />
     <ClInclude Include="..\..\src\market\building-monster.h" />
@@ -1836,6 +1842,7 @@
     <ClInclude Include="..\..\src\wizard\tval-descriptions-table.h" />
     <ClInclude Include="..\..\src\load\quest-loader.h" />
     <ClInclude Include="..\..\src\view\display-store.h" />
+    <ClInclude Include="..\..\src\market\Fix\flag-checker.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\system\angband.h" />

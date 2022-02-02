@@ -2,7 +2,7 @@
 
 #include "system/angband.h"
 
-#define MENU_DATA_NUM 92
+#define MENU_DATA_NUM 93
 
 typedef struct command_menu_type {
     concptr name;

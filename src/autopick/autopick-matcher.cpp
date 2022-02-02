@@ -178,6 +178,9 @@ bool is_autopick_match(PlayerType *player_ptr, object_type *o_ptr, autopick_type
     if (IS_FLG(FLG_HUMAN) && (o_ptr->tval != ItemKindType::CORPSE || !angband_strchr("pht", r_info[o_ptr->pval].d_char)))
         return false;
 
+    if (IS_FLG(FLG_MINERAL) && (o_ptr->tval != ItemKindType::CORPSE || r_info[o_ptr->pval].race_kind_flags.has_none_of({ MonraceKindType::KAN_SEN, MonraceKindType::MINERAL })))
+        return false;
+
     if (IS_FLG(FLG_UNREADABLE) && (o_ptr->tval < ItemKindType::LIFE_BOOK || check_book_realm(player_ptr, o_ptr->tval, o_ptr->sval)))
         return false;
 

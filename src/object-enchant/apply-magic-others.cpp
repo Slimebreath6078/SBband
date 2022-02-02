@@ -21,6 +21,7 @@
 #include "object-enchant/trc-types.h"
 #include "object/object-kind.h"
 #include "perception/object-perception.h"
+#include "sv-definition/sv-corpse-types.h"
 #include "sv-definition/sv-lite-types.h"
 #include "sv-definition/sv-other-types.h"
 #include "system/floor-type-definition.h"
@@ -156,15 +157,29 @@ void apply_magic_others(PlayerType *player_ptr, object_type *o_ptr, int power)
     case ItemKindType::CORPSE: {
         PARAMETER_VALUE i = 1;
         int check;
-        auto match = MonraceDropType::MAX;
+        auto match_d = MonraceDropType::MAX;
+        auto match_r = EnumClassFlagGroup<MonraceKindType>();
         monster_race *r_ptr;
-        if (o_ptr->sval == SV_SKELETON) {
-            match = MonraceDropType::DROP_SKELETON;
-        } else if (o_ptr->sval == SV_CORPSE) {
-            match = MonraceDropType::DROP_CORPSE;
+        switch (o_ptr->sval) {
+        case enum2i(CorpseSubType::FRAGMENT):
+            match_d = MonraceDropType::DROP_SKELETON;
+            match_r.set({ MonraceKindType::KAN_SEN, MonraceKindType::MINERAL });
+            break;
+        case enum2i(CorpseSubType::SKELETON):
+            match_d = MonraceDropType::DROP_SKELETON;
+            break;
+        case enum2i(CorpseSubType::BROKEN_DOWN):
+            match_d = MonraceDropType::DROP_CORPSE;
+            match_r.set({ MonraceKindType::KAN_SEN, MonraceKindType::MINERAL });
+            break;
+        case enum2i(CorpseSubType::CORPSE):
+            match_d = MonraceDropType::DROP_CORPSE;
+            break;
+        default:
+            break;
         }
 
-        if (match == MonraceDropType::MAX)
+        if (match_d == MonraceDropType::MAX)
             return;
 
         get_mon_num_prep(player_ptr, item_monster_okay, nullptr);
@@ -174,7 +189,7 @@ void apply_magic_others(PlayerType *player_ptr, object_type *o_ptr, int power)
             check = (floor_ptr->dun_level < r_ptr->level) ? (r_ptr->level - floor_ptr->dun_level) : 0;
             if (!r_ptr->rarity)
                 continue;
-            if (r_ptr->drop_flags.has_not(match))
+            if (r_ptr->drop_flags.has_not(match_d) || (!match_r.none() && r_ptr->race_kind_flags.has_none_of(match_r)))
                 continue;
             if (randint0(check))
                 continue;

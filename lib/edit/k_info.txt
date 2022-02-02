@@ -6452,3 +6452,27 @@ F:INT | WIS | SUST_INT | SUST_WIS
 F:RES_CHAOS | RES_CONF | RES_NEXUS | HOLD_EXP
 D:$It protects you from the power of chaos.
 D:それは混沌の力からあなたを守る。
+
+N:675:の欠片
+E:Fragment~
+G:~:w
+I:10:2:0
+W:30:0:20:0
+A:30/2
+P:0:1d1:0:0:0
+D:$The fragment of shattered KAN-SEN or golems.
+D:$  The plenty of this is useful for repairng weapon.
+D:艦船やゴーレムが砕け散った後の欠片。
+D:いくつか集めれば武器にできそうだ。
+
+N:676:動かなくなった
+E:Broken down
+G:~:d
+I:10:3:0
+W:30:0:160:0
+A:30/2
+P:0:1d1:0:0:0
+D:$The body of broken down KAN-SEN or golems.
+D:$  A metal parts of this are useful for repairng weapon.
+D:艦船やゴーレムが故障して動かなくなったもの。
+D:鉱物の部分だけ取り出せば武器にできそうだ。

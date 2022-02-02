@@ -18,6 +18,7 @@
 #include "player/player-personality-types.h"
 #include "realm/realm-types.h"
 #include "sv-definition/sv-bow-types.h"
+#include "sv-definition/sv-corpse-types.h"
 #include "sv-definition/sv-food-types.h"
 #include "sv-definition/sv-lite-types.h"
 #include "sv-definition/sv-other-types.h"
@@ -96,7 +97,7 @@ static void decide_initial_items(PlayerType *player_ptr, object_type *q_ptr)
         /* Demon can drain vitality from humanoid corpse */
         get_mon_num_prep(player_ptr, monster_hook_human, nullptr);
         for (int i = rand_range(3, 4); i > 0; i--) {
-            q_ptr->prep(lookup_kind(ItemKindType::CORPSE, SV_CORPSE));
+            q_ptr->prep(lookup_kind(ItemKindType::CORPSE, enum2i(CorpseSubType::CORPSE)));
             q_ptr->pval = get_mon_num(player_ptr, 0, 2, 0);
             if (q_ptr->pval) {
                 q_ptr->number = 1;
@@ -237,7 +238,7 @@ void player_outfit(PlayerType *player_ptr)
     if (player_ptr->pclass != PlayerClassType::SORCERER) {
         auto short_pclass = enum2i(player_ptr->pclass);
         if (player_ptr->ppersonality == PERSONALITY_SEXY) {
-            player_init[short_pclass][2] = std::make_tuple(ItemKindType::HAFTED, SV_WHIP);            
+            player_init[short_pclass][2] = std::make_tuple(ItemKindType::HAFTED, SV_WHIP);
         } else if (player_ptr->prace == PlayerRaceType::MERFOLK) {
             player_init[short_pclass][2] = std::make_tuple(ItemKindType::POLEARM, SV_TRIDENT);
         }
@@ -266,7 +267,7 @@ void player_outfit(PlayerType *player_ptr)
         if (((tv == ItemKindType::SWORD) || (tv == ItemKindType::HAFTED)) && ((player_ptr->pclass == PlayerClassType::ROGUE) && (player_ptr->realm1 == REALM_DEATH))) {
             q_ptr->name2 = EGO_BRAND_POIS;
         }
-        
+
         add_outfit(player_ptr, q_ptr);
     }
 

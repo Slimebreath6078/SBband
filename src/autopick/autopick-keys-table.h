@@ -28,6 +28,7 @@ extern concptr KEY_MORE_BONUS2;
 extern concptr KEY_WANTED;
 extern concptr KEY_UNIQUE;
 extern concptr KEY_HUMAN;
+extern concptr KEY_MINERAL;
 extern concptr KEY_UNREADABLE;
 extern concptr KEY_REALM1;
 extern concptr KEY_REALM2;

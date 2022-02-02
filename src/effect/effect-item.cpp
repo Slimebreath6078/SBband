@@ -8,6 +8,7 @@
 #include "grid/grid.h"
 #include "monster-floor/monster-summon.h"
 #include "monster-floor/place-monster-types.h"
+#include "monster-race/monster-race.h"
 #include "monster/monster-info.h"
 #include "object-enchant/tr-types.h"
 #include "object-hook/hook-expendable.h"
@@ -16,10 +17,12 @@
 #include "object/object-mark-types.h"
 #include "perception/object-perception.h"
 #include "spell-kind/spells-perception.h"
+#include "sv-definition/sv-corpse-types.h"
 #include "sv-definition/sv-other-types.h"
 #include "sv-definition/sv-scroll-types.h"
 #include "system/floor-type-definition.h"
 #include "system/grid-type-definition.h"
+#include "system/monster-race-definition.h"
 #include "system/monster-type-definition.h"
 #include "system/object-type-definition.h"
 #include "system/player-type-definition.h"
@@ -118,7 +121,7 @@ bool affect_item(PlayerType *player_ptr, MONSTER_IDX who, POSITION r, POSITION y
 
             if (BreakerElec().hates(o_ptr)) {
                 note_kill = _("壊れてしまった！", (plural ? " are destroyed!" : " is destroyed!"));
-                    ignore = true;
+                ignore = true;
             }
 
             break;
@@ -133,7 +136,7 @@ bool affect_item(PlayerType *player_ptr, MONSTER_IDX who, POSITION r, POSITION y
 
             if (BreakerCold().hates(o_ptr)) {
                 note_kill = _("砕け散ってしまった！", (plural ? " shatter!" : " shatters!"));
-                    ignore = true;
+                ignore = true;
             }
 
             break;
@@ -214,16 +217,25 @@ bool affect_item(PlayerType *player_ptr, MONSTER_IDX who, POSITION r, POSITION y
                 mode |= PM_FORCE_PET;
 
             for (int i = 0; i < o_ptr->number; i++) {
-                if (((o_ptr->sval == SV_CORPSE) && (randint1(100) > 80)) || ((o_ptr->sval == SV_SKELETON) && (randint1(100) > 60))) {
+                if ((o_ptr->is_corpse() && (randint1(100) > 80)) || (o_ptr->is_skeleton() && (randint1(100) > 60))) {
                     if (!note_kill) {
-                        note_kill = _("灰になった。", (plural ? " become dust." : " becomes dust."));
+                        if (r_info[o_ptr->pval].race_kind_flags.has_any_of({ MonraceKindType::KAN_SEN, MonraceKindType::MINERAL }))
+                            note_kill = _("砕け散った。", (plural ? " is shattered." : " are shattered."));
+                        else
+                            note_kill = _("灰になった。", (plural ? " become dust." : " becomes dust."));
                     }
 
                     continue;
                 } else if (summon_named_creature(player_ptr, who, y, x, o_ptr->pval, mode)) {
-                    note_kill = _("生き返った。", " revived.");
+                    if (r_info[o_ptr->pval].race_kind_flags.has_any_of({ MonraceKindType::KAN_SEN, MonraceKindType::MINERAL }))
+                        note_kill = _("再び動き始めた。", (plural ? " become all right." : " becomes all right."));
+                    else
+                        note_kill = _("生き返った。", " revived.");
                 } else if (!note_kill) {
-                    note_kill = _("灰になった。", (plural ? " become dust." : " becomes dust."));
+                    if (r_info[o_ptr->pval].race_kind_flags.has_any_of({ MonraceKindType::KAN_SEN, MonraceKindType::MINERAL }))
+                        note_kill = _("砕け散った。", (plural ? " is shattered." : " are shattered."));
+                    else
+                        note_kill = _("灰になった。", (plural ? " become dust." : " becomes dust."));
                 }
             }
 

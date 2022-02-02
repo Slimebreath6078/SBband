@@ -38,6 +38,7 @@
 #include "object/object-kind-hook.h"
 #include "pet/pet-fall-off.h"
 #include "player/patron.h"
+#include "sv-definition/sv-corpse-types.h"
 #include "sv-definition/sv-other-types.h"
 #include "sv-definition/sv-scroll-types.h"
 #include "system/artifact-type-definition.h"
@@ -136,7 +137,13 @@ static void drop_corpse(PlayerType *player_ptr, monster_death_type *md_ptr)
 
     object_type forge;
     object_type *q_ptr = &forge;
-    q_ptr->prep(lookup_kind(ItemKindType::CORPSE, (corpse ? SV_CORPSE : SV_SKELETON)));
+    auto sv_corpse = CorpseSubType::CORPSE;
+    auto sv_skeleton = CorpseSubType::SKELETON;
+    if (md_ptr->r_ptr->race_kind_flags.has_any_of({ MonraceKindType::KAN_SEN, MonraceKindType::MINERAL })) {
+        sv_corpse = CorpseSubType::BROKEN_DOWN;
+        sv_skeleton = CorpseSubType::FRAGMENT;
+    }
+    q_ptr->prep(lookup_kind(ItemKindType::CORPSE, enum2i(corpse ? sv_corpse : sv_skeleton)));
     apply_magic_to_object(player_ptr, q_ptr, floor_ptr->object_level, AM_NO_FIXED_ART);
     q_ptr->pval = md_ptr->m_ptr->r_idx;
     (void)drop_near(player_ptr, q_ptr, -1, md_ptr->md_y, md_ptr->md_x);

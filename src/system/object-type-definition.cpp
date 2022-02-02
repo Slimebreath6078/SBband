@@ -18,6 +18,7 @@
 #include "object/object-flags.h"
 #include "object/object-kind.h"
 #include "sv-definition/sv-armor-types.h"
+#include "sv-definition/sv-corpse-types.h"
 #include "sv-definition/sv-lite-types.h"
 #include "sv-definition/sv-other-types.h"
 #include "sv-definition/sv-protector-types.h"
@@ -291,7 +292,7 @@ bool object_type::is_ammo() const
 bool object_type::is_convertible() const
 {
     auto is_convertible = ((this->tval == ItemKindType::JUNK) || (this->tval == ItemKindType::SKELETON));
-    is_convertible |= ((this->tval == ItemKindType::CORPSE) && (this->sval == SV_SKELETON));
+    is_convertible |= ((this->tval == ItemKindType::CORPSE) && (this->sval == enum2i(CorpseSubType::SKELETON)));
     return is_convertible;
 }
 
@@ -506,7 +507,7 @@ bool object_type::is_rechargeable() const
  */
 bool object_type::is_offerable() const
 {
-    if ((this->tval != ItemKindType::CORPSE) || (this->sval != SV_CORPSE)) {
+    if ((this->tval != ItemKindType::CORPSE) || (this->sval != enum2i(CorpseSubType::CORPSE))) {
         return false;
     }
 
@@ -525,4 +526,47 @@ bool object_type::is_activatable() const
 
     auto flags = object_flags(this);
     return flags.has(TR_ACTIVATE);
+}
+
+bool object_type::is_corpse() const
+{
+    if (tval != ItemKindType::CORPSE)
+        return false;
+    switch (sval) {
+    case enum2i(CorpseSubType::CORPSE):
+    case enum2i(CorpseSubType::BROKEN_DOWN):
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool object_type::is_skeleton() const
+{
+    if (tval != ItemKindType::CORPSE)
+        return false;
+    switch (sval) {
+    case enum2i(CorpseSubType::SKELETON):
+    case enum2i(CorpseSubType::FRAGMENT):
+        return true;
+    default:
+        return false;
+    }
+}
+
+/*!
+ * @brief 武器匠の「残骸」対象になるかを判定する。/ Hook to specify "body"
+ * @return 対象になるならtrueを返す。
+ */
+bool object_type::is_fragment_or_broken() const
+{
+    if (this->tval == ItemKindType::CORPSE)
+        return sval == enum2i(CorpseSubType::BROKEN_DOWN) || sval == enum2i(CorpseSubType::FRAGMENT);
+
+    return false;
+}
+
+bool object_type::is_material() const
+{
+    return this->is_fragment_or_broken() || this->is_orthodox_melee_weapons();
 }
