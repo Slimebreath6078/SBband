@@ -1,144 +1,165 @@
 ﻿#include "market/Fix/flag-checker.h"
 #include "util/bit-flags-calculator.h"
+#include <numeric>
 
-template std::shared_ptr<monster_flag_checker<MonsterResistanceType>> make_general_flag_checker(MonsterResistanceType flag);
-template std::shared_ptr<monster_flag_checker<MonsterAbilityType>> make_general_flag_checker(MonsterAbilityType flag);
-template std::shared_ptr<monster_flag_checker<MonraceKindType>> make_general_flag_checker(MonraceKindType flag);
-template std::shared_ptr<monster_flag_checker<MonsterAuraType>> make_general_flag_checker(MonsterAuraType flag);
-template std::shared_ptr<monster_flag_checker<MonsterAbilityType>> make_general_flag_checker(std::vector<MonsterAbilityType> flag);
+const flgchk_std::stream flgchk_std::null_stream = flgchk_std::stream();
+const flgchk_std::stream_end flgchk_std::end = flgchk_std::stream_end();
 
-template <typename T>
-std::shared_ptr<monster_flag_checker<T>> make_general_flag_checker(T flag)
+void flgchk_std::stream::check_symbol(const char &symbol)
 {
-    return std::make_shared<monster_flag_checker<T>>(flag);
-}
-
-template <typename T>
-std::shared_ptr<monster_flag_checker<T>> make_general_flag_checker(std::vector<T> flag)
-{
-    return std::make_shared<monster_flag_checker<T>>(flag);
-}
-
-std::unique_ptr<monster_flag_checker<BIT_FLAGS>> make_general_flag_checker(BIT_FLAGS flag, int num)
-{
-    return std::make_unique<monster_flag_checker<BIT_FLAGS>>(flag, num);
-}
-
-template <typename T>
-monster_flag_checker<T>::monster_flag_checker(T flag)
-    : flag({ flag })
-    , num(0)
-{
-}
-
-template <typename T>
-monster_flag_checker<T>::monster_flag_checker(T flag, int num)
-    : flag({ flag })
-    , num(num)
-{
-}
-
-template <typename T>
-monster_flag_checker<T>::monster_flag_checker(std::vector<T> flag)
-    : flag(flag)
-    , num(0)
-{
-}
-
-template <typename T>
-bool monster_flag_checker<T>::flag_check(monster_race * /* Unused */)
-{
-    return false;
-}
-
-template <>
-bool monster_flag_checker<MonsterResistanceType>::flag_check(monster_race *r_ptr)
-{
-    return r_ptr->resistance_flags.has_any_of(this->flag.begin(), this->flag.end());
-}
-
-template <>
-bool monster_flag_checker<MonsterAuraType>::flag_check(monster_race *r_ptr)
-{
-    return r_ptr->aura_flags.has_any_of(this->flag.begin(), this->flag.end());
-}
-
-template <>
-bool monster_flag_checker<MonsterAbilityType>::flag_check(monster_race *r_ptr)
-{
-    return r_ptr->ability_flags.has_any_of(this->flag.begin(), this->flag.end());
-}
-
-template <>
-bool monster_flag_checker<MonraceKindType>::flag_check(monster_race *r_ptr)
-{
-    return r_ptr->race_kind_flags.has_any_of(this->flag.begin(), this->flag.end());
-}
-
-template <>
-bool monster_flag_checker<MonraceDropType>::flag_check(monster_race *r_ptr)
-{
-    return r_ptr->drop_flags.has_any_of(this->flag.begin(), this->flag.end());
-}
-
-template <>
-bool monster_flag_checker<BIT_FLAGS>::flag_check(monster_race *r_ptr)
-{
-    BIT_FLAGS *flag_ptr;
-
-    switch (this->num) {
-    case 1:
-        flag_ptr = &r_ptr->flags1;
+    switch (symbol) {
+    case '(':
+        this->priority++;
         break;
-    case 2:
-        flag_ptr = &r_ptr->flags2;
+    case ')':
+        this->priority--;
         break;
-    case 3:
-        flag_ptr = &r_ptr->flags3;
+    case '&':
+        add_op(token_kind::AND, this->checker);
         break;
-    case 7:
-        flag_ptr = &r_ptr->flags7;
+    case '|':
+        add_op(token_kind::OR, this->checker);
         break;
-    case 8:
-        flag_ptr = &r_ptr->flags8;
+    case '^':
+        add_op(token_kind::XOR, this->checker);
         break;
-    case 9:
-        flag_ptr = &r_ptr->flags9;
+    case '~':
+        add_op(token_kind::NOT, this->checker);
         break;
     default:
-        return false;
+        throw std::runtime_error("Unknown symbol in flag_checker.");
     }
 
-    for (auto f : this->flag) {
-        if (any_bits(*flag_ptr, f))
-            return true;
+    if (this->priority < 0)
+        throw std::runtime_error("Priority is minus in flag_checker.");
+}
+
+bool flgchk_std::chk_func::proc(monster_race *r_ptr)
+{
+    return method(r_ptr);
+}
+
+bool flgchk_std::bit_flags::proc(monster_race *r_ptr)
+{
+    BIT_FLAGS *r_flag;
+    switch (num) {
+    case 1:
+        r_flag = &r_ptr->flags1;
+        break;
+    case 2:
+        r_flag = &r_ptr->flags2;
+        break;
+    case 3:
+        r_flag = &r_ptr->flags3;
+        break;
+    case 7:
+        r_flag = &r_ptr->flags7;
+        break;
+    case 8:
+        r_flag = &r_ptr->flags8;
+        break;
+    case 9:
+        r_flag = &r_ptr->flags9;
+        break;
+    default:
+        throw std::runtime_error("Invalid number of r_flags.");
+    };
+
+    return any_bits(*r_flag, flag);
+}
+
+void flgchk_std::op_abstrct::sort()
+{
+    const auto func = [kind = this->kind](std::shared_ptr<token_abstrct> checker, auto pop, auto push) {
+        checker->sort();
+        if (checker->kind == kind) {
+            const auto lis = checker->get_list();
+
+            pop();
+            for (const auto &l : lis) {
+                push(l);
+            }
+        }
+    };
+
+    func(
+        checker.front(), [&checker = this->checker]() { checker.pop_front(); }, [&checker = this->checker](std::shared_ptr<token_abstrct> ptr) { checker.push_front(ptr); });
+    func(
+        checker.back(), [&checker = this->checker]() { checker.pop_back(); }, [&checker = this->checker](std::shared_ptr<token_abstrct> ptr) { checker.push_back(ptr); });
+}
+
+bool flgchk_std::op_abstrct::proc(monster_race *r_ptr)
+{
+    return std::transform_reduce(
+        this->checker.begin(), this->checker.end(), this->first_result, [calc_func = this->calc_func](bool first, bool second) { return calc_func(first, second); }, [r_ptr](auto &c) { return c->proc(r_ptr); });
+}
+
+bool flgchk_std::op_not::proc(monster_race *r_ptr)
+{
+    return !checker->proc(r_ptr);
+}
+
+bool flgchk_std::op_count::proc(monster_race *r_ptr)
+{
+    auto result = std::transform_reduce(
+        this->checker.begin(), this->checker.end(), 0, [](int first, int second) { return first + second; }, [r_ptr](auto &c) { 
+            if(c->proc(r_ptr)){
+                return 1;
+                } else {
+                    return 0;
+                    } });
+
+    return this->compare(this->count, result);
+}
+
+void flgchk_std::stream::add_op(token_kind kind, std::shared_ptr<token_abstrct> &ptr)
+{
+    if (!ptr)
+        throw std::runtime_error("The flag operator has no right.");
+
+    if (this->priority * enum2i(token_kind::MAX) + enum2i(kind) < ptr->priority * enum2i(token_kind::MAX) + enum2i(ptr->kind)) {
+        std::shared_ptr<token_abstrct> token = make_op_token(kind);
+
+        assert(token);
+
+        token->push(std::move(ptr));
+        ptr = std::move(token);
+    } else {
+        add_op(kind, ptr->right());
     }
-    return false;
 }
 
-monster_many_flag_checker::monster_many_flag_checker(std::vector<std::shared_ptr<monster_flag_checker_abstrct>> flag)
+void flgchk_std::stream::push_checker_token(std::shared_ptr<token_abstrct> checker)
 {
-    for (auto &f : flag) {
-        this->flag.push_back(std::move(f));
+    auto *ptr = &this->checker;
+
+    if (!(*ptr)) {
+        this->checker = checker;
+        return;
     }
+
+    while (true) {
+        if (!(*ptr)->right())
+            break;
+        ptr = &(*ptr)->right();
+    }
+    (*ptr)->push(checker);
 }
 
-bool monster_many_flag_checker::flag_check(monster_race *r_ptr)
+std::shared_ptr<flgchk_std::token_abstrct> flgchk_std::stream::make_op_token(token_kind kind)
 {
-    for (auto &f : this->flag)
-        if (!f->flag_check(r_ptr))
-            return false;
-    return true;
-}
-
-monster_flag_checker_with_func::monster_flag_checker_with_func(std::function<bool(monster_race *)> func)
-    : func(func)
-{
-}
-
-bool monster_flag_checker_with_func::flag_check(monster_race *r_ptr)
-{
-    return func(r_ptr);
+    switch (kind) {
+    case token_kind::AND:
+        return std::make_unique<op_and>(this->priority);
+    case token_kind::OR:
+        return std::make_unique<op_or>(this->priority);
+    case token_kind::XOR:
+        return std::make_unique<op_xor>(this->priority);
+    case token_kind::NOT:
+        return std::make_unique<op_not>(this->priority);
+    default:
+        return nullptr;
+    }
 }
 
 bool can_cast_spell(monster_race *r_ptr)

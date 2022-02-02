@@ -45,36 +45,31 @@ static const std::vector<MonsterAbilityType> poison_ability_mask = {
     MonsterAbilityType::BR_POIS,
 };
 
-static const std::vector<MonsterAbilityType> summon_dragon_mask = {
-    MonsterAbilityType::S_DRAGON,
-    MonsterAbilityType::S_HI_DRAGON,
+static const sb_std::unordered_map<tr_type, flgchk_std::stream> flag_pow_up = {
+    { TR_SLAY_EVIL, flgchk_std::stream() << MonraceKindType::GOOD },
+    { TR_SLAY_GOOD, flgchk_std::stream() << MonraceKindType::EVIL },
+    { TR_SLAY_UNDEAD, flgchk_std::stream() << flgchk_std::make_multi(flgchk_std::token_kind::OR, lite_ability_mask) << flgchk_std::end },
+    { TR_SLAY_HUMAN, flgchk_std::stream() << MonraceKindType::KAN_SEN },
+    { TR_SLAY_DRAGON, flgchk_std::stream() << MonraceKindType::DRAGON << '|' << MonsterAbilityType::S_DRAGON << '|' << MonsterAbilityType::S_HI_DRAGON << flgchk_std::end },
+    { TR_KILL_EVIL, flgchk_std::stream() << MonraceKindType::GOOD },
+    { TR_KILL_GOOD, flgchk_std::stream() << MonraceKindType::EVIL },
+    { TR_KILL_UNDEAD, flgchk_std::stream() << flgchk_std::make_multi(flgchk_std::token_kind::OR, lite_ability_mask) << flgchk_std::end },
+    { TR_KILL_HUMAN, flgchk_std::stream() << MonraceKindType::KAN_SEN },
+    { TR_KILL_DRAGON, flgchk_std::stream() << MonraceKindType::DRAGON << '|' << MonsterAbilityType::S_DRAGON << '|' << MonsterAbilityType::S_HI_DRAGON << flgchk_std::end },
+    { TR_BRAND_FIRE, flgchk_std::stream() << flgchk_std::make_multi(flgchk_std::token_kind::OR, fire_ability_mask) << flgchk_std::end },
+    { TR_BRAND_COLD, flgchk_std::stream() << flgchk_std::make_multi(flgchk_std::token_kind::OR, cold_ability_mask) << flgchk_std::end },
+    { TR_BRAND_ELEC, flgchk_std::stream() << flgchk_std::make_multi(flgchk_std::token_kind::OR, acid_ability_mask) << flgchk_std::end },
+    { TR_BRAND_ACID, flgchk_std::stream() << flgchk_std::make_multi(flgchk_std::token_kind::OR, elec_ability_mask) << flgchk_std::end },
+    { TR_BRAND_POIS, flgchk_std::stream() << flgchk_std::make_multi(flgchk_std::token_kind::OR, poison_ability_mask) << flgchk_std::end },
+    { TR_FORCE_WEAPON, flgchk_std::stream() << MonsterAbilityType::PSY_SPEAR },
+    { TR_BRAND_MAGIC, flgchk_std::stream() << can_cast_spell }
 };
 
-static const sb_std::unordered_map<tr_type, std::shared_ptr<monster_flag_checker_abstrct>> flag_pow_up = {
-    { TR_SLAY_EVIL, make_general_flag_checker(MonraceKindType::GOOD) },
-    { TR_SLAY_GOOD, make_general_flag_checker(MonraceKindType::EVIL) },
-    { TR_SLAY_UNDEAD, make_general_flag_checker(lite_ability_mask) },
-    { TR_SLAY_HUMAN, make_general_flag_checker(MonraceKindType::KAN_SEN) },
-    { TR_SLAY_DRAGON, std::make_shared<monster_many_flag_checker>(std::vector<std::shared_ptr<monster_flag_checker_abstrct>>{ make_general_flag_checker(MonraceKindType::DRAGON), make_general_flag_checker(summon_dragon_mask) }) },
-    { TR_KILL_EVIL, make_general_flag_checker(MonraceKindType::GOOD) },
-    { TR_KILL_GOOD, make_general_flag_checker(MonraceKindType::EVIL) },
-    { TR_KILL_UNDEAD, make_general_flag_checker(lite_ability_mask) },
-    { TR_KILL_HUMAN, make_general_flag_checker(MonraceKindType::KAN_SEN) },
-    { TR_KILL_DRAGON, std::make_shared<monster_many_flag_checker>(std::vector<std::shared_ptr<monster_flag_checker_abstrct>>{ make_general_flag_checker(MonraceKindType::DRAGON), make_general_flag_checker(summon_dragon_mask) }) },
-    { TR_BRAND_FIRE, make_general_flag_checker(fire_ability_mask) },
-    { TR_BRAND_COLD, make_general_flag_checker(cold_ability_mask) },
-    { TR_BRAND_ELEC, make_general_flag_checker(acid_ability_mask) },
-    { TR_BRAND_ACID, make_general_flag_checker(elec_ability_mask) },
-    { TR_BRAND_POIS, make_general_flag_checker(poison_ability_mask) },
-    { TR_FORCE_WEAPON, make_general_flag_checker(MonsterAbilityType::PSY_SPEAR) },
-    { TR_BRAND_MAGIC, std::make_shared<monster_flag_checker_with_func>(can_cast_spell) }
-};
-
-static const sb_std::unordered_map<tr_type, std::shared_ptr<monster_flag_checker_abstrct>> flag_pow_down = {
-    { TR_SLAY_EVIL, make_general_flag_checker(MonraceKindType::EVIL) },
-    { TR_SLAY_GOOD, make_general_flag_checker(MonraceKindType::GOOD) },
-    { TR_KILL_EVIL, make_general_flag_checker(MonraceKindType::EVIL) },
-    { TR_KILL_GOOD, make_general_flag_checker(MonraceKindType::GOOD) },
+static const sb_std::unordered_map<tr_type, flgchk_std::stream> flag_pow_down = {
+    { TR_SLAY_EVIL, flgchk_std::stream() << MonraceKindType::EVIL },
+    { TR_SLAY_GOOD, flgchk_std::stream() << MonraceKindType::GOOD },
+    { TR_KILL_EVIL, flgchk_std::stream() << MonraceKindType::EVIL },
+    { TR_KILL_GOOD, flgchk_std::stream() << MonraceKindType::GOOD },
 };
 
 template <typename T, typename M>
@@ -194,7 +189,13 @@ bool pow_check_magic_mastery(monster_race *r_ptr)
     return (randint0(pow) > 25);
 }
 
-/* アイテムフラグでpowの初期値を決めて、一定条件でそれ2倍または半分にした後ダイス判定をする汎用的な関数 */
+/**
+ * @brief アイテムフラグでpowの初期値を決めて、一定条件でそれ2倍または半分にした後ダイス判定をする汎用的な関数
+ *
+ * @param r_ptr モンスター種族データへのポインタ
+ * @param typ 付加する装備フラグ
+ * @return ダイス判定に成功した場合 true を返す
+ */
 bool pow_check_common(monster_race *r_ptr, tr_type typ)
 {
     int pow;
@@ -238,9 +239,9 @@ bool pow_check_common(monster_race *r_ptr, tr_type typ)
         break;
     }
 
-    if (flag_pow_up.contains(typ) && flag_pow_up.at(typ)) {
+    if (flag_pow_up.contains(typ) && flag_pow_up.at(typ).proc(r_ptr)) {
         pow *= 2;
-    } else if (flag_pow_down.contains(typ) && flag_pow_down.at(typ)) {
+    } else if (flag_pow_down.contains(typ) && flag_pow_down.at(typ).proc(r_ptr)) {
         pow /= 2;
     }
 

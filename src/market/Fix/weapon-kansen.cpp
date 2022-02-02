@@ -98,83 +98,83 @@ static const sb_std::unordered_map<tr_type, std::vector<tr_type>> duplicate_list
 };
 
 static const std::vector<std::shared_ptr<add_hook_abstrct>> resistance_table = {
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter_one_in>(6, TR_RES_FIRE, TR_IM_FIRE), make_general_flag_checker(MonsterResistanceType::IMMUNE_FIRE), no_powcheck),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter_one_in>(6, TR_RES_COLD, TR_IM_COLD), make_general_flag_checker(MonsterResistanceType::IMMUNE_COLD), no_powcheck),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter_one_in>(6, TR_RES_ELEC, TR_IM_ELEC), make_general_flag_checker(MonsterResistanceType::IMMUNE_ELEC), no_powcheck),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter_one_in>(6, TR_RES_ACID, TR_IM_ACID), make_general_flag_checker(MonsterResistanceType::IMMUNE_ACID), no_powcheck),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_RES_POIS), make_general_flag_checker(MonsterResistanceType::IMMUNE_POISON), no_powcheck),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_RES_CHAOS), make_general_flag_checker(MonsterResistanceType::RESIST_CHAOS), no_powcheck),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_RES_DARK), make_general_flag_checker(MonsterResistanceType::RESIST_DARK), no_powcheck),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_RES_LITE), make_general_flag_checker(MonsterResistanceType::RESIST_LITE), no_powcheck),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_RES_SHARDS), make_general_flag_checker(MonsterResistanceType::RESIST_SHARDS), no_powcheck),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_RES_WATER), make_general_flag_checker(MonsterResistanceType::RESIST_WATER), no_powcheck),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_RES_TIME), make_general_flag_checker(MonsterResistanceType::RESIST_TIME), no_powcheck),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_RES_NETHER), make_general_flag_checker(MonsterResistanceType::RESIST_NETHER), no_powcheck),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_RES_NEXUS), make_general_flag_checker(MonsterResistanceType::RESIST_NEXUS), no_powcheck),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_RES_SOUND), make_general_flag_checker(MonsterResistanceType::RESIST_SOUND), no_powcheck),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_RES_DISEN), make_general_flag_checker(MonsterResistanceType::RESIST_DISENCHANT), no_powcheck),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_RES_FEAR), make_general_flag_checker(static_cast<BIT_FLAGS>(RF3_NO_FEAR), 3), no_powcheck),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_RES_CONF), make_general_flag_checker(static_cast<BIT_FLAGS>(RF3_NO_CONF), 3), no_powcheck),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_RES_BLIND), make_general_flag_checker(static_cast<BIT_FLAGS>(RF3_NO_SLEEP), 3), no_powcheck),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_RES_SOUND), make_general_flag_checker(static_cast<BIT_FLAGS>(RF3_NO_STUN), 3), no_powcheck),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_random_getter>(all_resistance), make_general_flag_checker(MonsterResistanceType::RESIST_ALL), no_powcheck)
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter_one_in>(6, TR_RES_FIRE, TR_IM_FIRE), flgchk_std::stream() << MonsterResistanceType::IMMUNE_FIRE, no_powcheck),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter_one_in>(6, TR_RES_COLD, TR_IM_COLD), flgchk_std::stream() << MonsterResistanceType::IMMUNE_COLD, no_powcheck),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter_one_in>(6, TR_RES_ELEC, TR_IM_ELEC), flgchk_std::stream() << MonsterResistanceType::IMMUNE_ELEC, no_powcheck),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter_one_in>(6, TR_RES_ACID, TR_IM_ACID), flgchk_std::stream() << MonsterResistanceType::IMMUNE_ACID, no_powcheck),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_RES_POIS), flgchk_std::stream() << MonsterResistanceType::IMMUNE_POISON, no_powcheck),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_RES_CHAOS), flgchk_std::stream() << MonsterResistanceType::RESIST_CHAOS, no_powcheck),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_RES_DARK), flgchk_std::stream() << MonsterResistanceType::RESIST_DARK, no_powcheck),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_RES_LITE), flgchk_std::stream() << MonsterResistanceType::RESIST_LITE, no_powcheck),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_RES_SHARDS), flgchk_std::stream() << MonsterResistanceType::RESIST_SHARDS, no_powcheck),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_RES_WATER), flgchk_std::stream() << MonsterResistanceType::RESIST_WATER, no_powcheck),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_RES_TIME), flgchk_std::stream() << MonsterResistanceType::RESIST_TIME, no_powcheck),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_RES_NETHER), flgchk_std::stream() << MonsterResistanceType::RESIST_NETHER, no_powcheck),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_RES_NEXUS), flgchk_std::stream() << MonsterResistanceType::RESIST_NEXUS, no_powcheck),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_RES_SOUND), flgchk_std::stream() << MonsterResistanceType::RESIST_SOUND, no_powcheck),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_RES_DISEN), flgchk_std::stream() << MonsterResistanceType::RESIST_DISENCHANT, no_powcheck),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_RES_FEAR), flgchk_std::stream() << flgchk_std::bit_stream(static_cast<BIT_FLAGS>(RF3_NO_FEAR), 3), no_powcheck),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_RES_CONF), flgchk_std::stream() << flgchk_std::bit_stream(static_cast<BIT_FLAGS>(RF3_NO_CONF), 3), no_powcheck),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_RES_BLIND), flgchk_std::stream() << flgchk_std::bit_stream(static_cast<BIT_FLAGS>(RF3_NO_SLEEP), 3), no_powcheck),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_RES_SOUND), flgchk_std::stream() << flgchk_std::bit_stream(static_cast<BIT_FLAGS>(RF3_NO_STUN), 3), no_powcheck),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_random_getter>(all_resistance), flgchk_std::stream() << MonsterResistanceType::RESIST_ALL, no_powcheck)
 };
 
 static const std::vector<std::shared_ptr<add_hook_abstrct>> slay_table = {
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_SLAY_EVIL), nullptr, pow_check_common),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_SLAY_GOOD), nullptr, pow_check_common),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_SLAY_GIANT), nullptr, pow_check_common),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_SLAY_ORC), nullptr, pow_check_common),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_SLAY_TROLL), nullptr, pow_check_common),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_SLAY_UNDEAD), nullptr, pow_check_common),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_SLAY_HUMAN), nullptr, pow_check_common),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_SLAY_DRAGON), nullptr, pow_check_common),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_SLAY_DEMON), nullptr, pow_check_common),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_SLAY_ANIMAL), nullptr, pow_check_common),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_KILL_EVIL), nullptr, pow_check_common),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_KILL_GOOD), nullptr, pow_check_common),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_KILL_GIANT), nullptr, pow_check_common),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_KILL_ORC), nullptr, pow_check_common),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_KILL_TROLL), nullptr, pow_check_common),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_KILL_UNDEAD), nullptr, pow_check_common),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_KILL_HUMAN), nullptr, pow_check_common),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_KILL_DRAGON), nullptr, pow_check_common),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_KILL_DEMON), nullptr, pow_check_common),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_KILL_ANIMAL), nullptr, pow_check_common),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_BRAND_FIRE), nullptr, pow_check_common),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_BRAND_COLD), nullptr, pow_check_common),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_BRAND_ELEC), nullptr, pow_check_common),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_BRAND_ACID), nullptr, pow_check_common),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_BRAND_POIS), nullptr, pow_check_common),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_FORCE_WEAPON), nullptr, pow_check_common),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_VORPAL), nullptr, pow_check_common),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_IMPACT), nullptr, pow_check_common),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_BRAND_MAGIC), nullptr, pow_check_common)
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_SLAY_EVIL), flgchk_std::null_stream, pow_check_common),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_SLAY_GOOD), flgchk_std::null_stream, pow_check_common),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_SLAY_GIANT), flgchk_std::null_stream, pow_check_common),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_SLAY_ORC), flgchk_std::null_stream, pow_check_common),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_SLAY_TROLL), flgchk_std::null_stream, pow_check_common),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_SLAY_UNDEAD), flgchk_std::null_stream, pow_check_common),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_SLAY_HUMAN), flgchk_std::null_stream, pow_check_common),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_SLAY_DRAGON), flgchk_std::null_stream, pow_check_common),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_SLAY_DEMON), flgchk_std::null_stream, pow_check_common),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_SLAY_ANIMAL), flgchk_std::null_stream, pow_check_common),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_KILL_EVIL), flgchk_std::null_stream, pow_check_common),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_KILL_GOOD), flgchk_std::null_stream, pow_check_common),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_KILL_GIANT), flgchk_std::null_stream, pow_check_common),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_KILL_ORC), flgchk_std::null_stream, pow_check_common),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_KILL_TROLL), flgchk_std::null_stream, pow_check_common),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_KILL_UNDEAD), flgchk_std::null_stream, pow_check_common),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_KILL_HUMAN), flgchk_std::null_stream, pow_check_common),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_KILL_DRAGON), flgchk_std::null_stream, pow_check_common),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_KILL_DEMON), flgchk_std::null_stream, pow_check_common),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_KILL_ANIMAL), flgchk_std::null_stream, pow_check_common),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_BRAND_FIRE), flgchk_std::null_stream, pow_check_common),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_BRAND_COLD), flgchk_std::null_stream, pow_check_common),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_BRAND_ELEC), flgchk_std::null_stream, pow_check_common),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_BRAND_ACID), flgchk_std::null_stream, pow_check_common),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_BRAND_POIS), flgchk_std::null_stream, pow_check_common),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_FORCE_WEAPON), flgchk_std::null_stream, pow_check_common),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_VORPAL), flgchk_std::null_stream, pow_check_common),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_IMPACT), flgchk_std::null_stream, pow_check_common),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_BRAND_MAGIC), flgchk_std::null_stream, pow_check_common)
 };
 
 static const std::vector<std::shared_ptr<add_hook_abstrct>> pval_table = {
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_STR), nullptr, pow_check_str),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_INT), nullptr, pow_check_int),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_DEX), nullptr, pow_check_dex),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_WIS), nullptr, pow_check_wis),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_CON), nullptr, pow_check_con),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_CHR), nullptr, pow_check_chr),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_SPEED), std::make_shared<monster_flag_checker_with_func>(has_speed), pow_check_speed),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_STEALTH), nullptr, pow_check_stealth),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_SEARCH), std::make_shared<monster_flag_checker_with_func>(can_search), pow_check_search),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_TUNNEL), nullptr, pow_check_tunnel),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_STR), flgchk_std::null_stream, pow_check_str),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_INT), flgchk_std::null_stream, pow_check_int),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_DEX), flgchk_std::null_stream, pow_check_dex),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_WIS), flgchk_std::null_stream, pow_check_wis),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_CON), flgchk_std::null_stream, pow_check_con),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_CHR), flgchk_std::null_stream, pow_check_chr),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_SPEED), flgchk_std::stream() << has_speed, pow_check_speed),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_STEALTH), flgchk_std::null_stream, pow_check_stealth),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_SEARCH), flgchk_std::stream() << can_search, pow_check_search),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_TUNNEL), flgchk_std::null_stream, pow_check_tunnel),
     std::make_shared<add_simple_hook>(std::make_unique<tr_flag_getter>(TR_INFRA)),
     std::make_shared<add_other_hook>(std::make_unique<tr_flag_getter>(TR_BLOWS)),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_MAGIC_MASTERY), nullptr, pow_check_magic_mastery)
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_MAGIC_MASTERY), flgchk_std::null_stream, pow_check_magic_mastery)
 };
 
 static const std::vector<std::shared_ptr<add_hook_abstrct>> other_table = {
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_FREE_ACT), make_general_flag_checker(static_cast<BIT_FLAGS>(RF3_NO_SLEEP), 3), no_powcheck),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_SH_FIRE), make_general_flag_checker(MonsterAuraType::FIRE), no_powcheck),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_SH_COLD), make_general_flag_checker(MonsterAuraType::COLD), no_powcheck),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_SH_ELEC), make_general_flag_checker(MonsterAuraType::ELEC), no_powcheck),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_HOLD_EXP), make_general_flag_checker(MonraceKindType::NONLIVING), no_powcheck),
-    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_REFLECT), make_general_flag_checker(static_cast<BIT_FLAGS>(RF2_REFLECTING), 2), no_powcheck),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_FREE_ACT), flgchk_std::stream() << flgchk_std::bit_stream(static_cast<BIT_FLAGS>(RF3_NO_SLEEP), 3), no_powcheck),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_SH_FIRE), flgchk_std::stream() << MonsterAuraType::FIRE, no_powcheck),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_SH_COLD), flgchk_std::stream() << MonsterAuraType::COLD, no_powcheck),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_SH_ELEC), flgchk_std::stream() << MonsterAuraType::ELEC, no_powcheck),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_HOLD_EXP), flgchk_std::stream() << MonraceKindType::NONLIVING, no_powcheck),
+    std::make_shared<add_check_hook>(std::make_unique<tr_flag_getter>(TR_REFLECT), flgchk_std::stream() << flgchk_std::bit_stream(static_cast<BIT_FLAGS>(RF2_REFLECTING), 2), no_powcheck),
     std::make_shared<add_simple_hook>(std::make_unique<tr_flag_getter>(TR_SUST_STR)),
     std::make_shared<add_simple_hook>(std::make_unique<tr_flag_getter>(TR_SUST_INT)),
     std::make_shared<add_simple_hook>(std::make_unique<tr_flag_getter>(TR_SUST_DEX)),
@@ -268,14 +268,14 @@ weapon_fix_result_type add_simple_hook::proc(object_type *o_ptr, monster_race * 
     return set_flag(o_ptr, tr_flag.get());
 }
 
-add_check_hook::add_check_hook(std::unique_ptr<tr_flag_getter_abstrct> tr_flag, std::shared_ptr<monster_flag_checker_abstrct> flag, std::function<bool(monster_race *)> pow_check)
+add_check_hook::add_check_hook(std::unique_ptr<tr_flag_getter_abstrct> tr_flag, flgchk_std::stream flag, std::function<bool(monster_race *)> pow_check)
     : tr_flag(std::move(tr_flag))
     , flag(flag)
     , pow_check([func = std::move(pow_check)](monster_race *r_ptr, tr_type) { return func(r_ptr); })
 {
 }
 
-add_check_hook::add_check_hook(std::unique_ptr<tr_flag_getter_abstrct> tr_flag, std::shared_ptr<monster_flag_checker_abstrct> flag, std::function<bool(monster_race *, tr_type)> pow_check)
+add_check_hook::add_check_hook(std::unique_ptr<tr_flag_getter_abstrct> tr_flag, flgchk_std::stream flag, std::function<bool(monster_race *, tr_type)> pow_check)
     : tr_flag(std::move(tr_flag))
     , flag(flag)
     , pow_check(std::move(pow_check))
@@ -287,7 +287,7 @@ weapon_fix_result_type add_check_hook::proc(object_type *o_ptr, monster_race *r_
     auto typ = tr_flag->get_flag();
     std::unique_ptr<tr_flag_getter_abstrct> getter = std::make_unique<tr_flag_getter>(typ);
 
-    if (flag && !flag->flag_check(r_ptr))
+    if (!flag.proc(r_ptr))
         return weapon_fix_result_type::NOT_MATCH;
 
     if (!pow_check(r_ptr, typ))

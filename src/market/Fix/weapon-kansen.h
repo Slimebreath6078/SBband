@@ -16,7 +16,6 @@ enum class weapon_fix_result_type {
     DUPLICATE = 2,
     FAILED = 3,
 };
-
 class tr_flag_getter_abstrct {
 public:
     tr_flag_getter_abstrct(bool single);
@@ -40,7 +39,10 @@ private:
     tr_type flag;
 };
 
-/* 装備のフラグを複数の候補からランダムに取り出す関数的クラス */
+/**
+ * @brief フラグを複数の候補からランダムに取り出すゲッタークラス
+ *
+ */
 class tr_flag_random_getter : public tr_flag_getter_abstrct {
 public:
     tr_flag_random_getter(std::initializer_list<tr_type> flag);
@@ -54,7 +56,10 @@ private:
     std::vector<tr_type> flag;
 };
 
-/* 装備のフラグを複数の候補からランダムに取り出す関数的クラス */
+/**
+ * @brief フラグをレア枠(1/n)とそれ以外に分けるクラス
+ *
+ */
 class tr_flag_getter_one_in : public tr_flag_getter_abstrct {
 public:
     tr_flag_getter_one_in(int range, tr_type one, tr_type other);
@@ -70,6 +75,10 @@ private:
     tr_type other;
 };
 
+/**
+ * @brief フラグ付加クラスの抽象
+ *
+ */
 class add_hook_abstrct {
 public:
     add_hook_abstrct() = default;
@@ -85,6 +94,10 @@ private:
     bool is_duplicate_flag(object_type *o_ptr, tr_type typ);
 };
 
+/**
+ * @brief フラグを無条件で1/2の確率で付加するクラス
+ *
+ */
 class add_simple_hook : public add_hook_abstrct {
 public:
     add_simple_hook(tr_type tr_flag);
@@ -99,10 +112,14 @@ private:
     std::unique_ptr<tr_flag_getter_abstrct> tr_flag;
 };
 
+/**
+ * @brief フラグを特定の条件で付加するクラス
+ *
+ */
 class add_check_hook : public add_hook_abstrct {
 public:
-    add_check_hook(std::unique_ptr<tr_flag_getter_abstrct> tr_flag, std::shared_ptr<monster_flag_checker_abstrct> flag, std::function<bool(monster_race *)> pow_check);
-    add_check_hook(std::unique_ptr<tr_flag_getter_abstrct> tr_flag, std::shared_ptr<monster_flag_checker_abstrct> flag, std::function<bool(monster_race *, tr_type)> pow_check);
+    add_check_hook(std::unique_ptr<tr_flag_getter_abstrct> tr_flag, flgchk_std::stream flag, std::function<bool(monster_race *)> pow_check);
+    add_check_hook(std::unique_ptr<tr_flag_getter_abstrct> tr_flag, flgchk_std::stream flag, std::function<bool(monster_race *, tr_type)> pow_check);
     add_check_hook() = delete;
     ~add_check_hook() = default;
     add_check_hook(const add_check_hook &) = delete;
@@ -111,10 +128,14 @@ public:
 
 private:
     std::unique_ptr<tr_flag_getter_abstrct> tr_flag;
-    std::shared_ptr<monster_flag_checker_abstrct> flag;
+    flgchk_std::stream flag;
     std::function<bool(monster_race *, tr_type)> pow_check;
 };
 
+/**
+ * @brief ハードコーディングの特殊な条件でフラグを付加するクラス
+ *
+ */
 class add_other_hook : public add_hook_abstrct {
 public:
     add_other_hook(tr_type tr_other);
