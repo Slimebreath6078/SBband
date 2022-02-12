@@ -1,0 +1,377 @@
+F:@:TREE:3
+F:~:FLOOR:3
+F:q:PERMANENT:3
+F:r:FLOOR:3
+F:s:FLOOR:3
+F:t:PERMANENT:3
+F:u:PERMANENT:3
+
+############### Quest 20 - Vapor Quest ################
+
+# Quest 20 untaken
+?:[EQU $QUEST20 0]
+F:f:BUILDING_5:3:0:0:0:0:NONE:20
+
+# Quest 20 taken, entrance is quest entrance
+?:[EQU $QUEST20 1]
+F:q:QUEST_ENTER:3:0:0:0:0:NONE:20
+F:f:BUILDING_5:3:0:0:0:0:NONE:20
+
+# Quest 20 completed
+?:[EQU $QUEST20 2]
+F:f:BUILDING_5:3:0:0:0:0:NONE:20
+
+# Quest 20 rewarding, reward is a Rod of Detection, continue with quest 24
+?:[EQU $QUEST20 3]
+F:f:BUILDING_5:3:0:0:0:0:NONE:24
+F:~:FLOOR:3:0:375
+
+# Continue with "Quest 21 - Doom Quest 2
+# "Quest 24 - The Rise and Fall of Micro$oft" and
+# "Quest 19 - Doom Quest 1" have to be finished first
+?:[AND [EQU $QUEST20 4] [GEQ $QUEST19 4] ]
+F:f:BUILDING_5:3:0:0:0:0:NONE:21
+
+# "Quest 19 - Doom Quest 1" has to be finished first
+?:[AND [EQU $QUEST20 4] [LEQ $QUEST19 3] ]
+F:f:BUILDING_5:3
+
+# Quest 20 failed
+?:[EQU $QUEST20 5]
+F:f:BUILDING_5:3:0:0:0:0:NONE:20
+
+# Continue with "Quest 21 - Doom Quest 2
+# "Quest 24 - The Rise and Fall of Micro$oft" and
+# "Quest 19 - Doom Quest 1" have to be finished first
+?:[AND [EQU $QUEST20 6] [GEQ $QUEST19 4] ]
+F:f:BUILDING_5:3:0:0:0:0:NONE:21
+
+# "Quest 19 - Doom Quest 1" has to be finished first
+?:[AND [EQU $QUEST20 6] [LEQ $QUEST19 3] ]
+F:f:BUILDING_5:3
+
+?:1
+
+############### Quest 21 - Doom Quest 2 ###############
+
+# Quest 21 assigned, entrance is quest entrance
+?:[EQU $QUEST21 1]
+F:s:QUEST_ENTER:3:0:0:0:0:NONE:21
+F:f:BUILDING_5:3:0:0:0:0:NONE:21
+
+# Quest 21 completed 
+?:[EQU $QUEST21 2]
+F:f:BUILDING_5:3:0:0:0:0:NONE:21
+
+# Quest 21 rewarding, reward is Artifact Creation, no new quest available
+# (Adjust reward as needed; I think this quest is tough enough, and
+#  Artifact Creation scrolls are flaky enough to not be an automatic
+#  huge reward.  Besides, they're cool when they turn up.)
+
+?:[EQU $QUEST21 3]
+F:f:BUILDING_5:3
+F:~:FLOOR:3:0:329
+
+# Continue with "Quest 21 - Doom Quest 2
+# "Quest 21 - Doom Quest 2" and
+# "Quest 19 - Doom Quest 1" have to be finished first
+?:[AND [EQU $QUEST21 4] [GEQ $QUEST21 4] ]
+F:f:BUILDING_5:3:0:0:0:0:NONE:24
+
+# "Quest 21 - Doom Quest 2" has to be finished first
+?:[AND [EQU $QUEST21 4] [LEQ $QUEST21 3] ]
+F:f:BUILDING_5:3
+
+# Quest 21 failed
+?:[EQU $QUEST21 5]
+F:f:BUILDING_5:3:0:0:0:0:NONE:21
+
+# Continue with "Quest 21 - Doom Quest 2
+# "Quest 21 - Doom Quest 2" and
+# "Quest 19 - Doom Quest 1" have to be finished first
+?:[AND [EQU $QUEST21 6] [GEQ $QUEST21 4] ]
+F:f:BUILDING_5:3:0:0:0:0:NONE:24
+
+# "Quest 21 - Doom Quest 2" has to be finished first
+?:[AND [EQU $QUEST21 6] [LEQ $QUEST21 3] ]
+F:f:BUILDING_5:3
+
+?:1
+
+############### Quest 24 - Doom Quest 3 ###############
+
+# Quest 24 assigned, entrance is quest entrance
+?:[EQU $QUEST24 1]
+F:s:QUEST_ENTER:3:0:0:0:0:NONE:24
+F:f:BUILDING_5:3:0:0:0:0:NONE:24
+
+# Quest 24 completed
+?:[EQU $QUEST24 2]
+F:f:BUILDING_5:3:0:0:0:0:NONE:24
+
+# Quest 24 rewarding, reward is ring of disenchantment resistance
+# (Adjust reward as needed; I think this quest is tough enough, and
+#  Artifact Creation scrolls are flaky enough to not be an automatic
+#  huge reward.  Besides, they're cool when they turn up.)
+?:[EQU $QUEST24 3]
+F:~:FLOOR:3:0:0:0:199
+
+?:[EQU $QUEST24 4]
+F:f:BUILDING:3
+
+?:[EQU $QUEST24 5]
+F:f:BUILDING_5:3:24
+
+?:[EQU $QUEST24 6]
+F:f:BUILDING_5:3
+
+?:1
+
+
+############### Quest 29 - Thieves Quest 1 ###############
+
+# Quest 29 untaken
+?:[EQU $QUEST29 0]
+F:k:BUILDING_10:3:0:0:0:0:NONE:29
+
+# Quest 29 taken, entrance is quest entrance
+?:[EQU $QUEST29 1]
+F:t:QUEST_ENTER:3:0:0:0:0:NONE:29
+F:k:BUILDING_10:3:0:0:0:0:NONE:29
+
+# Quest 29 completed
+?:[EQU $QUEST29 2]
+F:k:BUILDING_10:3:0:0:0:0:NONE:29
+
+# Quest 29 rewarding, reward is Ring of See Invisible
+# continue with quest 30
+?:[EQU $QUEST29 3]
+F:k:BUILDING_10:3:0:0:0:0:NONE:30
+F:@:FLOOR:3:0:155
+
+# Quest 29 finished, continue with quest 30
+?:[EQU $QUEST29 4]
+F:k:BUILDING_10:3:0:0:0:0:NONE:30
+
+# Quest 29 failed, wait for the player to enter the Thieves Guild
+?:[EQU $QUEST29 5]
+F:k:BUILDING_10:3:0:0:0:0:NONE:29
+
+# Quest 29 failed but done, continue with quest 30
+?:[EQU $QUEST29 6]
+F:k:BUILDING_10:3:0:0:0:0:NONE:30
+
+?:1
+
+
+############### Quest 30 - Thieves Quest 2 ###############
+
+# Quest 30 taken, entrance is quest entrance
+?:[EQU $QUEST30 1]
+F:u:QUEST_ENTER:3:0:0:0:0:NONE:30
+F:k:BUILDING_10:3:0:0:0:0:NONE:30
+
+# Quest 30 completed
+?:[EQU $QUEST30 2]
+F:k:BUILDING_10:3:0:0:0:0:NONE:30
+
+# Quest 30 rewarding, reward is Ring of Free Action
+# no new quest available
+?:[EQU $QUEST30 3]
+F:k:BUILDING_10:3
+F:@:FLOOR:3:0:144
+
+# Quest 30 finished, no new quest available
+?:[EQU $QUEST30 4]
+F:k:BUILDING_10:3
+
+# Quest 30 failed, wait for the player to enter the Thieves Guild
+?:[EQU $QUEST30 5]
+F:k:BUILDING_10:3:0:0:0:0:NONE:30
+
+# Quest 30 failed but done, no new quest available
+?:[EQU $QUEST30 6]
+F:k:BUILDING_10:3
+
+?:1
+
+
+#################### Buildings ####################
+
+B:$0:N:Boat Boarding:Vivian:Elf
+B:0:N:乗船場:ヴィヴィアン:エルフ
+B:$0:A:0:Listen for rumors:10:10:u:19:0
+B:0:A:0:噂を聞く:10:10:u:19:0
+B:$0:A:1:Teleport to other town:500:500:m:42:0
+B:0:A:1:他の町へ移動:500:500:m:42:0
+
+B:$1:N:Equipment and rigging lab:Rodney:Human
+B:1:N:装備研究所:ロドニー:人間
+B:$1:A:0:Compare weapons:200:200:c:21:0
+B:1:A:0:武器を比較する:200:200:c:21:0
+B:$1:A:1:Repair broken weapon:1000:1000:r:47:0
+B:1:A:1:折れた武器を修復する:1000:1000:r:47:0
+B:$1:A:2:Enchant weapon:400:800:w:23:0
+B:1:A:2:武器を強化する:400:800:w:23:0
+B:$1:A:3:Evaluate AC:200:200:e:46:0
+B:1:A:3:防御について調べる:200:200:e:46:0
+B:$1:A:4:Enchant armor:600:600:a:24:0
+B:1:A:4:防具を強化する:600:600:a:24:0
+B:$1:A:5:Enchant missiles:20:40:m:30:0
+B:1:A:5:矢や石等を強化する:20:40:m:30:0
+B:$1:A:6:Enchant bow:400:800:b:31:0
+B:1:A:6:弓を強化する:400:800:b:31:0
+
+B:$3:N:Home:You:Liver
+B:3:N:自宅:あなた:居住者
+B:$3:A:0:Rest for the night:0:0:r:17:0
+B:3:A:0:休む:0:0:r:17:0
+
+B:$4:N:Library:Mirimbar:High-Elf
+B:4:N:図書館:ミリムバー:ハイ=エルフ
+B:$4:A:0:Research item:1300:1300:a:1:0
+B:4:A:0:アイテム調査:1300:1300:a:1:0
+B:$4:A:1:Town Overview:0:0:h:2:0
+B:4:A:1:街の概要:0:0:h:2:0
+B:$4:A:2:Identify item:100:100:i:44:0
+B:4:A:2:アイテム鑑定:100:100:i:44:0
+
+B:$5:N:Office:Saratoga:KAN-SEN
+B:5:N:執務室:サラトガ:艦船
+#B:5:A:0:Look at busts of Barons:0:0:l:5:0
+B:$5:A:0:Request quest:0:0:q:6:0
+B:5:A:0:クエスト:0:0:q:6:0
+
+B:$6:N:Cafeteria:Celebor:Half-Elf
+B:6:N:食堂:ケレボール:ハーフエルフ
+B:$6:A:0:Buy food and drink:2:2:f:18:1
+B:6:A:0:食事をする:2:2:f:18:1
+B:$6:R:2:1:1:1:1:1:1:1:1:1:1:1:1:1:1:1:1:1:1:1:1:1:1:0:0:0:0:0:1:1:0:1:0:1:1:1:0:1
+B:6:R:2:1:1:1:1:1:1:1:1:1:1:1:1:1:1:1:1:1:1:1:1:1:1:0:0:0:0:0:1:1:0:1:0:1:1:1:0:1
+
+B:$8:N:Room of Sorcery:Tanistil:Elf
+B:8:N:賢者の部屋:タニスティル:エルフ
+B:$8:A:0:Recharge item:0:0:r:25:0
+B:8:A:0:再充填:0:0:r:25:0
+B:$8:A:1:Recharge all items:0:0:a:45:0
+B:8:A:1:全てのアイテムを再充填:0:0:a:45:0
+B:$8:A:2:Identify possessions:100:800:i:26:0
+B:8:A:2:持ち物全てを鑑定:100:800:i:26:0
+#B:8:A:3:Request quest:0:0:q:6:2
+B:$8:M:0:3:0:0:0:0:0:0:0:0
+B:8:M:0:3:0:0:0:0:0:0:0:0
+
+B:$10:N:Thieves Guild:Paliro:Yeek
+B:10:N:盗賊のギルド:パリロ:イーク
+B:$10:A:1:Rest for the night:0:50:r:17:0
+B:10:A:1:一泊する:0:50:r:17:0
+B:$10:A:2:Identify possessions:100:600:i:26:0
+B:10:A:2:持ち物全てを鑑定:100:600:i:26:0
+B:$10:A:3:request Quest:0:0:q:6:0
+B:10:A:3:クエスト:0:0:q:6:0
+B:$10:C:0:0:0:2:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0
+B:10:C:0:0:0:2:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0
+
+B:$13:N:Trump Room:Pelloi:Amberite
+B:13:N:トランプ魔術の部屋:ペロイ:アンバライト
+B:$13:A:0:Recall to dungeon:100:200:r:33:0
+B:13:A:0:ダンジョンへ帰還:100:200:r:33:0
+B:$13:A:1:Teleport to dungeon-level:100000:1000000:t:34:0
+B:13:A:1:階を指定してテレポート:100000:1000000:t:34:0
+B:$13:M:0:0:0:0:0:2:0:0:0:0
+B:13:M:0:0:0:0:0:2:0:0:0:0
+
+B:$14:N:Beastmaster:Draxle:Draconian
+B:14:N:モンスター仙人:ドラクスル:ドラコニアン
+B:$14:A:0:Research monster:1500:1500:r:20:0
+B:14:A:0:モンスター調査:1500:1500:r:20:0
+
+D:WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWVWVVVTTTTT---------.---TT---TTTTVWVVVWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWVVVWVVTTTT---T-----.------TTTTV##VVWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWVWWVV-TTTTT--------.---TTTTTTTTu#VWVWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWVVVVTT###TT----T--.--TTTT#t#T-TVVVVWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWVVVT#k#-TT-T----.---T-T###TTTVVVWVWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWVVVVTT@TTTT--T---.---TTT#7#TVVVVWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWVVVVTVTTT-TT--T---.---TTTTTTTTTVVWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWVV-TTT-TT-------.-T----TT-TTTVVVVWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWVVVVV--T-T----T-T-.------TTT--VVVVWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWVVVVV---TTT--------.------TTT---VVVVWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW.......................................................................................................................................WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW.......................................................................................................................................WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW.......#######..#######....#########..#######.................#########................................................................WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW.......#######..#######....#########..#######.................#....####................................................................WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW.......#######..#######....#########..#######.................#.##.####..............................................##########........WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW.......#######..#######....#########..#######.................#.##.####..............................................##########........WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW.......##2.3##..##1.5##....#########..##...##.................#.##.####..............................................##......##........WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW.......###.###..###.###....#########..###.###.................#.0#...................................................##......##........WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW.......###.###..###.###....####e####..###.###.................#.##.####..............................................##......##........WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW.......##b.i##..##4.6##....###..o###..##...##.................#.##.####..............................................##......##................................WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW.......###.###..###.###....####.####..###.###.................#.##.####..............................................##......##................................WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW.......###.###..###.###....####.####..###.###.................#....####..............................................##......##................................WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW.......##n.###..###.9##....####.####..###.###.................#########..............................................##......##................................WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW.......###.###..###.###...............###.###........................................................................##......##................................WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW.......###.###..###.###...............###.###........................................................................##......##................................WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW.......###.###..###.###...............###.###........................................................................##......##................................WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW..........................................................##################################################.........##......##................................WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW..........................................................##################################################.................##................................WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW..........................................................##################################################.........##......##........WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW..........................................................##################################################.........##......##........WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW..........................................................##################################################.........##......##........WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW..........................................................##################################################.........##......##........WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW......################..#################.................##################################################.........##......##........WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW......################..#################.................##################################################.........##......##........WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW......################..#########.#######............................................................................##......##........WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW......###...............#########.#######............................................................................##......##........WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW......###g############..###q#####.#######............................................................................##########........WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW......################............#######............................................................................##########........WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW......################..#########.d######..............................................................................................WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW......################..#########.8######..............................................................................................WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW......###~..............#########.#######..............................................................................................WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW......###f###############################.............................................................................#...#............WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW......###################################..............................................................................................WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW......###################################...............................................................................s..............WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW.......................................................................................................................................WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW......................................................................................................................#...#............WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW.......................................................................................................................................WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWW.......................................................................................................................................WWWWWWW......WWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.....WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.....WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.....WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.....WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.....WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW......WWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.....WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.....WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.....WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.....WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW....................................................................................a..WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.......................................................................................WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.......................................................................................WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.......................................................................................WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+D:WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+
+# Starting position when coming from quest 20
+?:[EQU $LEAVING_QUEST 20]
+P:37:38
+
+# Starting position when coming from quest 21
+?:[EQU $LEAVING_QUEST 21]
+P:43:131
+
+# Starting position when coming from quest 24
+?:[EQU $LEAVING_QUEST 24]
+P:46:71
+
+# Starting position when coming from quest 29
+?:[EQU $LEAVING_QUEST 29]
+P:2:107
+
+# Starting position when coming from quest 30
+?:[EQU $LEAVING_QUEST 30]
+P:3:111
+
+# Default starting position
+?:1
+P:10:99

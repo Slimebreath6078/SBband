@@ -13,8 +13,9 @@ angband_files = \
 	q0thief1.txt q0thief2.txt q0willow.txt q_info.txt q_oberon.txt \
 	q_pref.txt q_random.txt q_serpen.txt q_warg.txt \
 	qdarkelf.txt qhaunted.txt r_info.txt t0000001.txt \
-	t0000002.txt t0000003.txt t0000004.txt t0000005.txt \
+	t0000002.txt t0000004.txt t0000005.txt \
 	t0000006.txt t_basic.txt t_info.txt t_lite.txt \
+	t_union_harbor.txt \
 	t_pref.txt v_info.txt w_info.txt \
 	m_info.txt s_info.txt
 
