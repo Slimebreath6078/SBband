@@ -9,6 +9,7 @@
 #include "floor/floor-object.h"
 #include "game-option/play-record-options.h"
 #include "grid/feature.h"
+#include "io/files-util.h"
 #include "io/write-diary.h"
 #include "locale/english.h"
 #include "main/music-definitions-table.h"
@@ -200,7 +201,10 @@ void quest_discovery(quest_id q_idx)
     bool is_random_quest_skipped = r_ptr->race_kind_flags.has(MonraceKindType::UNIQUE);
     is_random_quest_skipped &= r_ptr->max_num == 0;
     if (!is_random_quest_skipped) {
-        msg_format(_("注意せよ！この階は%sによって守られている！", "Beware, this level is protected by %s!"), name);
+        std::string line_got;
+        line_got.resize(1024);
+        if (get_rnd_line(_("randomquest_j.txt", "randomquest.txt"), q_ptr->r_idx, line_got.data()) == 0)
+            msg_format(line_got.c_str(), name);
         return;
     }
 

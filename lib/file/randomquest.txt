@@ -1,0 +1,9 @@
+N:1351:GREAT THING, the Huge Battle Ship
+WARNING!! A HUGE BATTLESHIP GREAT THING IS APPROACHING FAST!
+
+N:1348:Mizuno Aoi
+N:1355:Cocoa, the chief of hell maids
+Destroy %s in this floor, it will gives you great rewards and the path of down-floor!
+
+N:*:Default line
+Beware, this level is protected by %s!
