@@ -112,4 +112,46 @@ struct monster_race {
     PLAYER_LEVEL defeat_level{}; //!< 倒したレベル(ユニーク用) / player level at which defeated this race
     REAL_TIME defeat_time{}; //!< 倒した時間(ユニーク用) / time at which defeated this race
     PERCENTAGE cur_hp_per{}; //!< 生成時現在HP率(%)
+
+    template <typename T>
+    inline const EnumClassFlagGroup<T> &get_flag();
 };
+
+template <typename T>
+inline const EnumClassFlagGroup<T> &monster_race::get_flag()
+{
+#if defined(_MSVC_LANG)
+    static_assert(false, "Invalid type.");
+#endif
+    return false;
+}
+
+template <>
+inline const EnumClassFlagGroup<MonsterAbilityType> &monster_race::get_flag<MonsterAbilityType>()
+{
+    return this->ability_flags;
+}
+
+template <>
+inline const EnumClassFlagGroup<MonraceDropType> &monster_race::get_flag<MonraceDropType>()
+{
+    return this->drop_flags;
+}
+
+template <>
+inline const EnumClassFlagGroup<MonraceKindType> &monster_race::get_flag<MonraceKindType>()
+{
+    return this->race_kind_flags;
+}
+
+template <>
+inline const EnumClassFlagGroup<MonsterResistanceType> &monster_race::get_flag<MonsterResistanceType>()
+{
+    return this->resistance_flags;
+}
+
+template <>
+inline const EnumClassFlagGroup<MonsterAuraType> &monster_race::get_flag<MonsterAuraType>()
+{
+    return this->aura_flags;
+}
