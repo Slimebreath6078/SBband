@@ -27,28 +27,30 @@
 #include "util/bit-flags-calculator.h"
 #include "view/display-messages.h"
 
-ObjectBreaker::ObjectBreaker(tr_type ignore_flg)
+ObjectBreaker::ObjectBreaker(tr_type ignore_flg, tr_type resist_flg, tr_type immune_flg)
     : ignore_flg(ignore_flg)
+    , resist_flg(resist_flg)
+    , immune_flg(immune_flg)
 {
 }
 
 BreakerAcid::BreakerAcid()
-    : ObjectBreaker(TR_IGNORE_ACID)
+    : ObjectBreaker(TR_IGNORE_ACID, TR_RES_ACID, TR_IM_ACID)
 {
 }
 
 BreakerElec::BreakerElec()
-    : ObjectBreaker(TR_IGNORE_ELEC)
+    : ObjectBreaker(TR_IGNORE_ELEC, TR_RES_ELEC, TR_IM_ELEC)
 {
 }
 
 BreakerFire::BreakerFire()
-    : ObjectBreaker(TR_IGNORE_FIRE)
+    : ObjectBreaker(TR_IGNORE_FIRE, TR_RES_FIRE, TR_IM_FIRE)
 {
 }
 
 BreakerCold::BreakerCold()
-    : ObjectBreaker(TR_IGNORE_COLD)
+    : ObjectBreaker(TR_IGNORE_COLD, TR_RES_COLD, TR_IM_COLD)
 {
 }
 
@@ -225,7 +227,7 @@ bool ObjectBreaker::can_destroy(object_type *o_ptr) const
     if (!this->hates(o_ptr))
         return false;
     auto flgs = object_flags(o_ptr);
-    if (flgs.has(this->ignore_flg))
+    if (flgs.has(this->ignore_flg) || flgs.has(this->resist_flg) || flgs.has(this->immune_flg))
         return false;
     return true;
 }

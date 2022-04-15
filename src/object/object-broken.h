@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-#include "system/angband.h"
 #include "object-enchant/tr-types.h"
+#include "system/angband.h"
 
 struct object_type;
 class PlayerType;
@@ -11,8 +11,9 @@ PERCENTAGE breakage_chance(PlayerType *player_ptr, object_type *o_ptr, bool has_
 
 class ObjectBreaker {
 protected:
-    ObjectBreaker(tr_type ignore_flg);
-    
+    ObjectBreaker(tr_type ignore_flg, tr_type resist_flg, tr_type immune_flg);
+    ObjectBreaker() = delete;
+
 public:
     virtual ~ObjectBreaker() = default;
     bool can_destroy(object_type *o_ptr) const;
@@ -20,6 +21,8 @@ public:
 
 private:
     tr_type ignore_flg;
+    tr_type resist_flg;
+    tr_type immune_flg;
 };
 
 class BreakerAcid : public ObjectBreaker {
