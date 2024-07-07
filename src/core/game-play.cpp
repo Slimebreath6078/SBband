@@ -112,52 +112,6 @@ static void restore_windows(PlayerType *player_ptr)
     (void)term_set_cursor(0);
 }
 
-static void send_waiting_record(PlayerType *player_ptr)
-{
-    if (!player_ptr->wait_report_score) {
-        return;
-    }
-
-    if (!input_check_strict(player_ptr, _("待機していたスコア登録を今行ないますか？", "Do you register score now? "), UserCheck::NO_HISTORY)) {
-        quit(0);
-    }
-
-    static constexpr auto flags = {
-        StatusRecalculatingFlag::BONUS,
-        StatusRecalculatingFlag::HP,
-        StatusRecalculatingFlag::MP,
-        StatusRecalculatingFlag::SPELLS,
-    };
-    RedrawingFlagsUpdater::get_instance().set_flags(flags);
-    update_creature(player_ptr);
-    player_ptr->is_dead = true;
-    auto &world = AngbandWorld::get_instance();
-    world.start_time = (uint32_t)time(nullptr);
-    signals_ignore_tstp();
-    world.character_icky_depth = 1;
-    const auto path = path_build(ANGBAND_DIR_APEX, "scores.raw");
-    highscore_fd = fd_open(path, O_RDWR);
-
-    /* 町名消失バグ対策(#38205)のためここで世界マップ情報を読み出す */
-    parse_fixed_map(player_ptr, WILDERNESS_DEFINITION, 0, 0, world.max_wild_y, world.max_wild_x);
-    bool success = send_world_score(player_ptr, true);
-    if (!success && !input_check_strict(player_ptr, _("スコア登録を諦めますか？", "Do you give up score registration? "), UserCheck::NO_HISTORY)) {
-        prt(_("引き続き待機します。", "standing by for future registration..."), 0, 0);
-        (void)inkey();
-    } else {
-        player_ptr->wait_report_score = false;
-        top_twenty(player_ptr);
-        if (!save_player(player_ptr, SaveType::CLOSE_GAME)) {
-            msg_print(_("セーブ失敗！", "death save failed!"));
-        }
-    }
-
-    (void)fd_close(highscore_fd);
-    highscore_fd = -1;
-    signals_handle_tstp();
-    quit(0);
-}
-
 static void init_random_seed(PlayerType *player_ptr, bool new_game)
 {
     auto &world = AngbandWorld::get_instance();
@@ -428,7 +382,6 @@ void play_game(PlayerType *player_ptr, bool new_game, bool browsing_movie)
     }
 
     extract_option_vars();
-    send_waiting_record(player_ptr);
     AngbandWorld::get_instance().creating_savefile = new_game;
     init_random_seed(player_ptr, new_game);
     if (new_game) {

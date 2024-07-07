@@ -92,9 +92,6 @@ dnl The world score server is currently only available in Japanese.
 if test "$use_japanese" = no; then
   worldscore=no
 fi
-if test "$worldscore" != no; then
-  AC_DEFINE(WORLD_SCORE, 1, [Allow the game to send scores to the score server])
-fi
 
 dnl Checks for header files.
 AC_PATH_XTRA

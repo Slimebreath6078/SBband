@@ -1,6 +1,5 @@
 #include "main-win/main-win-exception.h"
 #include "main-win/main-win-utils.h"
-#include "net/report-error.h"
 #include <sstream>
 
 /*!
@@ -25,7 +24,6 @@ void handle_unexpected_exception(const std::exception &e)
 
     if (auto choice = MessageBoxW(NULL, report_confirm_msg_ss.str().data(), caption, MB_ICONEXCLAMATION | MB_YESNO | MB_ICONSTOP);
         choice == IDYES) {
-        report_error(e.what());
     }
 #endif
 

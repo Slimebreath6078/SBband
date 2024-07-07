@@ -11,7 +11,6 @@
 #include "game-option/birth-options.h"
 #include "game-option/play-record-options.h"
 #include "io/files-util.h"
-#include "io/report.h"
 #include "io/write-diary.h"
 #include "main/sound-definitions-table.h"
 #include "main/sound-of-music.h"
@@ -274,12 +273,6 @@ void MonsterDamageProcessor::dying_scream(std::string_view m_name)
     if (death_mes) {
         msg_format("%s^ %s", m_name.data(), death_mes->data());
     }
-
-#ifdef WORLD_SCORE
-    if (m_ptr->r_idx == MonsterRaceId::SERPENT) {
-        screen_dump = make_screen_dump(this->player_ptr);
-    }
-#endif
 }
 
 void MonsterDamageProcessor::show_kill_message(std::string_view note, std::string_view m_name)

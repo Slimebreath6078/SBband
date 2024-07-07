@@ -42,24 +42,6 @@ static void clear_floor(PlayerType *player_ptr)
     signals_handle_tstp();
 }
 
-static void send_world_score_on_closing(PlayerType *player_ptr, bool do_send)
-{
-    if (send_world_score(player_ptr, do_send)) {
-        return;
-    }
-
-    if (!input_check_strict(
-            player_ptr, _("後でスコアを登録するために待機しますか？", "Stand by for later score registration? "), { UserCheck::NO_ESCAPE, UserCheck::NO_HISTORY })) {
-        return;
-    }
-
-    player_ptr->wait_report_score = true;
-    player_ptr->is_dead = false;
-    if (!save_player(player_ptr, SaveType::CLOSE_GAME)) {
-        msg_print(_("セーブ失敗！", "death save failed!"));
-    }
-}
-
 /*!
  * @brief ゲームクローズ時、プレイヤーが死亡しているかのチェックを行い死亡していないならば、確認キー入力とスコア表示、現フロアの初期化を行う。
  * @param player_ptr プレイヤー構造体参照ポインタ。
@@ -184,10 +166,7 @@ void close_game(PlayerType *player_ptr)
     show_death_info(player_ptr);
     term_clear();
     if (check_score(player_ptr)) {
-        send_world_score_on_closing(player_ptr, do_send);
-        if (!player_ptr->wait_report_score) {
-            (void)top_twenty(player_ptr);
-        }
+        (void)top_twenty(player_ptr);
     } else if (highscore_fd >= 0) {
         display_scores(0, 10, -1, nullptr);
     }

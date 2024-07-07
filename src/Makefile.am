@@ -306,7 +306,6 @@ hengband_SOURCES = \
 	io/pref-file-expressor.cpp io/pref-file-expressor.h \
 	io/read-pref-file.cpp io/read-pref-file.h \
 	io/record-play-movie.cpp io/record-play-movie.h \
-	io/report.cpp io/report.h \
 	io/screen-util.cpp io/screen-util.h \
 	io/signal-handlers.cpp io/signal-handlers.h \
 	io/tokenizer.cpp io/tokenizer.h \
@@ -572,11 +571,6 @@ hengband_SOURCES = \
 	mutation/mutation-flag-types.h \
 	mutation/mutation-processor.cpp mutation/mutation-processor.h \
 	mutation/mutation-techniques.cpp mutation/mutation-techniques.h \
-	\
-	net/curl-easy-session.cpp net/curl-easy-session.h \
-	net/curl-slist.cpp net/curl-slist.h \
-	net/http-client.cpp net/http-client.h \
-	net/report-error.cpp net/report-error.h \
 	\
 	object/item-tester-hooker.cpp object/item-tester-hooker.h \
 	object/object-broken.cpp object/object-broken.h \
