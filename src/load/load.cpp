@@ -401,16 +401,12 @@ bool load_savedata(PlayerType *player_ptr, bool *new_game)
         // 10～13はその名残。変愚蛮怒から更にバリアントを切ったらこの評価は不要.
         auto &system = AngbandSystem::get_instance();
         auto tmp_major = tmp_ver[0];
-        auto is_old_ver = (10 <= tmp_major) && (tmp_major <= 13);
         if (tmp_major == variant_length) {
             if (std::string_view(&tmp_ver[1], variant_length) != VARIANT_NAME) {
-                THROW_EXCEPTION(std::runtime_error, _("セーブデータのバリアントは変愚蛮怒以外です", "The variant of save data is other than Hengband!"));
+                THROW_EXCEPTION(std::runtime_error, _("セーブデータのバリアントはSBband以外です", "The variant of save data is other than Hengband!"));
             }
 
             system.savefile_key = tmp_ver[version_length - 1];
-            (void)fd_close(fd);
-        } else if (is_old_ver) {
-            system.savefile_key = tmp_ver[3];
             (void)fd_close(fd);
         } else {
             (void)fd_close(fd);
