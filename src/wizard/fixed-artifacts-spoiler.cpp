@@ -130,7 +130,7 @@ SpoilerOutputResultType spoil_fixed_artifact()
     }
 
     std::stringstream ss;
-    ss << "Artifact Spoilers for Hengband Version " << AngbandSystem::get_instance().build_version_expression(VersionExpression::FULL);
+    ss << "Artifact Spoilers for SBband Version " << AngbandSystem::get_instance().build_version_expression(VersionExpression::FULL);
     spoiler_underline(ss.str(), ofs);
     for (const auto &[tval_list, name] : group_artifact_list) {
         spoiler_blanklines(2, ofs);

@@ -2,9 +2,9 @@
 
 AUTOMAKE_OPTIONS = foreign subdir-objects nostdinc
 
-bin_PROGRAMS = hengband
+bin_PROGRAMS = SBband
 
-hengband_SOURCES = \
+SBband_SOURCES = \
 	action/action-limited.cpp action/action-limited.h \
 	action/activation-execution.cpp action/activation-execution.h \
 	action/movement-execution.cpp action/movement-execution.h \
@@ -1036,7 +1036,7 @@ hengband_SOURCES = \
 	world/world-movement-processor.cpp world/world-movement-processor.h \
 	world/world-turn-processor.cpp world/world-turn-processor.h
 
-EXTRA_hengband_SOURCES = \
+EXTRA_SBband_SOURCES = \
 	angband.ico angband.rc ang_eng.rc ang_jp.rc maid-x11.cpp main-win.cpp \
 	main-win/commandline-win.cpp main-win/commandline-win.h \
 	main-win/graphics-win.cpp main-win/graphics-win.h \
@@ -1080,13 +1080,13 @@ stdafx.h.gch: stdafx.h stdafx.cpp Makefile
 		$(PCH_CHECKSUMMER) $@ > "$@".sum ; \
 	fi
 
-$(hengband_SOURCES:.cpp=.$(OBJEXT)): stdafx.h.gch
+$(SBband_SOURCES:.cpp=.$(OBJEXT)): stdafx.h.gch
 endif
 
 install-exec-hook:
 if SET_GID
-	chgrp "@GAMEGROUP@" "$(DESTDIR)$(bindir)/hengband"
-	chmod g+s "$(DESTDIR)$(bindir)/hengband"
+	chgrp "@GAMEGROUP@" "$(DESTDIR)$(bindir)/SBband"
+	chmod g+s "$(DESTDIR)$(bindir)/SBband"
 endif
 
 clean-local:

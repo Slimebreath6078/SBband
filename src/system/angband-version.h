@@ -65,10 +65,10 @@ public:
     {
     }
 
-    uint8_t major = 0; //!< 変愚蛮怒バージョン(メジャー番号)
-    uint8_t minor = 0; //!< 変愚蛮怒バージョン(マイナー番号)
-    uint8_t patch = 0; //!< 変愚蛮怒バージョン(パッチ番号)
-    uint8_t extra = 0; //!< 変愚蛮怒バージョン(エクストラ番号)
+    uint8_t major = 0; //!< SBbandバージョン(メジャー番号)
+    uint8_t minor = 0; //!< SBbandバージョン(マイナー番号)
+    uint8_t patch = 0; //!< SBbandバージョン(パッチ番号)
+    uint8_t extra = 0; //!< SBbandバージョン(エクストラ番号)
 
     std::string build_expression(VersionExpression expression) const;
 };

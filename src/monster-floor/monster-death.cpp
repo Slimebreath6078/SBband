@@ -322,7 +322,7 @@ static void on_defeat_last_boss(PlayerType *player_ptr)
     world.add_winner_class(player_ptr->pclass);
     RedrawingFlagsUpdater::get_instance().set_flag(MainWindowRedrawingFlag::TITLE);
     play_music(TERM_XTRA_MUSIC_BASIC, MUSIC_BASIC_FINAL_QUEST_CLEAR);
-    exe_write_diary(*player_ptr->current_floor_ptr, DiaryKind::DESCRIPTION, 0, _("見事に変愚蛮怒の勝利者となった！", "finally became *WINNER* of Hengband!"));
+    exe_write_diary(*player_ptr->current_floor_ptr, DiaryKind::DESCRIPTION, 0, _("見事にSBbandの勝利者となった！", "finally became *WINNER* of SBband!"));
     patron_list[player_ptr->chaos_patron].admire(player_ptr);
     msg_print(_("*** おめでとう ***", "*** CONGRATULATIONS ***"));
     msg_print(_("あなたはゲームをコンプリートしました。", "You have won the game!"));

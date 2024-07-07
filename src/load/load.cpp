@@ -403,7 +403,7 @@ bool load_savedata(PlayerType *player_ptr, bool *new_game)
         auto tmp_major = tmp_ver[0];
         if (tmp_major == variant_length) {
             if (std::string_view(&tmp_ver[1], variant_length) != VARIANT_NAME) {
-                THROW_EXCEPTION(std::runtime_error, _("セーブデータのバリアントはSBband以外です", "The variant of save data is other than Hengband!"));
+                THROW_EXCEPTION(std::runtime_error, _("セーブデータのバリアントはSBband以外です", "The variant of save data is other than SBband!"));
             }
 
             system.savefile_key = tmp_ver[version_length - 1];

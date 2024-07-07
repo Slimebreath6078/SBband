@@ -28,7 +28,7 @@ static void create_console(void)
     ::AllocConsole();
     FILE *stream = nullptr;
     freopen_s(&stream, "CONOUT$", "w+", stdout);
-    std::cout << "Hengband debug console" << std::endl;
+    std::cout << "SBband debug console" << std::endl;
 }
 
 void CommandLine::handle(void)
