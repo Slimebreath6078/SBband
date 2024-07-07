@@ -15,7 +15,7 @@
  * @param r_ptr 読み込み先モンスター種族情報へのポインタ
  * @param r_idx 読み込み先モンスターID(種族特定用)
  */
-static void rd_lore(MonsterRaceInfo *r_ptr, const MonsterRaceId r_idx)
+static void rd_lore(MonsterRaceInfo *r_ptr)
 {
     r_ptr->r_sights = rd_s16b();
     r_ptr->r_deaths = rd_s16b();
@@ -81,7 +81,7 @@ void load_lore(void)
     for (auto i = 0U; i < loading_max_r_idx; i++) {
         auto r_idx = static_cast<MonsterRaceId>(i);
         auto *r_ptr = i < monraces_info.size() ? &monraces_info[r_idx] : &dummy;
-        rd_lore(r_ptr, r_idx);
+        rd_lore(r_ptr);
     }
 
     for (size_t i = loading_max_r_idx; i < monraces_info.size(); i++) {

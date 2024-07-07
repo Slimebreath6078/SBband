@@ -206,24 +206,6 @@ static void rd_base_status(PlayerType *player_ptr)
     }
 }
 
-static void set_imitation(PlayerType *player_ptr)
-{
-    if (h_older_than(0, 0, 1)) {
-        return;
-    }
-
-    if (h_older_than(0, 2, 3)) {
-        const int OLD_MAX_MANE = 22;
-        for (int i = 0; i < OLD_MAX_MANE; i++) {
-            strip_bytes(2);
-            strip_bytes(2);
-        }
-
-        strip_bytes(2);
-        return;
-    }
-}
-
 static void rd_phase_out(PlayerType *player_ptr)
 {
     player_ptr->current_floor_ptr->inside_arena = rd_s16b() != 0;
@@ -442,7 +424,6 @@ static void rd_player_status(PlayerType *player_ptr)
     rd_experience(player_ptr);
     rd_skills(player_ptr);
     rd_race(player_ptr);
-    set_imitation(player_ptr);
     rd_bounty_uniques(player_ptr);
     rd_arena(player_ptr);
     rd_dummy1();

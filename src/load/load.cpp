@@ -324,7 +324,7 @@ static bool on_read_save_data_not_supported(PlayerType *player_ptr, bool *new_ga
  * @param player_ptr プレイヤーへの参照ポインタ
  * @return 引き継ぎ可能ならtrue、そうでなければfalseを返す
  */
-static bool can_takeover_savefile(PlayerType *player_ptr)
+static bool can_takeover_savefile()
 {
     return true;
 }
@@ -441,7 +441,7 @@ bool load_savedata(PlayerType *player_ptr, bool *new_game)
         return false;
     }
 
-    if (!can_takeover_savefile(player_ptr)) {
+    if (!can_takeover_savefile()) {
         return on_read_save_data_not_supported(player_ptr, new_game);
     }
 

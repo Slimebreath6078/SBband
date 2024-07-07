@@ -75,19 +75,6 @@ static void load_quest_details(PlayerType *player_ptr, QuestType *q_ptr, const Q
     q_ptr->flags = rd_byte();
 }
 
-static bool is_missing_id_ver_16(const QuestId q_idx)
-{
-    auto is_missing_id = (enum2i(q_idx) == 0);
-    is_missing_id |= (enum2i(q_idx) == 13);
-    is_missing_id |= (enum2i(q_idx) == 17);
-    is_missing_id |= (enum2i(q_idx) >= 35 && enum2i(q_idx) <= 39);
-    is_missing_id |= (enum2i(q_idx) >= 88 && enum2i(q_idx) <= 100);
-
-    auto is_deleted_random_quest = (enum2i(q_idx) >= 50 || enum2i(q_idx) <= 88);
-
-    return is_missing_id || is_deleted_random_quest;
-}
-
 static bool is_loadable_quest(const QuestId q_idx, const byte max_rquests_load)
 {
     const auto &quests = QuestList::get_instance();
