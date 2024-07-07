@@ -87,10 +87,6 @@ static errr load_town_quest(PlayerType *player_ptr)
  */
 static void rd_total_play_time()
 {
-    if (loading_savefile_version_is_older_than(4)) {
-        return;
-    }
-
     AngbandWorld::get_instance().sf_play_time = rd_u32b();
 }
 
@@ -99,10 +95,6 @@ static void rd_total_play_time()
  */
 static void rd_winner_class()
 {
-    if (loading_savefile_version_is_older_than(4)) {
-        return;
-    }
-
     rd_FlagGroup(AngbandWorld::get_instance().sf_winner, rd_byte);
     rd_FlagGroup(AngbandWorld::get_instance().sf_retired, rd_byte);
 }
@@ -334,10 +326,6 @@ static bool on_read_save_data_not_supported(PlayerType *player_ptr, bool *new_ga
  */
 static bool can_takeover_savefile(PlayerType *player_ptr)
 {
-    if (loading_savefile_version_is_older_than(8) && PlayerClass(player_ptr).equals(PlayerClassType::SMITH)) {
-        return false;
-    }
-
     return true;
 }
 

@@ -26,12 +26,7 @@ void rd_options()
 {
     strip_bytes(16);
 
-    if (loading_savefile_version_is_older_than(9)) {
-        auto b = rd_byte();
-        delay_factor = b * b * b;
-    } else {
-        delay_factor = rd_s32b();
-    }
+    delay_factor = rd_s32b();
 
     hitpoint_warn = rd_byte();
 

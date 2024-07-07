@@ -97,11 +97,7 @@ static bool is_loadable_quest(const QuestId q_idx, const byte max_rquests_load)
 
     bool is_missing_id;
 
-    if (loading_savefile_version_is_older_than(17)) {
-        is_missing_id = is_missing_id_ver_16(q_idx);
-    } else {
-        is_missing_id = false;
-    }
+    is_missing_id = false;
 
     if (!is_missing_id) {
         const std::string msg(_("削除されたクエストのあるセーブデータはサポート対象外です。",
@@ -140,25 +136,13 @@ void analyze_quests(PlayerType *player_ptr, const uint16_t max_quests_load, cons
     QuestId old_inside_quest = player_ptr->current_floor_ptr->quest_number;
     for (auto i = 0; i < max_quests_load; i++) {
         QuestId quest_id;
-        if (loading_savefile_version_is_older_than(17)) {
-            quest_id = i2enum<QuestId>(i);
-        } else {
-            quest_id = i2enum<QuestId>(rd_s16b());
-        }
+        quest_id = i2enum<QuestId>(rd_s16b());
         if (!is_loadable_quest(quest_id, max_rquests_load)) {
             continue;
         }
 
         auto &quests = QuestList::get_instance();
         auto &quest = quests.get_quest(quest_id);
-
-        if (loading_savefile_version_is_older_than(15)) {
-            if (i == enum2i(OldQuestId15::CITY_SEA) && quest.status != QuestStatusType::UNTAKEN) {
-                const std::string msg(_("海底都市クエストを受領または解決しているセーブデータはサポート外です。",
-                    "The save data with the taken quest of The City beneath the Sea is unsupported."));
-                throw(SaveDataNotSupportedException(msg));
-            }
-        }
 
         load_quest_completion(&quest);
         auto is_quest_running = (quest.status == QuestStatusType::TAKEN);

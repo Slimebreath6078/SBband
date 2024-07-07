@@ -181,16 +181,7 @@ void rd_bounty_uniques(PlayerType *player_ptr)
 
     for (auto &[bounty_monrace_id, is_achieved] : AngbandWorld::get_instance().bounties) {
         auto monrace_id = rd_s16b();
-        if (loading_savefile_version_is_older_than(16)) {
-            constexpr auto old_achieved_flag = 10000; // かつて賞金首達成フラグとしてモンスター種族番号を10000増やしていた
-            is_achieved = false;
-            if (monrace_id >= old_achieved_flag) {
-                monrace_id -= old_achieved_flag;
-                is_achieved = true;
-            }
-        } else {
-            is_achieved = rd_bool();
-        }
+        is_achieved = rd_bool();
 
         bounty_monrace_id = i2enum<MonsterRaceId>(monrace_id);
     }
@@ -231,42 +222,16 @@ static void set_imitation(PlayerType *player_ptr)
         strip_bytes(2);
         return;
     }
-
-    if (loading_savefile_version_is_older_than(9)) {
-        auto mane_data = PlayerClass(player_ptr).get_specific_data<mane_data_type>();
-        if (!mane_data) {
-            // ものまね師でない場合に読み捨てるためのダミーデータ領域
-            mane_data = std::make_shared<mane_data_type>();
-        }
-
-        for (int i = 0; i < MAX_MANE; ++i) {
-            auto spell = rd_s16b();
-            auto damage = rd_s16b();
-            mane_data->mane_list.push_back({ i2enum<MonsterAbilityType>(spell), damage });
-        }
-        auto count = rd_s16b();
-        mane_data->mane_list.resize(count);
-    }
 }
 
 static void rd_phase_out(PlayerType *player_ptr)
 {
     player_ptr->current_floor_ptr->inside_arena = rd_s16b() != 0;
     const auto quest_number = rd_s16b();
-    if (loading_savefile_version_is_older_than(15)) {
-        if (quest_number == enum2i(OldQuestId15::CITY_SEA)) {
-            const std::string msg(_("海底都市クエストにいるデータはサポート外です。",
-                "The save data in the quest of The City beneath the Sea is unsupported."));
-            throw(SaveDataNotSupportedException(msg));
-        }
-    }
+
     player_ptr->current_floor_ptr->quest_number = i2enum<QuestId>(quest_number);
     auto &system = AngbandSystem::get_instance();
-    if (h_older_than(0, 3, 5)) {
-        system.set_phase_out(false);
-    } else {
-        system.set_phase_out(rd_s16b() != 0);
-    }
+    system.set_phase_out(rd_s16b() != 0);
 }
 
 static void rd_arena(PlayerType *player_ptr)
@@ -283,12 +248,6 @@ static void rd_arena(PlayerType *player_ptr)
     if (h_older_than(1, 5, 0, 1)) {
         if (entries.get_current_entry() >= 99) {
             entries.reset_entry();
-            entries.set_defeated_entry();
-        }
-    } else if (loading_savefile_version < 23) {
-        const auto currrent_entry = entries.get_current_entry();
-        if (currrent_entry < 0) {
-            entries.load_current_entry(-currrent_entry);
             entries.set_defeated_entry();
         }
     } else {
@@ -449,14 +408,7 @@ static void set_timed_effects(PlayerType *player_ptr)
 
 static void set_mutations(PlayerType *player_ptr)
 {
-    if (loading_savefile_version_is_older_than(2)) {
-        for (int i = 0; i < 3; i++) {
-            auto tmp32u = rd_u32b();
-            migrate_bitflag_to_flaggroup(player_ptr->muta, tmp32u, i * 32);
-        }
-    } else {
-        rd_FlagGroup(player_ptr->muta, rd_byte);
-    }
+    rd_FlagGroup(player_ptr->muta, rd_byte);
 }
 
 static void set_virtues(PlayerType *player_ptr)
@@ -500,15 +452,7 @@ static void rd_player_status(PlayerType *player_ptr)
     rd_dungeons(player_ptr);
     strip_bytes(8);
     player_ptr->sc = rd_s16b();
-    if (loading_savefile_version_is_older_than(9)) {
-        auto sniper_data = PlayerClass(player_ptr).get_specific_data<SniperData>();
-        if (sniper_data) {
-            sniper_data->concent = rd_s16b();
-        } else {
-            // 職業がスナイパーではないので読み捨てる
-            strip_bytes(2);
-        }
-    }
+
     rd_bad_status(player_ptr);
     rd_energy(player_ptr);
     rd_status(player_ptr);

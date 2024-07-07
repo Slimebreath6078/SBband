@@ -63,87 +63,33 @@ void ItemLoader50::rd_item(ItemEntity *o_ptr)
     }
 
     /* Object flags */
-    if (loading_savefile_version_is_older_than(7)) {
-        constexpr SavedataItemOlderThan7FlagType old_savefile_art_flags[] = {
-            SavedataItemOlderThan7FlagType::ART_FLAGS0,
-            SavedataItemOlderThan7FlagType::ART_FLAGS1,
-            SavedataItemOlderThan7FlagType::ART_FLAGS2,
-            SavedataItemOlderThan7FlagType::ART_FLAGS3,
-            SavedataItemOlderThan7FlagType::ART_FLAGS4,
-        };
-        auto start = 0;
-        for (auto f : old_savefile_art_flags) {
-            if (any_bits(flags, f)) {
-                auto tmp32u = rd_u32b();
-                migrate_bitflag_to_flaggroup(o_ptr->art_flags, tmp32u, start);
-            }
-            start += 32;
-        }
+    if (any_bits(flags, SaveDataItemFlagType::ART_FLAGS)) {
+        rd_FlagGroup(o_ptr->art_flags, rd_byte);
     } else {
-        if (any_bits(flags, SaveDataItemFlagType::ART_FLAGS)) {
-            rd_FlagGroup(o_ptr->art_flags, rd_byte);
-        } else {
-            o_ptr->art_flags.clear();
-        }
+        o_ptr->art_flags.clear();
     }
 
     if (any_bits(flags, SaveDataItemFlagType::CURSE_FLAGS)) {
-        if (loading_savefile_version_is_older_than(5)) {
-            auto tmp32u = rd_u32b();
-            migrate_bitflag_to_flaggroup(o_ptr->curse_flags, tmp32u);
-        } else {
-            rd_FlagGroup(o_ptr->curse_flags, rd_byte);
-        }
+        rd_FlagGroup(o_ptr->curse_flags, rd_byte);
     } else {
         o_ptr->curse_flags.clear();
     }
 
     o_ptr->held_m_idx = any_bits(flags, SaveDataItemFlagType::HELD_M_IDX) ? rd_s16b() : 0;
-    if (loading_savefile_version_is_older_than(12)) {
-        if (any_bits(flags, SavedataItemOlderThan12FlagType::XTRA1)) {
-            strip_bytes(1);
-        }
-    }
-
     if (any_bits(flags, SaveDataItemFlagType::ACTIVATION_ID)) {
-        if (h_older_than(3, 0, 0, 2)) {
-            o_ptr->activation_id = i2enum<RandomArtActType>(rd_byte());
-        } else {
-            o_ptr->activation_id = i2enum<RandomArtActType>(rd_s16b());
-        }
+        o_ptr->activation_id = i2enum<RandomArtActType>(rd_s16b());
     } else {
         o_ptr->activation_id = i2enum<RandomArtActType>(0);
     }
 
     // xtra3フィールドが複数目的に共用されていた頃の名残.
     const auto tval = o_ptr->bi_key.tval();
-    if (loading_savefile_version_is_older_than(12)) {
-        uint8_t tmp8s = any_bits(flags, SavedataItemOlderThan12FlagType::XTRA3) ? rd_byte() : 0;
-        if (tval == ItemKindType::CHEST) {
-            o_ptr->chest_level = tmp8s;
-        } else if (tval == ItemKindType::CAPTURE) {
-            o_ptr->captured_monster_speed = tmp8s;
-        }
-    } else {
-        o_ptr->chest_level = any_bits(flags, SaveDataItemFlagType::CHEST_LEVEL) ? rd_byte() : 0;
-        o_ptr->captured_monster_speed = any_bits(flags, SaveDataItemFlagType::CAPTURED_MONSTER_SPEED) ? rd_byte() : 0;
-    }
+    o_ptr->chest_level = any_bits(flags, SaveDataItemFlagType::CHEST_LEVEL) ? rd_byte() : 0;
+    o_ptr->captured_monster_speed = any_bits(flags, SaveDataItemFlagType::CAPTURED_MONSTER_SPEED) ? rd_byte() : 0;
 
     // xtra4フィールドが複数目的に共用されていた頃の名残.
-    if (loading_savefile_version_is_older_than(13)) {
-        int16_t xtra4 = any_bits(flags, SavedataItemOlderThan13FlagType::XTRA4) ? rd_s16b() : 0;
-        if (o_ptr->is_fuel()) {
-            o_ptr->fuel = static_cast<short>(xtra4);
-        } else if (tval == ItemKindType::CAPTURE) {
-            o_ptr->captured_monster_current_hp = xtra4;
-        } else {
-            o_ptr->smith_hit = static_cast<byte>(xtra4 >> 8);
-            o_ptr->smith_damage = static_cast<byte>(xtra4 & 0x000f);
-        }
-    } else {
-        o_ptr->fuel = any_bits(flags, SaveDataItemFlagType::FUEL) ? rd_s16b() : 0;
-        o_ptr->captured_monster_current_hp = any_bits(flags, SaveDataItemFlagType::CAPTURED_MONSTER_CURRENT_HP) ? rd_s16b() : 0;
-    }
+    o_ptr->fuel = any_bits(flags, SaveDataItemFlagType::FUEL) ? rd_s16b() : 0;
+    o_ptr->captured_monster_current_hp = any_bits(flags, SaveDataItemFlagType::CAPTURED_MONSTER_CURRENT_HP) ? rd_s16b() : 0;
 
     if (o_ptr->is_fuel() && (o_ptr->bi_key.tval() == ItemKindType::LITE)) {
         const auto fuel_max = o_ptr->bi_key.sval() == SV_LITE_TORCH ? FUEL_TORCH : FUEL_LAMP;
@@ -155,7 +101,7 @@ void ItemLoader50::rd_item(ItemEntity *o_ptr)
     o_ptr->captured_monster_max_hp = any_bits(flags, SaveDataItemFlagType::XTRA5) ? rd_s16b() : 0;
     o_ptr->feeling = any_bits(flags, SaveDataItemFlagType::FEELING) ? rd_byte() : 0;
     o_ptr->stack_idx = any_bits(flags, SaveDataItemFlagType::STACK_IDX) ? rd_s16b() : 0;
-    if (any_bits(flags, SaveDataItemFlagType::SMITH) && !loading_savefile_version_is_older_than(7)) {
+    if (any_bits(flags, SaveDataItemFlagType::SMITH)) {
         if (auto tmp16s = rd_s16b(); tmp16s > 0) {
             o_ptr->smith_effect = static_cast<SmithEffectType>(tmp16s);
         }
@@ -164,10 +110,8 @@ void ItemLoader50::rd_item(ItemEntity *o_ptr)
             o_ptr->smith_act_idx = static_cast<RandomArtActType>(tmp16s);
         }
 
-        if (!loading_savefile_version_is_older_than(13)) {
-            o_ptr->smith_hit = rd_byte();
-            o_ptr->smith_damage = rd_byte();
-        }
+        o_ptr->smith_hit = rd_byte();
+        o_ptr->smith_damage = rd_byte();
     }
 
     if (any_bits(flags, SaveDataItemFlagType::INSCRIPTION)) {
