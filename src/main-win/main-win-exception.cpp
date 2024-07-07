@@ -4,7 +4,7 @@
 #include "util/angband-files.h"
 #include <sstream>
 
-static void write_error_message(const wchar_t *caption, const std::string& msg)
+static void write_error_message(const wchar_t *caption, const std::string &msg)
 {
 
     const auto path = path_build(ANGBAND_DIR_USER, "error.txt");
@@ -49,10 +49,13 @@ void handle_unexpected_exception(const std::exception &e)
 {
     constexpr auto caption = _(L"予期しないエラー！", L"Unexpected error!");
 
+    const std::string msg = e.what();
+    const auto first_line = msg.substr(0, msg.find('\n'));
+
 #if !defined(DISABLE_NET)
     std::wstringstream report_confirm_msg_ss;
     report_confirm_msg_ss
-        << to_wchar(e.what()).wc_str() << L"\n\n"
+        << to_wchar(first_line.data()).wc_str() << L"\n\n"
         << _(L"エラー内容をファイルに書き出しますか？\n", L"Are you sure you want to write the error information file?\n");
 
     if (auto choice = MessageBoxW(NULL, report_confirm_msg_ss.str().data(), caption, MB_ICONEXCLAMATION | MB_YESNO | MB_ICONSTOP);
