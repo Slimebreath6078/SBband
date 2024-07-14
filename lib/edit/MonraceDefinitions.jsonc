@@ -87594,6 +87594,70 @@
         "en": "He looks like a constructor. But his dress and mask describe him abnormal. He don't easily let his found enemies escape. Watch for an attack chance and take it!"
       },
       "sex": "MALE"
+    },
+    {
+      "id": 1367,
+      "name": {
+        "ja": "『ミズノアオイ』",
+        "en": "Mizuno Aoi"
+      },
+      "symbol": {
+        "character": "p",
+        "color": "Light Blue"
+      },
+      "speed": 5,
+      "hit_point": "40d35",
+      "vision": 30,
+      "armor_class": 60,
+      "alertness": 0,
+      "level": 33,
+      "rarity": 2,
+      "exp": 2800,
+      "blows": [
+        {
+          "method": "SLASH",
+          "effect": "HURT",
+          "damage_dice": "20d2"
+        },
+        {
+          "method": "SLASH",
+          "effect": "HURT",
+          "damage_dice": "20d2"
+        },
+        {
+          "method": "SLASH",
+          "effect": "HURT",
+          "damage_dice": "20d2"
+        }
+      ],
+      "flags": [
+        "UNIQUE",
+        "FORCE_MAXHP",
+        "HUMAN",
+        "GOOD",
+        "FRIENDLY",
+        "HAS_LITE_1",
+        "TAKE_ITEM",
+        "BASH_DOOR",
+        "DROP_2D2",
+        "DROP_4D2",
+        "ONLY_ITEM",
+        "DROP_GOOD",
+        "DROP_CORPSE",
+        "DROP_SKELETON"
+      ],
+      "skill": {
+        "probability": "1_IN_6",
+        "shoot": "17d2",
+        "list": [
+          "ROCKET"
+        ]
+      },
+      "flavor": {
+        "ja": "とある殺人集団がこの世界に逃げ込んでいると聞き、掃討のために迷宮へと赴いた。",
+        "en": "She began to explore to caves for sweeping the certain murder group that she heard it went to this world."
+      },
+      "sex": "FEMALE"
     }
   ]
 }
