@@ -87416,6 +87416,67 @@
         "en": "She is searching for her big brother. "
       },
       "sex": "FEMALE"
+    },
+    //出典「アズールレーン」
+    {
+      "id": 1364,
+      "name": {
+        "ja": "綾波",
+        "en": "IJN Ayanami"
+      },
+      "symbol": {
+        "character": "g",
+        "color": "White"
+      },
+      "speed": 10,
+      "hit_point": "9d157",
+      "vision": 55,
+      "armor_class": 20,
+      "alertness": 10,
+      "level": 30,
+      "rarity": 2,
+      "exp": 2000,
+      "evolve": {
+        "need_exp": 20000,
+        "to": 1337
+      },
+      "blows": [
+        {
+          "method": "SLASH",
+          "effect": "HURT",
+          "damage_dice": "10d4"
+        }
+      ],
+      "flags": [
+        "KAN-SEN",
+        "NONLIVING",
+        "WEIRD_MIND",
+        "TAKE_ITEM",
+        "OPEN_DOOR",
+        "CAN_SWIM",
+        "WILD_OCEAN",
+        "HURT_FIRE",
+        "IM_COLD",
+        "IM_POIS",
+        "NO_SLEEP",
+        "NO_STUN",
+        "NO_CONF",
+        "DROP_3D2",
+        "DROP_CORPSE",
+        "DROP_SKELETON"
+      ],
+      "skill": {
+        "probability": "1_IN_6",
+        "shoot": "3d6",
+        "list": [
+          "ROCKET"
+        ]
+      },
+      "flavor": {
+        "ja": "丈の短いセーラー服と機械チックな角が特徴的な少女の見た目をしているが、背後にある艤装は彼女がただ者ではないことを示している。そしてそこから放たれる攻撃はその見た目通りの強力さを誇る。「吹雪型駆逐艦の改良型、綾波……です。戦闘は怖くないです。駆逐艦だけど、どんな敵とも戦える、です……」（Manjuu, Yongshi, Yostar「アズールレーン」, 綾波, 自己紹介）",
+        "en": "She is a girl who is characterized wearing midriff-baring schoollike-uniform and having her mechanical horns. But her rigging describes she isn't the common girl. In fact, attacks from it is as strong as looks."
+      },
+      "sex": "FEMALE"
     }
   ]
 }
