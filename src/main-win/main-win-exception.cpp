@@ -1,5 +1,6 @@
 #include "main-win/main-win-exception.h"
 #include "io/files-util.h"
+#include "locale/japanese.h"
 #include "main-win/main-win-utils.h"
 #include "util/angband-files.h"
 #include <sstream>
@@ -49,7 +50,13 @@ void handle_unexpected_exception(const std::exception &e)
 {
     constexpr auto caption = _(L"予期しないエラー！", L"Unexpected error!");
 
-    const std::string msg = e.what();
+    std::string msg = e.what();
+#ifdef JP
+    // 例外メッセージがUTF-8の場合一旦SJISに変換する(SJISの場合はそのまま)
+    const auto msg_len = guess_convert_to_system_encoding(msg.data(), msg.size());
+    msg.erase(msg_len);
+#endif
+
     const auto first_line = msg.substr(0, msg.find('\n'));
 
 #if !defined(DISABLE_NET)
