@@ -87668,6 +87668,90 @@
         "en": "She began to explore to caves for sweeping the certain murder group that she heard it went to this world."
       },
       "sex": "FEMALE"
+    },
+    {
+      "id": 1368,
+      "name": {
+        "ja": "対策委員会のアウトロー『砂狼シロコ』",
+        "en": "Shiroko Sunaokami, the outlaw of the Countermeasure Council"
+      },
+      "symbol": {
+        "character": "p",
+        "color":"Light Blue"
+      },
+      "level": 70,
+      "hit_point": "60d100",
+      "armor_class": 140,
+      "rarity": 3,
+      "exp": 45000,
+      "speed": 20,
+      "vision": 20,
+      "alertness": 10,
+      "sex": "FEMALE",
+      "flags": [
+        "UNIQUE",
+        "HUMAN",
+        "EVIL",
+        "SPEAK_ALL",
+        "SMART",
+        "CAN_SWIM",
+        "BASH_DOOR",
+        "OPEN_DOOR",
+        "MOVE_BODY",
+        "KILL_BODY",
+        "TAKE_ITEM",
+        "DROP_CORPSE",
+        "DROP_SKELETON",
+        "DROP_GREAT",
+        "DROP_1D2",
+        "DROP_3D2",
+        "IM_FIRE",
+        "IM_ACID",
+        "RES_SHAR",
+        "RES_GRAV",
+        "RES_PLAS",
+        "RES_METEOR",
+        "RES_WALL",
+        "NO_FEAR",
+        "NO_CONF",
+        "NO_SLEEP"
+      ],
+      "skill": {
+        "probability": "1_IN_5",
+        "list": [
+          "ROCKET",
+          "BA_FIRE",
+          "BLINK",
+          "TPORT"
+        ],
+        "shoot": "90d2"
+      },
+      "blows": [
+        {
+          "method": "PUNCH",
+          "effect": "HURT",
+          "damage_dice": "20d6"
+        },
+        {
+          "method": "PUNCH",
+          "effect": "HURT",
+          "damage_dice": "20d6"
+        },
+        {
+          "method": "KICK",
+          "effect": "SUPERHURT",
+          "damage_dice": "30d3"
+        },
+        {
+          "method": "HIT",
+          "effect": "EAT_GOLD",
+          "damage_dice": "10d18"
+        }
+      ],
+      "flavor": {
+        "ja": "アビドス高校2年生のスポーツ好きな少女。アビドス高校を愛しており、アビドス高校のためなら手段を選ばない節がある。あなたは高校の借金返済のための格好の餌だ。",
+        "en": "A girl, a junior in Abydos high school, who likes sports. She loves the high school and she takes any way for the school. She looks you as a gorgeous treasure-chest that is for paying back her school's debt."
+      }
     }
   ]
 }
