@@ -87752,6 +87752,75 @@
         "ja": "アビドス高校2年生のスポーツ好きな少女。アビドス高校を愛しており、アビドス高校のためなら手段を選ばない節がある。あなたは高校の借金返済のための格好の餌だ。",
         "en": "A girl, a junior in Abydos high school, who likes sports. She loves the high school and she takes any way for the school. She looks you as a gorgeous treasure-chest that is for paying back her school's debt."
       }
+    },
+    {
+      "id": 1369,
+      "name": {
+        "ja": "落書き師『小塗マキ』",
+        "en": "Maki Konuri, a graffiti drawer"
+      },
+      "symbol": {
+        "character": "p",
+        "color": "Dark Gray"
+      },
+      "level": 50,
+      "hit_point": "60d50",
+      "armor_class": 120,
+      "speed": 10,
+      "exp": 30000,
+      "alertness": 20,
+      "sex": "FEMALE",
+      "rarity": 2,
+      "vision": 20,
+      "flags": [
+        "UNIQUE",
+        "HUMAN",
+        "EVIL",
+        "SPEAK_ALL",
+        "SMART",
+        "CAN_SWIM",
+        "BASH_DOOR",
+        "OPEN_DOOR",
+        "TAKE_ITEM",
+        "DROP_CORPSE",
+        "DROP_SKELETON",
+        "DROP_GOOD",
+        "DROP_2D2",
+        "IM_FIRE",
+        "IM_ACID",
+        "RES_SHAR",
+        "RES_GRAV",
+        "RES_PLAS",
+        "RES_METEOR",
+        "RES_WALL",
+        "NO_FEAR",
+        "NO_CONF",
+        "NO_SLEEP"
+      ],
+      "skill": {
+        "probability": "1_IN_6",
+        "list": [
+          "BO_WATE",
+          "SHRIEK",
+          "TRAPS"
+        ]
+      },
+      "blows": [
+        {
+          "method": "HIT",
+          "effect": "HURT",
+          "damage_dice": "10d6"
+        },
+        {
+          "method": "HIT",
+          "effect": "HURT",
+          "damage_dice": "10d6"
+        }
+      ],
+      "flavor": {
+        "ja": "ミレニアムサイエンススクール1年生のヴェリタス部員。彼女は今日もダンジョンに落書きを思うがままに施している。",
+        "en": "A member of Veritas and a freshman of Millennium Science School. She is drawing always a graffito on the dungeon."
+      }
     }
   ]
 }
