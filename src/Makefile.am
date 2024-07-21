@@ -306,6 +306,7 @@ SBband_SOURCES = \
 	io/pref-file-expressor.cpp io/pref-file-expressor.h \
 	io/read-pref-file.cpp io/read-pref-file.h \
 	io/record-play-movie.cpp io/record-play-movie.h \
+	io/report.cpp io/report.h \
 	io/screen-util.cpp io/screen-util.h \
 	io/signal-handlers.cpp io/signal-handlers.h \
 	io/tokenizer.cpp io/tokenizer.h \
