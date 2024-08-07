@@ -87887,6 +87887,84 @@
         "ja": "それは冒険者の来店を待っている。持ち物を狙って…",
         "en": "It waits for your coming. Aims at your things..."
       }
+    },
+    {
+      "id": 1371,
+      "name": {
+        "ja": "ぼんやり少女『和泉元エイミ』",
+        "en": "Eimi Izumimoto, the fuzzy girl"
+      },
+      "symbol": {
+        "character": "p",
+        "color": "Light Red"
+      },
+      "level": 70,
+      "hit_point": "100d100",
+      "armor_class": 130,
+      "exp": 40000,
+      "alertness": 20,
+      "vision": 25,
+      "rarity": 2,
+      "speed": 15,
+      "sex": "FEMALE",
+      "flags": [
+        "UNIQUE",
+        "HUMAN",
+        "GOOD",
+        "SMART",
+        "SPEAK_ALL",
+        "CAN_SWIM",
+        "TAKE_ITEM",
+        "OPEN_DOOR",
+        "DROP_CORPSE",
+        "DROP_SKELETON",
+        "DROP_3D2",
+        "DROP_GOOD",
+        "HURT_FIRE",
+        "IM_COLD",
+        "IM_ACID",
+        "RES_SHAR",
+        "RES_GRAV",
+        "RES_PLAS",
+        "RES_METEOR",
+        "RES_WALL",
+        "NO_FEAR",
+        "NO_CONF"
+      ],
+      "blows": [
+        {
+          "method": "HIT",
+          "effect": "HURT",
+          "damage_dice": "8d8"
+        },
+        {
+          "method": "HIT",
+          "effect": "HURT",
+          "damage_dice": "8d8"
+        },
+        {
+          "method": "HIT",
+          "effect": "EXP_VAMP",
+          "damage_dice": "8d8"
+        },
+        {
+          "method": "HIT",
+          "effect": "UN_POWER",
+          "damage_dice": "8d8"
+        }
+      ],
+      "skill": {
+        "probability": "1_IN_5",
+        "shoot": "50d3",
+        "list": [
+          "HEAL",
+          "BO_FIRE"
+        ]
+      },
+      "flavor": {
+        "ja": "特異現象捜査部の数少ない部員。掴みどころのない人物だが、異常なレベルに暑がりなこととかなり効率的に行動をしているのは確かだ。ただでさえ露出の多い服を着ておきながら、肌寒い中でも暑がってすぐ服を脱ぎたがるのが見受けられる。",
+        "en": "A few member of Super Phenomenon Task Force. She is fuzzy, but she is unusually sensitive to the heat and acts quite efficiently. There seems she feels the heat even in the chilly weather and take her clothes off, even though she wears very revealing clothes!"
+      }
     }
   ]
 }
