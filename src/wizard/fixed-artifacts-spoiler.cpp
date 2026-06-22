@@ -1,8 +1,9 @@
 #include "wizard/fixed-artifacts-spoiler.h"
 #include "io/files-util.h"
 #include "system/angband-system.h"
-#include "system/artifact-type-definition.h"
-#include "system/item-entity.h"
+#include "system/artifact/artifact-definition.h"
+#include "system/artifact/artifact-list.h"
+#include "system/item/item-entity.h"
 #include "system/player-type-definition.h"
 #include "util/angband-files.h"
 #include "view/display-messages.h"
@@ -145,7 +146,7 @@ SpoilerOutputResultType spoil_fixed_artifact()
 
                 const auto item = make_fake_artifact(fa_id);
                 PlayerType dummy;
-                const auto artifacts_list = object_analyze(&dummy, &item);
+                const auto artifacts_list = object_analyze(&dummy, item);
                 spoiler_print_art(&artifacts_list, ofs);
             }
         }

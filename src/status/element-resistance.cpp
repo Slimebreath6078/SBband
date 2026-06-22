@@ -1,7 +1,10 @@
 #include "status/element-resistance.h"
+#include "action/travel-execution.h"
 #include "core/disturbance.h"
 #include "core/stuff-handler.h"
 #include "game-option/disturbance-options.h"
+#include "main/sound-definitions-table.h"
+#include "main/sound-of-music.h"
 #include "player-base/player-class.h"
 #include "player-base/player-race.h"
 #include "player-info/race-info.h"
@@ -41,6 +44,7 @@ bool set_oppose_acid(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
         if (player_ptr->oppose_acid && !music_singing(player_ptr, MUSIC_RESIST) &&
             !PlayerClass(player_ptr).samurai_stance_is(SamuraiStanceType::MUSOU)) {
             msg_print(_("酸への耐性が薄れた気がする。", "You feel less resistant to acid."));
+            sound(SoundKind::BUFF_EXPIRE);
             notice = true;
         }
     }
@@ -51,8 +55,8 @@ bool set_oppose_acid(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
     }
 
     RedrawingFlagsUpdater::get_instance().set_flag(MainWindowRedrawingFlag::TIMED_EFFECT);
-    if (disturb_state) {
-        disturb(player_ptr, false, false);
+    if (disturb_state || Travel::get_instance().is_ongoing()) {
+        disturb(player_ptr, false, true);
     }
 
     handle_stuff(player_ptr);
@@ -88,6 +92,7 @@ bool set_oppose_elec(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
         if (player_ptr->oppose_elec && !music_singing(player_ptr, MUSIC_RESIST) &&
             !PlayerClass(player_ptr).samurai_stance_is(SamuraiStanceType::MUSOU)) {
             msg_print(_("電撃への耐性が薄れた気がする。", "You feel less resistant to electricity."));
+            sound(SoundKind::BUFF_EXPIRE);
             notice = true;
         }
     }
@@ -98,8 +103,8 @@ bool set_oppose_elec(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
     }
 
     RedrawingFlagsUpdater::get_instance().set_flag(MainWindowRedrawingFlag::TIMED_EFFECT);
-    if (disturb_state) {
-        disturb(player_ptr, false, false);
+    if (disturb_state || Travel::get_instance().is_ongoing()) {
+        disturb(player_ptr, false, true);
     }
 
     handle_stuff(player_ptr);
@@ -137,6 +142,7 @@ bool set_oppose_fire(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
         if (player_ptr->oppose_fire && !music_singing(player_ptr, MUSIC_RESIST) &&
             !PlayerClass(player_ptr).samurai_stance_is(SamuraiStanceType::MUSOU)) {
             msg_print(_("火への耐性が薄れた気がする。", "You feel less resistant to fire."));
+            sound(SoundKind::BUFF_EXPIRE);
             notice = true;
         }
     }
@@ -147,8 +153,8 @@ bool set_oppose_fire(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
     }
 
     RedrawingFlagsUpdater::get_instance().set_flag(MainWindowRedrawingFlag::TIMED_EFFECT);
-    if (disturb_state) {
-        disturb(player_ptr, false, false);
+    if (disturb_state || Travel::get_instance().is_ongoing()) {
+        disturb(player_ptr, false, true);
     }
 
     handle_stuff(player_ptr);
@@ -183,6 +189,7 @@ bool set_oppose_cold(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
         if (player_ptr->oppose_cold && !music_singing(player_ptr, MUSIC_RESIST) &&
             !PlayerClass(player_ptr).samurai_stance_is(SamuraiStanceType::MUSOU)) {
             msg_print(_("冷気への耐性が薄れた気がする。", "You feel less resistant to cold."));
+            sound(SoundKind::BUFF_EXPIRE);
             notice = true;
         }
     }
@@ -193,8 +200,8 @@ bool set_oppose_cold(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
     }
 
     RedrawingFlagsUpdater::get_instance().set_flag(MainWindowRedrawingFlag::TIMED_EFFECT);
-    if (disturb_state) {
-        disturb(player_ptr, false, false);
+    if (disturb_state || Travel::get_instance().is_ongoing()) {
+        disturb(player_ptr, false, true);
     }
 
     handle_stuff(player_ptr);
@@ -233,6 +240,7 @@ bool set_oppose_pois(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
         if (player_ptr->oppose_pois && !music_singing(player_ptr, MUSIC_RESIST) &&
             !pc.samurai_stance_is(SamuraiStanceType::MUSOU)) {
             msg_print(_("毒への耐性が薄れた気がする。", "You feel less resistant to poison."));
+            sound(SoundKind::BUFF_EXPIRE);
             notice = true;
         }
     }
@@ -243,8 +251,8 @@ bool set_oppose_pois(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
     }
 
     RedrawingFlagsUpdater::get_instance().set_flag(MainWindowRedrawingFlag::TIMED_EFFECT);
-    if (disturb_state) {
-        disturb(player_ptr, false, false);
+    if (disturb_state || Travel::get_instance().is_ongoing()) {
+        disturb(player_ptr, false, true);
     }
 
     handle_stuff(player_ptr);

@@ -7,18 +7,19 @@
 #include "locale/english.h"
 #include "mind/mind-weaponsmith.h"
 #include "object-enchant/object-ego.h"
-#include "object-enchant/special-object-flags.h"
 #include "object-enchant/tr-types.h"
 #include "perception/object-perception.h"
-#include "system/artifact-type-definition.h"
-#include "system/item-entity.h"
+#include "system/artifact/artifact-definition.h"
+#include "system/baseitem/baseitem-definition.h"
+#include "system/item/item-entity.h"
 #include "system/player-type-definition.h"
 #include "util/bit-flags-calculator.h"
 #include "util/string-processor.h"
 #ifdef JP
 #else
 #include "object/tval-types.h"
-#include "system/monster-race-info.h"
+#include "system/artifact/artifact-list.h"
+#include "system/monrace/monrace-definition.h"
 #endif
 #include <sstream>
 
@@ -121,10 +122,10 @@ static std::string describe_unique_name_before_body_ja(const ItemEntity &item, c
     return "";
 }
 
-static std::optional<std::string> describe_random_artifact_name_after_body_ja(const ItemEntity &item)
+static tl::optional<std::string> describe_random_artifact_name_after_body_ja(const ItemEntity &item)
 {
     if (!item.is_random_artifact()) {
-        return std::nullopt;
+        return tl::nullopt;
     }
 
     const std::string_view name_sv = *item.randart_name;

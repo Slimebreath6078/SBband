@@ -1,95 +1,76 @@
 #include "floor/object-scanner.h"
 #include "flavor/flavor-describer.h"
-#include "floor/cave.h"
 #include "game-option/text-display-options.h"
 #include "inventory/inventory-util.h"
 #include "io/input-key-requester.h"
 #include "locale/japanese.h"
 #include "object/item-tester-hooker.h"
-#include "object/object-mark-types.h"
-#include "system/floor-type-definition.h"
+#include "system/floor/floor-info.h"
 #include "system/grid-type-definition.h"
-#include "system/item-entity.h"
+#include "system/item/item-entity.h"
 #include "system/player-type-definition.h"
 #include "term/gameterm.h"
 #include "term/screen-processor.h"
-#include "term/z-form.h"
-#include "util/string-processor.h"
 #include <array>
 
 /*!
- * @brief 床に落ちているオブジェクトの数を返す / scan floor items
- * @param items オブジェクトのIDリストを返すための配列参照ポインタ
- * @param y 走査するフロアのY座標
- * @param x 走査するフロアのX座標
+ * @brief 床に落ちているオブジェクトのインデックス群を返す
+ * @param floor フロアへの参照
+ * @param pos 走査するフロアの座標
  * @param mode オプションフラグ
  * @return 対象のマスに落ちているアイテム数
- * @details
- * Return a list of o_list[] indexes of items at the given floor
- * location. Valid flags are:
- *
- *		mode & 0x01 -- Item tester
- *		mode & 0x02 -- Marked items only
- *		mode & 0x04 -- Stop after first
  */
-ITEM_NUMBER scan_floor_items(PlayerType *player_ptr, OBJECT_IDX *items, POSITION y, POSITION x, BIT_FLAGS mode, const ItemTester &item_tester)
+std::vector<short> scan_floor_items(const FloorType &floor, const Pos2D &pos, const EnumClassFlagGroup<ScanFloorMode> &mode, const ItemTester &item_tester)
 {
-    auto *floor_ptr = player_ptr->current_floor_ptr;
-    if (!in_bounds(floor_ptr, y, x)) {
-        return 0;
+    if (!floor.contains(pos, FloorBoundary::OUTER_WALL_EXCLUSIVE)) {
+        return {};
     }
 
-    ITEM_NUMBER num = 0;
-    for (const auto this_o_idx : floor_ptr->grid_array[y][x].o_idx_list) {
-        ItemEntity *o_ptr;
-        o_ptr = &floor_ptr->o_list[this_o_idx];
-        if ((mode & SCAN_FLOOR_ITEM_TESTER) && !item_tester.okay(o_ptr)) {
+    std::vector<short> items;
+    for (const auto this_o_idx : floor.get_grid(pos).o_idx_list) {
+        const auto &item = *floor.o_list[this_o_idx];
+        if (mode.has(ScanFloorMode::ITEM_TESTER) && !item_tester.okay(&item)) {
             continue;
         }
 
-        if ((mode & SCAN_FLOOR_ONLY_MARKED) && o_ptr->marked.has_not(OmType::FOUND)) {
+        if (mode.has(ScanFloorMode::ONLY_MARKED) && item.marked.has_not(OmType::FOUND)) {
             continue;
         }
 
-        if (num < 23) {
-            items[num] = this_o_idx;
-        }
-
-        num++;
-        if (mode & SCAN_FLOOR_AT_MOST_ONE) {
+        items.push_back(this_o_idx);
+        if (mode.has(ScanFloorMode::AT_MOST_ONE)) {
             break;
         }
     }
 
-    return num;
+    return items;
 }
 
 /*!
- * @brief タグIDにあわせてタグアルファベットのリストを返す(床上アイテム用) /
- * Move around label characters with correspond tags (floor version)
- * @param label ラベルリストを取得する文字列参照ポインタ
- * @param floor_list 床上アイテムの配列
- * @param floor_num  床上アイテムの配列ID
+ * @brief タグIDにあわせてタグアルファベットのリストを返す(床上アイテム用)
+ * @param floor フロアへの参照
+ * @param floor_item_index 床上アイテムインデックス群
+ * @return タグアルファベットのリスト
  */
-/*
- */
-static void prepare_label_string_floor(FloorType *floor_ptr, char *label, FLOOR_IDX floor_list[], ITEM_NUMBER floor_num)
+static std::string prepare_label_string_floor(const FloorType &floor, const std::vector<short> &floor_item_index)
 {
-    concptr alphabet_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    strcpy(label, alphabet_chars);
-    for (int i = 0; i < 52; i++) {
-        COMMAND_CODE index;
-        auto c = alphabet_chars[i];
-        if (!get_tag_floor(floor_ptr, &index, c, floor_list, floor_num)) {
+    constexpr std::string_view alphabet("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
+    std::string tag_chars(alphabet);
+    for (size_t i = 0; i < tag_chars.length(); i++) {
+        const auto tag_char = alphabet[i];
+        const auto fii_num = get_tag_floor(floor, tag_char, floor_item_index);
+        if (!fii_num) {
             continue;
         }
 
-        if (label[i] == c) {
-            label[i] = ' ';
+        if (tag_chars[i] == tag_char) {
+            tag_chars[i] = ' ';
         }
 
-        label[index] = c;
+        tag_chars[*fii_num] = tag_char;
     }
+
+    return tag_chars;
 }
 
 /*!
@@ -103,26 +84,25 @@ static void prepare_label_string_floor(FloorType *floor_ptr, char *label, FLOOR_
  */
 COMMAND_CODE show_floor_items(PlayerType *player_ptr, int target_item, POSITION y, POSITION x, TERM_LEN *min_width, const ItemTester &item_tester)
 {
-    COMMAND_CODE i, m;
-    int j, k, l;
-    ItemEntity *o_ptr;
-    COMMAND_CODE out_index[23]{};
-    TERM_COLOR out_color[23]{};
-    std::array<std::string, 23> descriptions{};
+    const Pos2D pos(y, x);
+    constexpr size_t max_items = 23; //!< @todo 1マスに落ちているアイテムの最大数. ヘッダに移したい.
+    COMMAND_CODE m;
+    int j, l;
+    short out_index[max_items]{};
+    TERM_COLOR out_color[max_items]{};
+    std::array<std::string, max_items> descriptions{};
     COMMAND_CODE target_item_label = 0;
-    OBJECT_IDX floor_list[23]{};
-    ITEM_NUMBER floor_num;
-    char floor_label[52 + 1]{};
     auto dont_need_to_show_weights = true;
     const auto &[wid, hgt] = term_get_size();
     auto len = std::max((*min_width), 20);
-    floor_num = scan_floor_items(player_ptr, floor_list, y, x, SCAN_FLOOR_ITEM_TESTER | SCAN_FLOOR_ONLY_MARKED, item_tester);
-    auto *floor_ptr = player_ptr->current_floor_ptr;
-    for (k = 0, i = 0; i < floor_num && i < 23; i++) {
-        o_ptr = &floor_ptr->o_list[floor_list[i]];
-        const auto item_name = describe_flavor(player_ptr, o_ptr, 0);
-        out_index[k] = i;
-        const auto tval = o_ptr->bi_key.tval();
+    auto &floor = *player_ptr->current_floor_ptr;
+    auto floor_item_index = scan_floor_items(floor, pos, { ScanFloorMode::ITEM_TESTER, ScanFloorMode::ONLY_MARKED }, item_tester);
+    auto k = 0;
+    for (size_t i = 0; (i < floor_item_index.size()) && (i < max_items); i++) {
+        const auto &item = *floor.o_list[floor_item_index[i]];
+        const auto item_name = describe_flavor(player_ptr, item, 0);
+        out_index[k] = static_cast<short>(i);
+        const auto tval = item.bi_key.tval();
         out_color[k] = tval_to_attr[enum2i(tval) & 0x7F];
         descriptions[k] = item_name;
         l = descriptions[k].length() + 5;
@@ -147,10 +127,10 @@ COMMAND_CODE show_floor_items(PlayerType *player_ptr, int target_item, POSITION 
 
     *min_width = len;
     int col = (len > wid - 4) ? 0 : (wid - len - 1);
-    prepare_label_string_floor(floor_ptr, floor_label, floor_list, floor_num);
+    const auto floor_label = prepare_label_string_floor(floor, floor_item_index);
     for (j = 0; j < k; j++) {
-        m = floor_list[out_index[j]];
-        o_ptr = &floor_ptr->o_list[m];
+        m = floor_item_index[out_index[j]];
+        const auto &item = *floor.o_list[m];
         prt("", j + 1, col ? col - 2 : col);
         std::string head;
         if (use_menu && target_item) {
@@ -161,13 +141,13 @@ COMMAND_CODE show_floor_items(PlayerType *player_ptr, int target_item, POSITION 
                 head = "   ";
             }
         } else {
-            head = format("%c)", floor_label[j]);
+            head = fmt::format("{})", floor_label[j]);
         }
 
         put_str(head, j + 1, col);
         c_put_str(out_color[j], descriptions[j], j + 1, col + 3);
-        if (show_weights && (o_ptr->bi_key.tval() != ItemKindType::GOLD)) {
-            int wgt = o_ptr->weight * o_ptr->number;
+        if (show_weights && (item.bi_key.tval() != ItemKindType::GOLD)) {
+            int wgt = item.weight * item.number;
             const auto weight = format(_("%3d.%1d kg", "%3d.%1d lb"), _(lb_to_kg_integer(wgt), wgt / 10), _(lb_to_kg_fraction(wgt), wgt % 10));
             prt(weight, j + 1, wid - 9);
         }

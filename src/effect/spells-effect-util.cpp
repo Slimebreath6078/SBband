@@ -1,8 +1,8 @@
 #include "effect/spells-effect-util.h"
-#include "monster-race/race-indice-types.h"
 #include "monster/monster-describer.h"
 #include "pet/pet-fall-off.h"
-#include "system/floor-type-definition.h"
+#include "system/enums/monrace/monrace-id.h"
+#include "system/floor/floor-info.h"
 #include "system/monster-entity.h"
 #include "system/player-type-definition.h"
 #include "view/display-messages.h"
@@ -19,7 +19,7 @@ POSITION monster_target_x;
 POSITION monster_target_y;
 
 CapturedMonsterType::CapturedMonsterType()
-    : r_idx(MonsterRaceId::PLAYER)
+    : r_idx(MonraceId::PLAYER)
 {
 }
 
@@ -49,7 +49,7 @@ void FallOffHorseEffect::apply() const
     }
 
     const auto &floor = *this->player_ptr->current_floor_ptr;
-    const auto m_name = monster_desc(this->player_ptr, &floor.m_list[player_ptr->riding], 0);
+    const auto m_name = monster_desc(this->player_ptr, floor.m_list[player_ptr->riding], 0);
 
     if (this->shake_off_damage > 0) {
         if (process_fall_off_horse(this->player_ptr, this->shake_off_damage, false)) {

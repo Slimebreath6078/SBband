@@ -1,177 +1,117 @@
 #include "store/rumor.h"
-#include "flavor/flavor-describer.h"
-#include "flavor/object-flavor-types.h"
-#include "floor/floor-town.h"
-#include "io/files-util.h"
-#include "io/tokenizer.h"
-#include "object-enchant/special-object-flags.h"
-#include "system/angband-exceptions.h"
-#include "system/artifact-type-definition.h"
-#include "system/baseitem-info.h"
-#include "system/dungeon-info.h"
-#include "system/item-entity.h"
-#include "system/monster-race-info.h"
-#include "system/player-type-definition.h"
+#include "locale/language-switcher.h"
+#include "locale/localized-string.h"
+#include "rumor/rumor-definition.h"
+#include "rumor/rumor-service.h"
+#include "system/artifact/artifact-definition.h"
+#include "system/artifact/artifact-list.h"
+#include "system/artifact/artifact-record.h"
+#include "system/dungeon/dungeon-definition.h"
+#include "system/dungeon/dungeon-list.h"
+#include "system/dungeon/dungeon-record.h"
+#include "system/floor/town-list.h"
+#include "system/floor/town-records.h"
+#include "system/monrace/monrace-list.h"
+#include "system/monrace/monrace-record.h"
+#include "system/monrace/monrace-records.h"
 #include "view/display-messages.h"
-#include "world/world.h"
-#include <algorithm>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <string_view>
-#include <utility>
+#include <fmt/format.h>
 
-/*
- * @brief 固定アーティファクト、モンスター、町 をランダムに1つ選び、ダンジョンを固定的に1つ選ぶ
- * @param zz 検索文字列
- * @param max_idx briefに挙げた各リストにおける最大数
- * @details rumor.txt (rumor_j.txt) の定義により、ダンジョンは鉄獄 (ダンジョンID1)が常に選ばれる
- * その他は常にランダム ("*")
- */
-static short get_rumor_num(std::string_view zz, short max_idx)
+namespace {
+void display_town_rumor(const RumorDefinition &rumor)
 {
-    if (zz == "*") {
-        return randnum1<short>(max_idx);
-    }
-
-    return static_cast<short>(atoi(zz.data()));
-}
-
-static std::string bind_rumor_name(std::string_view base, std::string_view item_name)
-{
-    if (const auto pos = base.find("{Name}");
-        pos != std::string::npos) {
-        const auto head = base.substr(0, pos);
-        const auto tail = base.substr(pos + 6);
-        std::stringstream ss;
-        ss << head << item_name << tail;
-        return ss.str();
-    }
-
-    return std::string(base);
-}
-
-/*
- * @brief 噂の、町やモンスターを表すトークンを得る
- * @param rumor rumor.txt (rumor_j.txt)の1行
- * @return トークン読み込み成否 とトークン群の配列
- * @todo tmp_tokensを使わず単なるsplitにすればもっと簡略化できそう
- */
-std::pair<bool, std::vector<std::string>> get_rumor_tokens(std::string rumor)
-{
-    constexpr auto num_tokens = 3;
-    char *tmp_tokens[num_tokens];
-    if (tokenize(rumor.data() + 2, num_tokens, tmp_tokens, TOKENIZE_CHECKQUOTE) != num_tokens) {
-        msg_print(_("この情報は間違っている。", "This information is wrong."));
-        return { false, {} };
-    }
-
-    std::vector<std::string> tokens(std::begin(tmp_tokens), std::end(tmp_tokens));
-    return { true, tokens };
-}
-
-/*!
- * @brief 固定アーティファクト番号とその定義を、ランダムに抽選する
- * @param artifact_name rumor.txt (rumor_j.txt)の定義により、常に"*" (ランダム)
- */
-static std::pair<FixedArtifactId, const ArtifactType *> get_artifact_definition(std::string_view artifact_name)
-{
-    const auto &artifacts = ArtifactList::get_instance();
-    const auto max_idx = enum2i(artifacts.rbegin()->first);
-    const auto fa_id = i2enum<FixedArtifactId>(get_rumor_num(artifact_name.data(), max_idx));
-    const auto &artifact = artifacts.get_artifact(fa_id);
-    return { fa_id, &artifact };
-}
-
-void display_rumor(PlayerType *player_ptr, bool ex)
-{
-    int section = (ex && (randint0(3) == 0)) ? 1 : 0;
-#ifdef JP
-    auto opt_rumor = get_random_line_ja_only("rumors_j.txt", section, 10);
-#else
-    auto opt_rumor = get_random_line("rumors.txt", section);
-#endif
-    std::string rumor;
-    if (opt_rumor) {
-        rumor = std::move(*opt_rumor);
-    } else {
-        rumor = _("嘘の噂もある。", "Some rumors are wrong.");
-    }
-
-    if (!rumor.starts_with("R:")) {
-        msg_print(rumor);
+    msg_erase();
+    msg_print(rumor.get_description());
+    const auto town_id = std::get<TownId>(rumor.get_id());
+    auto &town_records = TownRecords::get_instance();
+    if (town_records.has_visited(town_id)) {
         return;
     }
 
-    const auto &[is_correct, tokens] = get_rumor_tokens(rumor);
-    if (!is_correct) {
+    town_records.set_visited(town_id);
+    msg_erase();
+    constexpr auto fmt = _("{}への行き方が分かった。", "You know the way to {}.");
+    msg_print(fmt, TownList::get_instance().get_town(town_id).get_name());
+}
+
+void display_dungeon_rumor(const RumorDefinition &rumor)
+{
+    const auto dungeon_id = std::get<DungeonId>(rumor.get_id());
+    msg_erase();
+    msg_print(rumor.get_description());
+    auto &dungeon_record = DungeonRecords::get_instance().get_record(dungeon_id);
+    const auto &dungeon = DungeonList::get_instance().get_dungeon(dungeon_id);
+    const auto &dungeon_name = dungeon.name;
+    if (dungeon_record.has_entered()) {
+        msg_erase();
+        constexpr auto fmt = _("あなたは{}への行き方を既に知っている。", "You can already recall to {}.");
+        msg_print(fmt, dungeon_name);
         return;
     }
 
-    concptr rumor_eff_format = nullptr;
-    std::string fullname;
-    const auto &category = tokens[0];
-    if (category == "ARTIFACT") {
-        const auto &artifact_name = tokens[1];
-        const auto &[a_idx, a_ptr] = get_artifact_definition(artifact_name);
-        const auto bi_id = BaseitemList::get_instance().lookup_baseitem_id(a_ptr->bi_key);
-        ItemEntity item(bi_id);
-        item.fa_id = a_idx;
-        item.ident = IDENT_STORE;
-        fullname = describe_flavor(player_ptr, &item, OD_NAME_ONLY);
-    } else if (category == "MONSTER") {
-        const auto &monster_name = tokens[1];
+    dungeon_record.set_max_level(dungeon.mindepth);
+    msg_erase();
+    constexpr auto fmt = _("{}に帰還できるようになった。", "You can recall to {}.");
+    msg_print(fmt, dungeon_name);
+}
 
-        // @details プレイヤーもダミーで入っているので、1つ引いておかないと数が合わなくなる.
-        const auto monraces_size = static_cast<short>(monraces_info.size() - 1);
-        auto monrace_id = i2enum<MonsterRaceId>(get_rumor_num(monster_name, monraces_size));
-        auto *r_ptr = &monraces_info[monrace_id];
-        fullname = r_ptr->name;
-        if (!r_ptr->r_sights) {
-            r_ptr->r_sights++;
-        }
-    } else if (category == "DUNGEON") {
-        DUNGEON_IDX d_idx;
-        dungeon_type *d_ptr;
-        const auto dungeons_size = static_cast<short>(dungeons_info.size());
-        const auto &d_idx_str = tokens[1];
-        while (true) {
-            d_idx = get_rumor_num(d_idx_str, dungeons_size);
-            d_ptr = &dungeons_info[d_idx];
-            if (!d_ptr->name.empty()) {
-                break;
-            }
-        }
-
-        fullname = d_ptr->name;
-        if (!max_dlv[d_idx]) {
-            max_dlv[d_idx] = d_ptr->mindepth;
-            rumor_eff_format = _("%sに帰還できるようになった。", "You can recall to %s.");
-        }
-    } else if (category == "TOWN") {
-        IDX t_idx;
-        const auto &town_name = tokens[1];
-        while (true) {
-            t_idx = get_rumor_num(town_name, VALID_TOWNS);
-            if (!towns_info[t_idx].name.empty()) {
-                break;
-            }
-        }
-
-        fullname = towns_info[t_idx].name;
-        int32_t visit = (1UL << (t_idx - 1));
-        if ((t_idx != SECRET_TOWN) && !(player_ptr->visit & visit)) {
-            player_ptr->visit |= visit;
-            rumor_eff_format = _("%sに行ったことがある気がする。", "You feel you have been to %s.");
-        }
-    } else {
-        THROW_EXCEPTION(std::runtime_error, "Unknown token exists in rumor.txt");
+void display_monster_rumor(const RumorDefinition &rumor)
+{
+    const auto monrace_id = std::get<MonraceId>(rumor.get_id());
+    auto record = MonraceRecords::get_instance().get_record(monrace_id);
+    msg_erase();
+    msg_print(rumor.get_description());
+    if (record->has_been_seen()) {
+        return;
     }
 
-    const auto rumor_msg = bind_rumor_name(tokens[2], fullname);
-    msg_print(rumor_msg);
-    if (rumor_eff_format) {
-        msg_print(nullptr);
-        msg_format(rumor_eff_format, fullname.data());
+    record->increment_seen_count();
+    msg_erase();
+    constexpr auto fmt = _("{}の名前を書き留めた。", "You note the name of {}.");
+    msg_print(fmt, MonraceList::get_instance().get_name(monrace_id));
+}
+
+void display_artifact_rumor(const RumorDefinition &rumor)
+{
+    msg_erase();
+    msg_print(rumor.get_description());
+    const auto fa_id = std::get<FixedArtifactId>(rumor.get_id());
+    auto &records = ArtifactRecords::get_instance();
+    if (records.get_known(fa_id)) {
+        return;
+    }
+
+    records.set_known(fa_id);
+    msg_erase();
+    constexpr auto fmt = _("{}の名前を書き留めた。", "You note the name of {}.");
+    msg_print(fmt, ArtifactList::get_instance().get_full_name(fa_id));
+}
+}
+
+void display_selected_rumor(const RumorDefinition &rumor)
+{
+    const auto rumor_type = rumor.get_type();
+    switch (rumor_type) {
+    case RumorType::GOSSIP:
+        msg_erase();
+        msg_print(rumor.get_description());
+        return;
+    case RumorType::TOWN:
+        display_town_rumor(rumor);
+        return;
+    case RumorType::SHALLOW_DUNGEON:
+    case RumorType::DEEP_DUNGEON:
+        display_dungeon_rumor(rumor);
+        return;
+    case RumorType::NORMAL_MONSTER:
+    case RumorType::UNIQUE_MONSTER:
+        display_monster_rumor(rumor);
+        return;
+    case RumorType::SHALLOW_ARTIFACT:
+    case RumorType::DEEP_ARTIFACT:
+        display_artifact_rumor(rumor);
+        return;
+    default:
+        THROW_EXCEPTION(std::runtime_error, fmt::format("Unknown rumor type exists in rumor list: {}", enum2i(rumor_type)));
     }
 }

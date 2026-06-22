@@ -16,7 +16,6 @@
 #include "mind/mind-sniper.h"
 #include "mind/mind-weaponsmith.h"
 #include "object-enchant/object-ego.h"
-#include "object-enchant/special-object-flags.h"
 #include "object-enchant/tr-types.h"
 #include "object-enchant/trg-types.h"
 #include "object/tval-types.h"
@@ -29,9 +28,9 @@
 #include "sv-definition/sv-lite-types.h"
 #include "sv-definition/sv-ring-types.h"
 #include "sv-definition/sv-weapon-types.h"
-#include "system/baseitem-info.h"
-#include "system/floor-type-definition.h"
-#include "system/item-entity.h"
+#include "system/baseitem/baseitem-definition.h"
+#include "system/floor/floor-info.h"
+#include "system/item/item-entity.h"
 #include "system/player-type-definition.h"
 #include "util/bit-flags-calculator.h"
 #include "util/string-processor.h"
@@ -345,7 +344,7 @@ static std::string describe_charges_rod(const ItemEntity &item)
         return _("(充填中)", " (charging)");
     }
 
-    const auto timeout_per_one = item.get_baseitem().pval;
+    const auto timeout_per_one = item.get_baseitem_pval();
     auto num_of_charging = (item.timeout + (timeout_per_one - 1)) / timeout_per_one;
     if (num_of_charging > item.number) {
         num_of_charging = item.number;
@@ -444,7 +443,7 @@ static std::string describe_item_feeling(const ItemEntity &item, const describe_
         return game_inscriptions[item.feeling];
     }
 
-    if (item.is_cursed() && (opt.known || any_bits(item.ident, IDENT_SENSE))) {
+    if (item.is_cursed() && (opt.known || item.has_identification_flag(IdentificationFlag::SENSE))) {
         return _("呪われている", "cursed");
     }
 
@@ -453,11 +452,11 @@ static std::string describe_item_feeling(const ItemEntity &item, const describe_
     unidentifiable |= tval == ItemKindType::AMULET;
     unidentifiable |= tval == ItemKindType::LITE;
     unidentifiable |= tval == ItemKindType::FIGURINE;
-    if (unidentifiable && opt.aware && !opt.known && none_bits(item.ident, IDENT_SENSE)) {
+    if (unidentifiable && opt.aware && !opt.known && item.has_not_identification_flag(IdentificationFlag::SENSE)) {
         return _("未鑑定", "unidentified");
     }
 
-    if (!opt.known && any_bits(item.ident, IDENT_EMPTY)) {
+    if (!opt.known && item.has_identification_flag(IdentificationFlag::EMPTY)) {
         return _("空", "empty");
     }
 
@@ -492,7 +491,7 @@ static std::string describe_player_inscription(const ItemEntity &item)
 
 static std::string describe_item_discount(const ItemEntity &item, bool hide_discount)
 {
-    if ((item.discount == 0) || (hide_discount && none_bits(item.ident, IDENT_STORE))) {
+    if ((item.discount == 0) || (hide_discount && item.has_not_identification_flag(IdentificationFlag::STORE))) {
         return "";
     }
 
@@ -555,7 +554,7 @@ static describe_option_type decide_describe_option(const ItemEntity &item, BIT_F
         opt.flavor = false;
     }
 
-    if (any_bits(mode, OD_STORE) || any_bits(item.ident, IDENT_STORE)) {
+    if (any_bits(mode, OD_STORE) || item.has_identification_flag(IdentificationFlag::STORE)) {
         opt.flavor = false;
         opt.aware = true;
         opt.known = true;
@@ -577,14 +576,13 @@ static describe_option_type decide_describe_option(const ItemEntity &item, BIT_F
  * @param mode 表記に関するオプション指定
  * @return modeに応じたオブジェクトの表記
  */
-std::string describe_flavor(PlayerType *player_ptr, const ItemEntity *o_ptr, BIT_FLAGS mode, const size_t max_length)
+std::string describe_flavor(PlayerType *player_ptr, const ItemEntity &item, BIT_FLAGS mode, const size_t max_length)
 {
-    const auto &item = *o_ptr;
     const auto opt = decide_describe_option(item, mode);
     std::stringstream ss;
     ss << describe_named_item(player_ptr, item, opt);
 
-    if (any_bits(mode, OD_NAME_ONLY) || !o_ptr->is_valid()) {
+    if (any_bits(mode, OD_NAME_ONLY) || !item.is_valid()) {
         return str_substr(ss.str(), 0, max_length);
     }
 
@@ -593,7 +591,7 @@ std::string describe_flavor(PlayerType *player_ptr, const ItemEntity *o_ptr, BIT
        << describe_accuracy_and_damage_bonus(item, opt);
 
     if (none_bits(mode, OD_DEBUG)) {
-        const auto &bow = player_ptr->inventory_list[INVEN_BOW];
+        const auto &bow = *player_ptr->inventory[INVEN_BOW];
         const auto tval = item.bi_key.tval();
         if (bow.is_valid() && (tval == bow.get_arrow_kind())) {
             ss << describe_ammo_detail(player_ptr, item, bow, opt);

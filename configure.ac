@@ -1,10 +1,11 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT(hengband, 3.0.1.20-Beta)
+AC_INIT(hengband, 3.0.2.3-Beta)
 
 AC_CONFIG_MACRO_DIRS([m4])
 AC_CONFIG_HEADERS(src/autoconf.h)
 AC_CONFIG_SRCDIR(src/main.cpp)
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE(tar-pax)
+AM_SILENT_RULES([yes])
 
 AC_ARG_WITH(setgid,
 [  --with-setgid=NAME      install hengband as group NAME],
@@ -45,8 +46,32 @@ AC_SUBST(DEFAULT_VAR_PATH)
 dnl Checks for programs.
 AC_LANG(C++)
 AC_PROG_CXX
+saved_CXXFLAGS="$CXXFLAGS"
+CXXFLAGS=$(echo "$CXXFLAGS" | sed 's/-Werror[[^ ]]*//g')
 AX_CXX_COMPILE_STDCXX(20, [noext], [mandatory])
+CXXFLAGS="$saved_CXXFLAGS"
 PKG_PROG_PKG_CONFIG
+
+dnl Detect macOS host
+AC_CANONICAL_HOST
+is_macos=no
+case "${host_os}" in
+  darwin*) is_macos=yes ;;
+esac
+
+AC_MSG_CHECKING([whether the compiler is Clang])
+AC_COMPILE_IFELSE(
+  [AC_LANG_SOURCE([[
+    #ifdef __clang__
+    int main() { return 0; }
+    #else
+    #error "Not Clang"
+    #endif
+  ]])],
+  [AC_MSG_RESULT([yes]); is_clang=yes],
+  [AC_MSG_RESULT([no]); is_clang=no]
+)
+AM_CONDITIONAL([COMPILER_IS_CLANG], [test "x$is_clang" = "xyes"])
 
 AC_ARG_ENABLE(japanese,
 [  --disable-japanese      build english version], use_japanese=no, [AC_DEFINE(JP, 1, [Enable Japanese]) AC_DEFINE(EUC, 1, [Use Extended Unix Code])])
@@ -68,9 +93,27 @@ AM_CONDITIONAL([PCH], [test x$enable_pch = xyes])
 
 dnl Checks for libraries.
 dnl Replace `main' with a function in -lncurses:
-AC_CHECK_LIB(ncursesw, initscr, [AC_DEFINE(USE_GCU, 1, [Allow -mGCU environment]) AC_DEFINE(USE_NCURSES, 1, [Use ncurses]) LIBS="$LIBS -lncursesw"])
+AC_CHECK_LIB(ncursesw, initscr, [
+  AC_DEFINE(USE_GCU, 1, [Allow -mGCU environment]) 
+  AC_DEFINE(USE_NCURSES, 1, [Use ncurses]) 
+  LIBS="$LIBS -lncursesw"
+  
+  dnl Define MACOS_TERMINAL_UTF8 for macOS ncursesw builds
+  if test "x$is_macos" = "xyes"; then
+     AC_DEFINE(MACOS_TERMINAL_UTF8, 1, [Enable UTF-8 width fix for macOS terminal])
+  fi
+])
 if test "$ac_cv_lib_ncursesw_initscr" != yes; then
-  AC_CHECK_LIB(ncurses, initscr, [AC_DEFINE(USE_GCU, 1, [Allow -mGCU environment]) AC_DEFINE(USE_NCURSES, 1, [Use ncurses]) LIBS="$LIBS -lncurses"])
+  AC_CHECK_LIB(ncurses, initscr, [
+    AC_DEFINE(USE_GCU, 1, [Allow -mGCU environment]) 
+    AC_DEFINE(USE_NCURSES, 1, [Use ncurses]) 
+    LIBS="$LIBS -lncurses"
+    
+    dnl Define MACOS_TERMINAL_UTF8 for macOS ncurses builds
+    if test "x$is_macos" = "xyes"; then
+       AC_DEFINE(MACOS_TERMINAL_UTF8, 1, [Enable UTF-8 width fix for macOS terminal])
+    fi
+  ])
   if test "$ac_cv_lib_ncurses_initscr" != yes; then
     AC_CHECK_LIB(curses, initscr, [AC_DEFINE(USE_GCU, 1, [Allow -mGCU environment]) LIBS="$LIBS -lcurses"])
     if test "$ac_cv_lib_curses_initscr" != yes; then
@@ -129,11 +172,31 @@ if test "$have_x" = yes; then
 fi
 
 if test "$use_japanese" != no; then
-  AC_CHECK_PROG(NKF, nkf, yes)
-  if test x"$NKF" != x"yes"; then
-    AC_MSG_ERROR([nkf is not found. Please install nkf.])
+  AC_MSG_CHECKING([whether the compiler supports -fexec-charset=euc-jp-ms])
+  saved_CXXFLAGS="$CXXFLAGS"
+  CXXFLAGS="$CXXFLAGS -fexec-charset=euc-jp-ms"
+  AC_COMPILE_IFELSE(
+    [AC_LANG_PROGRAM(
+      [],
+      [return 0;]
+    )],
+    [AC_MSG_RESULT([yes])
+      ac_cv_compile_exec_charset=yes],
+    [AC_MSG_RESULT([no])
+      ac_cv_compile_exec_charset=no]
+  )
+  CXXFLAGS="$saved_CXXFLAGS"
+
+  if test x"$ac_cv_compile_exec_charset" = xno; then
+    AC_CHECK_PROG(NKF, nkf, yes)
+    if test x"$NKF" != x"yes"; then
+      AC_MSG_ERROR([nkf is not found. Please install nkf.])
+    fi
   fi
 fi
+
+AM_CONDITIONAL([COMPILER_HAVE_EXEC_CHARSET_EUC_JP_MS], [test x"$use_japanese" != xno -a x"$ac_cv_compile_exec_charset" = xyes])
+AM_CONDITIONAL([USE_NKF], [test x"$use_japanese" != xno -a x"$ac_cv_compile_exec_charset" = xno])
 
 if test "$enable_pch" != no; then
   dnl md5sum, sha224sum, sha256sum, sha384sum, sha512sum and b2sum are
@@ -156,6 +219,29 @@ AC_FUNC_MEMCMP
 AC_FUNC_STRFTIME
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS(gethostname mkdir select socket strtol mkstemp usleep)
+
+dnl On Linux, backtrace() may need additional linker flags to produce useful
+dnl symbol names.  With the GNU linker, the necessary option is
+dnl --export-dynamic or, if using the compiler to do the linking, -rdynamic.
+dnl Use -rdynamic on any platform where it is accepted.  If a platform
+dnl requires linking additional libraries to use backtrace(), this may have
+dnl to be modified as it only accounts for FreeBSD/NetBSD/OpenBSD where
+dnl libexecinfo needs to be linked to have access to backtrace().
+AC_SEARCH_LIBS([backtrace], [execinfo],
+  [AC_LINK_IFELSE(
+    [AC_LANG_SOURCE([[
+      #include <execinfo.h>
+      int main() { void *a[100]; int n; n = (int)backtrace(a, 100); return (n != 0) ? 0 : 1; }
+    ]])],
+    [AC_DEFINE([HAVE_BACKTRACE], [1], [Define if backtrace and backtrace_symbols exist.])
+    ac_save_LDFLAGS="$LDFLAGS"
+    LDFLAGS="$LDFLAGS -rdynamic"
+    AC_LINK_IFELSE(
+      [AC_LANG_SOURCE([[
+        int main() { return 0; }
+      ]])],
+      [],
+      [LDFLAGS="$ac_save_LDFLAGS"])])])
 
 AC_CONFIG_FILES(Makefile src/Makefile lib/Makefile lib/apex/Makefile \
 	lib/bone/Makefile lib/data/Makefile \

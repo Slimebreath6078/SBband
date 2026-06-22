@@ -8,7 +8,7 @@
 #include "player-info/race-info.h"
 #include "player-info/samurai-data-type.h"
 #include "player/special-defense-types.h"
-#include "system/item-entity.h"
+#include "system/item/item-entity.h"
 #include "system/player-type-definition.h"
 #include "util/bit-flags-calculator.h"
 
@@ -37,6 +37,9 @@ void player_immunity(PlayerType *player_ptr, TrFlags &flags)
     }
     if (p_flags.has(TR_IM_DARK)) {
         flags.set(TR_RES_DARK);
+    }
+    if (p_flags.has(TR_IM_LITE)) {
+        flags.set(TR_RES_LITE);
     }
 
     if (PlayerRace(player_ptr).equals(PlayerRaceType::SPECTRE)) {
@@ -79,9 +82,9 @@ void known_obj_immunity(PlayerType *player_ptr, TrFlags &flags)
 {
     flags.clear();
 
-    for (int i = INVEN_MAIN_HAND; i < INVEN_TOTAL; i++) {
+    for (const auto i_idx : INVEN_WIELDING_SLOTS) {
         ItemEntity *o_ptr;
-        o_ptr = &player_ptr->inventory_list[i];
+        o_ptr = player_ptr->inventory[i_idx].get();
         if (!o_ptr->is_valid()) {
             continue;
         }

@@ -14,8 +14,8 @@
 #include "inventory/inventory-slot-types.h"
 #include "player-base/player-class.h"
 #include "player/player-realm.h"
-#include "system/floor-type-definition.h"
-#include "system/item-entity.h"
+#include "system/floor/floor-info.h"
+#include "system/item/item-entity.h"
 #include "util/int-char-converter.h"
 
 /*!
@@ -36,18 +36,18 @@ char index_to_label(int i)
  * @param o_ptr 名称を取得する元のオブジェクト構造体参照ポインタ
  * @return 対応する装備部位ID
  */
-int16_t wield_slot(PlayerType *player_ptr, const ItemEntity *o_ptr)
+short wield_slot(PlayerType *player_ptr, const ItemEntity &item)
 {
-    switch (o_ptr->bi_key.tval()) {
+    switch (item.bi_key.tval()) {
     case ItemKindType::DIGGING:
     case ItemKindType::HAFTED:
     case ItemKindType::POLEARM:
     case ItemKindType::SWORD:
-        if (!player_ptr->inventory_list[INVEN_MAIN_HAND].bi_id) {
+        if (!player_ptr->inventory[INVEN_MAIN_HAND]->bi_id) {
             return INVEN_MAIN_HAND;
         }
 
-        if (player_ptr->inventory_list[INVEN_SUB_HAND].bi_id) {
+        if (player_ptr->inventory[INVEN_SUB_HAND]->bi_id) {
             return INVEN_MAIN_HAND;
         }
 
@@ -55,11 +55,11 @@ int16_t wield_slot(PlayerType *player_ptr, const ItemEntity *o_ptr)
     case ItemKindType::CAPTURE:
     case ItemKindType::CARD:
     case ItemKindType::SHIELD:
-        if (!player_ptr->inventory_list[INVEN_SUB_HAND].bi_id) {
+        if (!player_ptr->inventory[INVEN_SUB_HAND]->bi_id) {
             return INVEN_SUB_HAND;
         }
 
-        if (player_ptr->inventory_list[INVEN_MAIN_HAND].bi_id) {
+        if (player_ptr->inventory[INVEN_MAIN_HAND]->bi_id) {
             return INVEN_SUB_HAND;
         }
 
@@ -67,7 +67,7 @@ int16_t wield_slot(PlayerType *player_ptr, const ItemEntity *o_ptr)
     case ItemKindType::BOW:
         return INVEN_BOW;
     case ItemKindType::RING:
-        if (!player_ptr->inventory_list[INVEN_MAIN_RING].bi_id) {
+        if (!player_ptr->inventory[INVEN_MAIN_RING]->bi_id) {
             return INVEN_MAIN_RING;
         }
 
@@ -123,8 +123,16 @@ bool check_book_realm(PlayerType *player_ptr, const BaseitemKey &bi_key)
     return pr.realm1().equals(book_realm) || pr.realm2().equals(book_realm);
 }
 
-ItemEntity *ref_item(PlayerType *player_ptr, INVENTORY_IDX i_idx)
+/*!
+ * @brief 所持品IDからアイテムを返す
+ * @param player_ptr プレイヤーへの参照ポインタ
+ * @param i_idx 所持品ID
+ * @return 対応するアイテムへの参照ポインタ
+ * @details 返り値をshared_ptrとして保持せず".get()"で取得した生ポインタや"*"で取得した参照を保持し続けてはいけない.
+ * アイテムがインベントリや床から削除された際にダングリングポインタになる可能性がある.
+ */
+std::shared_ptr<ItemEntity> ref_item(PlayerType *player_ptr, short i_idx)
 {
-    auto *floor_ptr = player_ptr->current_floor_ptr;
-    return i_idx >= 0 ? &player_ptr->inventory_list[i_idx] : &(floor_ptr->o_list[0 - i_idx]);
+    auto &floor = *player_ptr->current_floor_ptr;
+    return i_idx >= 0 ? player_ptr->inventory[i_idx] : floor.o_list[0 - i_idx];
 }

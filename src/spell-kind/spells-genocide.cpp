@@ -20,9 +20,9 @@
 #include "monster/monster-status.h"
 #include "player/player-damage.h"
 #include "system/angband-system.h"
-#include "system/floor-type-definition.h"
+#include "system/floor/floor-info.h"
+#include "system/monrace/monrace-definition.h"
 #include "system/monster-entity.h"
-#include "system/monster-race-info.h"
 #include "system/player-type-definition.h"
 #include "system/redrawing-flags-updater.h"
 #include "util/bit-flags-calculator.h"
@@ -62,7 +62,7 @@ bool genocide_aux(PlayerType *player_ptr, MONSTER_IDX m_idx, int power, bool pla
         resist = true;
     } else {
         if (record_named_pet && monster.is_named_pet()) {
-            const auto m_name = monster_desc(player_ptr, &monster, MD_INDEF_VISIBLE);
+            const auto m_name = monster_desc(player_ptr, monster, MD_INDEF_VISIBLE);
             exe_write_diary(floor, DiaryKind::NAMED_PET, RECORD_NAMED_PET_GENOCIDE, m_name);
         }
 
@@ -70,14 +70,14 @@ bool genocide_aux(PlayerType *player_ptr, MONSTER_IDX m_idx, int power, bool pla
     }
 
     if (resist && player_cast) {
-        const auto see_m = is_seen(player_ptr, &monster);
-        const auto m_name = monster_desc(player_ptr, &monster, 0);
+        const auto see_m = is_seen(player_ptr, monster);
+        const auto m_name = monster_desc(player_ptr, monster, 0);
         if (see_m) {
             msg_format(_("%s^には効果がなかった。", "%s^ is unaffected."), m_name.data());
         }
 
         if (monster.is_asleep()) {
-            (void)set_monster_csleep(player_ptr, m_idx, 0);
+            (void)set_monster_csleep(*player_ptr->current_floor_ptr, m_idx, 0);
             if (monster.ml) {
                 msg_format(_("%s^が目を覚ました。", "%s^ wakes up."), m_name.data());
             }
@@ -175,11 +175,11 @@ bool mass_genocide(PlayerType *player_ptr, int power, bool player_cast)
 
     bool result = false;
     for (MONSTER_IDX i = 1; i < floor.m_max; i++) {
-        auto *m_ptr = &floor.m_list[i];
-        if (!m_ptr->is_valid()) {
+        const auto &monster = floor.m_list[i];
+        if (!monster.is_valid()) {
             continue;
         }
-        if (m_ptr->cdis > MAX_PLAYER_SIGHT) {
+        if (monster.cdis > MAX_PLAYER_SIGHT) {
             continue;
         }
 
@@ -212,15 +212,15 @@ bool mass_genocide_undead(PlayerType *player_ptr, int power, bool player_cast)
 
     bool result = false;
     for (MONSTER_IDX i = 1; i < floor.m_max; i++) {
-        auto *m_ptr = &floor.m_list[i];
-        auto *r_ptr = &m_ptr->get_monrace();
-        if (!m_ptr->is_valid()) {
+        const auto &monster = floor.m_list[i];
+        const auto &monrace = monster.get_monrace();
+        if (!monster.is_valid()) {
             continue;
         }
-        if (r_ptr->kind_flags.has_not(MonsterKindType::UNDEAD)) {
+        if (monrace.kind_flags.has_not(MonsterKindType::UNDEAD)) {
             continue;
         }
-        if (m_ptr->cdis > MAX_PLAYER_SIGHT) {
+        if (monster.cdis > MAX_PLAYER_SIGHT) {
             continue;
         }
 

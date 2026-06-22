@@ -5,103 +5,28 @@
  */
 
 #include "spell-realm/spells-crusade.h"
+#include "action/travel-execution.h"
 #include "core/disturbance.h"
 #include "core/stuff-handler.h"
-#include "effect/attribute-types.h"
 #include "effect/effect-characteristics.h"
 #include "effect/effect-processor.h"
-#include "floor/cave.h"
-#include "floor/geometry.h"
 #include "game-option/disturbance-options.h"
-#include "grid/feature-flag-types.h"
-#include "spell-realm/spells-crusade.h"
+#include "main/sound-definitions-table.h"
+#include "main/sound-of-music.h"
+#include "player-info/race-info.h"
+#include "spell-kind/spells-detection.h"
+#include "spell-kind/spells-floor.h"
+#include "spell-kind/spells-sight.h"
 #include "spell/range-calc.h"
-#include "system/angband-system.h"
-#include "system/floor-type-definition.h"
+#include "system/enums/terrain/terrain-characteristics.h"
+#include "system/floor/floor-info.h"
 #include "system/grid-type-definition.h"
 #include "system/player-type-definition.h"
 #include "system/redrawing-flags-updater.h"
-#include "target/projection-path-calculator.h"
 #include "target/target-checker.h"
 #include "target/target-getter.h"
-#include "util/bit-flags-calculator.h"
 #include "view/display-messages.h"
-
-/*!
- * @brief 破邪魔法「神の怒り」の処理としてターゲットを指定した後分解のボールを最大20回発生させる。
- * @param player_ptr プレイヤーへの参照ポインタ
- * @param dam ダメージ
- * @param rad 効力の半径
- * @return ターゲットを指定し、実行したならばTRUEを返す。
- */
-bool cast_wrath_of_the_god(PlayerType *player_ptr, int dam, POSITION rad)
-{
-    int dir;
-    if (!get_aim_dir(player_ptr, &dir)) {
-        return false;
-    }
-
-    Pos2D pos_target(player_ptr->y + 99 * ddy[dir], player_ptr->x + 99 * ddx[dir]);
-    if ((dir == 5) && target_okay(player_ptr)) {
-        pos_target.x = target_col;
-        pos_target.y = target_row;
-    }
-
-    Pos2D pos = player_ptr->get_position();
-    auto &floor = *player_ptr->current_floor_ptr;
-    while (true) {
-        if (pos == pos_target) {
-            break;
-        }
-
-        const auto pos_to = mmove2(pos, player_ptr->get_position(), pos_target);
-        if (AngbandSystem::get_instance().get_max_range() <= distance(player_ptr->y, player_ptr->x, pos_to.y, pos_to.x)) {
-            break;
-        }
-        if (!cave_has_flag_bold(&floor, pos_to.y, pos_to.x, TerrainCharacteristics::PROJECT)) {
-            break;
-        }
-        if ((dir != 5) && floor.get_grid(pos_to).has_monster()) {
-            break;
-        }
-
-        pos = pos_to;
-    }
-
-    pos_target = pos;
-    const auto b = 10 + randint1(10);
-    for (auto i = 0; i < b; i++) {
-        auto count = 20;
-        Pos2D pos_explode(pos_target.x, pos_target.y);
-        while (count--) {
-            const auto x = pos_target.x - 5 + randint0(11);
-            const auto y = pos_target.y - 5 + randint0(11);
-            const auto dx = (pos_target.x > x) ? (pos_target.x - x) : (x - pos_target.x);
-            const auto dy = (pos_target.y > y) ? (pos_target.y - y) : (y - pos_target.y);
-            const auto d = (dy > dx) ? (dy + (dx >> 1)) : (dx + (dy >> 1));
-            if (d < 5) {
-                pos_explode.x = x;
-                pos_explode.y = y;
-                break;
-            }
-        }
-
-        if (count < 0) {
-            continue;
-        }
-
-        auto should_cast = in_bounds(&floor, pos_explode.y, pos_explode.x) && !cave_stop_disintegration(&floor, pos_explode.y, pos_explode.x);
-        should_cast &= in_disintegration_range(&floor, pos_target.y, pos_target.x, pos_explode.y, pos_explode.x);
-        if (!should_cast) {
-            continue;
-        }
-
-        constexpr auto mode = PROJECT_JUMP | PROJECT_GRID | PROJECT_ITEM | PROJECT_KILL;
-        project(player_ptr, 0, rad, pos_explode.y, pos_explode.x, dam, AttributeType::DISINTEGRATE, mode);
-    }
-
-    return true;
-}
+#include <cmath>
 
 /*!
  * @brief 一時的聖なるのオーラの継続時間をセットする / Set "tim_sh_holy", notice observable changes
@@ -131,6 +56,7 @@ bool set_tim_sh_holy(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
     } else {
         if (player_ptr->tim_sh_holy) {
             msg_print(_("聖なるオーラが消えた。", "The holy aura disappeared."));
+            sound(SoundKind::BUFF_EXPIRE);
             notice = true;
         }
     }
@@ -143,8 +69,8 @@ bool set_tim_sh_holy(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
         return false;
     }
 
-    if (disturb_state) {
-        disturb(player_ptr, false, false);
+    if (disturb_state || Travel::get_instance().is_ongoing()) {
+        disturb(player_ptr, false, true);
     }
 
     rfu.set_flag(StatusRecalculatingFlag::BONUS);
@@ -181,6 +107,7 @@ bool set_tim_eyeeye(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
     } else {
         if (player_ptr->tim_eyeeye) {
             msg_print(_("懲罰を執行することができなくなった。", "You lost your aura of retribution."));
+            sound(SoundKind::BUFF_EXPIRE);
             notice = true;
         }
     }
@@ -193,11 +120,75 @@ bool set_tim_eyeeye(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
         return false;
     }
 
-    if (disturb_state) {
-        disturb(player_ptr, false, false);
+    if (disturb_state || Travel::get_instance().is_ongoing()) {
+        disturb(player_ptr, false, true);
     }
 
     rfu.set_flag(StatusRecalculatingFlag::BONUS);
     handle_stuff(player_ptr);
     return true;
+}
+
+void check_emission(PlayerType *player_ptr)
+{
+    if (player_ptr->tim_emission > 0) {
+        if (player_ptr->lev > 29) {
+            map_area(player_ptr, player_ptr->cur_lite);
+        }
+        if (player_ptr->lev > 24) {
+            detect_traps(player_ptr, player_ptr->cur_lite, true);
+        }
+        if (player_ptr->lev > 19) {
+            detect_monsters_evil(player_ptr, player_ptr->cur_lite);
+        }
+    }
+}
+
+void check_demigod(PlayerType *player_ptr)
+{
+    if (player_ptr->mimic_form == MimicKindType::DEMIGOD) {
+        const Dice dice(1, player_ptr->lev * 4);
+
+        dispel_evil(player_ptr, dice.roll());
+    }
+}
+
+bool has_slay_demon_from_exorcism(const PlayerType *player_ptr)
+{
+    if (player_ptr->tim_exorcism > 0) {
+        if (player_ptr->lev < THRESHOLD_KILL_FROM_EXORCISM) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool has_kill_demon_from_exorcism(const PlayerType *player_ptr)
+{
+    if (player_ptr->tim_exorcism > 0) {
+        if (player_ptr->lev >= THRESHOLD_KILL_FROM_EXORCISM) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool has_slay_undead_from_exorcism(const PlayerType *player_ptr)
+{
+    if (player_ptr->tim_exorcism > 0) {
+        if (player_ptr->lev < THRESHOLD_KILL_FROM_EXORCISM) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool has_kill_undead_from_exorcism(const PlayerType *player_ptr)
+{
+    if (player_ptr->tim_exorcism > 0) {
+        if (player_ptr->lev >= THRESHOLD_KILL_FROM_EXORCISM) {
+            return true;
+        }
+    }
+    return false;
 }

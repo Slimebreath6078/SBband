@@ -9,6 +9,5 @@
 enum class FixedArtifactId : short;
 class ItemEntity;
 class PlayerType;
-bool create_named_art(PlayerType *player_ptr, FixedArtifactId a_idx, POSITION y, POSITION x);
+bool create_named_art(PlayerType *player_ptr, FixedArtifactId fa_id, POSITION y, POSITION x);
 void apply_artifact(PlayerType *player_ptr, ItemEntity *o_ptr);
-bool make_artifact_special(PlayerType *player_ptr, ItemEntity *o_ptr);

@@ -3,7 +3,7 @@
 #include "mind/stances-table.h"
 #include "monster/monster-status.h"
 #include "player-base/player-class.h"
-#include "player-info/bluemage-data-type.h"
+#include "player-info/bluemage-data.h"
 #include "player-info/mane-data-type.h"
 #include "player-info/monk-data-type.h"
 #include "player-info/ninja-data-type.h"
@@ -18,7 +18,7 @@
 #include "realm/realm-types.h"
 #include "spell-realm/spells-hex.h"
 #include "status/element-resistance.h"
-#include "system/floor-type-definition.h"
+#include "system/floor/floor-info.h"
 #include "system/monster-entity.h"
 #include "system/player-type-definition.h"
 #include "term/screen-processor.h"
@@ -180,7 +180,7 @@ void print_state(PlayerType *player_ptr)
 
     case ACTION_LEARN: {
         text = _("学習", "lear");
-        auto bluemage_data = PlayerClass(player_ptr).get_specific_data<bluemage_data_type>();
+        auto bluemage_data = PlayerClass(player_ptr).get_specific_data<BluemageData>();
         if (bluemage_data->new_magic_learned) {
             attr = TERM_L_RED;
         }
@@ -252,17 +252,17 @@ void print_speed(PlayerType *player_ptr)
     auto row_speed = hgt + ROW_SPEED;
 
     const auto speed = player_ptr->pspeed - STANDARD_SPEED;
-    auto *floor_ptr = player_ptr->current_floor_ptr;
+    const auto &floor = *player_ptr->current_floor_ptr;
     bool is_player_fast = is_fast(player_ptr);
     std::string buf;
     TERM_COLOR attr = TERM_WHITE;
     const auto is_slow = player_ptr->effects()->deceleration().is_slow();
     if (speed > 0) {
         if (player_ptr->riding) {
-            auto *m_ptr = &floor_ptr->m_list[player_ptr->riding];
-            if (m_ptr->is_accelerated() && !m_ptr->is_decelerated()) {
+            const auto &monster = floor.m_list[player_ptr->riding];
+            if (monster.is_accelerated() && !monster.is_decelerated()) {
                 attr = TERM_L_BLUE;
-            } else if (m_ptr->is_decelerated() && !m_ptr->is_accelerated()) {
+            } else if (monster.is_decelerated() && !monster.is_accelerated()) {
                 attr = TERM_VIOLET;
             } else {
                 attr = TERM_GREEN;
@@ -277,10 +277,10 @@ void print_speed(PlayerType *player_ptr)
         buf = format("%s(+%d)", (player_ptr->riding ? _("乗馬", "Ride") : _("加速", "Fast")), speed);
     } else if (speed < 0) {
         if (player_ptr->riding) {
-            auto *m_ptr = &floor_ptr->m_list[player_ptr->riding];
-            if (m_ptr->is_accelerated() && !m_ptr->is_decelerated()) {
+            const auto &monster = floor.m_list[player_ptr->riding];
+            if (monster.is_accelerated() && !monster.is_decelerated()) {
                 attr = TERM_L_BLUE;
-            } else if (m_ptr->is_decelerated() && !m_ptr->is_accelerated()) {
+            } else if (monster.is_decelerated() && !monster.is_accelerated()) {
                 attr = TERM_VIOLET;
             } else {
                 attr = TERM_RED;
@@ -488,7 +488,7 @@ void print_status(PlayerType *player_ptr)
         ADD_BAR_FLAG(BAR_INFRAVISION);
     }
 
-    if (player_ptr->protevil) {
+    if (effects->protection().is_protected()) {
         ADD_BAR_FLAG(BAR_PROTEVIL);
     }
 
@@ -659,6 +659,30 @@ void print_status(PlayerType *player_ptr)
 
     if (player_ptr->tim_eyeeye) {
         ADD_BAR_FLAG(BAR_EYEEYE);
+    }
+
+    if (player_ptr->tim_res_lite) {
+        ADD_BAR_FLAG(BAR_RESLITE);
+    }
+
+    if (player_ptr->tim_res_dark) {
+        ADD_BAR_FLAG(BAR_RESDARK);
+    }
+
+    if (player_ptr->tim_res_fear) {
+        ADD_BAR_FLAG(BAR_RESFEAR);
+    }
+
+    if (player_ptr->tim_emission) {
+        ADD_BAR_FLAG(BAR_EMISSION);
+    }
+
+    if (player_ptr->tim_exorcism) {
+        ADD_BAR_FLAG(BAR_EXORCISM);
+    }
+
+    if (player_ptr->tim_imm_dark) {
+        ADD_BAR_FLAG(BAR_IMMDARK);
     }
 
     add_hex_status_flags(player_ptr, bar_flags);

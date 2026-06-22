@@ -2,9 +2,9 @@
 #include "core/asking-player.h"
 #include "market/arena-entry.h"
 #include "player-info/race-types.h"
-#include "system/monster-race-info.h"
+#include "system/floor/town-list.h"
+#include "system/monrace/monrace-list.h"
 #include "system/player-type-definition.h"
-#include "term/term-color-types.h"
 #include "util/bit-flags-calculator.h"
 
 AngbandWorld AngbandWorld::instance{};
@@ -79,59 +79,12 @@ std::tuple<int, int, int> AngbandWorld::extract_date_time(PlayerRaceType start_r
     return { day, hour, min };
 }
 
-/*!
- * @brief 実ゲームプレイ時間を更新する
- */
-void AngbandWorld::update_playtime()
-{
-    if (this->start_time == 0) {
-        return;
-    }
-
-    const auto current_time = static_cast<uint32_t>(time(nullptr));
-    this->play_time += (current_time - this->start_time);
-    this->start_time = current_time;
-}
-
-/*!
- * @brief 勝利したクラスを追加する
- */
-void AngbandWorld::add_winner_class(PlayerClassType c)
-{
-    if (!this->noscore) {
-        this->sf_winner.set(c);
-    }
-}
-
-/*!
- * @brief 引退したクラスを追加する
- */
-void AngbandWorld::add_retired_class(PlayerClassType c)
-{
-    if (!this->noscore) {
-        this->sf_retired.set(c);
-    }
-}
-
-term_color_type AngbandWorld::get_birth_class_color(PlayerClassType c) const
-{
-    if (c >= PlayerClassType::MAX) {
-        return TERM_WHITE;
-    }
-
-    if (this->is_retired_class(c)) {
-        return TERM_L_DARK;
-    }
-
-    return this->is_winner_class(c) ? TERM_SLATE : TERM_WHITE;
-}
-
-MonsterRaceInfo &AngbandWorld::get_today_bounty()
+MonraceDefinition &AngbandWorld::get_today_bounty()
 {
     return MonraceList::get_instance().get_monrace(this->today_mon);
 }
 
-const MonsterRaceInfo &AngbandWorld::get_today_bounty() const
+const MonraceDefinition &AngbandWorld::get_today_bounty() const
 {
     return MonraceList::get_instance().get_monrace(this->today_mon);
 }
@@ -140,30 +93,6 @@ bool AngbandWorld::is_player_true_winner() const
 {
     const auto &entries = ArenaEntryList::get_instance();
     return (this->total_winner > 0) && (entries.is_player_true_victor());
-}
-
-/*!
- * @brief 勝利したクラスか判定する
- */
-bool AngbandWorld::is_winner_class(PlayerClassType c) const
-{
-    if (c == PlayerClassType::MAX) {
-        return false;
-    }
-
-    return this->sf_winner.has(c);
-}
-
-/*!
- * @brief 引退したクラスか判定する
- */
-bool AngbandWorld::is_retired_class(PlayerClassType c) const
-{
-    if (c == PlayerClassType::MAX) {
-        return false;
-    }
-
-    return this->sf_retired.has(c);
 }
 
 /*!
@@ -189,10 +118,36 @@ void AngbandWorld::pass_game_turn_by_stay()
  */
 std::string AngbandWorld::format_real_playtime() const
 {
-    const auto hour = this->play_time / (60 * 60);
-    const auto min = (this->play_time / 60) % 60;
-    const auto sec = this->play_time % 60;
+    const auto playtime = this->play_time.elapsed_sec();
+    const auto hour = playtime / (60 * 60);
+    const auto min = (playtime / 60) % 60;
+    const auto sec = playtime % 60;
     return format("%.2u:%.2u:%.2u", hour, min, sec);
+}
+
+bool AngbandWorld::is_in_any_town() const
+{
+    return this->current_town_index > 0;
+}
+
+size_t AngbandWorld::get_town_index() const
+{
+    return this->current_town_index;
+}
+
+void AngbandWorld::set_town_index(size_t index)
+{
+    this->current_town_index = index;
+}
+
+const TownInfo &AngbandWorld::get_town() const
+{
+    return TownList::get_instance().get_town(this->current_town_index);
+}
+
+TownInfo &AngbandWorld::get_town()
+{
+    return TownList::get_instance().get_town(this->current_town_index);
 }
 
 /*!

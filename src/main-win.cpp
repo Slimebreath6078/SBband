@@ -90,8 +90,6 @@
 #include "core/special-internal-keys.h"
 #include "core/stuff-handler.h"
 #include "core/visuals-reseter.h"
-#include "core/window-redrawer.h"
-#include "floor/floor-events.h"
 #include "game-option/runtime-arguments.h"
 #include "game-option/special-options.h"
 #include "io/files-util.h"
@@ -111,19 +109,15 @@
 #include "main-win/main-win-utils.h"
 #include "main/angband-initializer.h"
 #include "main/sound-of-music.h"
-#include "monster-floor/monster-lite.h"
 #include "save/save.h"
 #include "system/angband.h"
+#include "system/floor/floor-info.h"
 #include "system/player-type-definition.h"
 #include "system/redrawing-flags-updater.h"
-#include "system/system-variables.h"
 #include "term/gameterm.h"
 #include "term/screen-processor.h"
 #include "term/term-color-types.h"
 #include "util/angband-files.h"
-#include "util/bit-flags-calculator.h"
-#include "util/enum-converter.h"
-#include "util/int-char-converter.h"
 #include "util/string-processor.h"
 #include "view/display-messages.h"
 #include "view/display-scores.h"
@@ -143,8 +137,6 @@
  * Window names
  */
 LPCWSTR win_term_name[] = { L"SBband", L"Term-1", L"Term-2", L"Term-3", L"Term-4", L"Term-5", L"Term-6", L"Term-7" };
-
-#define MAX_TERM_DATA 8 //!< Maximum number of windows
 
 static term_data data[MAX_TERM_DATA]; //!< An array of term_data's
 static bool is_main_term(term_data *td)
@@ -191,7 +183,7 @@ static HICON hIcon;
 
 /* bg */
 bg_mode current_bg_mode = bg_mode::BG_NONE;
-#define DEFAULT_BG_FILENAME "bg.bmp"
+constexpr auto DEFAULT_BG_FILENAME = "bg.bmp";
 std::filesystem::path wallpaper_path = ""; //!< 壁紙ファイル名。
 
 /*
@@ -202,7 +194,7 @@ static bool keep_subwindows = true;
 /*
  * Full path to ANGBAND.INI
  */
-static concptr ini_file = nullptr;
+static std::filesystem::path path_ini_file;
 
 /*
  * Name of application
@@ -336,7 +328,8 @@ static void save_prefs_aux(int i)
     }
 
     wsprintfA(sec_name, "Term-%d", i);
-
+    const auto &str_ini_file = path_ini_file.string();
+    const auto *ini_file = str_ini_file.data();
     if (i > 0) {
         strcpy(buf, td->visible ? "1" : "0");
         WritePrivateProfileStringA(sec_name, "Visible", buf, ini_file);
@@ -399,8 +392,10 @@ static void save_prefs_aux(int i)
  * @brief Write the "prefs"
  * We assume that the windows have all been initialized
  */
-static void save_prefs(void)
+static void save_prefs()
 {
+    const auto &str_ini_file = path_ini_file.string();
+    const auto *ini_file = str_ini_file.data();
     char buf[128];
     wsprintfA(buf, "%d", arg_graphics);
     WritePrivateProfileStringA("Angband", "Graphics", buf, ini_file);
@@ -446,7 +441,7 @@ static void save_prefs(void)
 /*!
  * @brief callback for EnumDisplayMonitors API
  */
-BOOL CALLBACK monitor_enum_procedure([[maybe_unused]] HMONITOR hMon, [[maybe_unused]] HDC hdcMon, [[maybe_unused]] LPRECT lpMon, LPARAM dwDate)
+static BOOL CALLBACK monitor_enum_procedure([[maybe_unused]] HMONITOR hMon, [[maybe_unused]] HDC hdcMon, [[maybe_unused]] LPRECT lpMon, LPARAM dwDate)
 {
     bool *result = (bool *)dwDate;
     *result = true;
@@ -460,18 +455,19 @@ static void load_prefs_aux(int i)
 {
     term_data *td = &data[i];
     GAME_TEXT sec_name[128];
-    char tmp[1024];
-
     wsprintfA(sec_name, "Term-%d", i);
+    const auto &str_ini_file = path_ini_file.string();
+    const auto *ini_file = str_ini_file.data();
     if (i > 0) {
         td->visible = (GetPrivateProfileIntA(sec_name, "Visible", td->visible, ini_file) != 0);
     }
 
+    char tmp[1024]{};
     GetPrivateProfileStringA(sec_name, "Font", _("ＭＳ ゴシック", "Courier"), tmp, 127, ini_file);
+    td->font_want = tmp;
 
-    td->font_want = string_make(tmp);
-    int hgt = 15;
-    int wid = 0;
+    const auto hgt = 15;
+    const auto wid = 0;
     td->lf.lfWidth = GetPrivateProfileIntA(sec_name, "FontWid", wid, ini_file);
     td->lf.lfHeight = GetPrivateProfileIntA(sec_name, "FontHgt", hgt, ini_file);
     td->lf.lfWeight = GetPrivateProfileIntA(sec_name, "FontWgt", 0, ini_file);
@@ -508,8 +504,10 @@ static void load_prefs_aux(int i)
 /*!
  * @brief Load the "prefs"
  */
-static void load_prefs(void)
+static void load_prefs()
 {
+    const auto &str_ini_file = path_ini_file.string();
+    const auto *ini_file = str_ini_file.data();
     arg_graphics = (byte)GetPrivateProfileIntA("Angband", "Graphics", enum2i(graphics_mode::GRAPHICS_NONE), ini_file);
     arg_bigtile = (GetPrivateProfileIntA("Angband", "Bigtile", false, ini_file) != 0);
     use_bigtile = arg_bigtile;
@@ -524,16 +522,12 @@ static void load_prefs(void)
     wallpaper_path = wallpaper_buf;
     char savefile_buf[1024]{};
     GetPrivateProfileStringA("Angband", "SaveFile", "", savefile_buf, 1023, ini_file);
-    if (strncmp(".\\", savefile_buf, 2) == 0) {
-        std::string angband_dir_str(ANGBAND_DIR.string());
-        const auto path_length = angband_dir_str.length() - 4; // "\lib" を除く.
-        angband_dir_str = angband_dir_str.substr(0, path_length);
-        char tmp[1024] = "";
-        strncat(tmp, angband_dir_str.data(), path_length);
-        strncat(tmp, savefile_buf + 2, std::string_view(savefile_buf).length() - 2 + path_length);
-        savefile = tmp;
+    const auto loaded_save_path = std::filesystem::path(savefile_buf).lexically_normal();
+    if (loaded_save_path.is_relative()) {
+        const auto angband_path = ANGBAND_DIR.parent_path().parent_path(); // remove "\\lib\\"
+        savefile = angband_path / loaded_save_path;
     } else {
-        savefile = savefile_buf;
+        savefile = loaded_save_path;
     }
 
     keep_subwindows = (GetPrivateProfileIntA("Angband", "KeepSubwindows", 0, ini_file) != 0);
@@ -545,7 +539,7 @@ static void load_prefs(void)
 /*!
  * @brief Initialize music
  */
-static void init_music(void)
+static void init_music()
 {
     // Flag set once "music" has been initialized
     static bool can_use_music = false;
@@ -559,7 +553,7 @@ static void init_music(void)
 /*!
  * @brief Initialize sound
  */
-static void init_sound(void)
+static void init_sound()
 {
     // Flag set once "sound" has been initialized
     static bool can_use_sound = false;
@@ -585,7 +579,7 @@ static void change_sound_mode(bool new_mode)
 /*!
  * @brief Initialize background
  */
-static void init_background(void)
+static void init_background()
 {
     // Flag set once "background" has been initialized
     static bool can_use_background = false;
@@ -737,7 +731,7 @@ static void term_data_redraw(term_data *td)
 /*!
  * @brief termの反転色表示
  */
-void term_inversed_area(HWND hWnd, int x, int y, int w, int h)
+static void term_inversed_area(HWND hWnd, int x, int y, int w, int h)
 {
     term_data *td = (term_data *)GetWindowLong(hWnd, 0);
     int tx = td->size_ow1 + x * td->tile_wid;
@@ -862,7 +856,7 @@ static errr term_xtra_win_event(int v)
 /*!
  * @brief Process all pending events
  */
-static errr term_xtra_win_flush(void)
+static errr term_xtra_win_flush()
 {
     MSG msg;
     while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
@@ -878,7 +872,7 @@ static errr term_xtra_win_flush(void)
  * @details
  * Make this more efficient
  */
-static errr term_xtra_win_clear(void)
+static errr term_xtra_win_clear()
 {
     term_data *td = (term_data *)(game_term->data);
 
@@ -903,7 +897,7 @@ static errr term_xtra_win_clear(void)
 /*!
  * @brief Hack -- make a noise
  */
-static errr term_xtra_win_noise(void)
+static errr term_xtra_win_noise()
 {
     MessageBeep(MB_ICONASTERISK);
     return 0;
@@ -923,10 +917,10 @@ static errr term_xtra_win_sound(int v)
 /*!
  * @brief Hack -- play a music
  */
-static errr term_xtra_win_music(int n, int v)
+static bool term_xtra_win_music(int n, int v)
 {
     if (!use_music) {
-        return 1;
+        return false;
     }
 
     return main_win_music::play_music(n, v);
@@ -935,14 +929,15 @@ static errr term_xtra_win_music(int n, int v)
 /*!
  * @brief Hack -- play a music matches a situation
  */
-static errr term_xtra_win_scene(int v)
+static bool term_xtra_win_scene(int v)
 {
     // TODO 場面に合った壁紙変更対応
     if (!use_music) {
-        return 1;
+        return false;
     }
 
-    return main_win_music::play_music_scene(v);
+    main_win_music::play_music_scene(v);
+    return true;
 }
 
 /*!
@@ -976,13 +971,13 @@ static errr term_xtra_win(int n, int v)
     case TERM_XTRA_MUSIC_QUEST:
     case TERM_XTRA_MUSIC_TOWN:
     case TERM_XTRA_MUSIC_MONSTER: {
-        return term_xtra_win_music(n, v);
+        return term_xtra_win_music(n, v) ? 0 : 1;
     }
-    case TERM_XTRA_MUSIC_MUTE: {
-        return main_win_music::stop_music();
-    }
+    case TERM_XTRA_MUSIC_MUTE:
+        main_win_music::stop_music();
+        return 0;
     case TERM_XTRA_SCENE: {
-        return term_xtra_win_scene(v);
+        return term_xtra_win_scene(v) ? 0 : 1;
     }
     case TERM_XTRA_SOUND: {
         return term_xtra_win_sound(v);
@@ -1148,8 +1143,7 @@ static errr term_text_win(int x, int y, int n, TERM_COLOR a, concptr s)
             rc.right += 2 * td->tile_wid;
         } else if (iskanji(*(s + i))) /* 2バイト文字 */
         {
-            char tmp[] = { *(s + i), *(s + i + 1), '\0' };
-            to_wchar wc(tmp);
+            to_wchar wc({ s + i, 2 });
             const auto *buf = wc.wc_str();
             rc.right += td->font_wid;
             if (buf == NULL) {
@@ -1325,7 +1319,7 @@ static void term_data_link(term_data *td)
  * Must use SW_SHOW not SW_SHOWNA, since on 256 color display
  * must make active to realize the palette.
  */
-static void init_windows(void)
+static void init_windows()
 {
     term_data *td;
     td = &data[0];
@@ -1467,7 +1461,7 @@ static void init_windows(void)
 /*!
  * @brief Prepare the menus
  */
-static void setup_menus(void)
+static void setup_menus()
 {
     HMENU hm = GetMenu(data[0].w);
 
@@ -1636,15 +1630,16 @@ static void process_menus(PlayerType *player_ptr, WORD wCmd)
             }
 
             msg_flag = false;
-            forget_lite(player_ptr->current_floor_ptr);
-            forget_view(player_ptr->current_floor_ptr);
-            clear_mon_lite(player_ptr->current_floor_ptr);
+            auto &floor = *player_ptr->current_floor_ptr;
+            floor.forget_lite();
+            floor.forget_view();
+            floor.forget_mon_lite();
 
             term_key_push(SPECIAL_KEY_QUIT);
             break;
         }
 
-        quit(nullptr);
+        quit("");
         break;
     }
     case IDM_FILE_SCORE: {
@@ -1880,14 +1875,16 @@ static void process_menus(PlayerType *player_ptr, WORD wCmd)
     case IDM_OPTIONS_MUSIC: {
         arg_music = !arg_music;
         use_music = arg_music;
-        if (use_music) {
-            init_music();
-            if (game_in_progress) {
-                select_floor_music(player_ptr);
-            }
-        } else {
+        if (!use_music) {
             main_win_music::stop_music();
+            break;
         }
+
+        init_music();
+        if (game_in_progress) {
+            select_floor_music(player_ptr);
+        }
+
         break;
     }
     case IDM_OPTIONS_MUSIC_VOLUME_100:
@@ -2039,7 +2036,7 @@ static bool process_keydown(WPARAM wParam, LPARAM lParam)
             term_keypress('A');
         }
 
-        int i = LOBYTE(HIWORD(lParam));
+        const auto i = LOBYTE(HIWORD(lParam));
         term_keypress('x');
         switch (wParam) {
         case VK_DIVIDE:
@@ -2083,8 +2080,8 @@ static bool process_keydown(WPARAM wParam, LPARAM lParam)
             term_keypress('K');
         }
 
-        term_keypress(hexsym[i / 16]);
-        term_keypress(hexsym[i % 16]);
+        term_keypress(hexify_upper(i));
+        term_keypress(hexify_lower(i));
         term_keypress(13);
 
         return 1;
@@ -2240,7 +2237,7 @@ static bool handle_window_resize(term_data *td, UINT uMsg, WPARAM wParam, LPARAM
 /*!
  * @brief メインウインドウ用ウインドウプロシージャ
  */
-LRESULT PASCAL angband_window_procedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static LRESULT PASCAL angband_window_procedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     term_data *td = (term_data *)GetWindowLong(hWnd, 0);
 
@@ -2419,7 +2416,7 @@ LRESULT PASCAL angband_window_procedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
     }
     case WM_CLOSE: {
         if (!game_in_progress || !AngbandWorld::get_instance().character_generated) {
-            quit(nullptr);
+            quit("");
             return 0;
         }
 
@@ -2429,15 +2426,16 @@ LRESULT PASCAL angband_window_procedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
         }
 
         msg_flag = false;
-        forget_lite(p_ptr->current_floor_ptr);
-        forget_view(p_ptr->current_floor_ptr);
-        clear_mon_lite(p_ptr->current_floor_ptr);
+        auto &floor = *p_ptr->current_floor_ptr;
+        floor.forget_lite();
+        floor.forget_view();
+        floor.forget_mon_lite();
         term_key_push(SPECIAL_KEY_QUIT);
         return 0;
     }
     case WM_QUERYENDSESSION: {
         if (!game_in_progress || !AngbandWorld::get_instance().character_generated) {
-            quit(nullptr);
+            quit("");
             return 0;
         }
 
@@ -2446,16 +2444,15 @@ LRESULT PASCAL angband_window_procedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
             p_ptr->is_dead = false;
         }
         exe_write_diary(*p_ptr->current_floor_ptr, DiaryKind::GAMESTART, 0, _("----ゲーム中断----", "---- Save and Exit Game ----"));
-
-        p_ptr->panic_save = 1;
+        AngbandSystem::get_instance().set_panic_save(true);
         signals_ignore_tstp();
         p_ptr->died_from = _("(緊急セーブ)", "(panic save)");
         (void)save_player(p_ptr, SaveType::CLOSE_GAME);
-        quit(nullptr);
+        quit("");
         return 0;
     }
     case WM_QUIT: {
-        quit(nullptr);
+        quit("");
         return 0;
     }
     case WM_COMMAND: {
@@ -2509,7 +2506,7 @@ LRESULT PASCAL angband_window_procedure(HWND hWnd, UINT uMsg, WPARAM wParam, LPA
 /*!
  * @brief サブウインドウ用ウインドウプロシージャ
  */
-LRESULT PASCAL AngbandListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static LRESULT PASCAL AngbandListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     term_data *td = (term_data *)GetWindowLong(hWnd, 0);
     if (handle_window_resize(td, uMsg, wParam, lParam)) {
@@ -2581,9 +2578,9 @@ LRESULT PASCAL AngbandListProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 /*!
  * @brief Display warning message (see "z-util.c")
  */
-static void hook_plog(concptr str)
+static void hook_plog(std::string_view str)
 {
-    if (str) {
+    if (!str.empty()) {
         MessageBoxW(data[0].w, to_wchar(str).wc_str(), _(L"警告！", L"Warning"), MB_ICONEXCLAMATION | MB_OK);
     }
 }
@@ -2591,21 +2588,20 @@ static void hook_plog(concptr str)
 /*!
  * @brief Display error message and quit (see "z-util.c")
  */
-static void hook_quit(concptr str)
+static void hook_quit(std::string_view str)
 {
-    if (str) {
+    if (!str.empty()) {
         MessageBoxW(data[0].w, to_wchar(str).wc_str(), _(L"エラー！", L"Error"), MB_ICONEXCLAMATION | MB_OK | MB_ICONSTOP);
     }
 
     save_prefs();
     for (int i = MAX_TERM_DATA - 1; i >= 0; --i) {
         term_force_font(&data[i]);
-        if (data[i].font_want) {
-            string_free(data[i].font_want);
-        }
+        data[i].font_want = "";
         if (data[i].w) {
             DestroyWindow(data[i].w);
         }
+
         data[i].w = 0;
     }
 
@@ -2619,7 +2615,7 @@ static void hook_quit(concptr str)
         DestroyIcon(hIcon);
     }
 
-    exit(0);
+    std::exit(0);
 }
 
 /*!
@@ -2630,7 +2626,7 @@ static void init_stuff()
     char path[MAIN_WIN_MAX_PATH];
     DWORD path_len = GetModuleFileNameA(hInstance, path, MAIN_WIN_MAX_PATH);
     strcpy(path + path_len - 4, ".INI");
-    ini_file = string_make(path);
+    path_ini_file = path;
 
     int i = path_len;
     for (; i > 0; i--) {
@@ -2703,7 +2699,7 @@ static void init_stuff()
  * Create Spoiler files
  * @details スポイラー出力処理の成功、失敗に関わらずプロセスを終了する。
  */
-void create_debug_spoiler(void)
+void create_debug_spoiler()
 {
     init_stuff();
     init_angband(p_ptr, true);
@@ -2722,13 +2718,13 @@ void create_debug_spoiler(void)
         break;
     }
 
-    quit(nullptr);
+    quit("");
 }
 
 /*!
  * @brief メインウインドウ、サブウインドウのウインドウクラス登録
  */
-static void register_wndclass(void)
+static void register_wndclass()
 {
     WNDCLASSW wc{};
     wc.style = CS_CLASSDC;
@@ -2743,7 +2739,7 @@ static void register_wndclass(void)
     wc.lpszClassName = AppName;
 
     if (!RegisterClassW(&wc)) {
-        exit(1);
+        std::exit(1);
     }
 
     wc.lpfnWndProc = AngbandListProc;
@@ -2751,14 +2747,14 @@ static void register_wndclass(void)
     wc.lpszClassName = AngList;
 
     if (!RegisterClassW(&wc)) {
-        exit(2);
+        std::exit(2);
     }
 }
 
 /*!
  * @brief ゲームのメインルーチン
  */
-int WINAPI game_main(_In_ HINSTANCE hInst)
+static int WINAPI game_main(_In_ HINSTANCE hInst)
 {
     setlocale(LC_ALL, "ja_JP");
     hInstance = hInst;
@@ -2773,13 +2769,13 @@ int WINAPI game_main(_In_ HINSTANCE hInst)
     register_wndclass();
 
     // before term_data initialize
-    plog_aux = [](concptr str) {
-        if (str) {
+    plog_aux = [](std::string_view str) {
+        if (!str.empty()) {
             MessageBoxW(NULL, to_wchar(str).wc_str(), _(L"警告！", L"Warning"), MB_ICONEXCLAMATION | MB_OK);
         }
     };
-    quit_aux = [](concptr str) {
-        if (str) {
+    quit_aux = [](std::string_view str) {
+        if (!str.empty()) {
             MessageBoxW(NULL, to_wchar(str).wc_str(), _(L"エラー！", L"Error"), MB_ICONEXCLAMATION | MB_OK | MB_ICONSTOP);
         }
 
@@ -2844,8 +2840,10 @@ int WINAPI game_main(_In_ HINSTANCE hInst)
         play_game(p_ptr, false, false);
     }
 
-    quit(nullptr);
+    quit("");
+#ifdef WIN_DEBUG
     return 0;
+#endif
 }
 
 /*!
@@ -2854,12 +2852,16 @@ int WINAPI game_main(_In_ HINSTANCE hInst)
 int WINAPI WinMain(
     _In_ HINSTANCE hInst, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 {
+#ifdef WIN_DEBUG
+    return game_main(hInst);
+#else
     try {
         return game_main(hInst);
     } catch (const std::exception &e) {
         handle_unexpected_exception(e);
         return 1;
     }
+#endif
 }
 
 #endif /* WINDOWS */

@@ -4,7 +4,8 @@
 #include "game-option/game-play-options.h"
 #include "io/input-key-acceptor.h"
 #include "lore/lore-util.h"
-#include "system/monster-race-info.h"
+#include "system/monrace/monrace-definition.h"
+#include "system/monrace/monrace-list.h"
 #include "term/gameterm.h"
 #include "term/screen-processor.h"
 #include "term/term-color-types.h"
@@ -31,7 +32,7 @@ bool research_mon(PlayerType *player_ptr)
     screen_save();
     constexpr auto prompt = _("モンスターの文字を入力して下さい(記号 or ^A全,^Uユ,^N非ユ,^M名前):",
         "Enter character to be identified(^A:All,^U:Uniqs,^N:Non uniqs,^M:Name): ");
-    const auto sym = input_command(prompt, false);
+    const auto sym = input_command(prompt);
     if (!sym) {
         screen_load();
         return false;
@@ -72,20 +73,20 @@ bool research_mon(PlayerType *player_ptr)
     }
 
     prt(buf, 16, 10);
-    std::vector<MonsterRaceId> monrace_ids;
+    std::vector<MonraceId> monrace_ids;
     auto &monraces = MonraceList::get_instance();
     for (const auto &[monrace_id, monrace] : monraces) {
-        if (!monrace.is_valid()) {
+        if (!monrace->is_valid()) {
             continue;
         }
 
         /* Require non-unique monsters if needed */
-        if (norm && monrace.kind_flags.has(MonsterKindType::UNIQUE)) {
+        if (norm && monrace->kind_flags.has(MonsterKindType::UNIQUE)) {
             continue;
         }
 
         /* Require unique monsters if needed */
-        if (uniq && monrace.kind_flags.has_not(MonsterKindType::UNIQUE)) {
+        if (uniq && monrace->kind_flags.has_not(MonsterKindType::UNIQUE)) {
             continue;
         }
 
@@ -103,7 +104,7 @@ bool research_mon(PlayerType *player_ptr)
                 }
             }
 
-            std::string temp2 = monrace.name.en_string();
+            std::string temp2 = monrace->name.en_string();
             for (auto &ch : temp2) {
                 if (isupper(ch)) {
                     ch = static_cast<char>(tolower(ch));
@@ -111,12 +112,12 @@ bool research_mon(PlayerType *player_ptr)
             }
 
 #ifdef JP
-            if (str_find(temp2, monster_name) || str_find(monrace.name.string(), monster_name))
+            if (str_find(temp2, monster_name) || str_find(monrace->name.string(), monster_name))
 #else
             if (str_find(temp2, monster_name))
 #endif
                 monrace_ids.push_back(monrace_id);
-        } else if (all || (monrace.symbol_definition.character == sym)) {
+        } else if (all || (monrace->symbol_definition.character == sym)) {
             monrace_ids.push_back(monrace_id);
         }
     }
@@ -149,7 +150,7 @@ bool research_mon(PlayerType *player_ptr)
                 const auto mes = monraces.probe_lore(monrace_id);
                 if (mes) {
                     msg_print(*mes);
-                    msg_print(nullptr);
+                    msg_erase();
                 }
 
                 tracker.set_trackee(monrace_id);

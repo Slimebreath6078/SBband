@@ -2,13 +2,12 @@
 #include "cmd-action/cmd-spell.h"
 #include "flavor/flavor-describer.h"
 #include "flavor/object-flavor-types.h"
-#include "object-enchant/special-object-flags.h"
 #include "object/tval-types.h"
 #include "perception/object-perception.h"
 #include "player-base/player-class.h"
 #include "player/player-realm.h"
 #include "spell/spell-info.h"
-#include "system/item-entity.h"
+#include "system/item/item-entity.h"
 #include "system/player-type-definition.h"
 #include "term/term-color-types.h"
 #include "tracking/baseitem-tracker.h"
@@ -47,10 +46,10 @@ void inven_item_charges(const ItemEntity &item)
  */
 void inven_item_describe(PlayerType *player_ptr, short i_idx)
 {
-    auto *o_ptr = &player_ptr->inventory_list[i_idx];
-    const auto item_name = describe_flavor(player_ptr, o_ptr, 0);
+    const auto &item = *player_ptr->inventory[i_idx];
+    const auto item_name = describe_flavor(player_ptr, item, 0);
 #ifdef JP
-    if (o_ptr->number <= 0) {
+    if (item.number <= 0) {
         msg_format("もう%sを持っていない。", item_name.data());
     } else {
         msg_format("まだ %sを持っている。", item_name.data());
@@ -77,7 +76,7 @@ void display_koff(PlayerType *player_ptr)
     }
 
     const auto item = tracker.get_trackee();
-    const auto item_name = describe_flavor(player_ptr, &item, (OD_OMIT_PREFIX | OD_NAME_ONLY | OD_STORE));
+    const auto item_name = describe_flavor(player_ptr, item, (OD_OMIT_PREFIX | OD_NAME_ONLY | OD_STORE));
     term_putstr(0, 0, -1, TERM_WHITE, item_name);
     const auto sval = *item.bi_key.sval();
     const auto use_realm = PlayerRealm::get_realm_of_book(item.bi_key.tval());

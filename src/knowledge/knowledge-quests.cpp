@@ -7,18 +7,19 @@
 #include "knowledge/knowledge-quests.h"
 #include "artifact/fixed-art-types.h"
 #include "core/show-file.h"
-#include "dungeon/quest.h"
 #include "flavor/flavor-describer.h"
 #include "flavor/object-flavor-types.h"
 #include "info-reader/fixed-map-parser.h"
 #include "io-dump/dump-util.h"
 #include "locale/english.h"
-#include "object-enchant/special-object-flags.h"
-#include "system/artifact-type-definition.h"
-#include "system/dungeon-info.h"
-#include "system/floor-type-definition.h"
-#include "system/item-entity.h"
-#include "system/monster-race-info.h"
+#include "system/artifact/artifact-definition.h"
+#include "system/dungeon/dungeon-record.h"
+#include "system/dungeon/quest-definition.h"
+#include "system/dungeon/quest-list.h"
+#include "system/enums/dungeon/dungeon-id.h"
+#include "system/floor/floor-info.h"
+#include "system/item/item-entity.h"
+#include "system/monrace/monrace-definition.h"
 #include "system/player-type-definition.h"
 #include "term/screen-processor.h"
 #include "term/z-form.h"
@@ -52,7 +53,7 @@ static void do_cmd_knowledge_quests_current(PlayerType *player_ptr, FILE *fff)
     int total = 0;
 
     fprintf(fff, _("《遂行中のクエスト》\n", "< Current Quest >\n"));
-
+    const auto &dungeon_records = DungeonRecords::get_instance();
     for (const auto &[quest_id, quest] : quests) {
         if (quest_id == QuestId::NONE) {
             continue;
@@ -100,11 +101,10 @@ static void do_cmd_knowledge_quests_current(PlayerType *player_ptr, FILE *fff)
                 case QuestKindType::FIND_ARTIFACT: {
                     std::string item_name("");
                     if (quest.has_reward()) {
-                        const auto &artifact = quest.get_reward();
-                        ItemEntity item(artifact.bi_key);
-                        item.fa_id = quest.reward_fa_id;
-                        item.ident = IDENT_STORE;
-                        item_name = describe_flavor(player_ptr, &item, OD_NAME_ONLY);
+                        ItemEntity item(quest.get_reward_bi_id());
+                        item.fa_id = quest.get_reward().value_or(FixedArtifactId::NONE);
+                        item.set_identification_flag(IdentificationFlag::STORE);
+                        item_name = describe_flavor(player_ptr, item, OD_NAME_ONLY);
                     }
 
                     note = format(_("\n   - %sを見つけ出す。", "\n   - Find %s."), item_name.data());
@@ -147,7 +147,7 @@ static void do_cmd_knowledge_quests_current(PlayerType *player_ptr, FILE *fff)
             continue;
         }
         rand_level = quest.level;
-        if (max_dlv[DUNGEON_ANGBAND] < rand_level) {
+        if (dungeon_records.get_record(DungeonId::ANGBAND).get_max_level() < rand_level) {
             continue;
         }
 
@@ -173,14 +173,14 @@ static bool do_cmd_knowledge_quests_aux(PlayerType *player_ptr, FILE *fff, Quest
     const auto &quests = QuestList::get_instance();
     const auto &quest = quests.get_quest(q_idx);
 
-    auto *floor_ptr = player_ptr->current_floor_ptr;
+    auto &floor = *player_ptr->current_floor_ptr;
     auto is_fixed_quest = QuestType::is_fixed(q_idx);
     if (is_fixed_quest) {
-        QuestId old_quest = floor_ptr->quest_number;
-        floor_ptr->quest_number = q_idx;
+        const auto old_quest = floor.quest_number;
+        floor.quest_number = q_idx;
         init_flags = INIT_NAME_ONLY;
         parse_fixed_map(player_ptr, QUEST_DEFINITION_LIST, 0, 0, 0, 0);
-        floor_ptr->quest_number = old_quest;
+        floor.quest_number = old_quest;
         if (quest.flags & QUEST_FLAG_SILENT) {
             return false;
         }

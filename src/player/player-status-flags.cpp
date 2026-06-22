@@ -36,11 +36,11 @@
 #include "spell-realm/spells-hex.h"
 #include "spell-realm/spells-song.h"
 #include "sv-definition/sv-weapon-types.h"
-#include "system/floor-type-definition.h"
+#include "system/floor/floor-info.h"
 #include "system/grid-type-definition.h"
-#include "system/item-entity.h"
+#include "system/item/item-entity.h"
+#include "system/monrace/monrace-definition.h"
 #include "system/monster-entity.h"
-#include "system/monster-race-info.h"
 #include "system/player-type-definition.h"
 #include "timed-effect/timed-effects.h"
 #include "util/bit-flags-calculator.h"
@@ -118,8 +118,8 @@ BIT_FLAGS check_equipment_flags(PlayerType *player_ptr, tr_type tr_flag)
 {
     ItemEntity *o_ptr;
     BIT_FLAGS result = 0L;
-    for (int i = INVEN_MAIN_HAND; i < INVEN_TOTAL; i++) {
-        o_ptr = &player_ptr->inventory_list[i];
+    for (const auto i_idx : INVEN_WIELDING_SLOTS) {
+        o_ptr = player_ptr->inventory[i_idx].get();
         if (!o_ptr->is_valid()) {
             continue;
         }
@@ -127,7 +127,7 @@ BIT_FLAGS check_equipment_flags(PlayerType *player_ptr, tr_type tr_flag)
         const auto flags = o_ptr->get_flags();
 
         if (flags.has(tr_flag)) {
-            set_bits(result, convert_inventory_slot_type_to_flag_cause(i2enum<inventory_slot_type>(i)));
+            set_bits(result, convert_inventory_slot_type_to_flag_cause(i_idx));
         }
     }
     return result;
@@ -469,6 +469,8 @@ BIT_FLAGS get_player_flags(PlayerType *player_ptr, tr_type tr_flag)
         return check_equipment_flags(player_ptr, tr_flag);
     case TR_VUL_CURSE:
         return has_vuln_curse(player_ptr);
+    case TR_IM_LITE:
+        return has_immune_lite(player_ptr);
 
     case TR_FLAG_MAX:
         break;
@@ -718,8 +720,8 @@ void check_no_flowed(PlayerType *player_ptr)
         return;
     }
 
-    for (int i = 0; i < INVEN_PACK; i++) {
-        const auto &bi_key = player_ptr->inventory_list[i].bi_key;
+    for (const auto i_idx : INVEN_PACK_SLOTS) {
+        const auto &bi_key = player_ptr->inventory[i_idx]->bi_key;
         if (bi_key == BaseitemKey(ItemKindType::NATURE_BOOK, 2)) {
             has_sw = true;
         }
@@ -730,7 +732,7 @@ void check_no_flowed(PlayerType *player_ptr)
     }
 
     for (const auto this_o_idx : player_ptr->current_floor_ptr->grid_array[player_ptr->y][player_ptr->x].o_idx_list) {
-        o_ptr = &player_ptr->current_floor_ptr->o_list[this_o_idx];
+        o_ptr = player_ptr->current_floor_ptr->o_list[this_o_idx].get();
 
         if (o_ptr->bi_key == BaseitemKey(ItemKindType::NATURE_BOOK, 2)) {
             has_sw = true;
@@ -787,8 +789,8 @@ BIT_FLAGS has_warning(PlayerType *player_ptr)
     BIT_FLAGS result = 0L;
     ItemEntity *o_ptr;
 
-    for (int i = INVEN_MAIN_HAND; i < INVEN_TOTAL; i++) {
-        o_ptr = &player_ptr->inventory_list[i];
+    for (const auto i_idx : INVEN_WIELDING_SLOTS) {
+        o_ptr = player_ptr->inventory[i_idx].get();
         if (!o_ptr->is_valid()) {
             continue;
         }
@@ -797,7 +799,7 @@ BIT_FLAGS has_warning(PlayerType *player_ptr)
 
         if (flags.has(TR_WARNING)) {
             if (!o_ptr->is_inscribed() || !angband_strchr(o_ptr->inscription->data(), '$')) {
-                set_bits(result, convert_inventory_slot_type_to_flag_cause(i2enum<inventory_slot_type>(i)));
+                set_bits(result, convert_inventory_slot_type_to_flag_cause(i_idx));
             }
         }
     }
@@ -1054,8 +1056,8 @@ void update_curses(PlayerType *player_ptr)
         player_ptr->cursed.set(CurseTraitType::AGGRAVATE);
     }
 
-    for (int i = INVEN_MAIN_HAND; i < INVEN_TOTAL; i++) {
-        o_ptr = &player_ptr->inventory_list[i];
+    for (const auto i_idx : INVEN_WIELDING_SLOTS) {
+        o_ptr = player_ptr->inventory[i_idx].get();
         if (!o_ptr->is_valid()) {
             continue;
         }
@@ -1164,17 +1166,17 @@ void update_extra_blows(PlayerType *player_ptr)
     const melee_type melee_type = player_melee_type(player_ptr);
     const bool two_handed = (melee_type == MELEE_TYPE_WEAPON_TWOHAND || melee_type == MELEE_TYPE_BAREHAND_TWO);
 
-    for (int i = INVEN_MAIN_HAND; i < INVEN_TOTAL; i++) {
-        o_ptr = &player_ptr->inventory_list[i];
+    for (const auto i_idx : INVEN_WIELDING_SLOTS) {
+        o_ptr = player_ptr->inventory[i_idx].get();
         if (!o_ptr->is_valid()) {
             continue;
         }
 
         const auto flags = o_ptr->get_flags();
         if (flags.has(TR_BLOWS)) {
-            if ((i == INVEN_MAIN_HAND || i == INVEN_MAIN_RING) && !two_handed) {
+            if ((i_idx == INVEN_MAIN_HAND || i_idx == INVEN_MAIN_RING) && !two_handed) {
                 player_ptr->extra_blows[0] += o_ptr->pval;
-            } else if ((i == INVEN_SUB_HAND || i == INVEN_SUB_RING) && !two_handed) {
+            } else if ((i_idx == INVEN_SUB_HAND || i_idx == INVEN_SUB_RING) && !two_handed) {
                 player_ptr->extra_blows[1] += o_ptr->pval;
             } else {
                 player_ptr->extra_blows[0] += o_ptr->pval;
@@ -1319,9 +1321,9 @@ BIT_FLAGS has_resist_sound(PlayerType *player_ptr)
 
 BIT_FLAGS has_resist_lite(PlayerType *player_ptr)
 {
-    BIT_FLAGS result = common_cause_flags(player_ptr, TR_RES_LITE);
+    BIT_FLAGS result = common_cause_flags(player_ptr, TR_RES_LITE) | common_cause_flags(player_ptr, TR_IM_LITE);
 
-    if (player_ptr->ult_res) {
+    if (player_ptr->ult_res || player_ptr->tim_res_lite || player_ptr->mimic_form == MimicKindType::DEMIGOD) {
         result |= FLAG_CAUSE_MAGIC_TIME_EFFECT;
     }
 
@@ -1343,7 +1345,7 @@ BIT_FLAGS has_resist_dark(PlayerType *player_ptr)
 {
     BIT_FLAGS result = common_cause_flags(player_ptr, TR_RES_DARK) | common_cause_flags(player_ptr, TR_IM_DARK);
 
-    if (player_ptr->ult_res) {
+    if (player_ptr->ult_res || player_ptr->tim_res_dark || player_ptr->tim_imm_dark) {
         result |= FLAG_CAUSE_MAGIC_TIME_EFFECT;
     }
 
@@ -1467,8 +1469,8 @@ BIT_FLAGS has_vuln_curse(PlayerType *player_ptr)
 {
     ItemEntity *o_ptr;
     BIT_FLAGS result = 0L;
-    for (int i = INVEN_MAIN_HAND; i < INVEN_TOTAL; i++) {
-        o_ptr = &player_ptr->inventory_list[i];
+    for (const auto i_idx : INVEN_WIELDING_SLOTS) {
+        o_ptr = player_ptr->inventory[i_idx].get();
         if (!o_ptr->is_valid()) {
             continue;
         }
@@ -1476,7 +1478,7 @@ BIT_FLAGS has_vuln_curse(PlayerType *player_ptr)
         const auto flags = o_ptr->get_flags();
 
         if (flags.has(TR_VUL_CURSE) || o_ptr->curse_flags.has(CurseTraitType::VUL_CURSE)) {
-            set_bits(result, convert_inventory_slot_type_to_flag_cause(i2enum<inventory_slot_type>(i)));
+            set_bits(result, convert_inventory_slot_type_to_flag_cause(i_idx));
         }
     }
 
@@ -1492,8 +1494,8 @@ BIT_FLAGS has_heavy_vuln_curse(PlayerType *player_ptr)
 {
     ItemEntity *o_ptr;
     BIT_FLAGS result = 0L;
-    for (int i = INVEN_MAIN_HAND; i < INVEN_TOTAL; i++) {
-        o_ptr = &player_ptr->inventory_list[i];
+    for (const auto i_idx : INVEN_WIELDING_SLOTS) {
+        o_ptr = player_ptr->inventory[i_idx].get();
         if (!o_ptr->is_valid()) {
             continue;
         }
@@ -1501,7 +1503,7 @@ BIT_FLAGS has_heavy_vuln_curse(PlayerType *player_ptr)
         const auto flags = o_ptr->get_flags();
 
         if ((flags.has(TR_VUL_CURSE) || o_ptr->curse_flags.has(CurseTraitType::VUL_CURSE)) && o_ptr->curse_flags.has(CurseTraitType::HEAVY_CURSE)) {
-            set_bits(result, convert_inventory_slot_type_to_flag_cause(i2enum<inventory_slot_type>(i)));
+            set_bits(result, convert_inventory_slot_type_to_flag_cause(i_idx));
         }
     }
 
@@ -1516,7 +1518,7 @@ BIT_FLAGS has_resist_fear(PlayerType *player_ptr)
         result |= FLAG_CAUSE_MUTATION;
     }
 
-    if (is_hero(player_ptr) || is_shero(player_ptr) || player_ptr->ult_res) {
+    if (is_hero(player_ptr) || is_shero(player_ptr) || player_ptr->ult_res || player_ptr->tim_res_fear) {
         result |= FLAG_CAUSE_MAGIC_TIME_EFFECT;
     }
 
@@ -1579,10 +1581,19 @@ BIT_FLAGS has_immune_dark(PlayerType *player_ptr)
 {
     BIT_FLAGS result = common_cause_flags(player_ptr, TR_IM_DARK);
 
-    if (player_ptr->wraith_form) {
+    if (player_ptr->wraith_form || player_ptr->tim_imm_dark) {
         result |= FLAG_CAUSE_MAGIC_TIME_EFFECT;
     }
 
+    return result;
+}
+
+BIT_FLAGS has_immune_lite(PlayerType *player_ptr)
+{
+    BIT_FLAGS result = common_cause_flags(player_ptr, TR_IM_LITE);
+    if (player_ptr->mimic_form == MimicKindType::DEMIGOD) {
+        result |= FLAG_CAUSE_MAGIC_TIME_EFFECT;
+    }
     return result;
 }
 
@@ -1653,9 +1664,9 @@ bool can_attack_with_sub_hand(PlayerType *player_ptr)
 bool has_two_handed_weapons(PlayerType *player_ptr)
 {
     if (can_two_hands_wielding(player_ptr)) {
-        if (can_attack_with_main_hand(player_ptr) && (empty_hands(player_ptr, false) == EMPTY_HAND_SUB) && player_ptr->inventory_list[INVEN_MAIN_HAND].allow_two_hands_wielding()) {
+        if (can_attack_with_main_hand(player_ptr) && (empty_hands(player_ptr, false) == EMPTY_HAND_SUB) && player_ptr->inventory[INVEN_MAIN_HAND]->allow_two_hands_wielding()) {
             return true;
-        } else if (can_attack_with_sub_hand(player_ptr) && (empty_hands(player_ptr, false) == EMPTY_HAND_MAIN) && player_ptr->inventory_list[INVEN_SUB_HAND].allow_two_hands_wielding()) {
+        } else if (can_attack_with_sub_hand(player_ptr) && (empty_hands(player_ptr, false) == EMPTY_HAND_MAIN) && player_ptr->inventory[INVEN_SUB_HAND]->allow_two_hands_wielding()) {
             return true;
         }
     }
@@ -1695,7 +1706,7 @@ BIT_FLAGS has_lite(PlayerType *player_ptr)
 bool has_disable_two_handed_bonus(PlayerType *player_ptr, int i)
 {
     if (has_melee_weapon(player_ptr, INVEN_MAIN_HAND + i) && has_two_handed_weapons(player_ptr)) {
-        auto *o_ptr = &player_ptr->inventory_list[INVEN_MAIN_HAND + i];
+        auto *o_ptr = player_ptr->inventory[INVEN_MAIN_HAND + i].get();
         int limit = calc_weapon_weight_limit(player_ptr);
 
         /* Enable when two hand wields an enough light weapon */
@@ -1714,7 +1725,7 @@ bool has_disable_two_handed_bonus(PlayerType *player_ptr, int i)
  */
 bool is_wielding_icky_weapon(PlayerType *player_ptr, int i)
 {
-    const auto *o_ptr = &player_ptr->inventory_list[INVEN_MAIN_HAND + i];
+    const auto *o_ptr = player_ptr->inventory[INVEN_MAIN_HAND + i].get();
     const auto flags = o_ptr->get_flags();
 
     const auto tval = o_ptr->bi_key.tval();
@@ -1742,7 +1753,7 @@ bool is_wielding_icky_weapon(PlayerType *player_ptr, int i)
  */
 bool is_wielding_icky_riding_weapon(PlayerType *player_ptr, int i)
 {
-    const auto *o_ptr = &player_ptr->inventory_list[INVEN_MAIN_HAND + i];
+    const auto *o_ptr = player_ptr->inventory[INVEN_MAIN_HAND + i].get();
     const auto flags = o_ptr->get_flags();
     const auto tval = o_ptr->bi_key.tval();
     const auto has_no_weapon = (tval == ItemKindType::NONE) || (tval == ItemKindType::SHIELD);
@@ -1756,12 +1767,12 @@ bool has_not_ninja_weapon(PlayerType *player_ptr, int i)
         return false;
     }
 
-    const auto &item = player_ptr->inventory_list[INVEN_MAIN_HAND + i];
+    const auto &item = *player_ptr->inventory[INVEN_MAIN_HAND + i];
     const auto tval = item.bi_key.tval();
     const auto sval = *item.bi_key.sval();
     return PlayerClass(player_ptr).equals(PlayerClassType::NINJA) &&
            !((player_ptr->weapon_exp_max[tval][sval] > PlayerSkill::weapon_exp_at(PlayerSkillRank::BEGINNER)) &&
-               (player_ptr->inventory_list[INVEN_SUB_HAND - i].bi_key.tval() != ItemKindType::SHIELD));
+               (player_ptr->inventory[INVEN_SUB_HAND - i]->bi_key.tval() != ItemKindType::SHIELD));
 }
 
 bool has_not_monk_weapon(PlayerType *player_ptr, int i)
@@ -1770,7 +1781,7 @@ bool has_not_monk_weapon(PlayerType *player_ptr, int i)
         return false;
     }
 
-    const auto &item = player_ptr->inventory_list[INVEN_MAIN_HAND + i];
+    const auto &item = *player_ptr->inventory[INVEN_MAIN_HAND + i];
     const auto tval = item.bi_key.tval();
     const auto sval = *item.bi_key.sval();
     PlayerClass pc(player_ptr);

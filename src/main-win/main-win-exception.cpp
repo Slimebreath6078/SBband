@@ -1,6 +1,5 @@
 #include "main-win/main-win-exception.h"
-#include "io/files-util.h"
-#include "locale/japanese.h"
+#include "locale/character-encoding.h"
 #include "main-win/main-win-utils.h"
 #include "util/angband-files.h"
 #include <sstream>
@@ -62,12 +61,14 @@ void handle_unexpected_exception(const std::exception &e)
 #if !defined(DISABLE_NET)
     std::wstringstream report_confirm_msg_ss;
     report_confirm_msg_ss
-        << to_wchar(first_line.data()).wc_str() << L"\n\n"
-        << _(L"エラー内容をファイルに書き出しますか？\n", L"Are you sure you want to write the error information file?\n");
+        << to_wchar(first_line).wc_str() << L"\n\n"
+        << _(L"開発チームにエラー情報を送信してよろしいですか？\n", L"Are you sure you want to send the error information to the development team?\n")
+        << _(L"※送信されるのはゲーム内の情報のみであり、個人情報が送信されることはありません。\n",
+               L"Only in-game information will be sent. No personal information will be sent.\n");
 
     if (auto choice = MessageBoxW(NULL, report_confirm_msg_ss.str().data(), caption, MB_ICONEXCLAMATION | MB_YESNO | MB_ICONSTOP);
         choice == IDYES) {
-        write_error_message(caption, e.what());
+        report_error(msg);
     }
 #endif
 

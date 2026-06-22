@@ -6,7 +6,6 @@
  */
 
 #include "monster-attack/monster-attack-switcher.h"
-#include "dungeon/quest.h"
 #include "inventory/inventory-slot-types.h"
 #include "mind/drs-types.h"
 #include "mind/mind-mirror-master.h"
@@ -29,8 +28,9 @@
 #include "status/base-status.h"
 #include "status/element-resistance.h"
 #include "status/experience.h"
-#include "system/floor-type-definition.h"
-#include "system/item-entity.h"
+#include "system/dungeon/quest-definition.h"
+#include "system/floor/floor-info.h"
+#include "system/item/item-entity.h"
 #include "system/monster-entity.h"
 #include "system/player-type-definition.h"
 #include "timed-effect/timed-effects.h"
@@ -111,8 +111,8 @@ static void calc_blow_un_power(PlayerType *player_ptr, MonsterAttackPlayer *mona
 
     int max_draining_item = is_magic_mastery ? 5 : 10;
     for (int i = 0; i < max_draining_item; i++) {
-        INVENTORY_IDX i_idx = (INVENTORY_IDX)randint0(INVEN_PACK);
-        monap_ptr->o_ptr = &player_ptr->inventory_list[i_idx];
+        const auto i_idx = rand_choice(INVEN_PACK_SLOTS);
+        monap_ptr->o_ptr = player_ptr->inventory[i_idx].get();
         if (!monap_ptr->o_ptr->is_valid()) {
             continue;
         }
@@ -397,7 +397,7 @@ void switch_monster_blow_to_player(PlayerType *player_ptr, MonsterAttackPlayer *
         break;
     }
     case RaceBlowEffectType::EAT_LITE: {
-        monap_ptr->o_ptr = &player_ptr->inventory_list[INVEN_LITE];
+        monap_ptr->o_ptr = player_ptr->inventory[INVEN_LITE].get();
         monap_ptr->get_damage += take_hit(player_ptr, DAMAGE_ATTACK, monap_ptr->damage, monap_ptr->ddesc);
         if (player_ptr->is_dead || check_multishadow(player_ptr)) {
             break;
@@ -489,7 +489,7 @@ void switch_monster_blow_to_player(PlayerType *player_ptr, MonsterAttackPlayer *
         monap_ptr->damage -= (monap_ptr->damage * ((monap_ptr->ac < 150) ? monap_ptr->ac : 150) / 250);
         monap_ptr->get_damage += take_hit(player_ptr, DAMAGE_ATTACK, monap_ptr->damage, monap_ptr->ddesc);
         if (monap_ptr->damage > 23 || monap_ptr->explode) {
-            earthquake(player_ptr, monap_ptr->m_ptr->fy, monap_ptr->m_ptr->fx, 8, monap_ptr->m_idx);
+            earthquake(player_ptr, monap_ptr->m_ptr->get_position(), 8, monap_ptr->m_idx);
         }
 
         break;
@@ -562,11 +562,11 @@ void switch_monster_blow_to_player(PlayerType *player_ptr, MonsterAttackPlayer *
         }
         if (one_in_(250)) {
             monap_ptr->obvious = true;
-            const auto *floor_ptr = player_ptr->current_floor_ptr;
-            if (floor_ptr->is_in_underground() && (!floor_ptr->is_in_quest() || !QuestType::is_fixed(floor_ptr->quest_number))) {
+            const auto &floor = *player_ptr->current_floor_ptr;
+            if (floor.is_underground() && (!floor.is_in_quest() || !QuestType::is_fixed(floor.quest_number))) {
                 if (monap_ptr->damage > 23 || monap_ptr->explode) {
                     msg_print(_("カオスの力でダンジョンが崩れ始める！", "The dungeon tumbles by the chaotic power!"));
-                    earthquake(player_ptr, monap_ptr->m_ptr->fy, monap_ptr->m_ptr->fx, 8, monap_ptr->m_idx);
+                    earthquake(player_ptr, monap_ptr->m_ptr->get_position(), 8, monap_ptr->m_idx);
                     break;
                 }
             }

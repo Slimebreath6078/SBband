@@ -12,9 +12,9 @@
 #include "player-base/player-class.h"
 #include "player-info/mane-data-type.h"
 #include "spell-realm/spells-hex.h"
-#include "system/floor-type-definition.h"
+#include "system/floor/floor-info.h"
+#include "system/monrace/monrace-definition.h"
 #include "system/monster-entity.h"
-#include "system/monster-race-info.h"
 #include "system/player-type-definition.h"
 #include "system/redrawing-flags-updater.h"
 #include "timed-effect/timed-effects.h"
@@ -87,10 +87,10 @@ static void process_rememberance(melee_spell_type *ms_ptr)
         return;
     }
 
-    ms_ptr->r_ptr->r_ability_flags.set(ms_ptr->thrown_spell);
+    ms_ptr->monrace->r_ability_flags.set(ms_ptr->thrown_spell);
 
-    if (ms_ptr->r_ptr->r_cast_spell < MAX_UCHAR) {
-        ms_ptr->r_ptr->r_cast_spell++;
+    if (ms_ptr->monrace->r_cast_spell < MAX_UCHAR) {
+        ms_ptr->monrace->r_cast_spell++;
     }
 }
 
@@ -111,7 +111,7 @@ bool monst_spell_monst(PlayerType *player_ptr, MONSTER_IDX m_idx)
         return false;
     }
 
-    ms_ptr->m_name = monster_desc(player_ptr, ms_ptr->m_ptr, 0x00);
+    ms_ptr->m_name = monster_desc(player_ptr, *ms_ptr->m_ptr, 0x00);
     ms_ptr->thrown_spell = rand_choice(ms_ptr->spells);
     if (ms_ptr->m_ptr->is_riding()) {
         disturb(player_ptr, true, true);
@@ -121,7 +121,7 @@ bool monst_spell_monst(PlayerType *player_ptr, MONSTER_IDX m_idx)
         return true;
     }
 
-    ms_ptr->can_remember = is_original_ap_and_seen(player_ptr, ms_ptr->m_ptr);
+    ms_ptr->can_remember = is_original_ap_and_seen(player_ptr, *ms_ptr->m_ptr);
     const auto res = monspell_to_monster(player_ptr, ms_ptr->thrown_spell, ms_ptr->y, ms_ptr->x, m_idx, ms_ptr->target_idx, false);
     if (!res.valid) {
         return false;
@@ -130,8 +130,8 @@ bool monst_spell_monst(PlayerType *player_ptr, MONSTER_IDX m_idx)
     ms_ptr->dam = res.dam;
     process_special_melee_spell(player_ptr, ms_ptr);
     process_rememberance(ms_ptr);
-    if (player_ptr->is_dead && (ms_ptr->r_ptr->r_deaths < MAX_SHORT) && !player_ptr->current_floor_ptr->inside_arena) {
-        ms_ptr->r_ptr->r_deaths++;
+    if (player_ptr->is_dead && (ms_ptr->monrace->r_deaths < MAX_SHORT) && !player_ptr->current_floor_ptr->inside_arena) {
+        ms_ptr->monrace->r_deaths++;
     }
 
     return true;

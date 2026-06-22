@@ -17,14 +17,17 @@
 #include <map>
 #include <string>
 
+enum class DungeonId;
+enum class ElementRealmType;
+enum class FixedArtifactId : short;
 enum class ItemKindType : short;
-enum class PlayerSkillKindType;
 enum class MimicKindType;
+enum class MonraceId : short;
 enum class MonsterAbilityType;
-enum class MonsterRaceId : int16_t;
-enum class Virtue : short;
+enum class PlayerSkillKindType;
 enum class RealmType;
-
+enum class Virtue : short;
+class Direction;
 class FloorType;
 class ItemEntity;
 class TimedEffects;
@@ -42,7 +45,7 @@ public:
     player_personality_type ppersonality{}; /* Personality index */
     RealmType realm1{}; /* First magic realm */
     RealmType realm2{}; /* Second magic realm */
-    int16_t element{}; //!< 元素使い領域番号 / Elementalist system index
+    ElementRealmType element_realm{}; //!< 元素使い領域
 
     Dice hit_dice{}; /* Hit dice */
     uint16_t expfact{}; /* Experience factor
@@ -64,11 +67,6 @@ public:
 
     PLAYER_LEVEL lev{}; /* Level */
 
-    int16_t town_num{}; /* Current town number */
-
-    POSITION wilderness_x{}; /* Coordinates in the wilderness */
-    POSITION wilderness_y{};
-
     int mhp{}; /* Max hit pts */
     int chp{}; /* Cur hit pts */
     uint32_t chp_frac{}; /* Cur hit frac (times 2^16) */
@@ -89,11 +87,10 @@ public:
 
     uint32_t count{};
 
-    TIME_EFFECT protevil{}; /* Timed -- Protection */
     TIME_EFFECT invuln{}; /* Timed -- Invulnerable */
     TIME_EFFECT ult_res{}; /* Timed -- Ultimate Resistance */
     TIME_EFFECT hero{}; /* Timed -- Heroism */
-    TIME_EFFECT shero{}; /* Timed -- Super Heroism */
+    TIME_EFFECT berserk{}; /* Timed -- Super Heroism */
     TIME_EFFECT shield{}; /* Timed -- Shield Spell */
     TIME_EFFECT blessed{}; /* Timed -- Blessed */
     TIME_EFFECT tim_invis{}; /* Timed -- See Invisible */
@@ -121,6 +118,9 @@ public:
     TIME_EFFECT tsubureru{};
     TIME_EFFECT magicdef{};
     TIME_EFFECT tim_res_nether{}; /* Timed -- Nether resistance */
+    TIME_EFFECT tim_res_lite{}; /* Timed -- Lite resistance */
+    TIME_EFFECT tim_res_dark{}; /* Timed -- Dark resistance */
+    TIME_EFFECT tim_res_fear{}; /* Timed -- Fear resistance */
     TIME_EFFECT tim_res_time{}; /* Timed -- Time resistance */
     MimicKindType mimic_form{};
     TIME_EFFECT tim_mimic{};
@@ -132,6 +132,11 @@ public:
     TIME_EFFECT tim_reflect{}; /* Timed -- Reflect */
     TIME_EFFECT multishadow{}; /* Timed -- Multi-shadow */
     TIME_EFFECT dustrobe{}; /* Timed -- Robe of dust */
+
+    /* for crusade */
+    TIME_EFFECT tim_emission{}; /* Timed -- Player Emission */
+    TIME_EFFECT tim_exorcism{}; /* Timed -- Exorcism */
+    TIME_EFFECT tim_imm_dark{}; /* Timed -- Darkness immunity */
 
     bool timewalk{};
 
@@ -148,7 +153,7 @@ public:
 
     TIME_EFFECT word_recall{}; /* Word of recall counter */
     TIME_EFFECT alter_reality{}; /* Alter reality counter */
-    DUNGEON_IDX recall_dungeon{}; /* Dungeon set to be recalled */
+    DungeonId recall_dungeon{}; /* Dungeon set to be recalled */
 
     ENERGY energy_need{}; /* Energy needed for next move */
     ENERGY enchant_energy_need{}; /* Energy needed for next upkeep effect	 */
@@ -187,9 +192,6 @@ public:
     std::string last_message = ""; /* Last message on death or retirement */
     char history[4][60]{}; /* Textual "history" for the Player */
 
-    uint16_t panic_save{}; /* Panic save */
-
-    bool wait_report_score{}; /* Waiting to report score */
     bool is_dead{}; /* Player is dead */
     bool now_damaged{};
     bool ambush_flag{};
@@ -199,7 +201,6 @@ public:
 #define KNOW_STAT 0x01
 #define KNOW_HPRATE 0x02
     BIT_FLAGS8 knowledge{}; /* Knowledge about yourself */
-    BIT_FLAGS visit{}; /* Visited towns */
 
     BIT_FLAGS old_race1{}; /* Record of race changes */
     BIT_FLAGS old_race2{}; /* Record of race changes */
@@ -213,10 +214,7 @@ public:
 
     bool autopick_autoregister{}; /* auto register is in-use or not */
 
-    byte feeling{}; /* Most recent dungeon feeling */
-    int32_t feeling_turn{}; /* The turn of the last dungeon feeling */
-
-    std::shared_ptr<ItemEntity[]> inventory_list{}; /* The player's inventory */
+    std::vector<std::shared_ptr<ItemEntity>> inventory{}; /* The player's inventory */
     int16_t inven_cnt{}; /* Number of items in inventory */
     int16_t equip_cnt{}; /* Number of items in equipment */
 
@@ -229,9 +227,7 @@ public:
 
     bool monk_notify_aux{};
 
-    bool leaving_dungeon{}; /* True if player is leaving the dungeon */
     bool teleport_town{};
-    bool enter_dungeon{}; /* Just enter the dungeon */
 
     int16_t new_spells{}; /* Number of spells available */
     int16_t old_spells{};
@@ -389,12 +385,17 @@ public:
     void ride_monster(MONSTER_IDX m_idx);
     std::shared_ptr<TimedEffects> effects() const;
     bool is_fully_healthy() const;
+    bool is_wielding(FixedArtifactId fa_id) const;
     std::string decrease_ability_random();
     std::string decrease_ability_all();
     Pos2D get_position() const;
+    Pos2D get_old_position() const;
     Pos2D get_neighbor(int dir) const;
+    Pos2D get_neighbor(const Direction &dir) const;
     bool is_located_at_running_destination() const;
     bool is_located_at(const Pos2D &pos) const;
+    bool try_set_position(const Pos2D &pos);
+    void set_position(const Pos2D &pos);
     bool in_saved_floor() const;
     int calc_life_rating() const;
     bool try_resist_eldritch_horror() const;

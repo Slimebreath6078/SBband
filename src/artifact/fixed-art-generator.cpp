@@ -16,18 +16,12 @@
 #include "floor/floor-object.h"
 #include "object-enchant/object-boost.h"
 #include "object-enchant/object-curse.h"
-#include "object-enchant/special-object-flags.h"
-#include "object-enchant/tr-types.h"
-#include "object-enchant/trc-types.h"
-#include "object-enchant/trg-types.h"
 #include "player-base/player-class.h"
-#include "player/player-sex.h"
 #include "specific-object/bloody-moon.h"
-#include "system/artifact-type-definition.h"
-#include "system/floor-type-definition.h"
-#include "system/item-entity.h"
-#include "system/player-type-definition.h"
-#include "util/bit-flags-calculator.h"
+#include "system/artifact/artifact-definition.h"
+#include "system/artifact/artifact-list.h"
+#include "system/artifact/artifact-record.h"
+#include "system/item/item-entity.h"
 
 /*!
  * @brief 恐怖の仮面への特殊処理
@@ -84,41 +78,41 @@ static void milim_swimsuit(PlayerType *player_ptr, ItemEntity *o_ptr)
  * @attention プレイヤーの各種ステータスに依存した処理がある。
  * @todo 折を見て関数名を変更すること。
  * @param player_ptr プレイヤーへの参照ポインタ
- * @param o_ptr 対象のオブジェクト構造体ポインタ
+ * @param item 対象のオブジェクト構造体への参照
  * @param a_ptr 生成する固定アーティファクト構造体ポインタ
  * @details
  * 対象は村正、ロビントンのハープ、龍争虎鬪、ブラッディムーン、羽衣、天女の羽衣、ミリム
  */
-static void invest_special_artifact_abilities(PlayerType *player_ptr, ItemEntity *o_ptr)
+static void invest_special_artifact_abilities(PlayerType *player_ptr, ItemEntity &item)
 {
     const auto pc = PlayerClass(player_ptr);
-    switch (o_ptr->fa_id) {
+    switch (item.fa_id) {
     case FixedArtifactId::MURAMASA:
         if (!pc.equals(PlayerClassType::SAMURAI)) {
-            o_ptr->art_flags.set(TR_NO_MAGIC);
-            o_ptr->curse_flags.set(CurseTraitType::HEAVY_CURSE);
+            item.art_flags.set(TR_NO_MAGIC);
+            item.curse_flags.set(CurseTraitType::HEAVY_CURSE);
         }
         return;
     case FixedArtifactId::ROBINTON:
         if (pc.equals(PlayerClassType::BARD)) {
-            o_ptr->art_flags.set(TR_DEC_MANA);
+            item.art_flags.set(TR_DEC_MANA);
         }
         return;
     case FixedArtifactId::XIAOLONG:
         if (pc.equals(PlayerClassType::MONK)) {
-            o_ptr->art_flags.set(TR_BLOWS);
+            item.art_flags.set(TR_BLOWS);
         }
         return;
     case FixedArtifactId::BLOOD:
-        get_bloody_moon_flags(o_ptr);
+        get_bloody_moon_flags(item);
         return;
     case FixedArtifactId::HEAVENLY_MAIDEN:
         if (player_ptr->psex != SEX_FEMALE) {
-            o_ptr->art_flags.set(TR_AGGRAVATE);
+            item.art_flags.set(TR_AGGRAVATE);
         }
         return;
     case FixedArtifactId::MILIM:
-        milim_swimsuit(player_ptr, o_ptr);
+        milim_swimsuit(player_ptr, &item);
         return;
     default:
         break;
@@ -131,17 +125,17 @@ static void invest_special_artifact_abilities(PlayerType *player_ptr, ItemEntity
  * @param a_ptr 固定アーティファクト情報への参照ポインタ
  * @param q_ptr オブジェクト情報への参照ポインタ
  */
-static void fixed_artifact_random_abilities(PlayerType *player_ptr, const ArtifactType &artifact, ItemEntity *o_ptr)
+static void fixed_artifact_random_abilities(PlayerType *player_ptr, const ArtifactDefinition &artifact, ItemEntity &item)
 {
     auto give_power = false;
     auto give_resistance = false;
 
-    if (invest_terror_mask(player_ptr, o_ptr)) {
+    if (invest_terror_mask(player_ptr, &item)) {
         give_power = true;
         give_resistance = true;
     }
 
-    invest_special_artifact_abilities(player_ptr, o_ptr);
+    invest_special_artifact_abilities(player_ptr, item);
 
     if (artifact.gen_flags.has(ItemGenerationTraitType::XTRA_POWER)) {
         give_power = true;
@@ -160,15 +154,15 @@ static void fixed_artifact_random_abilities(PlayerType *player_ptr, const Artifa
     }
 
     if (give_power) {
-        one_ability(o_ptr);
+        one_ability(&item);
     }
 
     if (give_resistance) {
-        one_high_resistance(o_ptr);
+        one_high_resistance(&item);
     }
 
     if (artifact.gen_flags.has(ItemGenerationTraitType::XTRA_DICE)) {
-        auto &dice = o_ptr->damage_dice;
+        auto &dice = item.damage_dice;
         do {
             dice.num++;
         } while (one_in_(dice.num));
@@ -185,10 +179,10 @@ static void fixed_artifact_random_abilities(PlayerType *player_ptr, const Artifa
  * @param a_ptr 固定アーティファクト情報への参照ポインタ
  * @param q_ptr オブジェクト情報への参照ポインタ
  */
-static void invest_curse_to_fixed_artifact(const ArtifactType &artifact, ItemEntity *o_ptr)
+static void invest_curse_to_fixed_artifact(const ArtifactDefinition &artifact, ItemEntity *o_ptr)
 {
     if (!artifact.cost) {
-        set_bits(o_ptr->ident, IDENT_BROKEN);
+        o_ptr->set_identification_flag(IdentificationFlag::BROKEN);
     }
 
     if (artifact.gen_flags.has(ItemGenerationTraitType::CURSED)) {
@@ -235,14 +229,14 @@ void apply_artifact(PlayerType *player_ptr, ItemEntity *o_ptr)
     o_ptr->activation_id = artifact.act_idx;
 
     invest_curse_to_fixed_artifact(artifact, o_ptr);
-    fixed_artifact_random_abilities(player_ptr, artifact, o_ptr);
+    fixed_artifact_random_abilities(player_ptr, artifact, *o_ptr);
 }
 
 /*!
  * @brief フロアの指定された位置に固定アーティファクトを生成する。 / Create the artifact of the specified number
  * @details 固定アーティファクト構造体から基本ステータスをコピーした後、所定の座標でdrop_item()で落とす。
  * @param player_ptr プレイヤーへの参照ポインタ
- * @param a_idx 生成する固定アーティファクト構造体のID
+ * @param fa_id 生成する固定アーティファクト構造体のID
  * @param y アイテムを落とす地点のy座標
  * @param x アイテムを落とす地点のx座標
  * @return 生成が成功したか否か、失敗はIDの不全、ベースアイテムの不全、drop_item()の失敗時に起こる。
@@ -250,91 +244,16 @@ void apply_artifact(PlayerType *player_ptr, ItemEntity *o_ptr)
  * 仮に2個以上存在可能かつ装備品以外の固定アーティファクトが作成されれば
  * drop_near()関数の返り値は信用できなくなる.
  */
-bool create_named_art(PlayerType *player_ptr, FixedArtifactId a_idx, POSITION y, POSITION x)
+bool create_named_art(PlayerType *player_ptr, FixedArtifactId fa_id, POSITION y, POSITION x)
 {
-    auto &artifact = ArtifactList::get_instance().get_artifact(a_idx);
+    auto &artifact = ArtifactList::get_instance().get_artifact(fa_id);
     ItemEntity item(artifact.bi_key);
-    item.fa_id = a_idx;
+    item.fa_id = fa_id;
     apply_artifact(player_ptr, &item);
-    if (drop_near(player_ptr, &item, -1, y, x) == 0) {
+    if (drop_near(player_ptr, item, { y, x }) == 0) {
         return false;
     }
 
-    artifact.is_generated = true;
+    ArtifactRecords::get_instance().set_generated(fa_id, true);
     return true;
-}
-
-/*!
- * @brief INSTA_ART型の固定アーティファクトの生成を確率に応じて試行する。
- * Mega-Hack -- Attempt to create one of the "Special Objects"
- * @param player_ptr プレイヤーへの参照ポインタ
- * @param o_ptr 生成に割り当てたいオブジェクトの構造体参照ポインタ
- * @return 生成に成功したらTRUEを返す。
- * @details
- * We are only called from "make_object()", and we assume that\n
- * "apply_magic()" is called immediately after we return.\n
- *\n
- * Note -- see "make_artifact()" and "apply_magic()"\n
- */
-bool make_artifact_special(PlayerType *player_ptr, ItemEntity *o_ptr)
-{
-    /*! @note 地上ではキャンセルする / No artifacts in the town */
-    const auto &floor = *player_ptr->current_floor_ptr;
-    if (!floor.is_in_underground()) {
-        return false;
-    }
-
-    /*! @note get_obj_index_hookによる指定がある場合は生成をキャンセルする / Themed object */
-    if (get_obj_index_hook) {
-        return false;
-    }
-
-    /*! @note 全固定アーティファクト中からIDの若い順に生成対象とその確率を走査する / Check the artifact list (just the "specials") */
-    for (const auto &[fa_id, artifact] : ArtifactList::get_instance()) {
-        /*! @note 既に生成回数がカウントされたアーティファクト、QUESTITEMと非INSTA_ARTは除外 / Cannot make an artifact twice */
-        if (artifact.is_generated) {
-            continue;
-        }
-        if (artifact.gen_flags.has(ItemGenerationTraitType::QUESTITEM)) {
-            continue;
-        }
-        if (!(artifact.gen_flags.has(ItemGenerationTraitType::INSTA_ART))) {
-            continue;
-        }
-
-        /*! @note アーティファクト生成階が現在に対して足りない場合は高確率で1/(不足階層*2)を満たさないと生成リストに加えられない */
-        if (artifact.level > floor.object_level) {
-            /* @note  / Acquire the "out-of-depth factor". Roll for out-of-depth creation. */
-            int d = (artifact.level - floor.object_level) * 2;
-            if (!one_in_(d)) {
-                continue;
-            }
-        }
-
-        /*! @note 1/(レア度)の確率を満たさないと除外される / Artifact "rarity roll" */
-        if (!one_in_(artifact.rarity)) {
-            continue;
-        }
-
-        /*!
-         * @note INSTA_ART型固定アーティファクトのベースアイテムもチェック対象とする。
-         * ベースアイテムの生成階層が足りない場合1/(不足階層*5)を満たさないと除外される。
-         */
-        const auto &baseitems = BaseitemList::get_instance();
-        const auto &baseitem = baseitems.lookup_baseitem(artifact.bi_key);
-        if (baseitem.level > floor.object_level) {
-            int d = (baseitem.level - floor.object_level) * 5;
-            if (!one_in_(d)) {
-                continue;
-            }
-        }
-
-        //<! @note 前述の条件を満たしたら、後のIDのアーティファクトはチェックせずすぐ確定し生成処理に移す.
-        o_ptr->generate(artifact.bi_key);
-        o_ptr->fa_id = fa_id;
-        return true;
-    }
-
-    /*! @note 全INSTA_ART固定アーティファクトを試行しても決まらなかった場合 FALSEを返す / Failure */
-    return false;
 }

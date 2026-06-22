@@ -10,13 +10,11 @@
 #include "object-enchant/enchanter-factory.h"
 #include "object-enchant/item-apply-magic.h"
 #include "object-enchant/object-curse.h"
-#include "object-enchant/special-object-flags.h"
 #include "player/player-status-flags.h"
-#include "system/artifact-type-definition.h"
-#include "system/baseitem-info.h"
-#include "system/dungeon-info.h"
-#include "system/floor-type-definition.h"
-#include "system/item-entity.h"
+#include "system/baseitem/baseitem-definition.h"
+#include "system/dungeon/dungeon-definition.h"
+#include "system/floor/floor-info.h"
+#include "system/item/item-entity.h"
 #include "system/player-type-definition.h"
 #include "util/bit-flags-calculator.h"
 #include "world/world.h"
@@ -162,7 +160,7 @@ int ItemMagicApplier::calculate_rolls(const int power)
 void ItemMagicApplier::try_make_artifact(const int rolls)
 {
     const auto &floor = *this->player_ptr->current_floor_ptr;
-    if (!floor.is_in_underground()) {
+    if (!floor.is_underground()) {
         return;
     }
 
@@ -191,7 +189,7 @@ bool ItemMagicApplier::set_fixed_artifact_generation_info()
     }
 
     apply_artifact(this->player_ptr, this->o_ptr);
-    this->o_ptr->get_fixed_artifact().is_generated = true;
+    this->o_ptr->set_fixed_artifact_generated(true);
     return true;
 }
 
@@ -204,11 +202,11 @@ void ItemMagicApplier::apply_cursed()
         return;
     }
 
-    const auto &baseitem = this->o_ptr->get_baseitem();
-    if (!baseitem.cost) {
-        set_bits(this->o_ptr->ident, IDENT_BROKEN);
+    if (this->o_ptr->is_worthless()) {
+        this->o_ptr->set_identification_flag(IdentificationFlag::BROKEN);
     }
 
+    const auto &baseitem = this->o_ptr->get_baseitem();
     if (baseitem.gen_flags.has(ItemGenerationTraitType::CURSED)) {
         this->o_ptr->curse_flags.set(CurseTraitType::CURSED);
     }

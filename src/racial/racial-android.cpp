@@ -14,17 +14,16 @@
 #include "sv-definition/sv-armor-types.h"
 #include "sv-definition/sv-protector-types.h"
 #include "sv-definition/sv-weapon-types.h"
-#include "system/artifact-type-definition.h"
-#include "system/baseitem-info.h"
-#include "system/item-entity.h"
+#include "system/artifact/artifact-definition.h"
+#include "system/item/item-entity.h"
 #include "system/player-type-definition.h"
 #include "target/target-getter.h"
 #include "view/display-messages.h"
 
 bool android_inside_weapon(PlayerType *player_ptr)
 {
-    DIRECTION dir;
-    if (!get_aim_dir(player_ptr, &dir)) {
+    const auto dir = get_aim_dir(player_ptr);
+    if (!dir) {
         return false;
     }
 
@@ -64,24 +63,17 @@ void calc_android_exp(PlayerType *player_ptr)
         return;
     }
 
-    for (int i = INVEN_MAIN_HAND; i < INVEN_TOTAL; i++) {
-        auto *o_ptr = &player_ptr->inventory_list[i];
-        ItemEntity forge;
-        auto *q_ptr = &forge;
+    for (const auto i_idx : INVEN_WIELDING_SLOTS) {
+        auto *o_ptr = player_ptr->inventory[i_idx].get();
         uint32_t value, exp;
-        DEPTH level = std::max(o_ptr->get_baseitem().level - 8, 1);
+        DEPTH level = std::max(o_ptr->get_baseitem_level() - 8, 1);
 
-        if ((i == INVEN_MAIN_RING) || (i == INVEN_SUB_RING) || (i == INVEN_NECK) || (i == INVEN_LITE)) {
+        if ((i_idx == INVEN_MAIN_RING) || (i_idx == INVEN_SUB_RING) || (i_idx == INVEN_NECK) || (i_idx == INVEN_LITE)) {
             continue;
         }
         if (!o_ptr->is_valid()) {
             continue;
         }
-
-        q_ptr->wipe();
-        q_ptr->copy_from(o_ptr);
-        q_ptr->discount = 0;
-        q_ptr->curse_flags.clear();
 
         if (o_ptr->is_fixed_artifact()) {
             const auto &artifact = o_ptr->get_fixed_artifact();
@@ -114,7 +106,12 @@ void calc_android_exp(PlayerType *player_ptr)
             level = std::max(level, (level + std::max(fake_level - 8, 5)) / 2 + 3);
         }
 
-        value = object_value_real(q_ptr);
+        // 装備品の割引や呪いはアンドロイドの経験値計算に影響しない
+        auto item = o_ptr->clone();
+        item.discount = 0;
+        item.curse_flags.clear();
+
+        value = object_value_real(&item);
         if (value <= 0) {
             continue;
         }
@@ -157,12 +154,12 @@ void calc_android_exp(PlayerType *player_ptr)
                 exp += (value - 100000L) / 4 * level;
             }
         }
-        if ((((i == INVEN_MAIN_HAND) || (i == INVEN_SUB_HAND)) && (has_melee_weapon(player_ptr, i))) || (i == INVEN_BOW)) {
+        if ((((i_idx == INVEN_MAIN_HAND) || (i_idx == INVEN_SUB_HAND)) && (has_melee_weapon(player_ptr, i_idx))) || (i_idx == INVEN_BOW)) {
             total_exp += exp / 48;
         } else {
             total_exp += exp / 16;
         }
-        if (i == INVEN_BODY) {
+        if (i_idx == INVEN_BODY) {
             total_exp += exp / 32;
         }
     }

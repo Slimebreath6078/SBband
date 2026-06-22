@@ -25,21 +25,15 @@
 #include "core/visuals-reseter.h"
 #include "core/window-redrawer.h"
 #include "dungeon/dungeon-processor.h"
-#include "dungeon/quest.h"
-#include "floor/cave.h"
 #include "floor/floor-changer.h"
-#include "floor/floor-events.h"
 #include "floor/floor-leaver.h"
 #include "floor/floor-mode-changer.h"
 #include "floor/floor-save.h"
 #include "floor/floor-util.h"
-#include "floor/wild.h"
 #include "game-option/cheat-options.h"
 #include "game-option/input-options.h"
 #include "game-option/play-record-options.h"
 #include "game-option/runtime-arguments.h"
-#include "grid/feature.h"
-#include "grid/grid.h"
 #include "info-reader/fixed-map-parser.h"
 #include "io/files-util.h"
 #include "io/input-key-acceptor.h"
@@ -56,10 +50,8 @@
 #include "market/bounty.h"
 #include "market/building-initializer.h"
 #include "monster-floor/monster-generator.h"
-#include "monster-floor/monster-lite.h"
 #include "monster-floor/monster-remover.h"
 #include "monster-floor/place-monster-types.h"
-#include "monster-race/race-indice-types.h"
 #include "monster/monster-util.h"
 #include "player-base/player-class.h"
 #include "player-base/player-race.h"
@@ -80,10 +72,14 @@
 #include "sv-definition/sv-weapon-types.h"
 #include "system/angband-system.h"
 #include "system/angband-version.h"
-#include "system/floor-type-definition.h"
-#include "system/item-entity.h"
+#include "system/dungeon/quest-definition.h"
+#include "system/enums/monrace/monrace-id.h"
+#include "system/floor/floor-info.h"
+#include "system/floor/wilderness-grid.h"
+#include "system/item/item-entity.h"
+#include "system/monrace/monrace-definition.h"
+#include "system/monrace/monrace-list.h"
 #include "system/monster-entity.h"
-#include "system/monster-race-info.h"
 #include "system/player-type-definition.h"
 #include "system/redrawing-flags-updater.h"
 #include "target/target-checker.h"
@@ -95,6 +91,7 @@
 #include "view/display-player.h"
 #include "window/main-window-util.h"
 #include "wizard/wizard-special-process.h"
+#include "world/town-info-service.h"
 #include "world/world.h"
 
 static void restore_windows(PlayerType *player_ptr)
@@ -109,7 +106,55 @@ static void restore_windows(PlayerType *player_ptr)
         }
     }
 
-    (void)term_set_cursor(0);
+    term_set_cursor(false);
+}
+
+static void send_waiting_record(PlayerType *player_ptr)
+{
+    auto &system = AngbandSystem::get_instance();
+    if (!system.is_awaiting_report_status()) {
+        return;
+    }
+
+    if (!input_check_strict(player_ptr, _("待機していたスコア登録を今行ないますか？", "Do you register score now? "), UserCheck::NO_HISTORY)) {
+        quit("");
+    }
+
+    static constexpr auto flags = {
+        StatusRecalculatingFlag::BONUS,
+        StatusRecalculatingFlag::HP,
+        StatusRecalculatingFlag::MP,
+        StatusRecalculatingFlag::SPELLS,
+    };
+    RedrawingFlagsUpdater::get_instance().set_flags(flags);
+    update_creature(player_ptr);
+    player_ptr->is_dead = true;
+    auto &world = AngbandWorld::get_instance();
+    world.play_time.pause();
+    signals_ignore_tstp();
+    world.character_icky_depth = 1;
+    const auto path = path_build(ANGBAND_DIR_APEX, "scores.raw");
+    highscore_fd = fd_open(path, O_RDWR);
+
+    /* 町名消失バグ対策(#38205)のためここで世界マップ情報を読み出す */
+    const auto &area = WildernessGrids::get_instance().get_area();
+    parse_fixed_map(player_ptr, WILDERNESS_DEFINITION, 0, 0, area.height(), area.width());
+    bool success = send_world_score(player_ptr, true);
+    if (!success && !input_check_strict(player_ptr, _("スコア登録を諦めますか？", "Do you give up score registration? "), UserCheck::NO_HISTORY)) {
+        prt(_("引き続き待機します。", "standing by for future registration..."), 0, 0);
+        (void)inkey();
+    } else {
+        system.set_awaiting_report_score(false);
+        top_twenty(player_ptr);
+        if (!save_player(player_ptr, SaveType::CLOSE_GAME)) {
+            msg_print(_("セーブ失敗！", "death save failed!"));
+        }
+    }
+
+    (void)fd_close(highscore_fd);
+    highscore_fd = -1;
+    signals_handle_tstp();
+    quit("");
 }
 
 static void init_random_seed(PlayerType *player_ptr, bool new_game)
@@ -137,11 +182,11 @@ static void init_random_seed(PlayerType *player_ptr, bool new_game)
 static void init_world_floor_info(PlayerType *player_ptr)
 {
     AngbandWorld::get_instance().character_dungeon = false;
-    auto *floor_ptr = player_ptr->current_floor_ptr;
-    floor_ptr->reset_dungeon_index();
-    floor_ptr->dun_level = 0;
-    floor_ptr->quest_number = QuestId::NONE;
-    floor_ptr->inside_arena = false;
+    auto &floor = *player_ptr->current_floor_ptr;
+    floor.reset_dungeon_index();
+    floor.dun_level = 0;
+    floor.quest_number = QuestId::NONE;
+    floor.inside_arena = false;
     AngbandSystem::get_instance().set_phase_out(false);
     write_level = true;
     auto &system = AngbandSystem::get_instance();
@@ -152,8 +197,8 @@ static void init_world_floor_info(PlayerType *player_ptr)
     player_ptr->count = 0;
     load = false;
     determine_bounty_uniques(player_ptr);
-    determine_daily_bounty(player_ptr, false);
-    wipe_o_list(floor_ptr);
+    determine_daily_bounty(player_ptr);
+    wipe_o_list(floor);
 }
 
 /*!
@@ -192,19 +237,14 @@ static void reset_world_info(PlayerType *player_ptr)
     world.timewalk_m_idx = 0;
     player_ptr->now_damaged = false;
     now_message = 0;
-    world.start_time = time(nullptr) - 1;
-    record_o_name[0] = '\0';
+    record_item_name.clear();
+    TownInfoService::overwrite_town_name();
 }
 
 static void generate_wilderness(PlayerType *player_ptr)
 {
-    auto *floor_ptr = player_ptr->current_floor_ptr;
-    if ((floor_ptr->dun_level == 0) && floor_ptr->is_in_quest()) {
-        return;
-    }
-
-    const auto &world = AngbandWorld::get_instance();
-    parse_fixed_map(player_ptr, WILDERNESS_DEFINITION, 0, 0, world.max_wild_y, world.max_wild_x);
+    const auto &area = WildernessGrids::get_instance().get_area();
+    parse_fixed_map(player_ptr, WILDERNESS_DEFINITION, 0, 0, area.height(), area.width());
     init_flags = INIT_ONLY_BUILDINGS;
     parse_fixed_map(player_ptr, TOWN_DEFINITION_LIST, 0, 0, MAX_HGT, MAX_WID);
     select_floor_music(player_ptr);
@@ -217,7 +257,8 @@ static void change_floor_if_error(PlayerType *player_ptr)
         return;
     }
 
-    if (player_ptr->panic_save == 0) {
+    auto &system = AngbandSystem::get_instance();
+    if (!system.is_panic_save_executed()) {
         return;
     }
 
@@ -230,7 +271,7 @@ static void change_floor_if_error(PlayerType *player_ptr)
         player_ptr->y = player_ptr->x = 10;
     }
 
-    player_ptr->panic_save = 0;
+    system.set_panic_save(false);
 }
 
 static void generate_world(PlayerType *player_ptr, bool new_game)
@@ -240,7 +281,6 @@ static void generate_world(PlayerType *player_ptr, bool new_game)
     panel_row_min = floor.height;
     panel_col_min = floor.width;
 
-    set_floor_and_wall(floor.dungeon_idx);
     initialize_items_flavor();
     prt(_("お待ち下さい...", "Please wait..."), 0, 0);
     term_fresh();
@@ -278,16 +318,16 @@ static void init_riding_pet(PlayerType *player_ptr, bool new_game)
         return;
     }
 
-    MonsterRaceId pet_r_idx = pc.equals(PlayerClassType::CAVALRY) ? MonsterRaceId::HORSE : MonsterRaceId::YASE_HORSE;
-    auto *r_ptr = &monraces_info[pet_r_idx];
-    auto m_idx = place_specific_monster(player_ptr, player_ptr->y, player_ptr->x - 1, pet_r_idx, (PM_FORCE_PET | PM_NO_KAGE));
-    auto *m_ptr = &player_ptr->current_floor_ptr->m_list[*m_idx];
-    m_ptr->mspeed = r_ptr->speed;
-    m_ptr->maxhp = r_ptr->hit_dice.floored_expected_value();
-    m_ptr->max_maxhp = m_ptr->maxhp;
-    m_ptr->hp = r_ptr->hit_dice.floored_expected_value();
-    m_ptr->dealt_damage = 0;
-    m_ptr->energy_need = ENERGY_NEED() + ENERGY_NEED();
+    const auto pet_id = pc.equals(PlayerClassType::CAVALRY) ? MonraceId::HORSE : MonraceId::YASE_HORSE;
+    const auto &monrace = MonraceList::get_instance().get_monrace(pet_id);
+    const auto m_idx = place_specific_monster(player_ptr, player_ptr->y, player_ptr->x - 1, pet_id, (PM_FORCE_PET | PM_NO_KAGE));
+    auto &monster = player_ptr->current_floor_ptr->m_list[*m_idx];
+    monster.mspeed = monrace.speed;
+    monster.maxhp = monrace.hit_dice.floored_expected_value();
+    monster.max_maxhp = monster.maxhp;
+    monster.hp = monrace.hit_dice.floored_expected_value();
+    monster.dealt_damage = 0;
+    monster.energy_need = ENERGY_NEED() + ENERGY_NEED();
 }
 
 static void decide_arena_death(PlayerType *player_ptr)
@@ -328,26 +368,27 @@ static void process_game_turn(PlayerType *player_ptr)
     auto load_game = true;
     auto &floor = *player_ptr->current_floor_ptr;
     auto &world = AngbandWorld::get_instance();
+    world.play_time.unpause();
     while (true) {
         process_dungeon(player_ptr, load_game);
         world.character_xtra = true;
         handle_stuff(player_ptr);
         world.character_xtra = false;
-        target_who = 0;
+        Target::clear_last_target();
         health_track(player_ptr, 0);
-        forget_lite(&floor);
-        forget_view(&floor);
-        clear_mon_lite(&floor);
+        floor.forget_lite();
+        floor.forget_view();
+        floor.forget_mon_lite();
         if (!player_ptr->playing && !player_ptr->is_dead) {
             break;
         }
 
-        wipe_o_list(&floor);
+        wipe_o_list(floor);
         if (!player_ptr->is_dead) {
             wipe_monsters_list(player_ptr);
         }
 
-        msg_print(nullptr);
+        msg_erase();
         load_game = false;
         decide_arena_death(player_ptr);
         if (player_ptr->is_dead) {
@@ -413,5 +454,5 @@ void play_game(PlayerType *player_ptr, bool new_game, bool browsing_movie)
     select_floor_music(player_ptr);
     process_game_turn(player_ptr);
     close_game(player_ptr);
-    quit(nullptr);
+    quit("");
 }

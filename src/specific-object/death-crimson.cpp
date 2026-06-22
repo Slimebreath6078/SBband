@@ -5,7 +5,7 @@
 #include "effect/effect-processor.h"
 #include "floor/geometry.h"
 #include "player-base/player-class.h"
-#include "system/item-entity.h"
+#include "system/item/item-entity.h"
 #include "system/player-type-definition.h"
 #include "target/target-checker.h"
 #include "target/target-getter.h"
@@ -21,17 +21,12 @@
  */
 static bool fire_crimson(PlayerType *player_ptr)
 {
-    DIRECTION dir;
-    if (!get_aim_dir(player_ptr, &dir)) {
+    const auto dir = get_aim_dir(player_ptr);
+    if (!dir) {
         return false;
     }
 
-    POSITION tx = player_ptr->x + 99 * ddx[dir];
-    POSITION ty = player_ptr->y + 99 * ddy[dir];
-    if ((dir == 5) && target_okay(player_ptr)) {
-        tx = target_col;
-        ty = target_row;
-    }
+    const auto [ty, tx] = dir.get_target_position(player_ptr->get_position(), 99);
 
     int num = 1;
     if (PlayerClass(player_ptr).equals(PlayerClassType::ARCHER)) {
@@ -56,9 +51,9 @@ static bool fire_crimson(PlayerType *player_ptr)
     return true;
 }
 
-bool activate_crimson(PlayerType *player_ptr, ItemEntity *o_ptr)
+bool activate_crimson(PlayerType *player_ptr, ItemEntity &item)
 {
-    if (!o_ptr->is_specific_artifact(FixedArtifactId::CRIMSON)) {
+    if (!item.is_specific_artifact(FixedArtifactId::CRIMSON)) {
         return false;
     }
 

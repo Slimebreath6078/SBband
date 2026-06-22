@@ -9,20 +9,19 @@
 #include "core/asking-player.h"
 #include "effect/effect-characteristics.h"
 #include "effect/effect-processor.h"
-#include "floor/cave.h"
 #include "floor/floor-util.h"
 #include "floor/pattern-walk.h"
+#include "grid/grid.h"
 #include "io/gf-descriptions.h"
-#include "mind/mind-blue-mage.h"
+#include "io/input-key-acceptor.h"
 #include "monster-floor/monster-generator.h"
 #include "monster-floor/monster-summon.h"
 #include "monster-floor/place-monster-types.h"
 #include "monster-race/race-ability-flags.h"
-#include "monster-race/race-indice-types.h"
 #include "mutation/mutation-processor.h"
 #include "object-activation/activation-others.h"
 #include "player-base/player-class.h"
-#include "player-info/bluemage-data-type.h"
+#include "player-info/bluemage-data.h"
 #include "player-info/smith-data-type.h"
 #include "smith/object-smith.h"
 #include "spell-kind/spells-launcher.h"
@@ -31,21 +30,28 @@
 #include "spell-realm/spells-chaos.h"
 #include "spell/spells-status.h"
 #include "spell/summon-types.h"
-#include "system/floor-type-definition.h"
-#include "system/monster-race-info.h"
+#include "system/enums/monrace/monrace-id.h"
+#include "system/floor/floor-info.h"
+#include "system/monrace/monrace-definition.h"
+#include "system/monrace/monrace-list.h"
+#include "system/monrace/monrace-service.h"
+#include "system/monster-entity.h"
 #include "system/player-type-definition.h"
 #include "target/grid-selector.h"
 #include "target/target-checker.h"
 #include "target/target-getter.h"
 #include "term/screen-processor.h"
+#include "util/candidate-selector.h"
 #include "util/enum-converter.h"
 #include "util/flag-group.h"
+#include "util/int-char-converter.h"
 #include "view/display-messages.h"
 #include "wizard/wizard-messages.h"
 #include <string_view>
 #include <vector>
 
-static const std::vector<debug_spell_command> debug_spell_commands_list = {
+namespace {
+const std::vector<debug_spell_command> debug_spell_commands_list = {
     { 2, "vanish dungeon", { .spell2 = { vanish_dungeon } } },
     { 2, "unique detection", { .spell2 = { activate_unique_detection } } },
     { 3, "true healing", { .spell3 = { true_healing } } },
@@ -54,13 +60,84 @@ static const std::vector<debug_spell_command> debug_spell_commands_list = {
     { 5, "pattern teleport", { .spell5 = { pattern_teleport } } },
 };
 
-static std::optional<MonsterRaceId> input_monster_race_id(const MonsterRaceId r_idx)
+std::vector<MonraceId> wiz_collect_monster_candidates(char symbol)
 {
-    if (MonraceList::is_valid(r_idx)) {
-        return r_idx;
+    if (symbol != KTRL('M')) {
+        return MonraceService::search_by_symbol(symbol, false);
     }
-    return input_numerics("MonsterID", 1, monraces_info.size() - 1, MonsterRaceId::FILTHY_URCHIN);
+
+    const auto monster_name = input_string("Monster name: ", MAX_MONSTER_NAME);
+    if (!monster_name || monster_name->empty()) {
+        return {};
+    }
+
+    return MonraceService::search_by_name(*monster_name, false);
 }
+
+tl::optional<MonraceId> wiz_select_summon_monrace_id()
+{
+    prt("Enter monster symbol character(^M:Search by name, ^I:Input MonsterID): ", 0, 0);
+    const auto skey = inkey_special(false);
+    prt("", 0, 0);
+    if ((skey & SKEY_MASK) || skey == ESCAPE) {
+        return tl::nullopt;
+    }
+
+    const auto &monraces = MonraceList::get_instance();
+    if (skey == KTRL('I')) {
+        return input_numerics("MonsterID", 1, monraces.size() - 1, MonraceId::FILTHY_URCHIN);
+    }
+
+    const auto monrace_ids = wiz_collect_monster_candidates(static_cast<char>(skey));
+    if (monrace_ids.empty()) {
+        return tl::nullopt;
+    }
+
+    auto describer = [&](MonraceId id) {
+        return monraces.get_monrace(id).name.string();
+    };
+    CandidateSelector cs("Witch monster: ", 15);
+    const auto choice = cs.select(monrace_ids, describer);
+
+    return (choice != monrace_ids.end()) ? tl::make_optional(*choice) : tl::nullopt;
+}
+
+void wiz_select_chameleon_polymorph(MonsterEntity &monster)
+{
+    msg_print("Please select a monster to polymorph into.");
+    msg_erase();
+
+    if (const auto polymorph_monrace_id = wiz_select_summon_monrace_id()) {
+        monster.r_idx = *polymorph_monrace_id;
+        monster.ap_r_idx = *polymorph_monrace_id;
+    }
+}
+
+void wiz_summon_specific_monster_common(PlayerType *player_ptr, MonraceId monrace_id, BIT_FLAGS mode)
+{
+    const auto summon_monrace_id = MonraceList::is_valid(monrace_id) ? monrace_id : wiz_select_summon_monrace_id();
+    if (!summon_monrace_id) {
+        return;
+    }
+
+    const auto index_to_monster = [player_ptr](auto index) -> MonsterEntity & {
+        return player_ptr->current_floor_ptr->m_list[index];
+    };
+    auto monster =
+        summon_named_creature(player_ptr, 0, player_ptr->y, player_ptr->x, *summon_monrace_id, mode)
+            .transform(index_to_monster);
+    if (!monster) {
+        msg_print_wizard(player_ptr, 1, "Monster isn't summoned correctly...");
+        return;
+    }
+
+    if (monster->mflag2.has(MonsterConstantFlagType::CHAMELEON)) {
+        wiz_select_chameleon_polymorph(*monster);
+    }
+
+    lite_spot(player_ptr, monster->get_position());
+}
+} // namespace
 
 /*!
  * @brief コマンド入力により任意にスペル効果を起こす / Wizard spells
@@ -112,12 +189,12 @@ void wiz_debug_spell(PlayerType *player_ptr)
  */
 void wiz_dimension_door(PlayerType *player_ptr)
 {
-    POSITION x = 0, y = 0;
-    if (!tgt_pt(player_ptr, &x, &y)) {
+    const auto pos = point_target(player_ptr);
+    if (!pos) {
         return;
     }
 
-    teleport_player_to(player_ptr, y, x, TELEPORT_NONMAGICAL);
+    teleport_player_to(player_ptr, pos->y, pos->x, TELEPORT_NONMAGICAL);
 }
 
 /*!
@@ -126,17 +203,18 @@ void wiz_dimension_door(PlayerType *player_ptr)
  */
 void wiz_summon_horde(PlayerType *player_ptr)
 {
-    POSITION wy = player_ptr->y, wx = player_ptr->x;
-    int attempts = 1000;
-
+    const auto &floor = *player_ptr->current_floor_ptr;
+    const auto p_pos = player_ptr->get_position();
+    auto pos = p_pos;
+    auto attempts = 1000;
     while (--attempts) {
-        scatter(player_ptr, &wy, &wx, player_ptr->y, player_ptr->x, 3, PROJECT_NONE);
-        if (is_cave_empty_bold(player_ptr, wy, wx)) {
+        pos = scatter(floor, p_pos, 3, PROJECT_NONE);
+        if (floor.is_empty_at(pos) && (pos != p_pos)) {
             break;
         }
     }
 
-    (void)alloc_horde(player_ptr, wy, wx, summon_specific);
+    (void)alloc_horde(player_ptr, pos.y, pos.x, summon_specific);
 }
 
 /*!
@@ -144,11 +222,13 @@ void wiz_summon_horde(PlayerType *player_ptr)
  */
 void wiz_teleport_back(PlayerType *player_ptr)
 {
-    if (!target_who) {
+    const auto target = Target::get_last_target();
+    const auto pos = target.get_position();
+    if (!pos || !target.get_m_idx()) {
         return;
     }
 
-    teleport_player_to(player_ptr, target_row, target_col, TELEPORT_NONMAGICAL);
+    teleport_player_to(player_ptr, pos->y, pos->x, TELEPORT_NONMAGICAL);
 }
 
 /*!
@@ -157,7 +237,7 @@ void wiz_teleport_back(PlayerType *player_ptr)
  */
 void wiz_learn_blue_magic_all(PlayerType *player_ptr)
 {
-    auto bluemage_data = PlayerClass(player_ptr).get_specific_data<bluemage_data_type>();
+    auto bluemage_data = PlayerClass(player_ptr).get_specific_data<BluemageData>();
     if (!bluemage_data) {
         return;
     }
@@ -224,51 +304,37 @@ void wiz_summon_random_monster(PlayerType *player_ptr, int num)
 /*!
  * @brief モンスターを種族IDを指定して自然生成と同じように召喚する /
  * Summon a creature of the specified type
- * @param r_idx モンスター種族ID（回数指定コマンド'0'で指定した回数がIDになる）
+ * @param monrace_id モンスター種族ID（回数指定コマンド'0'で指定した回数がIDになる）
  * @details
  * This function is rather dangerous
  */
-void wiz_summon_specific_monster(PlayerType *player_ptr, const MonsterRaceId r_idx)
+void wiz_summon_specific_monster(PlayerType *player_ptr, MonraceId monrace_id)
 {
-    const auto new_monrace_id = input_monster_race_id(r_idx);
-    if (!new_monrace_id) {
-        return;
-    }
-
-    (void)summon_named_creature(player_ptr, 0, player_ptr->y, player_ptr->x, *new_monrace_id, PM_ALLOW_SLEEP | PM_ALLOW_GROUP);
+    wiz_summon_specific_monster_common(player_ptr, monrace_id, PM_ALLOW_SLEEP | PM_ALLOW_GROUP);
 }
 
 /*!
  * @brief モンスターを種族IDを指定してペット召喚する /
  * Summon a creature of the specified type
- * @param r_idx モンスター種族ID（回数指定コマンド'0'で指定した回数がIDになる）
+ * @param monrace_id モンスター種族ID（回数指定コマンド'0'で指定した回数がIDになる）
  * @details
  * This function is rather dangerous
  */
-void wiz_summon_pet(PlayerType *player_ptr, const MonsterRaceId r_idx)
+void wiz_summon_pet(PlayerType *player_ptr, MonraceId monrace_id)
 {
-    const auto new_monrace_id = input_monster_race_id(r_idx);
-    if (!new_monrace_id) {
-        return;
-    }
-
-    (void)summon_named_creature(player_ptr, 0, player_ptr->y, player_ptr->x, *new_monrace_id, PM_ALLOW_SLEEP | PM_ALLOW_GROUP | PM_FORCE_PET);
+    wiz_summon_specific_monster_common(player_ptr, monrace_id, PM_ALLOW_SLEEP | PM_ALLOW_GROUP | PM_FORCE_PET);
 }
 
 /*!
  * @brief モンスターを種族IDを指定してクローン召喚（口寄せ）する /
  * Summon a creature of the specified type
- * @param r_idx モンスター種族ID（回数指定コマンド'0'で指定した回数がIDになる）
+ * @param monrace_id モンスター種族ID（回数指定コマンド'0'で指定した回数がIDになる）
  */
-void wiz_summon_clone(PlayerType *player_ptr, const MonsterRaceId r_idx)
+void wiz_summon_clone(PlayerType *player_ptr, MonraceId monrace_id)
 {
-    const auto new_monrace_id = input_monster_race_id(r_idx);
-    if (!new_monrace_id) {
-        return;
-    }
-
-    (void)summon_named_creature(player_ptr, 0, player_ptr->y, player_ptr->x, *new_monrace_id, PM_ALLOW_SLEEP | PM_ALLOW_GROUP | PM_CLONE);
+    wiz_summon_specific_monster_common(player_ptr, monrace_id, PM_ALLOW_SLEEP | PM_ALLOW_GROUP | PM_CLONE);
 }
+
 /*!
  * @brief ターゲットを指定して指定ダメージ・指定属性・半径0のボールを放つ
  * @param dam ダメージ量
@@ -318,8 +384,8 @@ void wiz_kill_target(PlayerType *player_ptr, int initial_dam, AttributeType effe
         return;
     }
 
-    DIRECTION dir;
-    if (!get_aim_dir(player_ptr, &dir)) {
+    const auto dir = get_aim_dir(player_ptr);
+    if (!dir) {
         return;
     }
     fire_ball(player_ptr, idx, dir, dam, 0);

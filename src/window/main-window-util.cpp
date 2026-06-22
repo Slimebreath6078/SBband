@@ -1,16 +1,16 @@
 #include "window/main-window-util.h"
 #include "flavor/flavor-describer.h"
 #include "flavor/object-flavor-types.h"
-#include "floor/cave.h"
 #include "floor/geometry.h"
 #include "game-option/map-screen-options.h"
 #include "game-option/special-options.h"
 #include "grid/grid.h"
-#include "monster-race/race-indice-types.h"
 #include "player/player-status.h"
-#include "system/floor-type-definition.h"
-#include "system/item-entity.h"
-#include "system/monster-race-info.h"
+#include "system/enums/monrace/monrace-id.h"
+#include "system/floor/floor-info.h"
+#include "system/item/item-entity.h"
+#include "system/monrace/monrace-definition.h"
+#include "system/monrace/monrace-list.h"
 #include "system/player-type-definition.h"
 #include "term/gameterm.h"
 #include "term/screen-processor.h"
@@ -35,7 +35,7 @@ POSITION panel_col_prt;
 POSITION panel_row_prt;
 
 int match_autopick;
-ItemEntity *autopick_obj; /*!< 各種自動拾い処理時に使うオブジェクトポインタ */
+const ItemEntity *autopick_obj; /*!< 各種自動拾い処理時に使うオブジェクトポインタ */
 int feat_priority; /*!< マップ縮小表示時に表示すべき地形の優先度を保管する */
 
 static const std::vector<std::pair<std::string_view, std::string_view>> simplify_list = {
@@ -74,16 +74,14 @@ void print_map(PlayerType *player_ptr)
     wid -= COL_MAP + 2;
     hgt -= ROW_MAP + 2;
 
-    int v;
-    (void)term_get_cursor(&v);
+    const auto v = term_get_cursor();
+    term_set_cursor(false);
 
-    (void)term_set_cursor(0);
-
-    auto *floor_ptr = player_ptr->current_floor_ptr;
+    const auto &floor = *player_ptr->current_floor_ptr;
     POSITION xmin = (0 < panel_col_min) ? panel_col_min : 0;
-    POSITION xmax = (floor_ptr->width - 1 > panel_col_max) ? panel_col_max : floor_ptr->width - 1;
+    POSITION xmax = (floor.width - 1 > panel_col_max) ? panel_col_max : floor.width - 1;
     POSITION ymin = (0 < panel_row_min) ? panel_row_min : 0;
-    POSITION ymax = (floor_ptr->height - 1 > panel_row_max) ? panel_row_max : floor_ptr->height - 1;
+    POSITION ymax = (floor.height - 1 > panel_row_max) ? panel_row_max : floor.height - 1;
 
     for (auto y = 1; y <= ymin - panel_row_prt; y++) {
         term_erase(COL_MAP, y, wid);
@@ -102,20 +100,20 @@ void print_map(PlayerType *player_ptr)
         }
     }
 
-    lite_spot(player_ptr, player_ptr->y, player_ptr->x);
-    (void)term_set_cursor(v);
+    lite_spot(player_ptr, player_ptr->get_position());
+    term_set_cursor(v != 0);
 }
 
 /*!
  * @brief 短縮マップにおける自動拾い対象のアイテムを短縮表記する
  * @param player_ptr プレイヤーへの参照ポインタ
- * @param o_ptr アイテムへの参照ポインタ
+ * @param item アイテムへの参照
  * @param y 表示する行番号
  */
-static void display_shortened_item_name(PlayerType *player_ptr, ItemEntity *o_ptr, int y)
+static void display_shortened_item_name(PlayerType *player_ptr, const ItemEntity &item, int y)
 {
-    auto item_name = describe_flavor(player_ptr, o_ptr, (OD_NO_FLAVOR | OD_OMIT_PREFIX | OD_NAME_ONLY));
-    auto attr = tval_to_attr[enum2i(o_ptr->bi_key.tval()) % 128];
+    auto item_name = describe_flavor(player_ptr, item, (OD_NO_FLAVOR | OD_OMIT_PREFIX | OD_NAME_ONLY));
+    auto attr = tval_to_attr[enum2i(item.bi_key.tval()) % 128];
     if (player_ptr->effects()->hallucination().is_hallucinated()) {
         attr = TERM_WHITE;
         item_name = _("何か奇妙な物", "something strange");
@@ -170,9 +168,9 @@ void display_map(PlayerType *player_ptr, int *cy, int *cx)
         wid = wid / 2 - 1;
     }
 
-    auto *floor_ptr = player_ptr->current_floor_ptr;
-    const auto yrat = (floor_ptr->height + hgt - 1) / hgt;
-    const auto xrat = (floor_ptr->width + wid - 1) / wid;
+    const auto &floor = *player_ptr->current_floor_ptr;
+    const auto yrat = (floor.height + hgt - 1) / hgt;
+    const auto xrat = (floor.width + wid - 1) / wid;
     view_special_lite = false;
     view_granite_lite = false;
 
@@ -181,14 +179,14 @@ void display_map(PlayerType *player_ptr, int *cy, int *cx)
     vector<vector<char>> mc(hgt + 2, vector<char>(wid + 2, ' '));
     vector<vector<byte>> mp(hgt + 2, vector<byte>(wid + 2, 0));
     vector<vector<int>> match_autopick_yx(hgt + 2, vector<int>(wid + 2, -1));
-    vector<vector<ItemEntity *>> object_autopick_yx(hgt + 2, vector<ItemEntity *>(wid + 2, nullptr));
+    vector<vector<const ItemEntity *>> object_autopick_yx(hgt + 2, vector<const ItemEntity *>(wid + 2, nullptr));
 
-    vector<vector<TERM_COLOR>> bigma(floor_ptr->height + 2, vector<TERM_COLOR>(floor_ptr->width + 2, TERM_WHITE));
-    vector<vector<char>> bigmc(floor_ptr->height + 2, vector<char>(floor_ptr->width + 2, ' '));
-    vector<vector<byte>> bigmp(floor_ptr->height + 2, vector<byte>(floor_ptr->width + 2, 0));
+    vector<vector<TERM_COLOR>> bigma(floor.height + 2, vector<TERM_COLOR>(floor.width + 2, TERM_WHITE));
+    vector<vector<char>> bigmc(floor.height + 2, vector<char>(floor.width + 2, ' '));
+    vector<vector<byte>> bigmp(floor.height + 2, vector<byte>(floor.width + 2, 0));
 
-    for (i = 0; i < floor_ptr->width; ++i) {
-        for (j = 0; j < floor_ptr->height; ++j) {
+    for (i = 0; i < floor.width; ++i) {
+        for (j = 0; j < floor.height; ++j) {
             x = i / xrat + 1;
             y = j / yrat + 1;
 
@@ -209,8 +207,8 @@ void display_map(PlayerType *player_ptr, int *cy, int *cx)
         }
     }
 
-    for (j = 0; j < floor_ptr->height; ++j) {
-        for (i = 0; i < floor_ptr->width; ++i) {
+    for (j = 0; j < floor.height; ++j) {
+        for (i = 0; i < floor.width; ++i) {
             x = i / xrat + 1;
             y = j / yrat + 1;
 
@@ -219,8 +217,9 @@ void display_map(PlayerType *player_ptr, int *cy, int *cx)
             if (mp[y][x] == tp) {
                 int cnt = 0;
 
-                for (const auto &dd : CCW_DD) {
-                    if ((symbol_foreground.character == bigmc[j + 1 + dd.y][i + 1 + dd.x]) && (symbol_foreground.color == bigma[j + 1 + dd.y][i + 1 + dd.x])) {
+                for (const auto &d : Direction::directions_8()) {
+                    const auto vec = d.vec();
+                    if ((symbol_foreground.character == bigmc[j + 1 + vec.y][i + 1 + vec.x]) && (symbol_foreground.color == bigma[j + 1 + vec.y][i + 1 + vec.x])) {
                         cnt++;
                     }
                 }
@@ -270,7 +269,7 @@ void display_map(PlayerType *player_ptr, int *cy, int *cx)
 
         term_putstr(0, y, 12, 0, "            ");
         if (match_autopick != -1) {
-            display_shortened_item_name(player_ptr, autopick_obj, y);
+            display_shortened_item_name(player_ptr, *autopick_obj, y);
         }
     }
 
@@ -292,7 +291,7 @@ DisplaySymbol set_term_color(PlayerType *player_ptr, const Pos2D &pos, const Dis
     }
 
     feat_priority = 31;
-    const auto &monrace = monraces_info[MonsterRaceId::PLAYER];
+    const auto &monrace = MonraceList::get_instance().get_monrace(MonraceId::PLAYER);
     return monrace.symbol_config;
 }
 

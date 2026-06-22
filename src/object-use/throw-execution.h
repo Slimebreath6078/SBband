@@ -8,12 +8,23 @@
 #include "system/angband.h"
 #include "system/system-variables.h"
 #include "util/flag-group.h"
+#include <memory>
 #include <string>
 
 class Grid;
 class MonsterEntity;
 class ItemEntity;
 class PlayerType;
+
+class ObjectThrowHitMonster {
+public:
+    ObjectThrowHitMonster(PlayerType *player_ptr, POSITION y, POSITION x);
+
+    MONSTER_IDX m_idx{};
+    MonsterEntity *m_ptr{};
+    std::string m_name{};
+};
+
 class ObjectThrowEntity {
 public:
     ObjectThrowEntity() = default;
@@ -28,7 +39,6 @@ public:
     POSITION prev_y{};
     POSITION prev_x{};
     bool equiped_item = false;
-    bool hit_body = false;
     PERCENTAGE corruption_possibility{};
 
     bool check_can_throw();
@@ -43,6 +53,7 @@ public:
     void check_boomerang_throw();
     void process_boomerang_back();
     void drop_thrown_item();
+    bool has_hit_monster() const;
 
 private:
     PlayerType *player_ptr;
@@ -58,20 +69,17 @@ private:
     int tdam{};
     int tdis{};
     int cur_dis{};
-    int visible{};
-    ItemEntity *o_ptr{};
+    std::shared_ptr<ItemEntity> item = nullptr;
     bool hit_wall = false;
     bool return_when_thrown = false;
     std::string o_name{};
     TrFlags obj_flags{};
     bool come_back = false;
     bool do_drop = true;
-    Grid *g_ptr{};
-    MonsterEntity *m_ptr{};
-    std::string m_name{};
     int back_chance{};
     std::string o2_name{};
     bool super_boomerang{};
+    tl::optional<ObjectThrowHitMonster> hit_monster{};
 
     bool check_what_throw();
     bool check_throw_boomerang();

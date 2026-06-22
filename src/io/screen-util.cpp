@@ -15,17 +15,15 @@
 #include "dungeon/quest.h"
 #include "effect/effect-characteristics.h"
 #include "effect/spells-effect-util.h"
-#include "floor/floor-town.h"
 #include "game-option/map-screen-options.h"
 #include "game-option/special-options.h"
-#include "grid/feature.h"
 #include "grid/grid.h"
 #include "io/cursor.h"
 #include "io/input-key-acceptor.h"
 #include "monster/monster-update.h"
 #include "player-info/mimic-info-table.h"
-#include "system/dungeon-info.h"
-#include "system/floor-type-definition.h"
+#include "system/dungeon/dungeon-definition.h"
+#include "system/floor/floor-info.h"
 #include "system/player-type-definition.h"
 #include "system/redrawing-flags-updater.h"
 #include "target/target-checker.h"
@@ -33,7 +31,6 @@
 #include "term/term-color-types.h"
 #include "util/bit-flags-calculator.h"
 #include "view/display-map.h"
-#include "window/main-window-row-column.h"
 #include "window/main-window-util.h"
 #include "world/world.h"
 
@@ -106,7 +103,7 @@ std::pair<int, int> get_screen_size()
  * Determines if a map location is currently "on screen" -RAK-
  * Note that "panel_contains(Y,X)" always implies "in_bounds2(Y,X)".
  */
-bool panel_contains(int y, int x)
+bool panel_contains(const Pos2D &pos)
 {
-    return (y >= panel_row_min) && (y <= panel_row_max) && (x >= panel_col_min) && (x <= panel_col_max);
+    return (pos.y >= panel_row_min) && (pos.y <= panel_row_max) && (pos.x >= panel_col_min) && (pos.x <= panel_col_max);
 }

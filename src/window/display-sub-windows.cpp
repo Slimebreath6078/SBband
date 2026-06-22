@@ -1,11 +1,10 @@
 #include "window/display-sub-windows.h"
 #include "flavor/flavor-describer.h"
-#include "floor/cave.h"
 #include "game-option/option-flags.h"
 #include "game-option/special-options.h"
 #include "game-option/text-display-options.h"
-#include "grid/feature.h"
 #include "inventory/inventory-describer.h"
+#include "inventory/inventory-slot-types.h"
 #include "inventory/inventory-util.h"
 #include "locale/japanese.h"
 #include "main/sound-of-music.h"
@@ -14,7 +13,6 @@
 #include "mind/mind-info.h"
 #include "mind/mind-sniper.h"
 #include "mind/mind-types.h"
-#include "monster-race/race-indice-types.h"
 #include "monster/monster-describer.h"
 #include "monster/monster-description-types.h"
 #include "object/item-tester-hooker.h"
@@ -27,12 +25,16 @@
 #include "player/player-status-table.h"
 #include "player/player-status.h"
 #include "spell/spells-execution.h"
-#include "system/floor-type-definition.h"
+#include "system/baseitem/baseitem-service.h"
+#include "system/enums/monrace/monrace-id.h"
+#include "system/enums/terrain/terrain-tag.h"
+#include "system/floor/floor-info.h"
 #include "system/grid-type-definition.h"
-#include "system/item-entity.h"
+#include "system/item/item-entity.h"
+#include "system/monrace/monrace-definition.h"
 #include "system/monster-entity.h"
-#include "system/monster-race-info.h"
-#include "system/terrain-type-definition.h"
+#include "system/terrain/terrain-definition.h"
+#include "system/terrain/terrain-list.h"
 #include "target/target-preparation.h"
 #include "term/gameterm.h"
 #include "term/screen-processor.h"
@@ -127,17 +129,16 @@ void fix_inventory(PlayerType *player_ptr)
  *  name: name of monster
  * </pre>
  */
-static void print_monster_line(TERM_LEN x, TERM_LEN y, MonsterEntity *m_ptr, int n_same, int n_awake)
+static void print_monster_line(TERM_LEN x, TERM_LEN y, const MonsterEntity &monster, int n_same, int n_awake)
 {
     term_erase(0, y);
     term_gotoxy(x, y);
-    const auto monrace_id = m_ptr->ap_r_idx;
-    if (monrace_id == MonsterRaceId::PLAYER) {
+    const auto &monrace = monster.get_apparent_monrace();
+    if (!monrace.is_valid()) {
         return;
     }
 
     std::string buf;
-    const auto &monrace = monraces_info[monrace_id];
     if (monrace.kind_flags.has(MonsterKindType::UNIQUE)) {
         buf = format(_("%3s(覚%2d)", "%3s(%2d)"), monrace.is_bounty(true) ? "  W" : "  U", n_awake);
     } else {
@@ -148,7 +149,7 @@ static void print_monster_line(TERM_LEN x, TERM_LEN y, MonsterEntity *m_ptr, int
     term_addstr(-1, TERM_WHITE, " ");
     term_add_bigch(monrace.symbol_config);
 
-    if (monrace.r_tkills && m_ptr->mflag2.has_not(MonsterConstantFlagType::KAGE)) {
+    if (monrace.r_tkills && monster.mflag2.has_not(MonsterConstantFlagType::KAGE)) {
         buf = format(" %2d", monrace.level);
     } else {
         buf = " ??";
@@ -164,11 +165,11 @@ static void print_monster_line(TERM_LEN x, TERM_LEN y, MonsterEntity *m_ptr, int
  * @param y 表示行
  * @param max_lines 最大何行描画するか
  */
-void print_monster_list(FloorType *floor_ptr, const std::vector<MONSTER_IDX> &monster_list, TERM_LEN x, TERM_LEN y, TERM_LEN max_lines)
+void print_monster_list(const FloorType &floor, const std::vector<MONSTER_IDX> &monster_list, TERM_LEN x, TERM_LEN y, TERM_LEN max_lines)
 {
     TERM_LEN line = y;
     struct info {
-        MonsterEntity *monster_entity;
+        const MonsterEntity *monster_entity;
         int visible_count; // 現在数
         int awake_count; // 起きている数
     };
@@ -178,32 +179,32 @@ void print_monster_list(FloorType *floor_ptr, const std::vector<MONSTER_IDX> &mo
 
     // 描画に必要なデータを集める
     for (auto monster_index : monster_list) {
-        auto m_ptr = &floor_ptr->m_list[monster_index];
+        const auto &monster = floor.m_list[monster_index];
 
-        if (m_ptr->is_pet()) {
+        if (monster.is_pet()) {
             continue;
         } // pet
-        if (!m_ptr->is_valid()) {
+        if (!monster.is_valid()) {
             continue;
         } // dead?
 
         // ソート済みなので同じモンスターは連続する．これを利用して同じモンスターをカウント，まとめて表示する．
-        if (monster_list_info.empty() || (monster_list_info.back().monster_entity->ap_r_idx != m_ptr->ap_r_idx)) {
-            monster_list_info.push_back({ m_ptr, 0, 0 });
+        if (monster_list_info.empty() || (monster_list_info.back().monster_entity->ap_r_idx != monster.ap_r_idx)) {
+            monster_list_info.push_back({ &monster, 0, 0 });
         }
 
         // 出現数をカウント
         monster_list_info.back().visible_count++;
 
         // 起きているモンスターをカウント
-        if (!m_ptr->is_asleep()) {
+        if (!monster.is_asleep()) {
             monster_list_info.back().awake_count++;
         }
     }
 
     // 集めたデータを元にリストを表示する
     for (const auto &info : monster_list_info) {
-        print_monster_line(x, line++, info.monster_entity, info.visible_count, info.awake_count);
+        print_monster_line(x, line++, *info.monster_entity, info.visible_count, info.awake_count);
 
         // 行数が足りなくなったら中断。
         if (line - y == max_lines) {
@@ -220,8 +221,8 @@ void print_monster_list(FloorType *floor_ptr, const std::vector<MONSTER_IDX> &mo
 
 static void print_pet_list_oneline(PlayerType *player_ptr, const MonsterEntity &monster, TERM_LEN x, TERM_LEN y, TERM_LEN width)
 {
-    const auto &monrace = monster.get_appearance_monrace();
-    const auto name = monster_desc(player_ptr, &monster, MD_ASSUME_VISIBLE | MD_INDEF_VISIBLE | MD_NO_OWNER);
+    const auto &monrace = monster.get_apparent_monrace();
+    const auto name = monster_desc(player_ptr, monster, MD_ASSUME_VISIBLE | MD_INDEF_VISIBLE | MD_NO_OWNER);
     const auto &[bar_color, bar_len] = monster.get_hp_bar_data();
     const auto is_visible = monster.ml && !player_ptr->effects()->hallucination().is_hallucinated();
 
@@ -275,7 +276,7 @@ void fix_monster_list(PlayerType *player_ptr)
         [player_ptr, &once] {
             const auto &[wid, hgt] = term_get_size();
             std::call_once(once, target_sensing_monsters_prepare, player_ptr, monster_list);
-            print_monster_list(player_ptr->current_floor_ptr, monster_list, 0, 0, hgt);
+            print_monster_list(*player_ptr->current_floor_ptr, monster_list, 0, 0, hgt);
         });
 
     if (use_music && has_monster_music) {
@@ -303,24 +304,25 @@ void fix_pet_list(PlayerType *player_ptr)
  */
 static void display_equipment(PlayerType *player_ptr, const ItemTester &item_tester)
 {
-    if (!player_ptr || !player_ptr->inventory_list) {
+    if (!player_ptr || player_ptr->inventory.empty()) {
         return;
     }
 
     const auto &[wid, hgt] = term_get_size();
+    const auto &empty_symbol = BaseitemService::get_dummy_symbol();
     byte attr = TERM_WHITE;
-    for (int i = INVEN_MAIN_HAND; i < INVEN_TOTAL; i++) {
-        int cur_row = i - INVEN_MAIN_HAND;
+    for (const auto i_idx : INVEN_WIELDING_SLOTS) {
+        int cur_row = i_idx - INVEN_MAIN_HAND;
         if (cur_row >= hgt) {
             break;
         }
 
-        auto o_ptr = &player_ptr->inventory_list[i];
-        auto do_disp = player_ptr->select_ring_slot ? is_ring_slot(i) : item_tester.okay(o_ptr);
+        const auto &item = *player_ptr->inventory[i_idx];
+        auto do_disp = player_ptr->select_ring_slot ? is_ring_slot(i_idx) : item_tester.okay(&item);
         std::string tmp_val = "   ";
 
         if (do_disp) {
-            tmp_val[0] = index_to_label(i);
+            tmp_val[0] = index_to_label(i_idx);
             tmp_val[1] = ')';
         }
 
@@ -329,23 +331,24 @@ static void display_equipment(PlayerType *player_ptr, const ItemTester &item_tes
         term_putstr(0, cur_row, cur_col, TERM_WHITE, tmp_val);
 
         std::string item_name;
-        auto is_two_handed = (i == INVEN_MAIN_HAND) && can_attack_with_sub_hand(player_ptr);
-        is_two_handed |= (i == INVEN_SUB_HAND) && can_attack_with_main_hand(player_ptr);
+        auto is_two_handed = (i_idx == INVEN_MAIN_HAND) && can_attack_with_sub_hand(player_ptr);
+        is_two_handed |= (i_idx == INVEN_SUB_HAND) && can_attack_with_main_hand(player_ptr);
         if (is_two_handed && has_two_handed_weapons(player_ptr)) {
             item_name = _("(武器を両手持ち)", "(wielding with two-hands)");
             attr = TERM_WHITE;
         } else {
-            item_name = describe_flavor(player_ptr, o_ptr, 0);
-            attr = tval_to_attr[enum2i(o_ptr->bi_key.tval()) % 128];
+            item_name = describe_flavor(player_ptr, item, 0);
+            attr = tval_to_attr[enum2i(item.bi_key.tval()) % 128];
         }
 
         int n = item_name.length();
-        if (o_ptr->timeout) {
+        if (item.timeout) {
             attr = TERM_L_DARK;
         }
 
         if (show_item_graph) {
-            term_queue_bigchar(cur_col, cur_row, { o_ptr->get_symbol(), {} });
+            const auto ds = item.is_valid() ? item.get_symbol() : empty_symbol;
+            term_queue_bigchar(cur_col, cur_row, { ds, {} });
             if (use_bigtile) {
                 cur_col++;
             }
@@ -355,14 +358,14 @@ static void display_equipment(PlayerType *player_ptr, const ItemTester &item_tes
 
         term_putstr(cur_col, cur_row, n, attr, item_name);
         if (show_weights) {
-            int wgt = o_ptr->weight * o_ptr->number;
+            int wgt = item.weight * item.number;
             tmp_val = format(_("%3d.%1d kg", "%3d.%1d lb"), _(lb_to_kg_integer(wgt), wgt / 10), _(lb_to_kg_fraction(wgt), wgt % 10));
             prt(tmp_val, cur_row, wid - (show_labels ? 28 : 9));
         }
 
         if (show_labels) {
             term_putstr(wid - 20, cur_row, -1, TERM_WHITE, " <-- ");
-            prt(mention_use(player_ptr, i), cur_row, wid - 15);
+            prt(mention_use(player_ptr, i_idx), cur_row, wid - 15);
         }
     }
 
@@ -391,7 +394,7 @@ void fix_equip(PlayerType *player_ptr)
  */
 void fix_player(PlayerType *player_ptr)
 {
-    AngbandWorld::get_instance().update_playtime();
+    AngbandWorld::get_instance().play_time.update();
     display_sub_windows(SubWindowRedrawingFlag::PLAYER,
         [player_ptr] {
             display_player(player_ptr, 0);
@@ -460,21 +463,22 @@ void fix_overhead(PlayerType *player_ptr)
  */
 static void display_dungeon(PlayerType *player_ptr)
 {
-    for (auto x = player_ptr->x - game_term->wid / 2 + 1; x <= player_ptr->x + game_term->wid / 2; x++) {
-        for (auto y = player_ptr->y - game_term->hgt / 2 + 1; y <= player_ptr->y + game_term->hgt / 2; y++) {
-            const auto pos_y = y - player_ptr->y + game_term->hgt / 2 - 1;
-            const auto pos_x = x - player_ptr->x + game_term->wid / 2 - 1;
-            if (!in_bounds2(player_ptr->current_floor_ptr, y, x)) {
-                const auto &terrain = TerrainList::get_instance().get_terrain(feat_none);
+    const auto &floor = *player_ptr->current_floor_ptr;
+    const auto p_pos = player_ptr->get_position();
+    for (auto x = p_pos.x - game_term->wid / 2 + 1; x <= p_pos.x + game_term->wid / 2; x++) {
+        for (auto y = p_pos.y - game_term->hgt / 2 + 1; y <= p_pos.y + game_term->hgt / 2; y++) {
+            const Pos2D pos(y, x);
+            const auto pos_drawing = pos - p_pos + Pos2DVec(game_term->hgt / 2 - 1, game_term->wid / 2 - 1);
+            if (!floor.contains(pos, FloorBoundary::OUTER_WALL_INCLUSIVE)) {
+                const auto &terrain = TerrainList::get_instance().get_terrain(TerrainTag::NONE);
                 const auto &symbol_foreground = terrain.symbol_configs.at(F_LIT_STANDARD);
-                term_queue_char(pos_x, pos_y, { symbol_foreground, {} });
+                term_queue_char(pos_drawing.x, pos_drawing.y, { symbol_foreground, {} });
                 continue;
             }
 
-            auto symbol_pair = map_info(player_ptr, { y, x });
+            auto symbol_pair = map_info(player_ptr, pos);
             symbol_pair.symbol_foreground.color = get_monochrome_display_color(player_ptr).value_or(symbol_pair.symbol_foreground.color);
-
-            term_queue_char(pos_x, pos_y, symbol_pair);
+            term_queue_char(pos_drawing.x, pos_drawing.y, symbol_pair);
         }
     }
 }
@@ -521,25 +525,21 @@ void fix_object(PlayerType *player_ptr)
 }
 
 /*!
- * @brief 床上のモンスター情報を返す
- * @param floor_ptr 階の情報への参照ポインタ
- * @param grid_prt 座標グリッドの情報への参照ポインタ
- * @return モンスターが見える場合にはモンスター情報への参照ポインタ、それ以外はnullptr
+ * @brief 指定したグリッドにモンスターが見えるかどうかを判定する
+ * @param floor フロアへの参照
+ * @param grid グリッドへの参照
+ * @return モンスターが見えるかどうか
  * @details
  * Lookコマンドでカーソルを合わせた場合に合わせてミミックは考慮しない。
  */
-static const MonsterEntity *monster_on_floor_items(FloorType *floor_ptr, const Grid *g_ptr)
+static bool is_seeing_monster_on(const FloorType &floor, const Grid &grid)
 {
-    if (!g_ptr->has_monster()) {
-        return nullptr;
+    if (!grid.has_monster()) {
+        return false;
     }
 
-    auto m_ptr = &floor_ptr->m_list[g_ptr->m_idx];
-    if (!m_ptr->is_valid() || !m_ptr->ml) {
-        return nullptr;
-    }
-
-    return m_ptr;
+    const auto &monster = floor.m_list[grid.m_idx];
+    return monster.is_valid() && monster.ml;
 }
 
 /*!
@@ -566,12 +566,13 @@ static void display_floor_item_list(PlayerType *player_ptr, const Pos2D &pos)
     const auto is_hallucinated = player_ptr->effects()->hallucination().is_hallucinated();
     if (player_ptr->is_located_at(pos)) {
         line = format(_("(X:%03d Y:%03d) あなたの足元のアイテム一覧", "Items at (%03d,%03d) under you"), pos.x, pos.y);
-    } else if (const auto *m_ptr = monster_on_floor_items(&floor, &grid); m_ptr != nullptr) {
+    } else if (is_seeing_monster_on(floor, grid)) {
         if (is_hallucinated) {
             line = format(_("(X:%03d Y:%03d) 何か奇妙な物の足元の発見済みアイテム一覧", "Found items at (%03d,%03d) under something strange"), pos.x, pos.y);
         } else {
-            const MonsterRaceInfo *const r_ptr = &m_ptr->get_appearance_monrace();
-            line = format(_("(X:%03d Y:%03d) %sの足元の発見済みアイテム一覧", "Found items at (%03d,%03d) under %s"), pos.x, pos.y, r_ptr->name.data());
+            const auto &monster = floor.m_list[grid.m_idx];
+            const auto &monrace = monster.get_apparent_monrace();
+            line = format(_("(X:%03d Y:%03d) %sの足元の発見済みアイテム一覧", "Found items at (%03d,%03d) under %s"), pos.x, pos.y, monrace.name.data());
         }
     } else {
         const auto &terrain = grid.get_terrain();
@@ -592,7 +593,7 @@ static void display_floor_item_list(PlayerType *player_ptr, const Pos2D &pos)
     // (y,x) のアイテムを1行に1個ずつ書く。
     TERM_LEN term_y = 1;
     for (const auto o_idx : grid.o_idx_list) {
-        const auto &item = floor.o_list[o_idx];
+        const auto &item = *floor.o_list[o_idx];
         const auto tval = item.bi_key.tval();
         if (item.marked.has_not(OmType::FOUND) || tval == ItemKindType::GOLD) {
             continue;
@@ -609,7 +610,7 @@ static void display_floor_item_list(PlayerType *player_ptr, const Pos2D &pos)
         if (is_hallucinated) {
             term_addstr(-1, TERM_WHITE, _("何か奇妙な物", "something strange"));
         } else {
-            const auto item_name = describe_flavor(player_ptr, &item, 0);
+            const auto item_name = describe_flavor(player_ptr, item, 0);
             TERM_COLOR attr = tval_to_attr[enum2i(tval) % 128];
             term_addstr(-1, attr, item_name);
         }
@@ -640,28 +641,28 @@ static void display_found_item_list(PlayerType *player_ptr)
         return;
     }
 
-    auto *floor_ptr = player_ptr->current_floor_ptr;
+    const auto &floor = *player_ptr->current_floor_ptr;
 
     // 所持品一覧と同じ順にソートする
-    // あらかじめfloor_ptr->o_list から↓項目を取り除く
+    // あらかじめfloor.o_list から↓項目を取り除く
     // bi_idが0
     // OM_FOUNDフラグが立っていない
     // ItemKindTypeがGOLD
-    std::vector<ItemEntity *> found_item_list;
-    for (auto &item : floor_ptr->o_list) {
+    std::vector<const ItemEntity *> found_item_list;
+    for (auto &item_ptr : floor.o_list) {
         const auto is_item_to_display =
-            item.is_valid() && (item.number > 0) &&
-            item.marked.has(OmType::FOUND) && (item.bi_key.tval() != ItemKindType::GOLD);
+            item_ptr->is_valid() && (item_ptr->number > 0) &&
+            item_ptr->marked.has(OmType::FOUND) && (item_ptr->bi_key.tval() != ItemKindType::GOLD);
 
         if (is_item_to_display) {
-            found_item_list.push_back(&item);
+            found_item_list.push_back(item_ptr.get());
         }
     }
 
     std::sort(
         found_item_list.begin(), found_item_list.end(),
-        [player_ptr](ItemEntity *left, ItemEntity *right) -> bool {
-            return object_sort_comp(player_ptr, left, left->get_price(), right);
+        [player_ptr](const ItemEntity *left, const ItemEntity *right) -> bool {
+            return object_sort_comp(player_ptr, *left, *right);
         });
 
     term_clear();
@@ -672,7 +673,7 @@ static void display_found_item_list(PlayerType *player_ptr)
 
     // 発見済みのアイテムを表示
     TERM_LEN term_y = 1;
-    for (auto item : found_item_list) {
+    for (auto item_ptr : found_item_list) {
         // 途中で行数が足りなくなったら終了。
         if (term_y >= hgt) {
             break;
@@ -681,16 +682,16 @@ static void display_found_item_list(PlayerType *player_ptr)
         term_gotoxy(0, term_y);
 
         // アイテムシンボル表示
-        const auto symbol = item->get_symbol();
+        const auto symbol = item_ptr->get_symbol();
         const auto symbol_str = format(" %c ", symbol.character);
         term_addstr(-1, symbol.color, symbol_str);
 
-        const auto item_name = describe_flavor(player_ptr, item, 0);
-        const auto color_code_for_item = tval_to_attr[enum2i(item->bi_key.tval()) % 128];
+        const auto item_name = describe_flavor(player_ptr, *item_ptr, 0);
+        const auto color_code_for_item = tval_to_attr[enum2i(item_ptr->bi_key.tval()) % 128];
         term_addstr(-1, color_code_for_item, item_name);
 
         // アイテム座標表示
-        const auto item_location = format("(X:%3d Y:%3d)", item->ix, item->iy);
+        const auto item_location = format("(X:%3d Y:%3d)", item_ptr->ix, item_ptr->iy);
         prt(item_location, term_y, wid - item_location.length() - 1);
 
         ++term_y;

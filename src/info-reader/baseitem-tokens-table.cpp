@@ -1,6 +1,5 @@
 #include "info-reader/baseitem-tokens-table.h"
 
-// clang-format off
 /*!
  * オブジェクト基本特性トークンの定義 /
  * Object flags
@@ -174,6 +173,7 @@ const std::unordered_map<std::string_view, tr_type> baseitem_flags = {
     { "SELF_ELEC", TR_SELF_ELEC },
     { "PERSISTENT_CURSE", TR_PERSISTENT_CURSE },
     { "VUL_CURSE", TR_VUL_CURSE },
+    { "IM_LITE", TR_IM_LITE },
 };
 
 /*!
@@ -211,4 +211,3 @@ const std::unordered_map<std::string_view, ItemGenerationTraitType> baseitem_gen
     { "ADD_DICE", ItemGenerationTraitType::ADD_DICE },
     { "DOUBLED_DICE", ItemGenerationTraitType::DOUBLED_DICE },
 };
-// clang-format on

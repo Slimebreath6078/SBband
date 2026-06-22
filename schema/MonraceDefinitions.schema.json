@@ -410,7 +410,6 @@
                                 "AURA_GRAVITY",
                                 "AURA_VOIDS",
                                 "AURA_ABYSS",
-                                "NEVER_BLOW",
                                 "NEVER_MOVE",
                                 "OPEN_DOOR",
                                 "BASH_DOOR",
@@ -457,6 +456,18 @@
                                 "DROP_2D2",
                                 "DROP_3D2",
                                 "DROP_4D2",
+                                "DROP_COPPER",
+                                "DROP_SILVER",
+                                "DROP_GARNET",
+                                "DROP_GOLD",
+                                "DROP_OPAL",
+                                "DROP_SAPPHIRE",
+                                "DROP_RUBY",
+                                "DROP_DIAMOND",
+                                "DROP_EMERALD",
+                                "DROP_MITHRIL",
+                                "DROP_ADAMANTITE",
+                                "DROP_OBSIDIAN",
                                 "WILD_ONLY",
                                 "WILD_TOWN",
                                 "WILD_SHORE",
@@ -510,7 +521,8 @@
                                 "EMPTY_MIND",
                                 "WEIRD_MIND",
                                 "DIMINISH_MAX_DAMAGE",
-                                "BUNBUN_STRIKER"
+                                "BUNBUN_STRIKER",
+                                "STALKER"
                             ]
                         }
                     },
@@ -677,6 +689,119 @@
                             "en": {
                                 "type": "string",
                                 "description": "English Flavor Text"
+                            }
+                        }
+                    },
+                    "final_summon": {
+                        "type": "array",
+                        "description": "死亡時召喚",
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "id",
+                                "probability",
+                                "min_num",
+                                "max_num",
+                                "radius"
+                            ],
+                            "properties": {
+                                "id": {
+                                    "type": "integer",
+                                    "description": "召喚するモンスターID",
+                                    "minimum": 1,
+                                    "maximum": 9999
+                                },
+                                "probability": {
+                                    "type": "integer",
+                                    "description": "召喚する確率。probability/100で召喚する。",
+                                    "minimum": 1,
+                                    "maximum": 100
+                                },
+                                "min_num": {
+                                    "type": "integer",
+                                    "description": "召喚数の下限",
+                                    "minimum": 0,
+                                    "maximum": 99
+                                },
+                                "max_num": {
+                                    "type": "integer",
+                                    "description": "召喚数の上限",
+                                    "minimum": 1,
+                                    "maximum": 99
+                                },
+                                "radius": {
+                                    "type": "integer",
+                                    "description": "召喚先の距離",
+                                    "minimum": 1,
+                                    "maximum": 20
+                                }
+                            }
+                        }
+                    },
+                    "message": {
+                        "type": "array",
+                        "description": "メッセージ",
+                        "items": {
+                            "type": "object",
+                            "maxItems": 3,
+                            "additionalProperties": false,
+                            "required": [
+                                "action",
+                                "chance",
+                                "message"
+                            ],
+                            "properties": {
+                                "action": {
+                                    "type": "string",
+                                    "description": "メッセージトリガーとなる行動",
+                                    "enum": [
+                                        "SPEAK_ALL",
+                                        "SPEAK_BATTLE",
+                                        "SPEAK_FEAR",
+                                        "SPEAK_FRIEND",
+                                        "SPEAK_DEATH",
+                                        "SPEAK_SPAWN",
+                                        "WALK_CLOSERANGE",
+                                        "WALK_MIDDLERANGE",
+                                        "WALK_LONGRANGE",
+                                        "MESSAGE_STALKER",
+                                        "MESSAGE_REFLECT",
+                                        "MESSAGE_TIMESTOP",
+                                        "MESSAGE_TIMESTART",
+                                        "MESSAGE_BREATH_SOUND",
+                                        "MESSAGE_BREATH_SHARDS",
+                                        "MESSAGE_BREATH_FORCE",
+                                        "MESSAGE_DETECT_UNIQUE"
+                                    ]
+                                },
+                                "chance": {
+                                    "type": "integer",
+                                    "description": "メッセージ発生率。1/chanceで機能する。",
+                                    "minimum": 1,
+                                    "maximum": 100
+                                },
+                                "use_name": {
+                                    "type": "boolean",
+                                    "description": "メッセージの先頭にモンスター名を表示する。"
+                                },
+                                "message": {
+                                    "type": "object",
+                                    "description": "メッセージ",
+                                    "additionalProperties": false,
+                                    "required": [
+                                        "ja"
+                                    ],
+                                    "properties": {
+                                        "ja": {
+                                            "type": "string",
+                                            "description": "日本語メッセージ"
+                                        },
+                                        "en": {
+                                            "type": "string",
+                                            "description": "English Message"
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

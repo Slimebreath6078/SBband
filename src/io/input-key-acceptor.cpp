@@ -4,11 +4,11 @@
 #include "core/window-redrawer.h"
 #include "game-option/input-options.h"
 #include "game-option/map-screen-options.h"
+#include "io/macro-configurations-store.h"
 #include "io/signal-handlers.h"
 #include "system/player-type-definition.h"
 #include "system/redrawing-flags-updater.h"
 #include "term/gameterm.h"
-#include "util/string-processor.h"
 #include "world/world.h"
 
 bool inkey_base; /* See the "inkey()" function */
@@ -26,22 +26,20 @@ int num_more = 0;
  */
 concptr inkey_next = nullptr;
 
-/* Save macro trigger string for use in inkey_special() */
-static char inkey_macro_trigger_string[1024];
+namespace {
+constexpr char GROUP_SEPARATOR = 29;
+constexpr char RECORD_SEPARATOR = 30;
+constexpr char UNIT_SEPARATOR = 31;
 
-/*
- * Local variable -- we are inside a "macro action"
- *
- * Do not match any macros until "ascii 30" is found.
- */
-static bool parse_macro = false;
+//! Save macro trigger string for use in inkey_special()
+char inkey_macro_trigger_string[1024];
 
-/*
- * Local variable -- we are inside a "macro trigger"
- *
- * Strip all keypresses until a low ascii value is found.
- */
-static bool parse_under = false;
+//! Meaning inside a "macro action", do not match any macros until Record Separator is found.
+bool parse_macro = false;
+
+//! Meaning inside a "macro trigger", strip all keypresses until a low ascii value is found.
+bool parse_under = false;
+}
 
 /*!
  * @brief 全てのウィンドウの再描画を行う
@@ -50,9 +48,8 @@ static bool parse_under = false;
  */
 static void all_term_fresh()
 {
-    TERM_LEN x, y;
     term_activate(angband_terms[0]);
-    term_locate(&x, &y);
+    auto [x, y] = term_locate();
 
     RedrawingFlagsUpdater::get_instance().fill_up_sub_flags();
     handle_stuff(p_ptr);
@@ -65,21 +62,15 @@ static void all_term_fresh()
 /*
  * Cancel macro action on the queue
  */
-static void forget_macro_action(void)
+static void forget_macro_action()
 {
     if (!parse_macro) {
         return;
     }
 
     while (true) {
-        char ch;
-        if (term_inkey(&ch, false, true)) {
-            break;
-        }
-        if (ch == 0) {
-            break;
-        }
-        if (ch == 30) {
+        const auto ch = term_inkey(false, true);
+        if ((ch == '\0') || (ch == RECORD_SEPARATOR)) {
             break;
         }
     }
@@ -94,9 +85,9 @@ static void forget_macro_action(void)
  *
  * We use the "term_key_push()" function to handle "failed" macros, as well
  * as "extra" keys read in while choosing the proper macro, and also to hold
- * the action for the macro, plus a special "ascii 30" character indicating
+ * the action for the macro, plus a special Record Separator indicating
  * that any macro action in progress is complete.  Embedded macros are thus
- * illegal, unless a macro action includes an explicit "ascii 30" character,
+ * illegal, unless a macro action includes an explicit Record Separator,
  * which would probably be a massive hack, and might break things.
  *
  * Only 500 (0+1+2+...+29+30) milliseconds may elapse between each key in
@@ -104,51 +95,48 @@ static void forget_macro_action(void)
  * macro trigger, 500 milliseconds must pass before the key sequence is
  * known not to be that macro trigger.
  */
-static char inkey_aux(void)
+static char inkey_aux()
 {
-    int k = 0, n, p = 0, w = 0;
-    char ch;
-    char *buf = inkey_macro_trigger_string;
-
     num_more = 0;
-
+    char ch;
     if (parse_macro) {
-        if (term_inkey(&ch, false, true)) {
+        if (ch = term_inkey(false, true); ch == '\0') {
             parse_macro = false;
         }
     } else {
-        (void)(term_inkey(&ch, true, true));
+        ch = term_inkey(true, true);
     }
 
-    if (ch == 30) {
+    if (ch == RECORD_SEPARATOR) {
         parse_macro = false;
-    }
-
-    if (ch == 30) {
-        return ch;
-    }
-    if (parse_macro) {
-        return ch;
-    }
-    if (parse_under) {
         return ch;
     }
 
+    if (parse_macro || parse_under) {
+        return ch;
+    }
+
+    char *buf = inkey_macro_trigger_string;
+    size_t p = 0;
     buf[p++] = ch;
     buf[p] = '\0';
-    k = macro_find_check(buf);
+    auto k = macro_find_check(buf);
     if (k < 0) {
         return ch;
     }
 
+    auto w = 0;
     while (true) {
         k = macro_find_maybe(buf);
-
         if (k < 0) {
             break;
         }
 
-        if (0 == term_inkey(&ch, false, true)) {
+        if (ch = term_inkey(false, true); ch != '\0') {
+            if (p >= sizeof(inkey_macro_trigger_string) - 1) {
+                break;
+            }
+
             buf[p++] = ch;
             buf[p] = '\0';
             w = 0;
@@ -162,34 +150,30 @@ static char inkey_aux(void)
         }
     }
 
-    k = macro_find_ready(buf);
-    if (k < 0) {
+    if (k = macro_find_ready(buf); k < 0) {
         while (p > 0) {
             if (term_key_push(buf[--p])) {
                 return 0;
             }
         }
 
-        (void)term_inkey(&ch, true, true);
-        return ch;
+        return term_inkey(true, true);
     }
 
-    concptr pat = macro_patterns[k].data();
-    n = strlen(pat);
-    while (p > n) {
+    const auto &pat = macro_patterns[k];
+    while (p > pat.length()) {
         if (term_key_push(buf[--p])) {
             return 0;
         }
     }
 
     parse_macro = true;
-    if (term_key_push(30)) {
+    if (term_key_push(RECORD_SEPARATOR)) {
         return 0;
     }
 
-    concptr act = macro_actions[k].data();
-
-    n = strlen(act);
+    const auto &act = macro_actions[k];
+    auto n = act.length();
     while (n > 0) {
         if (term_key_push(act[--n])) {
             return 0;
@@ -223,39 +207,41 @@ char inkey(bool do_all_term_refresh)
         term_flush();
     }
 
-    int v;
-    (void)term_get_cursor(&v);
+    const auto v = term_get_cursor();
 
     /* Show the cursor if waiting, except sometimes in "command" mode */
     auto &world = AngbandWorld::get_instance();
     if (!inkey_scan && (!inkey_flag || hilite_player || world.character_icky_depth > 0)) {
-        (void)term_set_cursor(1);
+        term_set_cursor(true);
     }
 
     term_activate(angband_terms[0]);
-    char kk;
     while (!ch) {
-        if (!inkey_base && inkey_scan && (0 != term_inkey(&kk, false, false))) {
-            break;
+        if (!inkey_base && inkey_scan) {
+            if (const auto key = term_inkey(false, false); key == '\0') {
+                break;
+            }
         }
 
-        if (!done && (0 != term_inkey(&kk, false, false))) {
-            start_term_fresh();
-            if (do_all_term_refresh) {
-                all_term_fresh();
-            } else {
-                term_fresh();
-            }
+        if (!done) {
+            if (const auto key = term_inkey(false, false); key == '\0') {
+                start_term_fresh();
+                if (do_all_term_refresh) {
+                    all_term_fresh();
+                } else {
+                    term_fresh();
+                }
 
-            world.character_saved = false;
-            signal_count = 0;
-            done = true;
+                world.character_saved = false;
+                signal_count = 0;
+                done = true;
+            }
         }
 
         if (inkey_base) {
             int w = 0;
             if (!inkey_scan) {
-                if (0 == term_inkey(&ch, true, true)) {
+                if (ch = term_inkey(true, true); ch == '\0') {
                     break;
                 }
 
@@ -263,7 +249,7 @@ char inkey(bool do_all_term_refresh)
             }
 
             while (true) {
-                if (0 == term_inkey(&ch, false, true)) {
+                if (ch = term_inkey(false, true); ch != '\0') {
                     break;
                 } else {
                     w += 10;
@@ -279,7 +265,7 @@ char inkey(bool do_all_term_refresh)
         }
 
         ch = inkey_aux();
-        if (ch == 29) {
+        if (ch == GROUP_SEPARATOR) {
             ch = 0;
             continue;
         }
@@ -289,9 +275,9 @@ char inkey(bool do_all_term_refresh)
             parse_under = false;
         }
 
-        if (ch == 30) {
+        if (ch == RECORD_SEPARATOR) {
             ch = 0;
-        } else if (ch == 31) {
+        } else if (ch == UNIT_SEPARATOR) {
             ch = 0;
             parse_under = true;
         } else if (parse_under) {
@@ -300,7 +286,7 @@ char inkey(bool do_all_term_refresh)
     }
 
     term_activate(old);
-    term_set_cursor(v);
+    term_set_cursor(v != 0);
     inkey_base = inkey_xtra = inkey_flag = inkey_scan = false;
     return ch;
 }
@@ -334,24 +320,24 @@ int inkey_special(bool numpad_cursor)
         { false, "Up]", SKEY_UP },
         { false, "Page_Up]", SKEY_PGUP },
         { false, "Page_Down]", SKEY_PGDOWN },
-        { false, "Home]", SKEY_TOP },
-        { false, "End]", SKEY_BOTTOM },
+        { false, "Home]", SKEY_HOME },
+        { false, "End]", SKEY_END },
         { true, "KP_Down]", SKEY_DOWN },
         { true, "KP_Left]", SKEY_LEFT },
         { true, "KP_Right]", SKEY_RIGHT },
         { true, "KP_Up]", SKEY_UP },
         { true, "KP_Page_Up]", SKEY_PGUP },
         { true, "KP_Page_Down]", SKEY_PGDOWN },
-        { true, "KP_Home]", SKEY_TOP },
-        { true, "KP_End]", SKEY_BOTTOM },
+        { true, "KP_Home]", SKEY_HOME },
+        { true, "KP_End]", SKEY_END },
         { true, "KP_2]", SKEY_DOWN },
         { true, "KP_4]", SKEY_LEFT },
         { true, "KP_6]", SKEY_RIGHT },
         { true, "KP_8]", SKEY_UP },
         { true, "KP_9]", SKEY_PGUP },
         { true, "KP_3]", SKEY_PGDOWN },
-        { true, "KP_7]", SKEY_TOP },
-        { true, "KP_1]", SKEY_BOTTOM },
+        { true, "KP_7]", SKEY_HOME },
+        { true, "KP_1]", SKEY_END },
         { false, nullptr, 0 },
     };
 
@@ -363,8 +349,8 @@ int inkey_special(bool numpad_cursor)
         { "B", SKEY_DOWN },
         { "C", SKEY_RIGHT },
         { "D", SKEY_LEFT },
-        { "1~", SKEY_TOP },
-        { "4~", SKEY_BOTTOM },
+        { "1~", SKEY_HOME },
+        { "4~", SKEY_END },
         { "5~", SKEY_PGUP },
         { "6~", SKEY_PGDOWN },
         { nullptr, 0 },

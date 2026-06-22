@@ -4,7 +4,6 @@
 #include "main/sound-of-music.h"
 #include "mind/drs-types.h"
 #include "monster-race/race-ability-flags.h"
-#include "monster-race/race-indice-types.h"
 #include "monster/monster-info.h"
 #include "monster/monster-status.h"
 #include "monster/monster-update.h"
@@ -14,7 +13,8 @@
 #include "mspell/mspell-data.h"
 #include "mspell/mspell-result.h"
 #include "mspell/mspell-util.h"
-#include "system/floor-type-definition.h"
+#include "system/enums/monrace/monrace-id.h"
+#include "system/floor/floor-info.h"
 #include "system/monster-entity.h"
 #include "system/player-type-definition.h"
 #include "timed-effect/timed-effects.h"
@@ -23,9 +23,9 @@
 static bool message_fire_ball(PlayerType *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int target_type)
 {
     mspell_cast_msg_blind msg;
-    auto *m_ptr = &player_ptr->current_floor_ptr->m_list[m_idx];
+    const auto &monster = player_ptr->current_floor_ptr->m_list[m_idx];
 
-    if (m_ptr->r_idx == MonsterRaceId::ROLENTO) {
+    if (monster.r_idx == MonraceId::ROLENTO) {
         msg.blind = _("%sが何かを投げた。", "%s^ throws something.");
         msg.to_player = _("%sは手榴弾を投げた。", "%s^ throws a hand grenade.");
         msg.to_mons = _("%s^が%s^に向かって手榴弾を投げた。", "%s^ throws a hand grenade.");
@@ -40,7 +40,7 @@ static bool message_fire_ball(PlayerType *player_ptr, MONSTER_IDX m_idx, MONSTER
 
 static bool message_water_ball(PlayerType *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int target_type)
 {
-    auto known = monster_near_player(player_ptr->current_floor_ptr, m_idx, t_idx);
+    auto known = monster_near_player(*player_ptr->current_floor_ptr, m_idx, t_idx);
     auto see_either = see_monster(player_ptr, m_idx) || see_monster(player_ptr, t_idx);
     auto mon_to_mon = (target_type == MONSTER_TO_MONSTER);
     auto mon_to_player = (target_type == MONSTER_TO_PLAYER);

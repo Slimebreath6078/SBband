@@ -14,7 +14,7 @@
 #include "player-status/player-energy.h"
 #include "racial/racial-switcher.h"
 #include "racial/racial-util.h"
-#include "system/item-entity.h"
+#include "system/item/item-entity.h"
 #include "system/player-type-definition.h"
 #include "term/screen-processor.h"
 #include "timed-effect/timed-effects.h"
@@ -68,7 +68,7 @@ PERCENTAGE racial_chance(PlayerType *player_ptr, rpi_type *rpi_ptr)
     }
 
     auto special_easy = PlayerClass(player_ptr).equals(PlayerClassType::IMITATOR);
-    special_easy &= player_ptr->inventory_list[INVEN_NECK].is_specific_artifact(FixedArtifactId::GOGO_PENDANT);
+    special_easy &= player_ptr->is_wielding(FixedArtifactId::GOGO_PENDANT);
     special_easy &= rpi_ptr->racial_name == _("倍返し", "Double Revenge");
     if (special_easy) {
         difficulty -= 12;

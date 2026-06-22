@@ -5,7 +5,6 @@
 #include "flavor/flavor-describer.h"
 #include "flavor/object-flavor-types.h"
 #include "game-option/special-options.h"
-#include "grid/feature.h"
 #include "io/files-util.h"
 #include "io/input-key-acceptor.h"
 #include "io/read-pref-file.h"
@@ -14,17 +13,23 @@
 #include "knowledge/knowledge-monsters.h"
 #include "knowledge/lighting-level-table.h"
 #include "main/sound-of-music.h"
-#include "system/item-entity.h"
-#include "system/monster-race-info.h"
+#include "system/baseitem/baseitem-config.h"
+#include "system/baseitem/baseitem-configs.h"
+#include "system/baseitem/baseitem-definition.h"
+#include "system/baseitem/baseitem-list.h"
+#include "system/item/item-entity.h"
+#include "system/monrace/monrace-definition.h"
+#include "system/monrace/monrace-list.h"
 #include "system/player-type-definition.h"
-#include "system/terrain-type-definition.h"
+#include "system/terrain/terrain-definition.h"
+#include "system/terrain/terrain-list.h"
 #include "term/screen-processor.h"
 #include "term/term-color-types.h"
 #include "term/z-form.h"
 #include "util/angband-files.h"
 #include "util/int-char-converter.h"
 #include "view/display-messages.h"
-#include <optional>
+#include <tl/optional.hpp>
 
 /*!
  * @brief キャラクタのビジュアルIDを変更する際の対象指定
@@ -34,12 +39,12 @@
  * @return 新しいビジュアルID
  */
 template <typename T>
-static std::optional<T> input_new_visual_id(int i, T initial_visual_id, int max)
+static tl::optional<T> input_new_visual_id(int i, T initial_visual_id, int max)
 {
     if (iscntrl(i)) {
         const auto new_visual_id = input_integer("Input new number", 0, max - 1, initial_visual_id);
         if (!new_visual_id) {
-            return std::nullopt;
+            return tl::nullopt;
         }
 
         return static_cast<T>(*new_visual_id);
@@ -124,8 +129,8 @@ void do_cmd_visuals(PlayerType *player_ptr)
 
             auto_dump_printf(auto_dump_stream, _("\n# モンスターの[色/文字]の設定\n\n", "\n# Monster attr/char definitions\n\n"));
             for (const auto &[monrace_id, monrace] : MonraceList::get_instance()) {
-                auto_dump_printf(auto_dump_stream, "# %s\n", monrace.name.data());
-                const auto &symbol_config = monrace.symbol_config;
+                auto_dump_printf(auto_dump_stream, "# %s\n", monrace->name.data());
+                const auto &symbol_config = monrace->symbol_config;
                 auto_dump_printf(auto_dump_stream, "R:%d:0x%02X/0x%02X\n\n", enum2i(monrace_id), symbol_config.color, static_cast<uint8_t>(symbol_config.character));
             }
 
@@ -148,8 +153,11 @@ void do_cmd_visuals(PlayerType *player_ptr)
             }
 
             auto_dump_printf(auto_dump_stream, _("\n# アイテムの[色/文字]の設定\n\n", "\n# Object attr/char definitions\n\n"));
+            const auto &baseitem_configs = BaseitemConfigs::get_instance();
+            short bi_id = 0;
             for (const auto &baseitem : BaseitemList::get_instance()) {
                 if (!baseitem.is_valid()) {
+                    bi_id++;
                     continue;
                 }
 
@@ -157,13 +165,14 @@ void do_cmd_visuals(PlayerType *player_ptr)
                 if (baseitem.flavor == 0) {
                     item_name = baseitem.stripped_name();
                 } else {
-                    ItemEntity dummy(baseitem.idx);
-                    item_name = describe_flavor(player_ptr, &dummy, OD_FORCE_FLAVOR);
+                    ItemEntity dummy(bi_id);
+                    item_name = describe_flavor(player_ptr, dummy, OD_FORCE_FLAVOR);
                 }
 
                 auto_dump_printf(auto_dump_stream, "# %s\n", item_name.data());
-                const auto &symbol_config = baseitem.symbol_config;
-                auto_dump_printf(auto_dump_stream, "K:%d:0x%02X/0x%02X\n\n", (int)baseitem.idx, symbol_config.color, static_cast<uint8_t>(symbol_config.character));
+                const auto &config = baseitem_configs.get_config(bi_id);
+                auto_dump_printf(auto_dump_stream, "K:%d:0x%02X/0x%02X\n\n", bi_id, config.get_color(), static_cast<uint8_t>(config.get_character()));
+                bi_id++;
             }
 
             close_auto_dump(&auto_dump_stream, mark);
@@ -210,7 +219,7 @@ void do_cmd_visuals(PlayerType *player_ptr)
             short num = 0;
             auto &monraces = MonraceList::get_instance();
             static auto choice_msg = _("モンスターの[色/文字]を変更します", "Change monster attr/chars");
-            static auto monrace_id = monraces.begin()->second.idx;
+            static auto monrace_id = monraces.begin()->second->idx;
             prt(format(_("コマンド: %s", "Command: %s"), choice_msg), 15, 0);
             while (true) {
                 auto &monrace = monraces.get_monrace(monrace_id);
@@ -218,10 +227,10 @@ void do_cmd_visuals(PlayerType *player_ptr)
                 const auto &symbol_definition = monrace.symbol_definition;
                 auto &symbol_config = monrace.symbol_config;
                 term_putstr(5, 17, -1, TERM_WHITE, format(_("モンスター = %d, 名前 = %-40.40s", "Monster = %d, Name = %-40.40s"), enum2i(monrace_id), monrace.name.data()));
-                term_putstr(10, 19, -1, TERM_WHITE, format(_("初期値  色 / 文字 = %3u / %3u", "Default attr/char = %3u / %3u"), symbol_definition.color, symbol_definition.character));
+                term_putstr(10, 19, -1, TERM_WHITE, format(_("初期値  色 / 文字 = %3u / %3u", "Default attr/char = %3u / %3u"), symbol_definition.color, static_cast<uint8_t>(symbol_definition.character)));
                 term_putstr(40, 19, -1, TERM_WHITE, empty_symbol);
                 term_queue_bigchar(43, 19, { symbol_definition, {} });
-                term_putstr(10, 20, -1, TERM_WHITE, format(_("現在値  色 / 文字 = %3u / %3u", "Current attr/char = %3u / %3u"), symbol_config.color, symbol_config.character));
+                term_putstr(10, 20, -1, TERM_WHITE, format(_("現在値  色 / 文字 = %3u / %3u", "Current attr/char = %3u / %3u"), symbol_config.color, static_cast<uint8_t>(symbol_config.character)));
                 term_putstr(40, 20, -1, TERM_WHITE, empty_symbol);
                 term_queue_bigchar(43, 20, { symbol_config, {} });
                 term_putstr(0, 22, -1, TERM_WHITE, _("コマンド (n/N/^N/a/A/^A/c/C/^C/v/V/^V): ", "Command (n/N/^N/a/A/^A/c/C/^C/v/V/^V): "));
@@ -246,7 +255,7 @@ void do_cmd_visuals(PlayerType *player_ptr)
                     }
 
                     const auto new_monrace_id = *new_monrace_id_opt;
-                    monrace_id = i2enum<MonsterRaceId>(new_monrace_id);
+                    monrace_id = i2enum<MonraceId>(new_monrace_id);
                     num = new_monrace_id;
                     break;
                 }
@@ -284,21 +293,22 @@ void do_cmd_visuals(PlayerType *player_ptr)
             static auto choice_msg = _("アイテムの[色/文字]を変更します", "Change object attr/chars");
             static short bi_id = 0;
             prt(format(_("コマンド: %s", "Command: %s"), choice_msg), 15, 0);
-            auto &baseitems = BaseitemList::get_instance();
+            const auto &baseitems = BaseitemList::get_instance();
+            auto &baseitem_configs = BaseitemConfigs::get_instance();
             while (true) {
                 auto &baseitem = baseitems.get_baseitem(bi_id);
                 int c;
-                const auto &symbol_definition = baseitem.symbol_definition;
-                auto &symbol_config = baseitem.symbol_config;
+                const auto &symbol_definition = baseitem.get_symbol();
+                auto &config = baseitem_configs.get_config(bi_id);
                 term_putstr(5, 17, -1, TERM_WHITE,
                     format(
                         _("アイテム = %d, 名前 = %-40.40s", "Object = %d, Name = %-40.40s"), bi_id, (!baseitem.flavor ? baseitem.name : baseitem.flavor_name).data()));
                 term_putstr(10, 19, -1, TERM_WHITE, format(_("初期値  色 / 文字 = %3d / %3d", "Default attr/char = %3d / %3d"), symbol_definition.color, symbol_definition.character));
                 term_putstr(40, 19, -1, TERM_WHITE, empty_symbol);
                 term_queue_bigchar(43, 19, { symbol_definition, {} });
-                term_putstr(10, 20, -1, TERM_WHITE, format(_("現在値  色 / 文字 = %3d / %3d", "Current attr/char = %3d / %3d"), symbol_config.color, symbol_config.character));
+                term_putstr(10, 20, -1, TERM_WHITE, format(_("現在値  色 / 文字 = %3d / %3d", "Current attr/char = %3d / %3d"), config.get_color(), config.get_character()));
                 term_putstr(40, 20, -1, TERM_WHITE, empty_symbol);
-                term_queue_bigchar(43, 20, { symbol_config, {} });
+                term_queue_bigchar(43, 20, { config.get_symbol(), {} });
                 term_putstr(0, 22, -1, TERM_WHITE, _("コマンド (n/N/^N/a/A/^A/c/C/^C/v/V/^V): ", "Command (n/N/^N/a/A/^A/c/C/^C/v/V/^V): "));
 
                 const auto ch = inkey();
@@ -316,7 +326,7 @@ void do_cmd_visuals(PlayerType *player_ptr)
 
                 switch (c) {
                 case 'n': {
-                    std::optional<short> new_baseitem_id;
+                    tl::optional<short> new_baseitem_id;
                     const auto previous_bi_id = bi_id;
                     while (true) {
                         new_baseitem_id = input_new_visual_id(ch, bi_id, static_cast<short>(baseitems.size()));
@@ -334,22 +344,22 @@ void do_cmd_visuals(PlayerType *player_ptr)
                     break;
                 }
                 case 'a': {
-                    const auto visual_id = input_new_visual_id(ch, symbol_config.color, 256);
+                    const auto visual_id = input_new_visual_id(ch, config.get_color(), 256);
                     if (!visual_id) {
                         break;
                     }
 
-                    baseitem.symbol_config.color = *visual_id;
+                    config.update_color(*visual_id);
                     need_redraw = true;
                     break;
                 }
                 case 'c': {
-                    const auto visual_id = input_new_visual_id(ch, symbol_config.character, 256);
+                    const auto visual_id = input_new_visual_id(ch, config.get_character(), 256);
                     if (!visual_id) {
                         break;
                     }
 
-                    baseitem.symbol_config.character = *visual_id;
+                    config.update_character(*visual_id);
                     need_redraw = true;
                     break;
                 }
@@ -402,7 +412,7 @@ void do_cmd_visuals(PlayerType *player_ptr)
 
                 switch (c) {
                 case 'n': {
-                    std::optional<short> new_terrain_id;
+                    tl::optional<short> new_terrain_id;
                     const auto previous_terrain_id = terrain_id;
                     while (true) {
                         new_terrain_id = input_new_visual_id(ch, terrain_id, static_cast<short>(TerrainList::get_instance().size()));

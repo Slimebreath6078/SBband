@@ -12,11 +12,11 @@
 #include "player/digestion-processor.h"
 #include "player/player-move.h"
 #include "player/player-status.h"
-#include "system/floor-type-definition.h"
+#include "system/floor/floor-info.h"
 #include "system/grid-type-definition.h"
 #include "system/monster-entity.h"
 #include "system/player-type-definition.h"
-#include "system/terrain-type-definition.h"
+#include "system/terrain/terrain-definition.h"
 #include "target/target-getter.h"
 #include "util/bit-flags-calculator.h"
 #include "view/display-messages.h"
@@ -33,13 +33,13 @@ bool eat_rock(PlayerType *player_ptr)
         return false;
     }
 
-    const auto pos = player_ptr->get_neighbor(*dir);
+    const auto pos = player_ptr->get_neighbor(dir);
     const auto &grid = player_ptr->current_floor_ptr->get_grid(pos);
     const auto &terrain = grid.get_terrain();
-    const auto &terrain_mimic = grid.get_terrain_mimic();
+    const auto &terrain_mimic = grid.get_terrain(TerrainKind::MIMIC);
 
     stop_mouth(player_ptr);
-    if (terrain_mimic.flags.has_not(TerrainCharacteristics::HURT_ROCK)) {
+    if (terrain_mimic.flags.has_not(TerrainCharacteristics::STONE)) {
         msg_print(_("この地形は食べられない。", "You cannot eat this feature."));
     } else if (terrain.flags.has(TerrainCharacteristics::PERMANENT)) {
         msg_format(_("いてっ！この%sはあなたの歯より硬い！", "Ouch!  This %s is harder than your teeth!"), terrain_mimic.name.data());
@@ -62,7 +62,7 @@ bool eat_rock(PlayerType *player_ptr)
         (void)set_food(player_ptr, player_ptr->food + 10000);
     }
 
-    cave_alter_feat(player_ptr, pos.y, pos.x, TerrainCharacteristics::HURT_ROCK);
+    cave_alter_feat(player_ptr, pos.y, pos.x, TerrainCharacteristics::STONE);
     (void)move_player_effect(player_ptr, pos.y, pos.x, MPE_DONT_PICKUP);
     return true;
 }

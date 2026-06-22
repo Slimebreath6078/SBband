@@ -11,8 +11,9 @@
 #include "object-enchant/tr-types.h"
 #include "object/tval-types.h"
 #include "sv-definition/sv-potion-types.h"
-#include "system/baseitem-info.h"
-#include "system/item-entity.h"
+#include "system/baseitem/baseitem-definition.h"
+#include "system/baseitem/baseitem-list.h"
+#include "system/item/item-entity.h"
 #include "system/player-type-definition.h"
 #include "util/bit-flags-calculator.h"
 
@@ -345,7 +346,7 @@ bool potion_smash_effect(PlayerType *player_ptr, MONSTER_IDX src_idx, POSITION y
  * @param o_ptr 矢弾のオブジェクト構造体参照ポインタ
  * @return 破損確率(%)
  * @details
- * Note that artifacts never break, see the "drop_near()" function.
+ * Note that artifacts never break, see the "drop_ammo_near()" function.
  */
 PERCENTAGE breakage_chance(PlayerType *player_ptr, ItemEntity *o_ptr, bool has_archer_bonus, SPELL_IDX snipe_type)
 {

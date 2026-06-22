@@ -1,10 +1,11 @@
 #include "core/visuals-reseter.h"
 #include "game-option/special-options.h"
 #include "io/read-pref-file.h"
-#include "system/baseitem-info.h"
-#include "system/monster-race-info.h"
+#include "system/baseitem/baseitem-service.h"
+#include "system/monrace/monrace-list.h"
 #include "system/player-type-definition.h"
-#include "system/terrain-type-definition.h"
+#include "system/terrain/terrain-definition.h"
+#include "system/terrain/terrain-list.h"
 
 /*!
  * @brief オブジェクト、地形の表示シンボルなど初期化する / Reset the "visual" lists
@@ -18,7 +19,7 @@ void reset_visuals(PlayerType *player_ptr)
         }
     }
 
-    BaseitemList::get_instance().reset_all_visuals();
+    BaseitemService::reset_all_visuals();
     MonraceList::get_instance().reset_all_visuals();
     const auto pref_file = use_graphics ? "graf.prf" : "font.prf";
     process_pref_file(player_ptr, pref_file);

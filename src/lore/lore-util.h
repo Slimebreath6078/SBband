@@ -13,12 +13,17 @@
 #include "monster-race/race-special-flags.h"
 #include "monster-race/race-visual-flags.h"
 #include "system/angband.h"
+#include "term/term-color-types.h"
 #include "util/flag-group.h"
+#include <memory>
 #include <string>
 #include <string_view>
+#include <tl/optional.hpp>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
-enum class MonsterRaceId : short;
+enum class MonraceId : short;
 enum class MonsterSex;
 
 enum monster_lore_mode {
@@ -28,15 +33,16 @@ enum monster_lore_mode {
     MONSTER_LORE_DEBUG
 };
 
-class MonsterRaceInfo;
+class MonraceDefinition;
+class MonraceRecord;
 struct lore_msg {
-    lore_msg(std::string_view msg, byte color);
+    lore_msg(std::string_view msg, byte color = TERM_WHITE);
     std::string msg;
     byte color;
 };
 
 struct lore_type {
-    lore_type(MonsterRaceId r_idx, monster_lore_mode mode);
+    lore_type(MonraceId monrace_id, monster_lore_mode mode);
 
 #ifndef JP
     bool sin = false;
@@ -57,13 +63,14 @@ struct lore_type {
     concptr q = "";
     byte qc = 0;
 
-    MonsterRaceId r_idx;
+    MonraceId monrace_id;
     BIT_FLAGS mode;
     MonsterSex msex;
     RaceBlowMethodType method;
 
     bool nightmare;
-    MonsterRaceInfo *r_ptr;
+    std::shared_ptr<const MonraceDefinition> monrace;
+    std::shared_ptr<const MonraceRecord> record;
     byte speed;
     ITEM_NUMBER drop_gold;
     ITEM_NUMBER drop_item;
@@ -80,6 +87,16 @@ struct lore_type {
     EnumClassFlagGroup<MonsterMiscType> misc_flags;
 
     bool has_reinforce() const;
+    bool is_details_known() const;
+    bool is_blow_damage_known(int num_blow) const;
+    term_color_type get_speed_color() const;
+
+    tl::optional<std::vector<lore_msg>> build_kill_unique_description() const;
+    std::string build_revenge_description(bool has_defeated) const;
+    std::vector<lore_msg> build_speed_description() const;
+
+private:
+    std::vector<lore_msg> build_random_movement_description() const;
 };
 
 using hook_c_roff_pf = void (*)(TERM_COLOR attr, std::string_view str);

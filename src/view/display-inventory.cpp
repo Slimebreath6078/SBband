@@ -9,8 +9,8 @@
 #include "object/item-tester-hooker.h"
 #include "object/item-use-flags.h"
 #include "object/object-info.h"
-#include "system/baseitem-info.h"
-#include "system/item-entity.h"
+#include "system/baseitem/baseitem-definition.h"
+#include "system/item/item-entity.h"
 #include "system/player-type-definition.h"
 #include "term/gameterm.h"
 #include "term/screen-processor.h"
@@ -28,41 +28,38 @@
  */
 COMMAND_CODE show_inventory(PlayerType *player_ptr, int target_item, BIT_FLAGS mode, const ItemTester &item_tester)
 {
-    COMMAND_CODE i;
     int k, l, z = 0;
-    ItemEntity *o_ptr;
     COMMAND_CODE out_index[23]{};
     TERM_COLOR out_color[23]{};
     std::array<std::string, 23> out_desc{};
     COMMAND_CODE target_item_label = 0;
-    char inven_label[52 + 1];
-
     auto col = command_gap;
     const auto &[wid, hgt] = term_get_size();
     auto len = wid - col - 1;
-    for (i = 0; i < INVEN_PACK; i++) {
-        o_ptr = &player_ptr->inventory_list[i];
-        if (!o_ptr->is_valid()) {
+    for (const auto i_idx : INVEN_PACK_SLOTS) {
+        const auto &item = *player_ptr->inventory[i_idx];
+        if (!item.is_valid()) {
             continue;
         }
 
-        z = i + 1;
+        z = enum2i(i_idx) + 1;
     }
 
-    prepare_label_string(player_ptr, inven_label, USE_INVEN, item_tester);
+    COMMAND_CODE i;
+    const auto inven_label = prepare_label_string(player_ptr, USE_INVEN, item_tester);
     for (k = 0, i = 0; i < z; i++) {
-        o_ptr = &player_ptr->inventory_list[i];
-        if (!item_tester.okay(o_ptr) && !(mode & USE_FULL)) {
+        auto &item = *player_ptr->inventory[i];
+        if (!item_tester.okay(&item) && !(mode & USE_FULL)) {
             continue;
         }
 
         out_index[k] = i;
-        out_color[k] = tval_to_attr[enum2i(o_ptr->bi_key.tval()) % 128];
-        if (o_ptr->timeout) {
+        out_color[k] = tval_to_attr[enum2i(item.bi_key.tval()) % 128];
+        if (item.timeout) {
             out_color[k] = TERM_L_DARK;
         }
 
-        out_desc[k] = describe_flavor(player_ptr, o_ptr, 0);
+        out_desc[k] = describe_flavor(player_ptr, item, 0);
         l = out_desc[k].length() + 5;
         if (show_weights) {
             l += 9;
@@ -87,7 +84,7 @@ COMMAND_CODE show_inventory(PlayerType *player_ptr, int target_item, BIT_FLAGS m
     int j;
     for (j = 0; j < k; j++) {
         i = out_index[j];
-        o_ptr = &player_ptr->inventory_list[i];
+        const auto &item = *player_ptr->inventory[i];
         prt("", j + 1, col ? col - 2 : col);
         std::string head;
         if (use_menu && target_item) {
@@ -106,7 +103,7 @@ COMMAND_CODE show_inventory(PlayerType *player_ptr, int target_item, BIT_FLAGS m
         put_str(head, j + 1, col);
         cur_col = col + 3;
         if (show_item_graph) {
-            term_queue_bigchar(cur_col, j + 1, { o_ptr->get_symbol(), {} });
+            term_queue_bigchar(cur_col, j + 1, { item.get_symbol(), {} });
             if (use_bigtile) {
                 cur_col++;
             }
@@ -116,7 +113,7 @@ COMMAND_CODE show_inventory(PlayerType *player_ptr, int target_item, BIT_FLAGS m
 
         c_put_str(out_color[j], out_desc[j], j + 1, cur_col);
         if (show_weights) {
-            int wgt = o_ptr->weight * o_ptr->number;
+            const auto wgt = item.weight * item.number;
             const auto weight = format(_("%3d.%1d kg", "%3d.%1d lb"), _(lb_to_kg_integer(wgt), wgt / 10), _(lb_to_kg_fraction(wgt), wgt % 10));
             prt(weight, j + 1, wid - 9);
         }
@@ -136,28 +133,28 @@ COMMAND_CODE show_inventory(PlayerType *player_ptr, int target_item, BIT_FLAGS m
  */
 void display_inventory(PlayerType *player_ptr, const ItemTester &item_tester)
 {
-    int i, z = 0;
+    int z = 0;
     TERM_COLOR attr = TERM_WHITE;
-    if (!player_ptr || !player_ptr->inventory_list) {
+    if (!player_ptr || player_ptr->inventory.empty()) {
         return;
     }
 
     const auto &[wid, hgt] = term_get_size();
-    for (i = 0; i < INVEN_PACK; i++) {
-        auto o_ptr = &player_ptr->inventory_list[i];
+    for (const auto i_idx : INVEN_PACK_SLOTS) {
+        auto o_ptr = player_ptr->inventory[i_idx].get();
         if (!o_ptr->is_valid()) {
             continue;
         }
-        z = i + 1;
+        z = enum2i(i_idx) + 1;
     }
 
-    for (i = 0; i < z; i++) {
+    for (auto i = 0; i < z; i++) {
         if (i >= hgt) {
             break;
         }
 
-        auto o_ptr = &player_ptr->inventory_list[i];
-        auto do_disp = item_tester.okay(o_ptr);
+        auto &item = *player_ptr->inventory[i];
+        auto do_disp = item_tester.okay(&item);
         std::string label = "   ";
         if (do_disp) {
             label[0] = index_to_label(i);
@@ -167,14 +164,14 @@ void display_inventory(PlayerType *player_ptr, const ItemTester &item_tester)
         int cur_col = 3;
         term_erase(cur_col, i);
         term_putstr(0, i, cur_col, TERM_WHITE, label);
-        const auto item_name = describe_flavor(player_ptr, o_ptr, 0);
-        attr = tval_to_attr[enum2i(o_ptr->bi_key.tval()) % 128];
-        if (o_ptr->timeout) {
+        const auto item_name = describe_flavor(player_ptr, item, 0);
+        attr = tval_to_attr[enum2i(item.bi_key.tval()) % 128];
+        if (item.timeout) {
             attr = TERM_L_DARK;
         }
 
         if (show_item_graph) {
-            term_queue_bigchar(cur_col, i, { o_ptr->get_symbol(), {} });
+            term_queue_bigchar(cur_col, i, { item.get_symbol(), {} });
             if (use_bigtile) {
                 cur_col++;
             }
@@ -185,7 +182,7 @@ void display_inventory(PlayerType *player_ptr, const ItemTester &item_tester)
         term_putstr(cur_col, i, item_name.length(), attr, item_name);
 
         if (show_weights) {
-            int wgt = o_ptr->weight * o_ptr->number;
+            const auto wgt = item.weight * item.number;
             const auto weight = format(_("%3d.%1d kg", "%3d.%1d lb"),
                 _(lb_to_kg_integer(wgt), wgt / 10),
                 _(lb_to_kg_fraction(wgt), wgt % 10));
@@ -193,7 +190,7 @@ void display_inventory(PlayerType *player_ptr, const ItemTester &item_tester)
         }
     }
 
-    for (i = z; i < hgt; i++) {
+    for (auto i = z; i < hgt; i++) {
         term_erase(0, i);
     }
 }

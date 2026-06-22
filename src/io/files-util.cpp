@@ -17,7 +17,8 @@
 #include "io/input-key-acceptor.h"
 #include "io/uid-checker.h"
 #include "system/angband-exceptions.h"
-#include "system/monster-race-info.h"
+#include "system/monrace/monrace-definition.h"
+#include "system/monrace/monrace-list.h"
 #include "system/player-type-definition.h"
 #include "term/screen-processor.h"
 #include "term/z-form.h"
@@ -80,7 +81,7 @@ void file_character(PlayerType *player_ptr, std::string_view filename)
     constexpr auto error_msg = _("キャラクタ情報のファイルへの書き出しに失敗しました！", "Character dump failed!");
     if (!fff) {
         msg_print(error_msg);
-        msg_print(nullptr);
+        msg_erase();
         return;
     }
 
@@ -91,13 +92,13 @@ void file_character(PlayerType *player_ptr, std::string_view filename)
     if (ferror(fff)) {
         angband_fclose(fff);
         msg_print(error_msg);
-        msg_print(nullptr);
+        msg_erase();
         return;
     }
 
     angband_fclose(fff);
     msg_print(_("キャラクタ情報のファイルへの書き出しに成功しました。", "Character dump successful."));
-    msg_print(nullptr);
+    msg_erase();
 }
 
 /*!
@@ -106,23 +107,23 @@ void file_character(PlayerType *player_ptr, std::string_view filename)
  * @param entry 特定条件時のN:タグヘッダID
  * @return ファイルから取得した行 (但しファイルがなかったり異常値ならばnullopt)
  */
-std::optional<std::string> get_random_line(concptr file_name, int entry)
+tl::optional<std::string> get_random_line(concptr file_name, int entry)
 {
     const auto path = path_build(ANGBAND_DIR_FILE, file_name);
     auto *fp = angband_fopen(path, FileOpenMode::READ);
     if (!fp) {
-        return std::nullopt;
+        return tl::nullopt;
     }
 
     int test;
     auto line_num = 0;
-    const auto monrace_id = i2enum<MonsterRaceId>(entry);
+    const auto monrace_id = i2enum<MonraceId>(entry);
     const auto &monrace = MonraceList::get_instance().get_monrace(monrace_id);
     while (true) {
         const auto line_str = angband_fgets(fp);
         if (!line_str) {
             angband_fclose(fp);
-            return std::nullopt;
+            return tl::nullopt;
         }
         const auto *buf = line_str->data();
 
@@ -150,14 +151,14 @@ std::optional<std::string> get_random_line(concptr file_name, int entry)
         } else {
             msg_format("Error in line %d of %s!", line_num, file_name);
             angband_fclose(fp);
-            return std::nullopt;
+            return tl::nullopt;
         }
     }
 
     auto counter = 0;
-    std::optional<std::string> line{};
+    tl::optional<std::string> line{};
     while (true) {
-        std::optional<std::string> buf;
+        tl::optional<std::string> buf;
         while (true) {
             buf = angband_fgets(fp);
             if (!buf) {
@@ -197,13 +198,13 @@ std::optional<std::string> get_random_line(concptr file_name, int entry)
  * @return ファイルから取得した行 (但しファイルがなかったり異常値ならばnullopt)
  * @details
  */
-std::optional<std::string> get_random_line_ja_only(concptr file_name, int entry, int count)
+tl::optional<std::string> get_random_line_ja_only(concptr file_name, int entry, int count)
 {
-    std::optional<std::string> line;
+    tl::optional<std::string> line;
     for (auto i = 0; i < count; i++) {
         line = get_random_line(file_name, entry);
         if (!line) {
-            return std::nullopt;
+            return tl::nullopt;
         }
 
         auto is_kanji = false;

@@ -10,9 +10,9 @@
 #include "monster/monster-description-types.h"
 #include "monster/monster-info.h"
 #include "monster/smart-learn-types.h"
-#include "system/floor-type-definition.h"
+#include "system/floor/floor-info.h"
+#include "system/monrace/monrace-definition.h"
 #include "system/monster-entity.h"
-#include "system/monster-race-info.h"
 #include "system/player-type-definition.h"
 #include "view/display-messages.h"
 
@@ -47,7 +47,7 @@ void discharge_minion(PlayerType *player_ptr)
 
         const auto &monrace = monster.get_monrace();
         if (monrace.kind_flags.has(MonsterKindType::UNIQUE)) {
-            const auto m_name = monster_desc(player_ptr, &monster, 0x00);
+            const auto m_name = monster_desc(player_ptr, monster, 0x00);
             msg_format(_("%sは爆破されるのを嫌がり、勝手に自分の世界へと帰った。", "%s^ resists being blasted and runs away."), m_name.data());
             delete_monster_idx(player_ptr, i);
             continue;
@@ -66,7 +66,7 @@ void discharge_minion(PlayerType *player_ptr)
         project(player_ptr, i, 2 + (monrace.level / 20), monster.fy, monster.fx, dam, AttributeType::PLASMA, PROJECT_STOP | PROJECT_GRID | PROJECT_ITEM | PROJECT_KILL);
 
         if (record_named_pet && monster.is_named()) {
-            const auto m_name = monster_desc(player_ptr, &monster, MD_INDEF_VISIBLE);
+            const auto m_name = monster_desc(player_ptr, monster, MD_INDEF_VISIBLE);
             exe_write_diary(floor, DiaryKind::NAMED_PET, RECORD_NAMED_PET_BLAST, m_name);
         }
 

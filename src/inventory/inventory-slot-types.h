@@ -1,6 +1,8 @@
 #pragma once
 
-enum inventory_slot_type {
+#include "util/enum-range.h"
+
+enum inventory_slot_type : short {
     INVEN_PACK = 23, /*!< アイテムスロット…所持品(0～) */
     INVEN_MAIN_HAND = 24, /*!< アイテムスロット…利手 */
     INVEN_SUB_HAND = 25, /*!< アイテムスロット…逆手 */
@@ -19,3 +21,18 @@ enum inventory_slot_type {
     INVEN_NONE = 1000, /*!< アイテムスロット非選択状態 */
     INVEN_FORCE = 1111, /*!< inventory_list slot for selecting force (hard-coded). */
 };
+
+/*!
+ * 所持品スロットの範囲
+ * @note 0-22番を使用。INVEN_PACK(23番)のスロットは特殊な用途で使用される
+ */
+constexpr auto INVEN_PACK_SLOTS = EnumRange(static_cast<inventory_slot_type>(0), INVEN_PACK);
+
+/** 装備スロットの範囲  */
+constexpr auto INVEN_WIELDING_SLOTS = EnumRangeInclusive(INVEN_MAIN_HAND, INVEN_FEET);
+
+/** 装備スロットのうち、武器(近接・遠隔)スロットの範囲 */
+constexpr auto INVEN_WEAPON_SLOTS = EnumRangeInclusive(INVEN_MAIN_HAND, INVEN_BOW);
+
+/** 所持品と装備を合わせた全スロットの範囲  */
+constexpr auto INVEN_ALL_SLOTS = EnumRange(static_cast<inventory_slot_type>(0), INVEN_TOTAL);

@@ -125,19 +125,21 @@ void MindPowerGetter::select_mind_description()
 
 bool MindPowerGetter::select_spell_index(SPELL_IDX *sn)
 {
-    COMMAND_CODE code;
     this->mind_ptr = &mind_powers[enum2i(this->use_mind)];
     *sn = -1;
-    if (!repeat_pull(&code)) {
+    auto code = repeat_pull();
+    if (!code) {
         return false;
     }
 
-    *sn = (SPELL_IDX)code;
+    *sn = *code;
     if (*sn == INVEN_FORCE) {
-        (void)repeat_pull(&code);
+        code = repeat_pull();
+        if (code) {
+            *sn = *code;
+        }
     }
 
-    *sn = (SPELL_IDX)code;
     return mind_ptr->info[*sn].min_lev <= this->player_ptr->lev;
 }
 
@@ -147,7 +149,7 @@ bool MindPowerGetter::decide_mind_choice(std::string_view prompt, const bool onl
         if (this->choice == ESCAPE) {
             this->choice = ' ';
         } else {
-            const auto command = input_command(prompt, true);
+            const auto command = input_command(prompt);
             if (!command) {
                 break;
             }

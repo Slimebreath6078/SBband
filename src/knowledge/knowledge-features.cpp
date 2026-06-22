@@ -7,14 +7,14 @@
 #include "knowledge/knowledge-features.h"
 #include "core/show-file.h"
 #include "game-option/special-options.h"
-#include "grid/feature.h"
 #include "io-dump/dump-util.h"
 #include "io/input-key-acceptor.h"
 #include "knowledge/lighting-level-table.h"
-#include "system/dungeon-info.h"
-#include "system/monster-race-info.h"
+#include "system/monrace/monrace-definition.h"
 #include "system/player-type-definition.h"
-#include "system/terrain-type-definition.h"
+#include "system/services/dungeon-service.h"
+#include "system/terrain/terrain-definition.h"
+#include "system/terrain/terrain-list.h"
 #include "term/gameterm.h"
 #include "term/screen-processor.h"
 #include "term/term-color-types.h"
@@ -106,10 +106,11 @@ static void display_feature_list(int col, int row, int per_page, FEAT_IDX *feat_
  */
 void do_cmd_knowledge_features(bool *need_redraw, bool visual_only, IDX direct_f_idx, IDX *lighting_level)
 {
-    TermCenteredOffsetSetter tcos(MAIN_TERM_MIN_COLS, std::nullopt);
+    TermCenteredOffsetSetter tcos(MAIN_TERM_MIN_COLS, tl::nullopt);
     std::map<int, DisplaySymbol> symbols;
     const auto &[wid, hgt] = term_get_size();
-    std::vector<FEAT_IDX> feat_idx(TerrainList::get_instance().size());
+    auto &terrains = TerrainList::get_instance();
+    std::vector<FEAT_IDX> feat_idx(terrains.size());
 
     const std::string terrain_group(_("地形    ", "Terrains")); //!< @details 他と合わせるためgroupと呼ぶ.
     const auto max_length = terrain_group.length();
@@ -126,7 +127,7 @@ void do_cmd_knowledge_features(bool *need_redraw, bool visual_only, IDX direct_f
 
         feat_cnt = 0;
     } else {
-        auto &terrain = TerrainList::get_instance().get_terrain(direct_f_idx);
+        auto &terrain = terrains.get_terrain(direct_f_idx);
         auto &symbol_config = terrain.symbol_configs.at(*lighting_level);
         feat_idx[0] = direct_f_idx;
         feat_cnt = 1;
@@ -148,7 +149,6 @@ void do_cmd_knowledge_features(bool *need_redraw, bool visual_only, IDX direct_f
     bool flag = false;
     bool redraw = true;
     const auto is_wizard = AngbandWorld::get_instance().wizard;
-    auto &terrains = TerrainList::get_instance();
     auto &symbols_cb = DisplaySymbolsClipboard::get_instance();
     while (!flag) {
         char ch;
@@ -361,25 +361,9 @@ void do_cmd_knowledge_dungeon(PlayerType *player_ptr)
         return;
     }
 
-    for (const auto &dungeon : dungeons_info) {
-        auto is_conquered = false;
-        if (!dungeon.is_dungeon() || !dungeon.maxdepth) {
-            continue;
-        }
-
-        if (!max_dlv[dungeon.idx]) {
-            continue;
-        }
-
-        if (dungeon.has_guardian()) {
-            if (dungeon.get_guardian().max_num == 0) {
-                is_conquered = true;
-            }
-        } else if (max_dlv[dungeon.idx] == dungeon.maxdepth) {
-            is_conquered = true;
-        }
-
-        fprintf(fff, _("%c%-12s :  %3d 階\n", "%c%-16s :  level %3d\n"), is_conquered ? '!' : ' ', dungeon.name.data(), (int)max_dlv[dungeon.idx]);
+    const auto known_dungeons = DungeonService::build_known_dungeons(DungeonMessageFormat::KNOWLEDGE);
+    for (const auto &known_dungeon : known_dungeons) {
+        fprintf(fff, "%s", known_dungeon.data());
     }
 
     angband_fclose(fff);

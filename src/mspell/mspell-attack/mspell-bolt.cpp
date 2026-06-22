@@ -12,7 +12,7 @@
 #include "mspell/mspell-data.h"
 #include "mspell/mspell-result.h"
 #include "mspell/mspell-util.h"
-#include "system/floor-type-definition.h"
+#include "system/floor/floor-info.h"
 #include "system/player-type-definition.h"
 
 static bool message_shoot(PlayerType *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX t_idx, int target_type)
@@ -24,7 +24,7 @@ static bool message_shoot(PlayerType *player_ptr, MONSTER_IDX m_idx, MONSTER_IDX
     auto notice = monspell_message(player_ptr, m_idx, t_idx, msg, target_type);
 
     if (notice) {
-        sound(SOUND_SHOOT);
+        sound(SoundKind::SHOOT);
     }
     return notice;
 }

@@ -2,8 +2,9 @@
 #include "artifact/random-art-effects.h"
 #include "load/old/item-flag-types-savefile50.h"
 #include "save/save-util.h"
-#include "system/baseitem-info.h"
-#include "system/item-entity.h"
+#include "system/baseitem/baseitem-definition.h"
+#include "system/baseitem/baseitem-list.h"
+#include "system/item/item-entity.h"
 #include "util/bit-flags-calculator.h"
 #include "util/enum-converter.h"
 
@@ -58,7 +59,7 @@ static BIT_FLAGS write_item_flags(const ItemEntity &item)
         set_bits(flags, SaveDataItemFlagType::DS);
     }
 
-    if (item.ident) {
+    if (item.any_identification_flag()) {
         set_bits(flags, SaveDataItemFlagType::IDENT);
     }
 
@@ -128,13 +129,13 @@ static BIT_FLAGS write_item_flags(const ItemEntity &item)
 
 static void write_item_info(const ItemEntity &item, const BIT_FLAGS flags)
 {
-    wr_s16b((int16_t)item.weight);
+    wr_s16b(static_cast<int16_t>(item.weight));
     if (any_bits(flags, SaveDataItemFlagType::FIXED_ARTIFACT_IDX)) {
         wr_s16b(enum2i(item.fa_id));
     }
 
     if (any_bits(flags, SaveDataItemFlagType::EGO_IDX)) {
-        wr_byte((byte)item.ego_idx);
+        wr_byte(static_cast<byte>(item.ego_idx));
     }
 
     if (any_bits(flags, SaveDataItemFlagType::TIMEOUT)) {
@@ -146,7 +147,7 @@ static void write_item_info(const ItemEntity &item, const BIT_FLAGS flags)
     }
 
     if (any_bits(flags, SaveDataItemFlagType::TO_D)) {
-        wr_s16b((int16_t)item.to_d);
+        wr_s16b(static_cast<int16_t>(item.to_d));
     }
 
     if (any_bits(flags, SaveDataItemFlagType::TO_A)) {
@@ -158,15 +159,15 @@ static void write_item_info(const ItemEntity &item, const BIT_FLAGS flags)
     }
 
     if (any_bits(flags, SaveDataItemFlagType::DD)) {
-        wr_byte((byte)item.damage_dice.num);
+        wr_byte(static_cast<byte>(item.damage_dice.num));
     }
 
     if (any_bits(flags, SaveDataItemFlagType::DS)) {
-        wr_byte((byte)item.damage_dice.sides);
+        wr_byte(static_cast<byte>(item.damage_dice.sides));
     }
 
     if (any_bits(flags, SaveDataItemFlagType::IDENT)) {
-        wr_byte(item.ident);
+        wr_FlagGroup(item.get_identification_flags(), wr_byte);
     }
 
     if (any_bits(flags, SaveDataItemFlagType::MARKED)) {
@@ -243,8 +244,8 @@ void wr_item(const ItemEntity &item)
 {
     const auto flags = write_item_flags(item);
     wr_s16b(item.bi_id);
-    wr_byte((byte)item.iy);
-    wr_byte((byte)item.ix);
+    wr_byte(static_cast<byte>(item.iy));
+    wr_byte(static_cast<byte>(item.ix));
     if (any_bits(flags, SaveDataItemFlagType::PVAL)) {
         wr_s16b(item.pval);
     }
@@ -254,7 +255,7 @@ void wr_item(const ItemEntity &item)
     }
 
     if (any_bits(flags, SaveDataItemFlagType::NUMBER)) {
-        wr_byte((byte)item.number);
+        wr_byte(static_cast<byte>(item.number));
     }
 
     write_item_info(item, flags);

@@ -10,10 +10,13 @@
 #include "io/files-util.h"
 #include "market/arena-entry.h"
 #include "player/player-status.h"
-#include "system/dungeon-info.h"
-#include "system/floor-type-definition.h"
+#include "system/dungeon/dungeon-definition.h"
+#include "system/dungeon/dungeon-record.h"
+#include "system/dungeon/quest-definition.h"
+#include "system/dungeon/quest-list.h"
+#include "system/floor/floor-info.h"
 #include "system/inner-game-data.h"
-#include "system/monster-race-info.h"
+#include "system/monrace/monrace-definition.h"
 #include "system/player-type-definition.h"
 #include "term/z-form.h"
 #include "util/angband-files.h"
@@ -44,7 +47,7 @@ static bool open_diary_file(FILE **fff, bool *disable_diary)
     constexpr auto fmt = _("%s を開くことができませんでした。プレイ記録を一時停止します。", "Failed to open %s. Play-Record is disabled temporarily.");
     const auto &filename = path.string();
     msg_format(fmt, filename.data());
-    msg_print(nullptr);
+    msg_erase();
     *disable_diary = true;
     return false;
 }
@@ -65,7 +68,7 @@ static std::pair<QuestId, std::string> write_floor(const FloorType &floor)
         return std::make_pair(q_idx, std::string(_("アリーナ:", "Arena:")));
     }
 
-    if (!floor.dun_level) {
+    if (!floor.is_underground()) {
         return std::make_pair(q_idx, std::string(_("地上:", "Surface:")));
     }
 
@@ -287,7 +290,10 @@ void exe_write_diary(const FloorType &floor, DiaryKind dk, int num, std::string_
     case DiaryKind::TRUMP: {
         constexpr auto fmt = _(" %2d:%02d %20s %s%sの最深階を%d階にセットした。\n", " %2d:%02d %20s reset recall level of %s to %d %s.\n");
         const auto &dungeon = floor.get_dungeon_definition();
-        fprintf(fff, fmt, hour, min, note_level.data(), note.data(), _(dungeon.name.data(), (int)max_dlv[num]), _((int)max_dlv[num], dungeon.name.data()));
+        const auto &dungeon_records = DungeonRecords::get_instance();
+        const auto dungeon_id = i2enum<DungeonId>(num);
+        const auto max_level = dungeon_records.get_record(dungeon_id).get_max_level();
+        fprintf(fff, fmt, hour, min, note_level.data(), note.data(), _(dungeon.name.data(), max_level), _(max_level, dungeon.name.data()));
         break;
     }
     case DiaryKind::STAIR: {
@@ -304,7 +310,9 @@ void exe_write_diary(const FloorType &floor, DiaryKind dk, int num, std::string_
         if (!num) {
             constexpr auto fmt = _(" %2d:%02d %20s 帰還を使って%sの%d階へ下りた。\n", " %2d:%02d %20s recalled to dungeon level %d of %s.\n");
             const auto &dungeon = floor.get_dungeon_definition();
-            fprintf(fff, fmt, hour, min, note_level.data(), _(dungeon.name.data(), (int)max_dlv[floor.dungeon_idx]), _((int)max_dlv[floor.dungeon_idx], dungeon.name.data()));
+            const auto &dungeon_records = DungeonRecords::get_instance();
+            const auto max_level = dungeon_records.get_record(floor.dungeon_id).get_max_level();
+            fprintf(fff, fmt, hour, min, note_level.data(), _(dungeon.name.data(), max_level), _(max_level, dungeon.name.data()));
         } else {
             constexpr auto fmt = _(" %2d:%02d %20s 帰還を使って地上へと戻った。\n", " %2d:%02d %20s recalled from dungeon to surface.\n");
             fprintf(fff, fmt, hour, min, note_level.data());
@@ -362,7 +370,7 @@ void exe_write_diary(const FloorType &floor, DiaryKind dk, int num, std::string_
         break;
     }
     case DiaryKind::PAT_TELE: {
-        const auto to = !floor.is_in_underground()
+        const auto to = !floor.is_underground()
                             ? _("地上", "the surface")
                             : format(_("%d階(%s)", "level %d of %s"), floor.dun_level, floor.get_dungeon_definition().name.data());
         constexpr auto fmt = _(" %2d:%02d %20s %sへとパターンの力で移動した。\n", " %2d:%02d %20s used Pattern to teleport to %s.\n");

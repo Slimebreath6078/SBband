@@ -6,27 +6,18 @@
  */
 
 #include "object-enchant/others/apply-magic-others.h"
-#include "artifact/random-art-generator.h"
 #include "game-option/cheat-options.h"
-#include "inventory/inventory-slot-types.h"
 #include "monster-floor/place-monster-types.h"
-#include "monster-race/monster-race-hook.h"
-#include "monster-race/race-indice-types.h"
 #include "monster/monster-list.h"
 #include "monster/monster-util.h"
-#include "object-enchant/object-ego.h"
-#include "object-enchant/tr-types.h"
-#include "object-enchant/trc-types.h"
-#include "object/tval-types.h"
 #include "perception/object-perception.h"
-#include "sv-definition/sv-lite-types.h"
 #include "sv-definition/sv-other-types.h"
-#include "system/baseitem-info.h"
-#include "system/floor-type-definition.h"
-#include "system/item-entity.h"
-#include "system/monster-race-info.h"
+#include "system/enums/monrace/monrace-id.h"
+#include "system/floor/floor-info.h"
+#include "system/item/item-entity.h"
+#include "system/monrace/monrace-definition.h"
+#include "system/monrace/monrace-list.h"
 #include "system/player-type-definition.h"
-#include "util/bit-flags-calculator.h"
 #include "view/display-messages.h"
 #include <unordered_map>
 
@@ -60,11 +51,11 @@ void OtherItemsEnchanter::apply_magic()
         this->enchant_wand_staff();
         break;
     case ItemKindType::ROD:
-        this->o_ptr->pval = this->o_ptr->get_baseitem().pval;
+        this->o_ptr->pval = this->o_ptr->get_baseitem_pval();
         break;
     case ItemKindType::CAPTURE:
         this->o_ptr->pval = 0;
-        object_aware(this->player_ptr, this->o_ptr);
+        object_aware(this->player_ptr, *this->o_ptr);
         this->o_ptr->mark_as_known();
         break;
     case ItemKindType::FIGURINE:
@@ -91,8 +82,8 @@ void OtherItemsEnchanter::apply_magic()
  */
 void OtherItemsEnchanter::enchant_wand_staff()
 {
-    const auto &baseitem = this->o_ptr->get_baseitem();
-    this->o_ptr->pval = baseitem.pval / 2 + randint1((baseitem.pval + 1) / 2);
+    const auto base_pval = this->o_ptr->get_baseitem_pval();
+    this->o_ptr->pval = base_pval / 2 + randint1((base_pval + 1) / 2);
 }
 
 /*
@@ -107,22 +98,7 @@ void OtherItemsEnchanter::generate_figurine()
 {
     const auto &floor = *this->player_ptr->current_floor_ptr;
     const auto &monraces = MonraceList::get_instance();
-    MonsterRaceId monrace_id;
-    while (true) {
-        monrace_id = monraces.pick_id_at_random();
-        if (!item_monster_okay(this->player_ptr, monrace_id) || (monrace_id == MonsterRaceId::TSUCHINOKO)) {
-            continue;
-        }
-
-        auto *r_ptr = &monraces_info[monrace_id];
-        auto check = (floor.dun_level < r_ptr->level) ? (r_ptr->level - floor.dun_level) : 0;
-        if ((r_ptr->rarity == 0) || (r_ptr->rarity > 100) || (randint0(check) > 0)) {
-            continue;
-        }
-
-        break;
-    }
-
+    const auto monrace_id = monraces.select_figurine(floor.dun_level);
     this->o_ptr->pval = enum2i(monrace_id);
     if (one_in_(6)) {
         this->o_ptr->curse_flags.set(CurseTraitType::CURSED);
@@ -144,33 +120,33 @@ void OtherItemsEnchanter::generate_corpse()
         { SV_CORPSE, MonsterDropType::DROP_CORPSE },
     };
 
-    get_mon_num_prep(this->player_ptr, item_monster_okay, nullptr);
-    auto *floor_ptr = this->player_ptr->current_floor_ptr;
-    MonsterRaceId r_idx;
+    get_mon_num_prep_enum(this->player_ptr, MonraceHook::FIGURINE);
+    const auto &floor = *this->player_ptr->current_floor_ptr;
+    const auto &monraces = MonraceList::get_instance();
+    MonraceId monrace_id;
     while (true) {
-        r_idx = get_mon_num(this->player_ptr, 0, floor_ptr->dun_level, PM_NONE);
-        auto &r_ref = monraces_info[r_idx];
-        auto check = (floor_ptr->dun_level < r_ref.level) ? (r_ref.level - floor_ptr->dun_level) : 0;
+        monrace_id = get_mon_num(this->player_ptr, 0, floor.dun_level, PM_NONE);
+        const auto &monrace = monraces.get_monrace(monrace_id);
+        const auto check = (floor.dun_level < monrace.level) ? (monrace.level - floor.dun_level) : 0;
         const auto sval = this->o_ptr->bi_key.sval();
         if (!sval) {
             continue;
         }
 
-        if ((r_ref.rarity == 0) || (match.find(*sval) != match.end() && r_ref.drop_flags.has_not(match.at(*sval))) || (randint0(check) > 0)) {
+        if ((match.find(*sval) != match.end() && monrace.drop_flags.has_not(match.at(*sval))) || (randint0(check) > 0)) {
             continue;
         }
 
         break;
     }
 
-    this->o_ptr->pval = enum2i(r_idx);
-    object_aware(this->player_ptr, this->o_ptr);
+    this->o_ptr->pval = enum2i(monrace_id);
+    object_aware(this->player_ptr, *this->o_ptr);
     this->o_ptr->mark_as_known();
 }
 
 /*
  * @brief ランダムに選択したモンスター種族IDからその像を作る
- * @details レアリティが1以上のものだけ生成対象になる
  */
 void OtherItemsEnchanter::generate_statue()
 {
@@ -178,9 +154,7 @@ void OtherItemsEnchanter::generate_statue()
     const auto pick_monrace_id_for_statue = [&monraces] {
         while (true) {
             auto &monrace = monraces.pick_monrace_at_random();
-            if (monrace.rarity > 0) {
-                return monrace.idx;
-            }
+            return monrace.idx;
         }
     };
     const auto monrace_id = pick_monrace_id_for_statue();
@@ -190,7 +164,7 @@ void OtherItemsEnchanter::generate_statue()
         msg_format(_("%sの像", "Statue of %s"), monrace.name.data());
     }
 
-    object_aware(this->player_ptr, this->o_ptr);
+    object_aware(this->player_ptr, *this->o_ptr);
     this->o_ptr->mark_as_known();
 }
 
@@ -200,12 +174,12 @@ void OtherItemsEnchanter::generate_statue()
  */
 void OtherItemsEnchanter::generate_chest()
 {
-    auto obj_level = this->o_ptr->get_baseitem().level;
-    if (obj_level <= 0) {
+    const auto item_level = this->o_ptr->get_baseitem_level();
+    if (item_level <= 0) {
         return;
     }
 
-    this->o_ptr->pval = randnum1<short>(obj_level);
+    this->o_ptr->pval = randnum1<short>(item_level);
     if (this->o_ptr->bi_key.sval() == SV_CHEST_KANDUME) {
         this->o_ptr->pval = 6;
     }

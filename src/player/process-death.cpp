@@ -10,7 +10,6 @@
 #include "core/asking-player.h"
 #include "core/stuff-handler.h"
 #include "flavor/flavor-describer.h"
-#include "floor/floor-town.h"
 #include "game-option/game-play-options.h"
 #include "inventory/inventory-slot-types.h"
 #include "io/files-util.h"
@@ -19,10 +18,9 @@
 #include "object/item-use-flags.h"
 #include "perception/object-perception.h"
 #include "player-info/class-info.h"
-#include "store/store-util.h"
-#include "store/store.h"
-#include "system/floor-type-definition.h"
-#include "system/item-entity.h"
+#include "system/floor/floor-info.h"
+#include "system/floor/town-list.h"
+#include "system/item/item-entity.h"
 #include "system/player-type-definition.h"
 #include "system/redrawing-flags-updater.h"
 #include "term/gameterm.h"
@@ -34,6 +32,7 @@
 #include "view/display-messages.h"
 #include "view/display-player.h"
 #include "world/world.h"
+#include <fmt/format.h>
 
 constexpr auto GRAVE_LINE_WIDTH = 31;
 constexpr auto GRAVE_LINE_START_COL = 11;
@@ -70,11 +69,11 @@ static void show_tomb_line(std::string_view str, int row)
  */
 static void show_basic_params(PlayerType *player_ptr)
 {
-    show_tomb_line(format(_("レベル: %d", "Level: %d"), (int)player_ptr->lev), GRAVE_LEVEL_ROW);
+    show_tomb_line(fmt::format(_("レベル: {}", "Level: {}"), player_ptr->lev), GRAVE_LEVEL_ROW);
 
-    show_tomb_line(format(_("経験値: %ld", "Exp: %ld"), (long)player_ptr->exp), GRAVE_EXP_ROW);
+    show_tomb_line(fmt::format(_("経験値: {}", "Exp: {}"), player_ptr->exp), GRAVE_EXP_ROW);
 
-    show_tomb_line(format(_("所持金: %ld", "AU: %ld"), (long)player_ptr->au), GRAVE_AU_ROW);
+    show_tomb_line(fmt::format(_("所持金: {}", "AU: {}"), player_ptr->au), GRAVE_AU_ROW);
 }
 
 #ifdef JP
@@ -100,10 +99,12 @@ static int show_killing_monster(PlayerType *player_ptr)
     }
 
     if (lines.size() >= 3) {
-        char buf[GRAVE_LINE_WIDTH + 1];
-        angband_strcpy(buf, lines[1], sizeof(buf) - 2);
-        angband_strcat(buf, "…", sizeof(buf));
         show_tomb_line(lines[0], GRAVE_KILLER_NAME_ROW);
+
+        //!< 文末を2文字削る文字数は日英で異なる.
+        //!< @todo 英語版は関数ごとプリプロで呼び分けているが、後で統一する.
+        const auto omit = _(2, 3);
+        const auto buf = fmt::format(_("{}…", "{}..."), str_substr(lines[1], 0, GRAVE_LINE_WIDTH - omit));
         show_tomb_line(buf, GRAVE_KILLER_NAME_ROW + 1);
         return 1;
     }
@@ -135,18 +136,19 @@ static void show_dead_place(PlayerType *player_ptr, int extra_line)
         return;
     }
 
+    const auto &floor = *player_ptr->current_floor_ptr;
     std::string place;
-    if (player_ptr->current_floor_ptr->dun_level == 0) {
-        concptr field_name = player_ptr->town_num ? "街" : "荒野";
+    if (!floor.is_underground()) {
+        std::string_view field_name = AngbandWorld::get_instance().is_in_any_town() ? "街" : "荒野";
         if (streq(player_ptr->died_from, "途中終了")) {
-            place = format("%sで死んだ", field_name);
+            place = fmt::format("{}で死んだ", field_name);
         } else {
-            place = format("に%sで殺された", field_name);
+            place = fmt::format("に{}で殺された", field_name);
         }
     } else if (streq(player_ptr->died_from, "途中終了")) {
-        place = format("地下 %d 階で死んだ", (int)player_ptr->current_floor_ptr->dun_level);
+        place = fmt::format("地下 {} 階で死んだ", floor.dun_level);
     } else {
-        place = format("に地下 %d 階で殺された", (int)player_ptr->current_floor_ptr->dun_level);
+        place = fmt::format("に地下 {} 階で殺された", floor.dun_level);
     }
 
     show_tomb_line(place, GRAVE_DEAD_PLACE_ROW + extra_line);
@@ -236,13 +238,13 @@ void print_tomb(PlayerType *player_ptr)
 static void inventory_aware(PlayerType *player_ptr)
 {
     ItemEntity *o_ptr;
-    for (int i = 0; i < INVEN_TOTAL; i++) {
-        o_ptr = &player_ptr->inventory_list[i];
+    for (const auto i_idx : INVEN_ALL_SLOTS) {
+        o_ptr = player_ptr->inventory[i_idx].get();
         if (!o_ptr->is_valid()) {
             continue;
         }
 
-        object_aware(player_ptr, o_ptr);
+        object_aware(player_ptr, *o_ptr);
         o_ptr->mark_as_known();
     }
 }
@@ -253,16 +255,17 @@ static void inventory_aware(PlayerType *player_ptr)
  */
 static void home_aware(PlayerType *player_ptr)
 {
-    for (size_t i = 1; i < towns_info.size(); i++) {
-        auto *store_ptr = &towns_info[i].stores[StoreSaleType::HOME];
-        for (auto j = 0; j < store_ptr->stock_num; j++) {
-            auto *o_ptr = &store_ptr->stock[j];
-            if (!o_ptr->is_valid()) {
+    const auto &towns = TownList::get_instance();
+    for (size_t i = 1; i < towns.size(); i++) {
+        const auto &store = towns.get_town(i).get_store(StoreSaleType::HOME);
+        for (auto j = 0; j < store.stock_num; j++) {
+            auto &item = *store.stock[j];
+            if (!item.is_valid()) {
                 continue;
             }
 
-            object_aware(player_ptr, o_ptr);
-            o_ptr->mark_as_known();
+            object_aware(player_ptr, item);
+            item.mark_as_known();
         }
     }
 }
@@ -302,19 +305,20 @@ static bool show_dead_player_items(PlayerType *player_ptr)
  */
 static void show_dead_home_items(PlayerType *player_ptr)
 {
-    for (size_t l = 1; l < towns_info.size(); l++) {
-        const auto *store_ptr = &towns_info[l].stores[StoreSaleType::HOME];
-        if (store_ptr->stock_num == 0) {
+    const auto &towns = TownList::get_instance();
+    for (size_t l = 1; l < towns.size(); l++) {
+        const auto &store = towns.get_town(l).get_store(StoreSaleType::HOME);
+        if (store.stock_num == 0) {
             continue;
         }
 
-        for (int i = 0, k = 0; i < store_ptr->stock_num; k++) {
+        for (int i = 0, k = 0; i < store.stock_num; k++) {
             term_clear();
-            for (int j = 0; (j < 12) && (i < store_ptr->stock_num); j++, i++) {
-                const auto *o_ptr = &store_ptr->stock[i];
+            for (int j = 0; (j < 12) && (i < store.stock_num); j++, i++) {
+                const auto &item = *store.stock[i];
                 prt(format("%c) ", I2A(j)), j + 2, 4);
-                const auto item_name = describe_flavor(player_ptr, o_ptr, 0);
-                c_put_str(tval_to_attr[enum2i(o_ptr->bi_key.tval())], item_name, j + 2, 7);
+                const auto item_name = describe_flavor(player_ptr, item, 0);
+                c_put_str(tval_to_attr[enum2i(item.bi_key.tval())], item_name, j + 2, 7);
             }
 
             prt(format(_("我が家に置いてあったアイテム ( %d ページ): -続く-", "Your home contains (page %d): -more-"), k + 1), 0, 0);

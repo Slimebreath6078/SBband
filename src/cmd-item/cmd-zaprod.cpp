@@ -2,7 +2,7 @@
 #include "action/action-limited.h"
 #include "effect/attribute-types.h"
 #include "floor/floor-object.h"
-#include "object-enchant/special-object-flags.h"
+#include "floor/geometry.h"
 #include "object-use/zaprod-execution.h"
 #include "object/item-tester-hooker.h"
 #include "object/item-use-flags.h"
@@ -29,7 +29,7 @@
 #include "status/experience.h"
 #include "status/shape-changer.h"
 #include "sv-definition/sv-rod-types.h"
-#include "system/item-entity.h"
+#include "system/item/item-entity.h"
 #include "system/player-type-definition.h"
 #include "view/display-messages.h"
 #include "world/world.h"
@@ -43,7 +43,7 @@
  * @param powerful 強力発動上の処理ならばTRUE
  * @return 発動により効果内容が確定したならばTRUEを返す
  */
-int rod_effect(PlayerType *player_ptr, int sval, int dir, bool *use_charge, bool powerful)
+int rod_effect(PlayerType *player_ptr, int sval, const Direction &dir, bool *use_charge, bool powerful)
 {
     int ident = false;
     PLAYER_LEVEL lev = powerful ? player_ptr->lev * 2 : player_ptr->lev;
@@ -53,7 +53,7 @@ int rod_effect(PlayerType *player_ptr, int sval, int dir, bool *use_charge, bool
     /* Analyze the rod */
     switch (sval) {
     case SV_ROD_DETECT_TRAP: {
-        if (detect_traps(player_ptr, detect_rad, dir == 0)) {
+        if (detect_traps(player_ptr, detect_rad, !dir)) {
             ident = true;
         }
         break;
@@ -120,7 +120,7 @@ int rod_effect(PlayerType *player_ptr, int sval, int dir, bool *use_charge, bool
         if (true_healing(player_ptr, 0)) {
             ident = true;
         }
-        if (set_shero(player_ptr, 0, true)) {
+        if (set_berserk(player_ptr, 0, true)) {
             ident = true;
         }
         break;
@@ -300,8 +300,8 @@ void do_cmd_zap_rod(PlayerType *player_ptr)
 
     constexpr auto q = _("どのロッドを振りますか? ", "Zap which rod? ");
     constexpr auto s = _("使えるロッドがない。", "You have no rod to zap.");
-    short i_idx;
-    if (!choose_object(player_ptr, &i_idx, q, s, (USE_INVEN | USE_FLOOR), TvalItemTester(ItemKindType::ROD))) {
+    const auto &[item, i_idx] = choose_item(player_ptr, q, s, (USE_INVEN | USE_FLOOR), TvalItemTester(ItemKindType::ROD));
+    if (!item) {
         return;
     }
 

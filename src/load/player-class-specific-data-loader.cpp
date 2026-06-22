@@ -1,7 +1,7 @@
 #include "load/player-class-specific-data-loader.h"
 #include "load/load-util.h"
 #include "player-info/bard-data-type.h"
-#include "player-info/bluemage-data-type.h"
+#include "player-info/bluemage-data.h"
 #include "player-info/force-trainer-data-type.h"
 #include "player-info/magic-eater-data-type.h"
 #include "player-info/mane-data-type.h"
@@ -37,12 +37,12 @@ void PlayerClassSpecificDataLoader::operator()(std::shared_ptr<force_trainer_dat
     force_trainer_data->ki = rd_s32b();
 }
 
-void PlayerClassSpecificDataLoader::operator()(std::shared_ptr<bluemage_data_type> &bluemage_data) const
+void PlayerClassSpecificDataLoader::operator()(std::shared_ptr<BluemageData> &bluemage_data) const
 {
     rd_FlagGroup(bluemage_data->learnt_blue_magics, rd_byte);
 }
 
-void PlayerClassSpecificDataLoader::operator()(std::shared_ptr<magic_eater_data_type> &magic_eater_data) const
+void PlayerClassSpecificDataLoader::operator()(std::shared_ptr<MagicEaterDataList> &magic_eater_data) const
 {
     auto load_item_group = [](auto &item_group) {
         auto item_count = rd_u16b();

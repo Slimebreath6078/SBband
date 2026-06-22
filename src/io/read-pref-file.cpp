@@ -25,6 +25,7 @@
 #include "world/world.h"
 #include <algorithm>
 #include <filesystem>
+#include <fmt/format.h>
 #include <string>
 
 //!< @todo コールバック関数に変更するので、いずれ消す.
@@ -121,13 +122,13 @@ static errr process_pref_file_aux(PlayerType *player_ptr, const std::filesystem:
             continue;
         }
 
-        err = interpret_pref_file(player_ptr, line_str->data());
+        err = interpret_pref_file(player_ptr, *line_str);
         if (err != 0) {
             if (preftype != PREF_TYPE_AUTOPICK) {
                 break;
             }
 
-            process_autopick_file_command(line_str->data());
+            process_autopick_file_command(*line_str);
             err = 0;
         }
     }
@@ -138,7 +139,7 @@ static errr process_pref_file_aux(PlayerType *player_ptr, const std::filesystem:
         const auto &name_str = name.string();
         msg_format(_("ファイル'%s'の%d行でエラー番号%dのエラー。", "Error %d in line %d of file '%s'."), _(name_str.data(), err), line, _(err, name_str.data()));
         msg_format(_("('%s'を解析中)", "Parsing '%s'"), error_line.data());
-        msg_print(nullptr);
+        msg_erase();
     }
 
     angband_fclose(fp);
@@ -242,7 +243,7 @@ bool open_auto_dump(FILE **fpp, const std::filesystem::path &path, std::string_v
     if (!fpp) {
         const auto &path_str = path.string();
         msg_format(_("%s を開くことができませんでした。", "Failed to open %s."), path_str.data());
-        msg_print(nullptr);
+        msg_erase();
         return false;
     }
 
@@ -271,26 +272,24 @@ void close_auto_dump(FILE **fpp, std::string_view mark)
 
 /*!
  * @brief 全ユーザプロファイルをロードする / Load some "user pref files"
+ *
+ * "{}.prf"をfmt::format() 第1引数へ変数として入れると実行時エラーを吐く場合があるので、リテラルで渡す.
  * @paaram player_ptr プレイヤーへの参照ポインタ
- * @note
- * Modified by Arcum Dagsson to support
- * separate macro files for different realms.
  */
 void load_all_pref_files(PlayerType *player_ptr)
 {
     process_pref_file(player_ptr, "user.prf");
-    process_pref_file(player_ptr, format("user-%s.prf", ANGBAND_SYS));
-    constexpr auto fmt = "%s.prf";
-    process_pref_file(player_ptr, format(fmt, rp_ptr->title.data()));
-    process_pref_file(player_ptr, format(fmt, cp_ptr->title.data()));
-    process_pref_file(player_ptr, format(fmt, player_ptr->base_name));
+    process_pref_file(player_ptr, fmt::format("user-{}.prf", ANGBAND_SYS));
+    process_pref_file(player_ptr, fmt::format("{}.prf", rp_ptr->title));
+    process_pref_file(player_ptr, fmt::format("{}.prf", cp_ptr->title));
+    process_pref_file(player_ptr, fmt::format("{}.prf", player_ptr->base_name));
     PlayerRealm pr(player_ptr);
     if (pr.realm1().is_available()) {
-        process_pref_file(player_ptr, format(fmt, pr.realm1().get_name().data()));
+        process_pref_file(player_ptr, fmt::format("{}.prf", pr.realm1().get_name()));
     }
 
     if (pr.realm2().is_available()) {
-        process_pref_file(player_ptr, format(fmt, pr.realm2().get_name().data()));
+        process_pref_file(player_ptr, fmt::format("{}.prf", pr.realm2().get_name()));
     }
 
     autopick_load_pref(player_ptr, false);
@@ -313,16 +312,16 @@ bool read_histpref(PlayerType *player_ptr)
         err = process_histpref_file(player_ptr, _("histedit.prf", "histpref.prf"));
     }
 
-    const auto finalizer = util::make_finalizer([]() { histpref_buf = std::nullopt; });
+    const auto finalizer = util::make_finalizer([]() { histpref_buf = tl::nullopt; });
     if (err) {
         msg_print(_("生い立ち設定ファイルの読み込みに失敗しました。", "Failed to load background history preference."));
-        msg_print(nullptr);
+        msg_erase();
         return false;
     }
 
     if (!histpref_buf || histpref_buf->empty()) {
         msg_print(_("有効な生い立ち設定はこのファイルにありません。", "There does not exist valid background history preference."));
-        msg_print(nullptr);
+        msg_erase();
         return false;
     }
 

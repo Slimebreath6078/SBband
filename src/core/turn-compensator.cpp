@@ -1,12 +1,13 @@
 #include "core/turn-compensator.h"
-#include "floor/floor-town.h"
+#include "floor/dungeon-feeling.h"
 #include "player-info/race-types.h"
 #include "store/store-owners.h"
 #include "store/store-util.h"
 #include "store/store.h"
-#include "system/floor-type-definition.h"
+#include "system/floor/floor-info.h"
+#include "system/floor/town-list.h"
 #include "system/inner-game-data.h"
-#include "system/item-entity.h"
+#include "system/item/item-entity.h"
 #include "system/player-type-definition.h"
 #include "world/world.h"
 
@@ -33,37 +34,40 @@ void prevent_turn_overflow(PlayerType *player_ptr)
     } else {
         world.game_turn = 1;
     }
-    auto *floor_ptr = player_ptr->current_floor_ptr;
-    if (floor_ptr->generated_turn > rollback_turns) {
-        floor_ptr->generated_turn -= rollback_turns;
+    auto &floor = *player_ptr->current_floor_ptr;
+    if (floor.generated_turn > rollback_turns) {
+        floor.generated_turn -= rollback_turns;
     } else {
-        floor_ptr->generated_turn = 1;
+        floor.generated_turn = 1;
     }
     if (world.arena_start_turn > rollback_turns) {
         world.arena_start_turn -= rollback_turns;
     } else {
         world.arena_start_turn = 1;
     }
-    if (player_ptr->feeling_turn > rollback_turns) {
-        player_ptr->feeling_turn -= rollback_turns;
+
+    auto &df = DungeonFeeling::get_instance();
+    if (df.get_turns() > rollback_turns) {
+        df.mod_turns(-rollback_turns);
     } else {
-        player_ptr->feeling_turn = 1;
+        df.set_turns(1);
     }
 
-    for (size_t i = 1; i < towns_info.size(); i++) {
+    auto &towns = TownList::get_instance();
+    for (size_t i = 1; i < towns.size(); i++) {
         for (auto sst : STORE_SALE_TYPE_LIST) {
-            auto *store_ptr = &towns_info[i].stores[sst];
-            if (store_ptr->last_visit > -10L * TURNS_PER_TICK * STORE_TICKS) {
-                store_ptr->last_visit -= rollback_turns;
-                if (store_ptr->last_visit < -10L * TURNS_PER_TICK * STORE_TICKS) {
-                    store_ptr->last_visit = -10L * TURNS_PER_TICK * STORE_TICKS;
+            auto &store = towns.get_town(i).get_store(sst);
+            if (store.last_visit > -10L * TURNS_PER_TICK * STORE_TICKS) {
+                store.last_visit -= rollback_turns;
+                if (store.last_visit < -10L * TURNS_PER_TICK * STORE_TICKS) {
+                    store.last_visit = -10L * TURNS_PER_TICK * STORE_TICKS;
                 }
             }
 
-            if (store_ptr->store_open) {
-                store_ptr->store_open -= rollback_turns;
-                if (store_ptr->store_open < 1) {
-                    store_ptr->store_open = 1;
+            if (store.store_open) {
+                store.store_open -= rollback_turns;
+                if (store.store_open < 1) {
+                    store.store_open = 1;
                 }
             }
         }

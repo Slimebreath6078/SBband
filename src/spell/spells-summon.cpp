@@ -8,7 +8,6 @@
 #include "inventory/inventory-object.h"
 #include "monster-floor/monster-summon.h"
 #include "monster-floor/place-monster-types.h"
-#include "monster-race/race-indice-types.h"
 #include "monster/monster-info.h"
 #include "monster/monster-status.h"
 #include "monster/monster-util.h"
@@ -27,10 +26,11 @@
 #include "spell/summon-types.h"
 #include "status/bad-status-setter.h"
 #include "sv-definition/sv-other-types.h"
-#include "system/floor-type-definition.h"
-#include "system/item-entity.h"
+#include "system/enums/monrace/monrace-id.h"
+#include "system/floor/floor-info.h"
+#include "system/item/item-entity.h"
+#include "system/monrace/monrace-definition.h"
 #include "system/monster-entity.h"
-#include "system/monster-race-info.h"
 #include "system/player-type-definition.h"
 #include "target/projection-path-calculator.h"
 #include "util/string-processor.h"
@@ -192,7 +192,7 @@ bool cast_summon_octopus(PlayerType *player_ptr)
     if (pet) {
         mode |= PM_FORCE_PET;
     }
-    if (summon_named_creature(player_ptr, 0, player_ptr->y, player_ptr->x, MonsterRaceId::JIZOTAKO, mode)) {
+    if (summon_named_creature(player_ptr, 0, player_ptr->y, player_ptr->x, MonraceId::JIZOTAKO, mode)) {
         if (pet) {
             msg_print(_("蛸があなたの下僕として出現した。", "A group of octopuses appear as your servants."));
         } else {
@@ -211,13 +211,12 @@ bool cast_summon_greater_demon(PlayerType *player_ptr)
 {
     constexpr auto q = _("どの死体を捧げますか? ", "Sacrifice which corpse? ");
     constexpr auto s = _("捧げられる死体を持っていない。", "You have nothing to sacrifice.");
-    short i_idx;
-    const auto *o_ptr = choose_object(player_ptr, &i_idx, q, s, (USE_INVEN | USE_FLOOR), FuncItemTester(&ItemEntity::is_offerable));
-    if (!o_ptr) {
+    const auto &[item, i_idx] = choose_item(player_ptr, q, s, (USE_INVEN | USE_FLOOR), FuncItemTester(&ItemEntity::is_offerable));
+    if (!item) {
         return false;
     }
 
-    const auto summon_lev = player_ptr->lev * 2 / 3 + o_ptr->get_monrace().level;
+    const auto summon_lev = player_ptr->lev * 2 / 3 + item->get_monrace().level;
     if (summon_specific(player_ptr, player_ptr->y, player_ptr->x, summon_lev, SUMMON_HI_DEMON, (PM_ALLOW_GROUP | PM_FORCE_PET))) {
         msg_print(_("硫黄の悪臭が充満した。", "The area fills with a stench of sulphur and brimstone."));
         msg_print(_("「ご用でございますか、ご主人様」", "'What is thy bidding... Master?'"));
@@ -255,19 +254,19 @@ bool summon_kin_player(PlayerType *player_ptr, DEPTH level, POSITION y, POSITION
  * @param summoner_m_idx モンスターの召喚による場合、召喚者のモンスターID
  * @return 作用が実際にあった場合TRUEを返す
  */
-int summon_cyber(PlayerType *player_ptr, POSITION y, POSITION x, std::optional<MONSTER_IDX> summoner_m_idx)
+int summon_cyber(PlayerType *player_ptr, POSITION y, POSITION x, tl::optional<MONSTER_IDX> summoner_m_idx)
 {
     /* Summoned by a monster */
     BIT_FLAGS mode = PM_ALLOW_GROUP;
-    auto *floor_ptr = player_ptr->current_floor_ptr;
+    const auto &floor = *player_ptr->current_floor_ptr;
     if (summoner_m_idx) {
-        auto *m_ptr = &floor_ptr->m_list[*summoner_m_idx];
-        if (m_ptr->is_pet()) {
+        const auto &monster = floor.m_list[*summoner_m_idx];
+        if (monster.is_pet()) {
             mode |= PM_FORCE_PET;
         }
     }
 
-    int max_cyber = (floor_ptr->dun_level / 50) + randint1(2);
+    int max_cyber = (floor.dun_level / 50) + randint1(2);
     if (max_cyber > 4) {
         max_cyber = 4;
     }
@@ -284,32 +283,35 @@ void mitokohmon(PlayerType *player_ptr)
 {
     int count = 0;
     [[maybe_unused]] concptr sukekakusan = "";
-    if (summon_named_creature(player_ptr, 0, player_ptr->y, player_ptr->x, MonsterRaceId::SUKE, PM_FORCE_PET)) {
+    if (summon_named_creature(player_ptr, 0, player_ptr->y, player_ptr->x, MonraceId::SUKE, PM_FORCE_PET)) {
         msg_print(_("『助さん』が現れた。", "Suke-san apperars."));
         sukekakusan = "Suke-san";
         count++;
     }
 
-    if (summon_named_creature(player_ptr, 0, player_ptr->y, player_ptr->x, MonsterRaceId::KAKU, PM_FORCE_PET)) {
+    if (summon_named_creature(player_ptr, 0, player_ptr->y, player_ptr->x, MonraceId::KAKU, PM_FORCE_PET)) {
         msg_print(_("『格さん』が現れた。", "Kaku-san appears."));
         sukekakusan = "Kaku-san";
         count++;
     }
 
     if (!count) {
-        for (int i = player_ptr->current_floor_ptr->m_max - 1; i > 0; i--) {
-            MonsterEntity *m_ptr;
-            m_ptr = &player_ptr->current_floor_ptr->m_list[i];
-            if (!m_ptr->is_valid()) {
+        const auto &floor = *player_ptr->current_floor_ptr;
+        const auto p_pos = player_ptr->get_position();
+        for (auto i = floor.m_max - 1; i > 0; i--) {
+            const auto &monster = floor.m_list[i];
+            if (!monster.is_valid()) {
                 continue;
             }
-            if (!((m_ptr->r_idx == MonsterRaceId::SUKE) || (m_ptr->r_idx == MonsterRaceId::KAKU))) {
+            if (!((monster.r_idx == MonraceId::SUKE) || (monster.r_idx == MonraceId::KAKU))) {
                 continue;
             }
-            if (!los(player_ptr, m_ptr->fy, m_ptr->fx, player_ptr->y, player_ptr->x)) {
+
+            const auto m_pos = monster.get_position();
+            if (!los(floor, m_pos, p_pos)) {
                 continue;
             }
-            if (!projectable(player_ptr, m_ptr->fy, m_ptr->fx, player_ptr->y, player_ptr->x)) {
+            if (!projectable(floor, m_pos, p_pos)) {
                 continue;
             }
             count++;
@@ -442,7 +444,7 @@ int activate_hi_summon(PlayerType *player_ptr, POSITION y, POSITION x, bool can_
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param dir 方向ID
  */
-void cast_invoke_spirits(PlayerType *player_ptr, DIRECTION dir)
+void cast_invoke_spirits(PlayerType *player_ptr, const Direction &dir)
 {
     PLAYER_LEVEL plev = player_ptr->lev;
     int die = randint1(100) + plev / 5;
@@ -513,7 +515,7 @@ void cast_invoke_spirits(PlayerType *player_ptr, DIRECTION dir)
     } else if (die < 101) {
         hypodynamic_bolt(player_ptr, dir, 100 + plev);
     } else if (die < 104) {
-        earthquake(player_ptr, player_ptr->y, player_ptr->x, 12, 0);
+        earthquake(player_ptr, player_ptr->get_position(), 12);
     } else if (die < 106) {
         (void)destroy_area(player_ptr, player_ptr->y, player_ptr->x, 13 + randint0(5), false);
     } else if (die < 108) {

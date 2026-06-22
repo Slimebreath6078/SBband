@@ -11,12 +11,13 @@
 
 #include "load/load.h"
 #include "core/asking-player.h"
-#include "dungeon/quest.h"
 #include "game-option/birth-options.h"
+#include "inventory/inventory-slot-types.h"
 #include "io/files-util.h"
 #include "io/report.h"
 #include "io/uid-checker.h"
 #include "load/angband-version-comparer.h"
+#include "load/artifact-record-loader.h"
 #include "load/dummy-loader.h"
 #include "load/dungeon-loader.h"
 #include "load/extra-loader.h"
@@ -43,15 +44,78 @@
 #include "system/angband-exceptions.h"
 #include "system/angband-system.h"
 #include "system/angband-version.h"
+#include "system/artifact/artifact-definition.h"
+#include "system/artifact/artifact-list.h"
+#include "system/artifact/artifact-record.h"
+#include "system/dungeon/quest-definition.h"
+#include "system/dungeon/quest-list.h"
+#include "system/floor/floor-info.h"
+#include "system/grid-type-definition.h"
+#include "system/inner-game-data.h"
+#include "system/item/item-entity.h"
 #include "system/player-type-definition.h"
 #include "system/system-variables.h"
 #include "util/angband-files.h"
 #include "util/enum-converter.h"
 #include "view/display-messages.h"
 #include "world/world.h"
+#include <set>
 #include <sstream>
 #include <string>
 #include <vector>
+
+namespace {
+/*!
+ * @brief 既知の固定アーティファクトIDを収集する（V26未満のセーブデータ用）
+ */
+auto collect_known_fixed_artifacts_old(PlayerType *player_ptr)
+{
+    const auto &artifacts = ArtifactList::get_instance();
+    const auto comparer = [&artifacts](auto id1, auto id2) { return artifacts.order(id1, id2); };
+    std::set<FixedArtifactId, decltype(comparer)> fa_ids(comparer);
+    for (const auto &[fa_id, record] : ArtifactRecords::get_instance()) {
+        if (!record.get_generated()) {
+            continue;
+        }
+
+        fa_ids.insert(fa_id);
+    }
+
+    if (!player_ptr->is_dead) {
+        const auto &floor = *player_ptr->current_floor_ptr;
+        for (const auto &pos : floor.get_area()) {
+            const auto &grid = floor.get_grid(pos);
+            for (const auto this_o_idx : grid.o_idx_list) {
+                const auto &item = *floor.o_list[this_o_idx];
+                if (!item.is_fixed_artifact() || item.is_known()) {
+                    continue;
+                }
+
+                fa_ids.erase(item.fa_id);
+            }
+        }
+    }
+
+    for (const auto i_idx : INVEN_ALL_SLOTS) {
+        const auto &item = *player_ptr->inventory[i_idx];
+        if (!item.is_valid()) {
+            continue;
+        }
+
+        if (!item.is_fixed_artifact()) {
+            continue;
+        }
+
+        if (item.is_known()) {
+            continue;
+        }
+
+        fa_ids.erase(item.fa_id);
+    }
+
+    return fa_ids;
+}
+}
 
 /*!
  * @brief 変愚蛮怒 v2.1.3で追加された街とクエストについて読み込む
@@ -87,7 +151,11 @@ static errr load_town_quest(PlayerType *player_ptr)
  */
 static void rd_total_play_time()
 {
-    AngbandWorld::get_instance().sf_play_time = rd_u32b();
+    if (loading_savefile_version_is_older_than(4)) {
+        return;
+    }
+
+    InnerGameData::get_instance().set_total_play_time(rd_u32b());
 }
 
 /*!
@@ -95,8 +163,17 @@ static void rd_total_play_time()
  */
 static void rd_winner_class()
 {
-    rd_FlagGroup(AngbandWorld::get_instance().sf_winner, rd_byte);
-    rd_FlagGroup(AngbandWorld::get_instance().sf_retired, rd_byte);
+    if (loading_savefile_version_is_older_than(4)) {
+        return;
+    }
+
+    auto &igd = InnerGameData::get_instance();
+    EnumClassFlagGroup<PlayerClassType> winner_classes{};
+    rd_FlagGroup(winner_classes, rd_byte);
+    igd.set_won_classes(winner_classes);
+    EnumClassFlagGroup<PlayerClassType> retired_classes{};
+    rd_FlagGroup(retired_classes, rd_byte);
+    igd.set_retired_classes(retired_classes);
 }
 
 static void load_player_world(PlayerType *player_ptr)
@@ -106,7 +183,7 @@ static void load_player_world(PlayerType *player_ptr)
     rd_base_info(player_ptr);
     rd_player_info(player_ptr);
     preserve_mode = rd_bool();
-    player_ptr->wait_report_score = rd_bool();
+    AngbandSystem::get_instance().set_awaiting_report_score(rd_bool());
     rd_dummy2();
     rd_global_configurations(player_ptr);
     rd_extra(player_ptr);
@@ -176,6 +253,16 @@ static errr verify_encoded_checksum()
     return 11;
 }
 
+static errr verify_savedata()
+{
+    const auto checksum_result = verify_checksum();
+    if (checksum_result != 0) {
+        return checksum_result;
+    }
+
+    return verify_encoded_checksum();
+}
+
 /*!
  * @brief セーブファイル読み込み処理の実体 / Actually read the savefile
  * @return エラーコード
@@ -199,7 +286,10 @@ static errr exe_reading_savefile(PlayerType *player_ptr)
     }
 
     load_note(_("クエスト情報をロードしました", "Loaded Quests"));
-    item_loader->load_artifact();
+    if (loading_savefile_version_is_older_than(26)) {
+        item_loader->load_artifact_older_than_26();
+    }
+
     load_player_world(player_ptr);
     auto load_hp_result = load_hp(player_ptr);
     if (load_hp_result != 0) {
@@ -234,12 +324,7 @@ static errr exe_reading_savefile(PlayerType *player_ptr)
     }
 
     if (!h_older_than(1, 0, 9)) {
-        std::vector<char> buf(SCREEN_BUF_MAX_SIZE);
-        const auto dump_str = rd_string();
-        dump_str.copy(buf.data(), SCREEN_BUF_MAX_SIZE - 1);
-        if (buf[0]) {
-            screen_dump = string_make(buf.data());
-        }
+        screen_dump = rd_string();
     }
 
     auto restore_dungeon_result = restore_dungeon(player_ptr);
@@ -251,12 +336,20 @@ static errr exe_reading_savefile(PlayerType *player_ptr)
         remove_water_cave(player_ptr);
     }
 
-    auto checksum_result = verify_checksum();
-    if (checksum_result != 0) {
-        return checksum_result;
+    if (loading_savefile_version_is_older_than(26)) {
+        auto &artifact_records = ArtifactRecords::get_instance();
+        const auto known_fixed_artifacts = collect_known_fixed_artifacts_old(player_ptr);
+        for (const auto fa_id : known_fixed_artifacts) {
+            artifact_records.set_generated(fa_id, true);
+            artifact_records.set_known(fa_id);
+            artifact_records.set_identified(fa_id);
+        }
+
+        return verify_savedata();
     }
 
-    return verify_encoded_checksum();
+    rd_artifact_records();
+    return verify_savedata();
 }
 
 /*!
@@ -298,7 +391,6 @@ static bool reset_save_data(PlayerType *player_ptr, bool *new_game)
 {
     *new_game = true;
     player_ptr->is_dead = false;
-    AngbandWorld::get_instance().sf_lives++;
     return true;
 }
 
@@ -307,14 +399,14 @@ static bool on_read_save_data_not_supported(PlayerType *player_ptr, bool *new_ga
     auto mes_not_play = _("このセーブデータの続きをプレイすることはできません。", "You can't play the rest of the game from this save data.");
     auto mes_check_restart = _("最初からプレイを始めますか？(モンスターの思い出は引き継がれます)", "Play from the beginning? (Monster recalls will be inherited.) ");
     msg_print(mes_not_play);
-    msg_print(nullptr);
+    msg_erase();
     if (!input_check(mes_check_restart)) {
         msg_print(_("ゲームを終了します。", "Exit the game."));
-        msg_print(nullptr);
+        msg_erase();
         return false;
     }
 
-    player_ptr->wait_report_score = false;
+    AngbandSystem::get_instance().set_awaiting_report_score(false);
     return reset_save_data(player_ptr, new_game);
 }
 
@@ -349,7 +441,7 @@ bool load_savedata(PlayerType *player_ptr, bool *new_game)
 #ifndef WINDOWS
     if (access(savefile_str.data(), 0) < 0) {
         msg_print(_("セーブファイルがありません。", "Savefile does not exist."));
-        msg_print(nullptr);
+        msg_erase();
         *new_game = true;
         return true;
     }
@@ -404,7 +496,7 @@ bool load_savedata(PlayerType *player_ptr, bool *new_game)
 
     if (err) {
         msg_format("%s: %s", what, savefile_str.data());
-        msg_print(nullptr);
+        msg_erase();
         return false;
     }
 
@@ -437,7 +529,7 @@ bool load_savedata(PlayerType *player_ptr, bool *new_game)
         auto &system = AngbandSystem::get_instance();
         constexpr auto fmt = _("エラー(%s)がバージョン %s 用セーブファイル読み込み中に発生。", "Error (%s) reading %s savefile.");
         msg_format(fmt, what, system.build_version_expression(VersionExpression::WITH_EXTRA).data());
-        msg_print(nullptr);
+        msg_erase();
         return false;
     }
 
@@ -455,7 +547,7 @@ bool load_savedata(PlayerType *player_ptr, bool *new_game)
         player_ptr->count = tmp;
     }
 
-    const auto play_time = world.play_time;
+    const auto play_time = world.play_time.elapsed_sec();
     if (counts_read(player_ptr, 0) > play_time || counts_read(player_ptr, 1) == play_time) {
         counts_write(player_ptr, 2, ++player_ptr->count);
     }

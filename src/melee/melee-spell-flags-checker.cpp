@@ -1,13 +1,11 @@
 #include "melee/melee-spell-flags-checker.h"
 #include "dungeon/dungeon-flag-types.h"
 #include "effect/effect-characteristics.h"
-#include "floor/geometry.h"
 #include "floor/line-of-sight.h"
 #include "melee/melee-spell-util.h"
 #include "monster-floor/monster-move.h"
 #include "monster-race/race-ability-mask.h"
 #include "monster-race/race-brightness-mask.h"
-#include "monster-race/race-indice-types.h"
 #include "monster/monster-status.h"
 #include "mspell/mspell-checker.h"
 #include "mspell/mspell-judgement.h"
@@ -16,11 +14,12 @@
 #include "player-base/player-class.h"
 #include "spell-kind/spells-world.h"
 #include "system/angband-system.h"
-#include "system/dungeon-info.h"
-#include "system/floor-type-definition.h"
+#include "system/dungeon/dungeon-definition.h"
+#include "system/enums/monrace/monrace-id.h"
+#include "system/floor/floor-info.h"
 #include "system/grid-type-definition.h"
+#include "system/monrace/monrace-definition.h"
 #include "system/monster-entity.h"
-#include "system/monster-race-info.h"
 #include "system/player-type-definition.h"
 #include "target/projection-path-calculator.h"
 #include "util/bit-flags-calculator.h"
@@ -33,8 +32,9 @@ static void decide_melee_spell_target(PlayerType *player_ptr, melee_spell_type *
     }
 
     ms_ptr->target_idx = player_ptr->pet_t_m_idx;
-    ms_ptr->t_ptr = &player_ptr->current_floor_ptr->m_list[ms_ptr->target_idx];
-    if ((ms_ptr->m_idx == ms_ptr->target_idx) || !projectable(player_ptr, ms_ptr->m_ptr->fy, ms_ptr->m_ptr->fx, ms_ptr->t_ptr->fy, ms_ptr->t_ptr->fx)) {
+    const auto &floor = *player_ptr->current_floor_ptr;
+    ms_ptr->t_ptr = &floor.m_list[ms_ptr->target_idx];
+    if ((ms_ptr->m_idx == ms_ptr->target_idx) || !projectable(floor, ms_ptr->m_ptr->get_position(), ms_ptr->t_ptr->get_position())) {
         ms_ptr->target_idx = 0;
     }
 }
@@ -46,20 +46,20 @@ static void decide_indirection_melee_spell(PlayerType *player_ptr, melee_spell_t
         return;
     }
 
-    auto *floor_ptr = player_ptr->current_floor_ptr;
-    ms_ptr->target_idx = floor_ptr->grid_array[monster_from.target_y][monster_from.target_x].m_idx;
+    const auto &floor = *player_ptr->current_floor_ptr;
+    ms_ptr->target_idx = floor.grid_array[monster_from.target_y][monster_from.target_x].m_idx;
     if (ms_ptr->target_idx == 0) {
         return;
     }
 
-    ms_ptr->t_ptr = &floor_ptr->m_list[ms_ptr->target_idx];
+    ms_ptr->t_ptr = &floor.m_list[ms_ptr->target_idx];
     const auto &monster_to = *ms_ptr->t_ptr;
     if ((ms_ptr->m_idx == ms_ptr->target_idx) || ((ms_ptr->target_idx != player_ptr->pet_t_m_idx) && !monster_from.is_hostile_to_melee(monster_to))) {
         ms_ptr->target_idx = 0;
         return;
     }
 
-    if (projectable(player_ptr, monster_from.fy, monster_from.fx, monster_to.fy, monster_to.fx)) {
+    if (projectable(floor, monster_from.get_position(), monster_to.get_position())) {
         return;
     }
 
@@ -73,29 +73,29 @@ static bool check_melee_spell_projection(PlayerType *player_ptr, melee_spell_typ
     }
 
     int start;
-    int plus = 1;
-    auto *floor_ptr = player_ptr->current_floor_ptr;
+    auto plus = 1;
+    const auto &floor = *player_ptr->current_floor_ptr;
     if (AngbandSystem::get_instance().is_phase_out()) {
-        start = randint1(floor_ptr->m_max - 1) + floor_ptr->m_max;
+        start = randint1(floor.m_max - 1) + floor.m_max;
         if (randint0(2)) {
             plus = -1;
         }
     } else {
-        start = floor_ptr->m_max + 1;
+        start = floor.m_max + 1;
     }
 
-    for (int i = start; ((i < start + floor_ptr->m_max) && (i > start - floor_ptr->m_max)); i += plus) {
-        MONSTER_IDX dummy = (i % floor_ptr->m_max);
-        if (!dummy) {
+    for (int i = start; ((i < start + floor.m_max) && (i > start - floor.m_max)); i += plus) {
+        short dummy = i % floor.m_max;
+        if (dummy == 0) {
             continue;
         }
 
         ms_ptr->target_idx = dummy;
-        ms_ptr->t_ptr = &floor_ptr->m_list[ms_ptr->target_idx];
+        ms_ptr->t_ptr = &floor.m_list[ms_ptr->target_idx];
         const auto &monster_from = *ms_ptr->m_ptr;
         const auto &monster_to = *ms_ptr->t_ptr;
         const auto is_enemies = monster_from.is_hostile_to_melee(monster_to);
-        const auto is_projectable = projectable(player_ptr, monster_from.fy, monster_from.fx, monster_to.fy, monster_to.fx);
+        const auto is_projectable = projectable(floor, monster_from.get_position(), monster_to.get_position());
         if (!monster_to.is_valid() || (ms_ptr->m_idx == ms_ptr->target_idx) || !is_enemies || !is_projectable) {
             continue;
         }
@@ -113,10 +113,10 @@ static void check_darkness(PlayerType *player_ptr, melee_spell_type *ms_ptr)
     }
 
     const auto vs_ninja = PlayerClass(player_ptr).equals(PlayerClassType::NINJA) && !ms_ptr->t_ptr->is_hostile();
-    auto can_use_lite_area = vs_ninja && ms_ptr->r_ptr->kind_flags.has_not(MonsterKindType::UNDEAD);
-    can_use_lite_area &= ms_ptr->r_ptr->resistance_flags.has_not(MonsterResistanceType::HURT_LITE);
-    can_use_lite_area &= ms_ptr->r_ptr->brightness_flags.has_none_of(dark_mask);
-    if (ms_ptr->r_ptr->behavior_flags.has(MonsterBehaviorType::STUPID)) {
+    auto can_use_lite_area = vs_ninja && ms_ptr->monrace->kind_flags.has_not(MonsterKindType::UNDEAD);
+    can_use_lite_area &= ms_ptr->monrace->resistance_flags.has_not(MonsterResistanceType::HURT_LITE);
+    can_use_lite_area &= ms_ptr->monrace->brightness_flags.has_none_of(dark_mask);
+    if (ms_ptr->monrace->behavior_flags.has(MonsterBehaviorType::STUPID)) {
         return;
     }
 
@@ -132,7 +132,7 @@ static void check_darkness(PlayerType *player_ptr, melee_spell_type *ms_ptr)
 
 static void check_stupid(melee_spell_type *ms_ptr)
 {
-    if (!ms_ptr->in_no_magic_dungeon || ms_ptr->r_ptr->behavior_flags.has(MonsterBehaviorType::STUPID)) {
+    if (!ms_ptr->in_no_magic_dungeon || ms_ptr->monrace->behavior_flags.has(MonsterBehaviorType::STUPID)) {
         return;
     }
 
@@ -146,7 +146,7 @@ static void check_arena(const FloorType &floor, melee_spell_type *ms_ptr)
     }
 
     ms_ptr->ability_flags.reset(RF_ABILITY_SUMMON_MASK).reset(MonsterAbilityType::TELE_LEVEL);
-    if (ms_ptr->m_ptr->r_idx == MonsterRaceId::ROLENTO) {
+    if (ms_ptr->m_ptr->r_idx == MonraceId::ROLENTO) {
         ms_ptr->ability_flags.reset(MonsterAbilityType::SPECIAL);
     }
 }
@@ -159,19 +159,20 @@ static void check_melee_spell_distance(PlayerType *player_ptr, melee_spell_type 
         return;
     }
 
-    auto real_y = ms_ptr->y;
-    auto real_x = ms_ptr->x;
-    get_project_point(player_ptr, ms_ptr->m_ptr->fy, ms_ptr->m_ptr->fx, &real_y, &real_x, 0L);
-    auto should_preserve = !projectable(player_ptr, real_y, real_x, player_ptr->y, player_ptr->x);
+    const auto &floor = *player_ptr->current_floor_ptr;
+    const auto p_pos = player_ptr->get_position();
+    const auto m_pos = ms_ptr->m_ptr->get_position();
+    const auto pos_real = get_project_point(floor, p_pos, m_pos, ms_ptr->get_position(), 0L);
+    auto should_preserve = !projectable(floor, pos_real, p_pos);
     should_preserve &= ms_ptr->ability_flags.has(MonsterAbilityType::BA_LITE);
-    should_preserve &= distance(real_y, real_x, player_ptr->y, player_ptr->x) <= 4;
-    should_preserve &= los(player_ptr, real_y, real_x, player_ptr->y, player_ptr->x);
+    should_preserve &= Grid::calc_distance(pos_real, p_pos) <= 4;
+    should_preserve &= los(*player_ptr->current_floor_ptr, pos_real, p_pos);
     if (should_preserve) {
         ms_ptr->ability_flags.reset(MonsterAbilityType::BA_LITE);
         return;
     }
 
-    int dist = distance(real_y, real_x, player_ptr->y, player_ptr->x);
+    const auto dist = Grid::calc_distance(pos_real, p_pos);
     if (dist <= 2) {
         ms_ptr->ability_flags.reset(ball_mask_except_rocket);
         return;
@@ -181,14 +182,14 @@ static void check_melee_spell_distance(PlayerType *player_ptr, melee_spell_type 
         return;
     }
 
-    auto ball_when_powerful_rad4 = {
+    const auto ball_when_powerful_rad4 = {
         MonsterAbilityType::BA_ACID,
         MonsterAbilityType::BA_ELEC,
         MonsterAbilityType::BA_FIRE,
         MonsterAbilityType::BA_COLD
     };
-    auto *r_ptr = &ms_ptr->m_ptr->get_monrace();
-    if (r_ptr->misc_flags.has(MonsterMiscType::POWERFUL)) {
+    const auto &monrace = ms_ptr->m_ptr->get_monrace();
+    if (monrace.misc_flags.has(MonsterMiscType::POWERFUL)) {
         ms_ptr->ability_flags.reset(ball_when_powerful_rad4);
     }
 
@@ -201,17 +202,18 @@ static void check_melee_spell_rocket(PlayerType *player_ptr, melee_spell_type *m
         return;
     }
 
-    POSITION real_y = ms_ptr->y;
-    POSITION real_x = ms_ptr->x;
-    get_project_point(player_ptr, ms_ptr->m_ptr->fy, ms_ptr->m_ptr->fx, &real_y, &real_x, PROJECT_STOP);
-    if (projectable(player_ptr, real_y, real_x, player_ptr->y, player_ptr->x) && (distance(real_y, real_x, player_ptr->y, player_ptr->x) <= 2)) {
+    const auto &floor = *player_ptr->current_floor_ptr;
+    const auto p_pos = player_ptr->get_position();
+    const auto m_pos = ms_ptr->m_ptr->get_position();
+    const auto pos_real = get_project_point(floor, p_pos, m_pos, ms_ptr->get_position(), PROJECT_STOP);
+    if (projectable(floor, pos_real, p_pos) && (Grid::calc_distance(pos_real, p_pos) <= 2)) {
         ms_ptr->ability_flags.reset(MonsterAbilityType::ROCKET);
     }
 }
 
 static void check_melee_spell_beam(PlayerType *player_ptr, melee_spell_type *ms_ptr)
 {
-    if (ms_ptr->ability_flags.has_none_of(RF_ABILITY_BEAM_MASK) || direct_beam(player_ptr, ms_ptr->m_ptr->fy, ms_ptr->m_ptr->fx, ms_ptr->t_ptr->fy, ms_ptr->t_ptr->fx, ms_ptr->m_ptr)) {
+    if (ms_ptr->ability_flags.has_none_of(RF_ABILITY_BEAM_MASK) || direct_beam(player_ptr, *ms_ptr->m_ptr, ms_ptr->t_ptr->get_position())) {
         return;
     }
 
@@ -224,20 +226,20 @@ static void check_melee_spell_breath(PlayerType *player_ptr, melee_spell_type *m
         return;
     }
 
-    POSITION rad = ms_ptr->r_ptr->misc_flags.has(MonsterMiscType::POWERFUL) ? 3 : 2;
-    if (!breath_direct(player_ptr, ms_ptr->m_ptr->fy, ms_ptr->m_ptr->fx, ms_ptr->t_ptr->fy, ms_ptr->t_ptr->fx, rad, AttributeType::NONE, true)) {
+    POSITION rad = ms_ptr->monrace->misc_flags.has(MonsterMiscType::POWERFUL) ? 3 : 2;
+    if (!breath_direct(player_ptr, ms_ptr->m_ptr->get_position(), ms_ptr->t_ptr->get_position(), rad, AttributeType::NONE, true)) {
         ms_ptr->ability_flags.reset(RF_ABILITY_BREATH_MASK);
         return;
     }
 
-    if (ms_ptr->ability_flags.has(MonsterAbilityType::BR_LITE) && !breath_direct(player_ptr, ms_ptr->m_ptr->fy, ms_ptr->m_ptr->fx,
-                                                                      ms_ptr->t_ptr->fy, ms_ptr->t_ptr->fx, rad, AttributeType::LITE, true)) {
+    if (ms_ptr->ability_flags.has(MonsterAbilityType::BR_LITE) && !breath_direct(player_ptr, ms_ptr->m_ptr->get_position(),
+                                                                      ms_ptr->t_ptr->get_position(), rad, AttributeType::LITE, true)) {
         ms_ptr->ability_flags.reset(MonsterAbilityType::BR_LITE);
         return;
     }
 
-    if (ms_ptr->ability_flags.has(MonsterAbilityType::BR_DISI) && !breath_direct(player_ptr, ms_ptr->m_ptr->fy, ms_ptr->m_ptr->fx,
-                                                                      ms_ptr->t_ptr->fy, ms_ptr->t_ptr->fx, rad, AttributeType::DISINTEGRATE, true)) {
+    if (ms_ptr->ability_flags.has(MonsterAbilityType::BR_DISI) && !breath_direct(player_ptr, ms_ptr->m_ptr->get_position(),
+                                                                      ms_ptr->t_ptr->get_position(), rad, AttributeType::DISINTEGRATE, true)) {
         ms_ptr->ability_flags.reset(MonsterAbilityType::BR_DISI);
     }
 }
@@ -248,7 +250,7 @@ static void check_melee_spell_special(PlayerType *player_ptr, melee_spell_type *
         return;
     }
 
-    if (ms_ptr->m_ptr->r_idx == MonsterRaceId::ROLENTO) {
+    if (ms_ptr->m_ptr->r_idx == MonraceId::ROLENTO) {
         if ((player_ptr->pet_extra_flags & (PF_ATTACK_SPELL | PF_SUMMON_SPELL)) != (PF_ATTACK_SPELL | PF_SUMMON_SPELL)) {
             ms_ptr->ability_flags.reset(MonsterAbilityType::SPECIAL);
         }
@@ -256,7 +258,7 @@ static void check_melee_spell_special(PlayerType *player_ptr, melee_spell_type *
         return;
     }
 
-    if (ms_ptr->r_ptr->symbol_char_is_any_of("B")) {
+    if (ms_ptr->monrace->symbol_char_is_any_of("B")) {
         if ((player_ptr->pet_extra_flags & (PF_ATTACK_SPELL | PF_TELEPORT)) != (PF_ATTACK_SPELL | PF_TELEPORT)) {
             ms_ptr->ability_flags.reset(MonsterAbilityType::SPECIAL);
         }
@@ -307,7 +309,7 @@ static void check_pet(PlayerType *player_ptr, melee_spell_type *ms_ptr)
 
 static void check_non_stupid(PlayerType *player_ptr, melee_spell_type *ms_ptr)
 {
-    if (ms_ptr->r_ptr->behavior_flags.has(MonsterBehaviorType::STUPID)) {
+    if (ms_ptr->monrace->behavior_flags.has(MonsterBehaviorType::STUPID)) {
         return;
     }
 
@@ -323,18 +325,18 @@ static void check_non_stupid(PlayerType *player_ptr, melee_spell_type *ms_ptr)
         ms_ptr->ability_flags.reset(MonsterAbilityType::DISPEL);
     }
 
-    if (ms_ptr->ability_flags.has(MonsterAbilityType::RAISE_DEAD) && !raise_possible(player_ptr, ms_ptr->m_ptr)) {
+    if (ms_ptr->ability_flags.has(MonsterAbilityType::RAISE_DEAD) && !raise_possible(player_ptr, *ms_ptr->m_ptr)) {
         ms_ptr->ability_flags.reset(MonsterAbilityType::RAISE_DEAD);
     }
 
-    if (ms_ptr->ability_flags.has(MonsterAbilityType::SPECIAL) && (ms_ptr->m_ptr->r_idx == MonsterRaceId::ROLENTO) && !summon_possible(player_ptr, ms_ptr->t_ptr->fy, ms_ptr->t_ptr->fx)) {
+    if (ms_ptr->ability_flags.has(MonsterAbilityType::SPECIAL) && (ms_ptr->m_ptr->r_idx == MonraceId::ROLENTO) && !summon_possible(player_ptr, ms_ptr->t_ptr->fy, ms_ptr->t_ptr->fx)) {
         ms_ptr->ability_flags.reset(MonsterAbilityType::SPECIAL);
     }
 }
 
 static void check_smart(PlayerType *player_ptr, melee_spell_type *ms_ptr)
 {
-    if (ms_ptr->r_ptr->behavior_flags.has_not(MonsterBehaviorType::SMART)) {
+    if (ms_ptr->monrace->behavior_flags.has_not(MonsterBehaviorType::SMART)) {
         return;
     }
 
@@ -365,7 +367,7 @@ bool check_melee_spell_set(PlayerType *player_ptr, melee_spell_type *ms_ptr)
         return false;
     }
 
-    ms_ptr->ability_flags = ms_ptr->r_ptr->ability_flags;
+    ms_ptr->ability_flags = ms_ptr->monrace->ability_flags;
     decide_melee_spell_target(player_ptr, ms_ptr);
     decide_indirection_melee_spell(player_ptr, ms_ptr);
     if (!check_melee_spell_projection(player_ptr, ms_ptr)) {
@@ -376,11 +378,11 @@ bool check_melee_spell_set(PlayerType *player_ptr, melee_spell_type *ms_ptr)
     ms_ptr->x = ms_ptr->t_ptr->fx;
     ms_ptr->m_ptr->reset_target();
     ms_ptr->ability_flags.reset({ MonsterAbilityType::WORLD, MonsterAbilityType::TRAPS, MonsterAbilityType::FORGET });
-    if (ms_ptr->ability_flags.has(MonsterAbilityType::BR_LITE) && !los(player_ptr, ms_ptr->m_ptr->fy, ms_ptr->m_ptr->fx, ms_ptr->t_ptr->fy, ms_ptr->t_ptr->fx)) {
+    if (ms_ptr->ability_flags.has(MonsterAbilityType::BR_LITE) && !los(*player_ptr->current_floor_ptr, ms_ptr->m_ptr->get_position(), ms_ptr->t_ptr->get_position())) {
         ms_ptr->ability_flags.reset(MonsterAbilityType::BR_LITE);
     }
 
-    if (ms_ptr->ability_flags.has(MonsterAbilityType::SPECIAL) && (ms_ptr->m_ptr->r_idx != MonsterRaceId::ROLENTO) && !ms_ptr->r_ptr->symbol_char_is_any_of("B")) {
+    if (ms_ptr->ability_flags.has(MonsterAbilityType::SPECIAL) && (ms_ptr->m_ptr->r_idx != MonraceId::ROLENTO) && !ms_ptr->monrace->symbol_char_is_any_of("B")) {
         ms_ptr->ability_flags.reset(MonsterAbilityType::SPECIAL);
     }
 

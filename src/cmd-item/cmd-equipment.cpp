@@ -20,7 +20,6 @@
 #include "main/sound-definitions-table.h"
 #include "main/sound-of-music.h"
 #include "object-enchant/item-feeling.h"
-#include "object-enchant/special-object-flags.h"
 #include "object-enchant/trc-types.h"
 #include "object-hook/hook-armor.h"
 #include "object-hook/hook-weapon.h"
@@ -42,7 +41,7 @@
 #include "spell-kind/spells-perception.h"
 #include "status/action-setter.h"
 #include "status/shape-changer.h"
-#include "system/item-entity.h"
+#include "system/item/item-entity.h"
 #include "system/player-type-definition.h"
 #include "system/redrawing-flags-updater.h"
 #include "term/screen-processor.h"
@@ -51,17 +50,18 @@
 #include "util/int-char-converter.h"
 #include "view/display-inventory.h"
 #include "view/display-messages.h"
+#include <utility>
 
 /*!
  * @brief 装備時にアイテムを呪う処理
  */
-static void do_curse_on_equip(OBJECT_IDX slot, ItemEntity *o_ptr, PlayerType *player_ptr)
+static void do_curse_on_equip(OBJECT_IDX slot, ItemEntity &item, PlayerType *player_ptr)
 {
     auto &rfu = RedrawingFlagsUpdater::get_instance();
     if (set_anubis_and_chariot(player_ptr) && ((slot == INVEN_MAIN_HAND) || (slot == INVEN_SUB_HAND))) {
 
-        ItemEntity *anubis = &(player_ptr->inventory_list[INVEN_MAIN_HAND]);
-        ItemEntity *chariot = &(player_ptr->inventory_list[INVEN_SUB_HAND]);
+        ItemEntity *anubis = player_ptr->inventory[INVEN_MAIN_HAND].get();
+        ItemEntity *chariot = player_ptr->inventory[INVEN_SUB_HAND].get();
 
         anubis->curse_flags.set(CurseTraitType::PERSISTENT_CURSE);
         anubis->curse_flags.set(CurseTraitType::HEAVY_CURSE);
@@ -75,16 +75,16 @@ static void do_curse_on_equip(OBJECT_IDX slot, ItemEntity *o_ptr, PlayerType *pl
         return;
     }
 
-    auto should_curse = o_ptr->get_flags().has(TR_PERSISTENT_CURSE) || o_ptr->curse_flags.has(CurseTraitType::PERSISTENT_CURSE);
-    should_curse &= o_ptr->curse_flags.has_not(CurseTraitType::HEAVY_CURSE);
+    auto should_curse = item.get_flags().has(TR_PERSISTENT_CURSE) || item.curse_flags.has(CurseTraitType::PERSISTENT_CURSE);
+    should_curse &= item.curse_flags.has_not(CurseTraitType::HEAVY_CURSE);
     if (!should_curse) {
         return;
     }
 
-    const auto item_name = describe_flavor(player_ptr, o_ptr, (OD_OMIT_PREFIX | OD_NAME_ONLY));
-    o_ptr->curse_flags.set(CurseTraitType::HEAVY_CURSE);
+    const auto item_name = describe_flavor(player_ptr, item, (OD_OMIT_PREFIX | OD_NAME_ONLY));
+    item.curse_flags.set(CurseTraitType::HEAVY_CURSE);
     msg_format(_("悪意に満ちた黒いオーラが%sをとりまいた...", "There is a malignant black aura surrounding your %s..."), item_name.data());
-    o_ptr->feeling = FEEL_NONE;
+    item.feeling = FEEL_NONE;
     rfu.set_flag(StatusRecalculatingFlag::BONUS);
 }
 
@@ -129,24 +129,21 @@ void do_cmd_equip(PlayerType *player_ptr)
  */
 void do_cmd_wield(PlayerType *player_ptr)
 {
-    ItemEntity forge;
-    ItemEntity *q_ptr;
     concptr act;
     OBJECT_IDX need_switch_wielding = 0;
     PlayerClass(player_ptr).break_samurai_stance({ SamuraiStanceType::MUSOU });
 
     constexpr auto selection_q = _("どれを装備しますか? ", "Wear/Wield which item? ");
     constexpr auto selection_s = _("装備可能なアイテムがない。", "You have nothing you can wear or wield.");
-    short i_idx;
-    auto *o_ptr = choose_object(player_ptr, &i_idx, selection_q, selection_s, (USE_INVEN | USE_FLOOR), FuncItemTester(item_tester_hook_wear, player_ptr));
-    if (!o_ptr) {
+    const auto &[item_chosen, i_idx] = choose_item(player_ptr, selection_q, selection_s, (USE_INVEN | USE_FLOOR), FuncItemTester(item_tester_hook_wear, player_ptr));
+    if (!item_chosen) {
         return;
     }
 
-    auto slot = wield_slot(player_ptr, o_ptr);
-    const auto o_ptr_mh = &player_ptr->inventory_list[INVEN_MAIN_HAND];
-    const auto o_ptr_sh = &player_ptr->inventory_list[INVEN_SUB_HAND];
-    const auto tval = o_ptr->bi_key.tval();
+    auto slot = wield_slot(player_ptr, *item_chosen);
+    const auto o_ptr_mh = player_ptr->inventory[INVEN_MAIN_HAND].get();
+    const auto o_ptr_sh = player_ptr->inventory[INVEN_SUB_HAND].get();
+    const auto tval = item_chosen->bi_key.tval();
     switch (tval) {
     case ItemKindType::CAPTURE:
     case ItemKindType::SHIELD:
@@ -154,10 +151,12 @@ void do_cmd_wield(PlayerType *player_ptr)
         if (has_melee_weapon(player_ptr, INVEN_MAIN_HAND) && has_melee_weapon(player_ptr, INVEN_SUB_HAND)) {
             constexpr auto q = _("どちらの武器と取り替えますか?", "Replace which weapon? ");
             constexpr auto s = _("おっと。", "Oops.");
-            if (!choose_object(player_ptr, &slot, q, s, (USE_EQUIP | IGNORE_BOTHHAND_SLOT), FuncItemTester(&ItemEntity::is_melee_weapon))) {
+            const auto &[item_replace, slot_replace] = choose_item(player_ptr, q, s, (USE_EQUIP | IGNORE_BOTHHAND_SLOT), FuncItemTester(&ItemEntity::is_melee_weapon));
+            if (!item_replace) {
                 return;
             }
 
+            slot = slot_replace;
             if (slot == INVEN_MAIN_HAND) {
                 need_switch_wielding = INVEN_SUB_HAND;
             }
@@ -167,9 +166,12 @@ void do_cmd_wield(PlayerType *player_ptr)
                    ((tval == ItemKindType::CAPTURE) || (!o_ptr_mh->is_melee_weapon() && !o_ptr_sh->is_melee_weapon()))) {
             constexpr auto q = _("どちらの手に装備しますか?", "Equip which hand? ");
             constexpr auto s = _("おっと。", "Oops.");
-            if (!choose_object(player_ptr, &slot, q, s, (USE_EQUIP), FuncItemTester(&ItemEntity::is_wieldable_in_etheir_hand))) {
+            const auto &[item_replace, slot_new] = choose_item(player_ptr, q, s, (USE_EQUIP), FuncItemTester(&ItemEntity::is_wieldable_in_etheir_hand));
+            if (!item_replace) {
                 return;
             }
+
+            slot = slot_new;
         }
 
         break;
@@ -188,10 +190,12 @@ void do_cmd_wield(PlayerType *player_ptr)
         } else if (o_ptr_mh->is_valid() && o_ptr_sh->is_valid()) {
             constexpr auto q = _("どちらの手に装備しますか?", "Equip which hand? ");
             constexpr auto s = _("おっと。", "Oops.");
-            if (!choose_object(player_ptr, &slot, q, s, (USE_EQUIP), FuncItemTester(&ItemEntity::is_wieldable_in_etheir_hand))) {
+            const auto &[item_new, slot_new] = choose_item(player_ptr, q, s, (USE_EQUIP), FuncItemTester(&ItemEntity::is_wieldable_in_etheir_hand));
+            if (!item_new) {
                 return;
             }
 
+            slot = slot_new;
             if ((slot == INVEN_SUB_HAND) && !has_melee_weapon(player_ptr, INVEN_MAIN_HAND)) {
                 need_switch_wielding = INVEN_MAIN_HAND;
             }
@@ -200,7 +204,7 @@ void do_cmd_wield(PlayerType *player_ptr)
         break;
     case ItemKindType::RING: {
         std::string q;
-        if (player_ptr->inventory_list[INVEN_SUB_RING].is_valid() && player_ptr->inventory_list[INVEN_MAIN_RING].is_valid()) {
+        if (player_ptr->inventory[INVEN_SUB_RING]->is_valid() && player_ptr->inventory[INVEN_MAIN_RING]->is_valid()) {
             q = _("どちらの指輪と取り替えますか?", "Replace which ring? ");
         } else {
             q = _("どちらの手に装備しますか?", "Equip which hand? ");
@@ -208,11 +212,13 @@ void do_cmd_wield(PlayerType *player_ptr)
 
         constexpr auto s = _("おっと。", "Oops.");
         player_ptr->select_ring_slot = true;
-        if (!choose_object(player_ptr, &slot, q.data(), s, (USE_EQUIP | IGNORE_BOTHHAND_SLOT))) {
+        const auto &[item_replace, slot_replace] = choose_item(player_ptr, q, s, (USE_EQUIP | IGNORE_BOTHHAND_SLOT));
+        if (!item_replace) {
             player_ptr->select_ring_slot = false;
             return;
         }
 
+        slot = slot_replace;
         player_ptr->select_ring_slot = false;
         break;
     }
@@ -220,8 +226,8 @@ void do_cmd_wield(PlayerType *player_ptr)
         break;
     }
 
-    if (player_ptr->inventory_list[slot].is_cursed()) {
-        const auto item_name = describe_flavor(player_ptr, &player_ptr->inventory_list[slot], OD_OMIT_PREFIX | OD_NAME_ONLY);
+    if (player_ptr->inventory[slot]->is_cursed()) {
+        const auto item_name = describe_flavor(player_ptr, *player_ptr->inventory[slot], OD_OMIT_PREFIX | OD_NAME_ONLY);
 #ifdef JP
         msg_format("%s%sは呪われているようだ。", describe_use(player_ptr, slot), item_name.data());
 #else
@@ -230,23 +236,23 @@ void do_cmd_wield(PlayerType *player_ptr)
         return;
     }
 
-    auto should_equip_cursed = o_ptr->is_cursed() && o_ptr->is_known();
-    should_equip_cursed |= any_bits(o_ptr->ident, IDENT_SENSE) && (FEEL_BROKEN <= o_ptr->feeling) && (o_ptr->feeling <= FEEL_CURSED);
+    auto should_equip_cursed = item_chosen->is_cursed() && item_chosen->is_known();
+    should_equip_cursed |= item_chosen->has_identification_flag(IdentificationFlag::SENSE) && (FEEL_BROKEN <= item_chosen->feeling) && (item_chosen->feeling <= FEEL_CURSED);
     should_equip_cursed &= confirm_wear;
     if (should_equip_cursed) {
-        const auto item_name = describe_flavor(player_ptr, o_ptr, (OD_OMIT_PREFIX | OD_NAME_ONLY));
+        const auto item_name = describe_flavor(player_ptr, *item_chosen, (OD_OMIT_PREFIX | OD_NAME_ONLY));
         if (!input_check(format(_("本当に%s{呪われている}を使いますか？", "Really use the %s {cursed}? "), item_name.data()))) {
             return;
         }
     }
 
     PlayerRace pr(player_ptr);
-    auto should_change_vampire = o_ptr->is_specific_artifact(FixedArtifactId::STONEMASK);
-    should_change_vampire &= o_ptr->is_known();
+    auto should_change_vampire = item_chosen->is_specific_artifact(FixedArtifactId::STONEMASK);
+    should_change_vampire &= item_chosen->is_known();
     should_change_vampire &= !pr.equals(PlayerRaceType::VAMPIRE);
     should_change_vampire &= !pr.equals(PlayerRaceType::ANDROID);
     if (should_change_vampire) {
-        const auto item_name = describe_flavor(player_ptr, o_ptr, (OD_OMIT_PREFIX | OD_NAME_ONLY));
+        const auto item_name = describe_flavor(player_ptr, *item_chosen, (OD_OMIT_PREFIX | OD_NAME_ONLY));
         constexpr auto mes = _("%sを装備すると吸血鬼になります。よろしいですか？",
             "%s will transform you into a vampire permanently when equipped. Do you become a vampire? ");
         if (!input_check(format(mes, item_name.data()))) {
@@ -254,31 +260,26 @@ void do_cmd_wield(PlayerType *player_ptr)
         }
     }
 
-    sound(SOUND_WIELD);
-    if (need_switch_wielding && !player_ptr->inventory_list[need_switch_wielding].is_cursed()) {
-        ItemEntity *slot_o_ptr = &player_ptr->inventory_list[slot];
-        ItemEntity *switch_o_ptr = &player_ptr->inventory_list[need_switch_wielding];
-        ItemEntity object_tmp;
-        ItemEntity *otmp_ptr = &object_tmp;
-        const auto item_name = describe_flavor(player_ptr, switch_o_ptr, (OD_OMIT_PREFIX | OD_NAME_ONLY));
-        otmp_ptr->copy_from(switch_o_ptr);
-        switch_o_ptr->copy_from(slot_o_ptr);
-        slot_o_ptr->copy_from(otmp_ptr);
+    sound(SoundKind::WIELD);
+    if (need_switch_wielding && !player_ptr->inventory[need_switch_wielding]->is_cursed()) {
+        auto &slot_item = *player_ptr->inventory[slot];
+        auto &switch_item = *player_ptr->inventory[need_switch_wielding];
+        const auto item_name = describe_flavor(player_ptr, switch_item, (OD_OMIT_PREFIX | OD_NAME_ONLY));
+        std::swap(switch_item, slot_item);
         msg_format(_("%sを%sに構えなおした。", "You wield %s at %s hand."), item_name.data(),
             (slot == INVEN_MAIN_HAND) ? (left_hander ? _("左手", "left") : _("右手", "right")) : (left_hander ? _("右手", "right") : _("左手", "left")));
         slot = need_switch_wielding;
     }
 
-    check_find_art_quest_completion(player_ptr, o_ptr);
+    check_find_art_quest_completion(player_ptr, item_chosen.get());
     if (player_ptr->ppersonality == PERSONALITY_MUNCHKIN) {
-        identify_item(player_ptr, o_ptr);
+        identify_item(player_ptr, item_chosen.get());
         autopick_alter_item(player_ptr, i_idx, false);
     }
 
     PlayerEnergy(player_ptr).set_player_turn_energy(100);
-    q_ptr = &forge;
-    q_ptr->copy_from(o_ptr);
-    q_ptr->number = 1;
+    auto item = item_chosen->clone();
+    item.number = 1;
     if (i_idx >= 0) {
         inven_item_increase(player_ptr, i_idx, -1);
         inven_item_optimize(player_ptr, i_idx);
@@ -287,13 +288,13 @@ void do_cmd_wield(PlayerType *player_ptr)
         floor_item_optimize(player_ptr, 0 - i_idx);
     }
 
-    o_ptr = &player_ptr->inventory_list[slot];
-    if (o_ptr->is_valid()) {
+    auto &wield_slot_item = *player_ptr->inventory[slot];
+    if (wield_slot_item.is_valid()) {
         (void)inven_takeoff(player_ptr, slot, 255);
     }
 
-    o_ptr->copy_from(q_ptr);
-    o_ptr->marked.set(OmType::TOUCHED);
+    wield_slot_item = std::move(item);
+    wield_slot_item.marked.set(OmType::TOUCHED);
     player_ptr->equip_cnt++;
 
 #define STR_WIELD_HAND_RIGHT _("%s(%c)を右手に装備した。", "You are wielding %s (%c) in your right hand.")
@@ -302,7 +303,7 @@ void do_cmd_wield(PlayerType *player_ptr)
 
     switch (slot) {
     case INVEN_MAIN_HAND:
-        if (o_ptr->allow_two_hands_wielding() && (empty_hands(player_ptr, false) == EMPTY_HAND_SUB) && can_two_hands_wielding(player_ptr)) {
+        if (wield_slot_item.allow_two_hands_wielding() && (empty_hands(player_ptr, false) == EMPTY_HAND_SUB) && can_two_hands_wielding(player_ptr)) {
             act = STR_WIELD_HANDS_TWO;
         } else {
             act = (left_hander ? STR_WIELD_HAND_LEFT : STR_WIELD_HAND_RIGHT);
@@ -310,7 +311,7 @@ void do_cmd_wield(PlayerType *player_ptr)
 
         break;
     case INVEN_SUB_HAND:
-        if (o_ptr->allow_two_hands_wielding() && (empty_hands(player_ptr, false) == EMPTY_HAND_MAIN) && can_two_hands_wielding(player_ptr)) {
+        if (wield_slot_item.allow_two_hands_wielding() && (empty_hands(player_ptr, false) == EMPTY_HAND_MAIN) && can_two_hands_wielding(player_ptr)) {
             act = STR_WIELD_HANDS_TWO;
         } else {
             act = (left_hander ? STR_WIELD_HAND_RIGHT : STR_WIELD_HAND_LEFT);
@@ -328,16 +329,16 @@ void do_cmd_wield(PlayerType *player_ptr)
         break;
     }
 
-    const auto item_name = describe_flavor(player_ptr, o_ptr, 0);
+    const auto item_name = describe_flavor(player_ptr, wield_slot_item, 0);
     msg_format(act, item_name.data(), index_to_label(slot));
-    if (o_ptr->is_cursed()) {
+    if (wield_slot_item.is_cursed()) {
         msg_print(_("うわ！ すさまじく冷たい！", "Oops! It feels deathly cold!"));
         chg_virtue(player_ptr, Virtue::HARMONY, -1);
-        o_ptr->ident |= (IDENT_SENSE);
+        wield_slot_item.set_identification_flag(IdentificationFlag::SENSE);
     }
 
-    do_curse_on_equip(slot, o_ptr, player_ptr);
-    if (o_ptr->is_specific_artifact(FixedArtifactId::STONEMASK)) {
+    do_curse_on_equip(slot, wield_slot_item, player_ptr);
+    if (wield_slot_item.is_specific_artifact(FixedArtifactId::STONEMASK)) {
         auto is_specific_race = pr.equals(PlayerRaceType::VAMPIRE);
         is_specific_race |= pr.equals(PlayerRaceType::ANDROID);
         if (!is_specific_race) {
@@ -372,25 +373,24 @@ void do_cmd_takeoff(PlayerType *player_ptr)
 
     constexpr auto q = _("どれを装備からはずしますか? ", "Take off which item? ");
     constexpr auto s = _("はずせる装備がない。", "You are not wearing anything to take off.");
-    short i_idx;
-    auto *o_ptr = choose_object(player_ptr, &i_idx, q, s, (USE_EQUIP | IGNORE_BOTHHAND_SLOT));
-    if (!o_ptr) {
+    const auto &[item, i_idx] = choose_item(player_ptr, q, s, (USE_EQUIP | IGNORE_BOTHHAND_SLOT));
+    if (!item) {
         return;
     }
 
     PlayerEnergy energy(player_ptr);
     auto &rfu = RedrawingFlagsUpdater::get_instance();
-    if (o_ptr->is_cursed()) {
-        if (o_ptr->curse_flags.has(CurseTraitType::PERMA_CURSE) || !pc.equals(PlayerClassType::BERSERKER)) {
+    if (item->is_cursed()) {
+        if (item->curse_flags.has(CurseTraitType::PERMA_CURSE) || !pc.equals(PlayerClassType::BERSERKER)) {
             msg_print(_("ふーむ、どうやら呪われているようだ。", "Hmmm, it seems to be cursed."));
             return;
         }
 
-        if ((o_ptr->curse_flags.has(CurseTraitType::HEAVY_CURSE) && one_in_(7)) || one_in_(4)) {
+        if ((item->curse_flags.has(CurseTraitType::HEAVY_CURSE) && one_in_(7)) || one_in_(4)) {
             msg_print(_("呪われた装備を力づくで剥がした！", "You tore off a piece of cursed equipment by sheer strength!"));
-            o_ptr->ident |= (IDENT_SENSE);
-            o_ptr->curse_flags.clear();
-            o_ptr->feeling = FEEL_NONE;
+            item->set_identification_flag(IdentificationFlag::SENSE);
+            item->curse_flags.clear();
+            item->feeling = FEEL_NONE;
             rfu.set_flag(StatusRecalculatingFlag::BONUS);
             rfu.set_flag(SubWindowRedrawingFlag::EQUIPMENT);
             msg_print(_("呪いを打ち破った。", "You break the curse."));
@@ -401,7 +401,7 @@ void do_cmd_takeoff(PlayerType *player_ptr)
         }
     }
 
-    sound(SOUND_TAKE_OFF);
+    sound(SoundKind::TAKE_OFF);
     energy.set_player_turn_energy(50);
     (void)inven_takeoff(player_ptr, i_idx, 255);
     verify_equip_slot(player_ptr, i_idx);

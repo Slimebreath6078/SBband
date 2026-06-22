@@ -5,7 +5,6 @@
 #include "inventory/inventory-slot-types.h"
 #include "mind/stances-table.h"
 #include "monster/monster-status.h"
-#include "object-enchant/special-object-flags.h"
 #include "object/tval-types.h"
 #include "perception/object-perception.h"
 #include "player-base/player-class.h"
@@ -20,9 +19,9 @@
 #include "player/player-status-table.h"
 #include "player/player-status.h"
 #include "sv-definition/sv-bow-types.h"
-#include "system/floor-type-definition.h"
+#include "system/floor/floor-info.h"
 #include "system/inner-game-data.h"
-#include "system/item-entity.h"
+#include "system/item/item-entity.h"
 #include "system/monster-entity.h"
 #include "system/player-type-definition.h"
 #include "term/term-color-types.h"
@@ -42,7 +41,7 @@ static void display_player_melee_bonus(PlayerType *player_ptr, int hand, int han
 {
     HIT_PROB show_tohit = player_ptr->dis_to_h[hand];
     int show_todam = player_ptr->dis_to_d[hand];
-    auto *o_ptr = &player_ptr->inventory_list[INVEN_MAIN_HAND + hand];
+    auto *o_ptr = player_ptr->inventory[INVEN_MAIN_HAND + hand].get();
 
     if (o_ptr->is_known()) {
         show_tohit += o_ptr->to_h;
@@ -97,7 +96,7 @@ static void display_sub_hand(PlayerType *player_ptr)
  */
 static void display_bow_hit_damage(PlayerType *player_ptr)
 {
-    const auto &item = player_ptr->inventory_list[INVEN_BOW];
+    const auto &item = *player_ptr->inventory[INVEN_BOW];
     auto show_tohit = player_ptr->dis_to_h_b;
     auto show_todam = 0;
     if (item.is_known()) {
@@ -133,8 +132,8 @@ static void display_bow_hit_damage(PlayerType *player_ptr)
 static void display_shoot_magnification(PlayerType *player_ptr)
 {
     int tmul = 0;
-    if (player_ptr->inventory_list[INVEN_BOW].is_valid()) {
-        tmul = player_ptr->inventory_list[INVEN_BOW].get_arrow_magnification();
+    if (player_ptr->inventory[INVEN_BOW]->is_valid()) {
+        tmul = player_ptr->inventory[INVEN_BOW]->get_arrow_magnification();
         if (player_ptr->xtra_might) {
             tmul++;
         }

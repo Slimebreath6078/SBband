@@ -4,23 +4,28 @@
  */
 
 #include "main-win/main-win-music.h"
-#include "dungeon/quest.h"
-#include "floor/floor-town.h"
+#include "main-win/main-win-cfg-reader.h"
 #include "main-win/main-win-define.h"
 #include "main-win/main-win-mci.h"
 #include "main-win/main-win-mmsystem.h"
 #include "main-win/main-win-tokenizer.h"
 #include "main-win/main-win-utils.h"
+#include "main/music-definitions-table.h"
 #include "main/scene-table.h"
 #include "main/sound-of-music.h"
-#include "system/dungeon-info.h"
-#include "system/monster-race-info.h"
+#include "system/dungeon/dungeon-definition.h"
+#include "system/dungeon/dungeon-list.h"
+#include "system/dungeon/quest-definition.h"
+#include "system/dungeon/quest-list.h"
+#include "system/floor/town-list.h"
+#include "system/monrace/monrace-list.h"
 #include "term/z-term.h"
 #include "util/angband-files.h"
 #include "world/world.h"
 #include <algorithm>
 #include <digitalv.h>
 #include <limits>
+#include <string>
 
 bool use_pause_music_inactive = false;
 static int current_music_type = TERM_XTRA_MUSIC_MUTE;
@@ -36,7 +41,7 @@ std::filesystem::path ANGBAND_DIR_XTRA_MUSIC;
 /*
  * "music.cfg" data
  */
-std::optional<CfgData> music_cfg_data;
+tl::optional<CfgData> music_cfg_data;
 
 namespace main_win_music {
 
@@ -46,12 +51,10 @@ namespace main_win_music {
  * @param buf 使用しない
  * @return 対応するキー名を返す
  */
-static concptr basic_key_at(int index, char *buf)
+static tl::optional<std::string> basic_key_at(int index)
 {
-    (void)buf;
-
     if (index >= MUSIC_BASIC_MAX) {
-        return nullptr;
+        return tl::nullopt;
     }
 
     return angband_music_basic_name[index];
@@ -63,14 +66,13 @@ static concptr basic_key_at(int index, char *buf)
  * @param buf バッファ
  * @return 対応するキー名を返す
  */
-static concptr dungeon_key_at(int index, char *buf)
+static tl::optional<std::string> dungeon_key_at(int index)
 {
-    if (index >= static_cast<int>(dungeons_info.size())) {
-        return nullptr;
+    if (index >= static_cast<int>(DungeonList::get_instance().size())) {
+        return tl::nullopt;
     }
 
-    sprintf(buf, "dungeon%03d", index);
-    return buf;
+    return format("dungeon%03d", index);
 }
 
 /*!
@@ -79,15 +81,14 @@ static concptr dungeon_key_at(int index, char *buf)
  * @param buf バッファ
  * @return 対応するキー名を返す
  */
-static concptr quest_key_at(int index, char *buf)
+static tl::optional<std::string> quest_key_at(int index)
 {
     const auto &quests = QuestList::get_instance();
     if (index > enum2i(quests.rbegin()->first)) {
-        return nullptr;
+        return tl::nullopt;
     }
 
-    sprintf(buf, "quest%03d", index);
-    return buf;
+    return format("quest%03d", index);
 }
 
 /*!
@@ -96,14 +97,13 @@ static concptr quest_key_at(int index, char *buf)
  * @param buf バッファ
  * @return 対応するキー名を返す
  */
-static concptr town_key_at(int index, char *buf)
+static tl::optional<std::string> town_key_at(int index)
 {
-    if (index >= static_cast<int>(towns_info.size())) {
-        return nullptr;
+    if (index >= static_cast<int>(TownList::get_instance().size())) {
+        return tl::nullopt;
     }
 
-    sprintf(buf, "town%03d", index);
-    return buf;
+    return format("town%03d", index);
 }
 
 /*!
@@ -112,14 +112,13 @@ static concptr town_key_at(int index, char *buf)
  * @param buf バッファ
  * @return 対応するキー名を返す
  */
-static concptr monster_key_at(int index, char *buf)
+static tl::optional<std::string> monster_key_at(int index)
 {
-    if (index >= static_cast<int>(monraces_info.size())) {
-        return nullptr;
+    if (index >= static_cast<int>(MonraceList::get_instance().size())) {
+        return tl::nullopt;
     }
 
-    sprintf(buf, "monster%04d", index);
-    return buf;
+    return format("monster%04d", index);
 }
 
 /*!
@@ -131,20 +130,18 @@ static concptr monster_key_at(int index, char *buf)
 void load_music_prefs()
 {
     CfgReader reader(ANGBAND_DIR_XTRA_MUSIC, { "music_debug.cfg", "music.cfg" });
-
-    char device_type[256];
-    GetPrivateProfileStringA("Device", "type", "MPEGVideo", device_type, _countof(device_type), reader.get_cfg_path().string().data());
+    constexpr auto size = 256;
+    char device_type[size];
+    GetPrivateProfileStringA("Device", "type", "MPEGVideo", device_type, size, reader.get_cfg_path().string().data());
     mci_device_type = to_wchar(device_type).wc_str();
 
-    // clang-format off
     music_cfg_data = reader.read_sections({
         { "Basic", TERM_XTRA_MUSIC_BASIC, basic_key_at },
         { "Dungeon", TERM_XTRA_MUSIC_DUNGEON, dungeon_key_at },
         { "Quest", TERM_XTRA_MUSIC_QUEST, quest_key_at },
         { "Town", TERM_XTRA_MUSIC_TOWN, town_key_at },
-        { "Monster", TERM_XTRA_MUSIC_MONSTER, monster_key_at, &has_monster_music }
-        });
-    // clang-format on
+        { "Monster", TERM_XTRA_MUSIC_MONSTER, monster_key_at, &has_monster_music },
+    });
 
     if (!has_monster_music) {
         int type = TERM_XTRA_MUSIC_BASIC;
@@ -160,42 +157,42 @@ void load_music_prefs()
 /*
  * Stop a music
  */
-errr stop_music(void)
+void stop_music()
 {
     mciSendCommandW(mci_open_parms.wDeviceID, MCI_STOP, MCI_WAIT, 0);
     mciSendCommandW(mci_open_parms.wDeviceID, MCI_CLOSE, MCI_WAIT, 0);
     current_music_type = TERM_XTRA_MUSIC_MUTE;
     current_music_id = 0;
     current_music_path = "";
-    return 0;
 }
 
 /*
  * Play a music
  */
-errr play_music(int type, int val)
+bool play_music(int type, int val)
 {
     if (type == TERM_XTRA_MUSIC_MUTE) {
-        return stop_music();
+        stop_music();
+        return true;
     }
 
     if (current_music_type == type && current_music_id == val) {
-        return 0;
+        return true;
     } // now playing
 
     if (!music_cfg_data) {
-        return 1;
+        return false;
     }
 
     auto filename = music_cfg_data->get_rand(type, val);
     if (!filename) {
-        return 1;
+        return false;
     } // no setting
 
     auto path_music = path_build(ANGBAND_DIR_XTRA_MUSIC, *filename);
     if (current_music_type != TERM_XTRA_MUSIC_MUTE) {
         if (current_music_path == path_music) {
-            return 0;
+            return true;
         }
     } // now playing same file
 
@@ -210,7 +207,7 @@ errr play_music(int type, int val)
     mciSendCommandW(mci_open_parms.wDeviceID, MCI_CLOSE, MCI_WAIT, 0);
     mciSendCommandW(mci_open_parms.wDeviceID, MCI_OPEN, MCI_OPEN_TYPE | MCI_OPEN_ELEMENT | MCI_NOTIFY, (DWORD)&mci_open_parms);
     // Send MCI_PLAY in the notification event once MCI_OPEN is completed
-    return 0;
+    return true;
 }
 
 /*
@@ -232,18 +229,15 @@ void resume_music(void)
 /*
  * Play a music matches a situation
  */
-errr play_music_scene(int val)
+void play_music_scene(int val)
 {
     // リストの先頭から順に再生を試み、再生できたら抜ける
     auto &list = get_scene_type_list(val);
-    const errr err_sucsess = 0;
     for (auto &item : list) {
-        if (play_music(item.type, item.val) == err_sucsess) {
+        if (play_music(item.type, item.val)) {
             break;
         }
     }
-
-    return 0;
 }
 
 void set_music_volume(int volume)

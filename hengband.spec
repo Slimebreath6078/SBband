@@ -1,4 +1,4 @@
-%define version 3.0.1.19
+%define version 3.0.2.3
 %define release 1
 
 Summary: hengband %{version}
@@ -9,10 +9,10 @@ License: unknown
 Group: Amusements/Games
 Url: https://hengband.github.io
 Source: hengband-%{version}.tar.gz
-Requires: ncurses-libs libstdc++ libcurl libX11
-BuildRequires: autoconf automake gcc-c++ ncurses-devel libcurl-devel nkf libX11-devel
+Requires: ncurses-libs libstdc++ libcurl libX11 libXft
+BuildRequires: autoconf automake gcc-c++ ncurses-devel libcurl-devel nkf libX11-devel libXft-devel
 
-Requires: %{name}-data
+Requires: %{name}-data = %{version}
 
 %package data
 
@@ -20,8 +20,8 @@ Summary: %{name}-data %{version}
 
 %package en
 
-Requires: ncurses-libs libstdc++ libcurl libX11
-Requires: %{name}-data
+Requires: ncurses-libs libstdc++ libcurl libX11 libXft
+Requires: %{name}-data = %{version}
 Summary: %{name}-en %{version}
 
 %description
@@ -30,8 +30,9 @@ Hengband is a variant of ZAngband.
 Official page is this,
 https://hengband.github.io
 
-More infomation is /usr/share/doc/hengband/readme-eng.md
-This is a Japanese version.
+More information is in /usr/share/doc/hengband/readme-eng.md
+This package contains an executable file in Japanese.
+You also need to install hengband-data package for playing.
 
 Summary(ja): 変愚蛮怒 %{version}
 
@@ -42,7 +43,8 @@ Summary(ja): 変愚蛮怒 %{version}
 https://hengband.github.io
 
 詳しくは /usr/share/doc/hengband/readme.md を参照。
-このパッケージは日本語版です。
+このパッケージは日本語版実行ファイルです。
+他にゲーム用データファイルが必要です。
 
 %description data
 Hengband is a variant of ZAngband.
@@ -50,7 +52,7 @@ Hengband is a variant of ZAngband.
 Official page is this,
 https://hengband.github.io
 
-More infomation is /usr/share/doc/hengband/readme-eng.md
+More information is in /usr/share/doc/hengband/readme-eng.md
 This packages contains common data files.
 
 Summary(ja): 変愚蛮怒 %{version}
@@ -70,8 +72,9 @@ Hengband is a variant of ZAngband.
 Official page is this,
 https://hengband.github.io
 
-More infomation is /usr/share/doc/hengband/readme-eng.md
-This is a English version.
+More information is in /usr/share/doc/hengband/readme-eng.md
+This package contains an executable file in English.
+You also need to install hengband-data package for playing.
 
 Summary(ja): 変愚蛮怒 %{version}
 
@@ -82,10 +85,10 @@ rm -rf %{buildroot}
 ./bootstrap
 
 %build
-%configure --with-libpath=%{_datadir}/games/%{name}/lib --disable-japanese
+%configure --with-libpath=%{_datadir}/games/%{name}/lib --disable-japanese --enable-xft
 %make_build
 cp src/hengband src/hengband-en
-%configure --with-libpath=%{_datadir}/games/%{name}/lib
+%configure --with-libpath=%{_datadir}/games/%{name}/lib --enable-xft
 %make_build
 
 %install
@@ -147,10 +150,56 @@ exit 0
 %{_datadir}/games/%{name}/lib/help/*.txt
 %{_datadir}/games/%{name}/lib/pref/*.prf
 %{_datadir}/games/%{name}/lib/xtra/graf/8x8.bmp
-%doc readme.md readme_angband readme-eng.md
-%license lib/help/jlicense.txt
+%doc readme.md readme_angband readme-eng.md autopick.txt autopick_eng.txt
+%license lib/help/jlicense.txt THIRD-PARTY-NOTICES.txt
 
 %changelog
+* Tue May 26 2026 whitehara <white@vx-xv.com>
+- hengband RPM 3.0.2.3(Beta)
+
+* Tue Jan 6 2026 whitehara <white@vx-xv.com>
+- hengband RPM 3.0.2.2(Beta)
+
+* Fri Dec 19 2025 whitehara <white@vx-xv.com>
+- hengband RPM 3.0.2.1(Beta)
+
+* Tue Dec 16 2025 whitehara <white@vx-xv.com>
+- hengband RPM 3.0.2.0(Beta)
+
+* Sun Aug 17 2025 whitehara <white@vx-xv.com>
+- Enable Xft
+- hengband RPM 3.0.1.29(Beta)
+
+* Mon Jun 16 2025 whitehara <white@vx-xv.com>
+- hengband RPM 3.0.1.28(Beta)
+
+* Mon May 26 2025 whitehara <white@vx-xv.com>
+- Add specified version dependencies between hengband,en and hengband-data
+
+* Wed May 21 2025 whitehara <white@vx-xv.com>
+- hengband RPM 3.0.1.27(Beta)
+
+* Tue Feb 18 2025 whitehara <white@vx-xv.com>
+- hengband RPM 3.0.1.26(Beta)
+
+* Mon Jan 20 2025 whitehara <white@vx-xv.com>
+- hengband RPM 3.0.1.25(Beta)
+
+* Mon Jan 6 2025 whitehara <white@vx-xv.com>
+- hengband RPM 3.0.1.24(Beta)
+
+* Fri Dec 20 2024 whitehara <white@vx-xv.com>
+- hengband RPM 3.0.1.23(Beta)
+
+* Mon Dec 16 2024 whitehara <white@vx-xv.com>
+- hengband RPM 3.0.1.22(Beta)
+
+* Fri Nov 29 2024 whitehara <white@vx-xv.com>
+- hengband RPM 3.0.1.21(Beta)
+
+* Tue Aug 27 2024 whitehara <white@vx-xv.com>
+- hengband RPM 3.0.1.20(Beta)
+
 * Mon Aug 12 2024 whitehara <white@vx-xv.com>
 - hengband RPM 3.0.1.19(Beta)
 

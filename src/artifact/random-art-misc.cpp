@@ -8,8 +8,7 @@
 #include "object-enchant/tr-types.h"
 #include "object-hook/hook-armor.h"
 #include "object/tval-types.h"
-#include "system/item-entity.h"
-#include "system/player-type-definition.h"
+#include "system/item/item-entity.h"
 #include "util/bit-flags-calculator.h"
 
 static bool invest_misc_ranger(ItemEntity *o_ptr)
@@ -140,8 +139,8 @@ static bool switch_misc_bias(ItemEntity *o_ptr)
 static void invest_misc_hit_dice(ItemEntity *o_ptr)
 {
     o_ptr->art_flags.set(TR_SHOW_MODS);
-    HIT_PROB bonus_h = 4 + (HIT_PROB)randint1(11);
-    int bonus_d = 4 + (int)randint1(11);
+    short bonus_h = 4 + randnum1<short>(11);
+    auto bonus_d = 4 + randint1(11);
     const auto is_weapon = o_ptr->is_melee_weapon();
     const auto tval = o_ptr->bi_key.tval();
     if (!is_weapon && (tval != ItemKindType::GLOVES) && (tval != ItemKindType::RING)) {
@@ -258,7 +257,7 @@ static void invest_misc_weak_esps(ItemEntity *o_ptr)
  * @attention オブジェクトのtval、svalに依存したハードコーディング処理がある。
  * @param o_ptr 対象のオブジェクト構造体ポインタ
  */
-void random_misc(PlayerType *player_ptr, ItemEntity *o_ptr)
+void random_misc(ItemEntity *o_ptr)
 {
     if (switch_misc_bias(o_ptr)) {
         return;
@@ -349,7 +348,7 @@ void random_misc(PlayerType *player_ptr, ItemEntity *o_ptr)
     case 25:
     case 26:
         if (o_ptr->is_protector()) {
-            random_misc(player_ptr, o_ptr);
+            random_misc(o_ptr);
         } else {
             o_ptr->to_a = 4 + randint1(11);
         }

@@ -1,22 +1,21 @@
 #include "system/building-type-definition.h"
 #include "monster-floor/place-monster-types.h"
-#include "monster-race/monster-race-hook.h"
 #include "monster/monster-list.h"
 #include "monster/monster-util.h"
-#include "system/dungeon-info.h"
-#include "system/monster-race-info.h"
-#include "system/player-type-definition.h"
+#include "system/monrace/monrace-definition.h"
+#include "system/monrace/monrace-list.h"
+#include "system/services/dungeon-service.h"
 #include <numeric>
 
 std::array<building_type, MAX_BUILDINGS> buildings;
 
-MeleeGladiator::MeleeGladiator(MonsterRaceId monrace_id, uint32_t odds)
+MeleeGladiator::MeleeGladiator(MonraceId monrace_id, uint32_t odds)
     : monrace_id(monrace_id)
     , odds(odds)
 {
 }
 
-const MonsterRaceInfo &MeleeGladiator::get_monrace() const
+const MonraceDefinition &MeleeGladiator::get_monrace() const
 {
     return MonraceList::get_instance().get_monrace(this->monrace_id);
 }
@@ -97,7 +96,7 @@ std::vector<std::string> MeleeArena::build_gladiators_names() const
  */
 void MeleeArena::update_gladiators(PlayerType *player_ptr)
 {
-    const auto mon_level = this->decide_max_level();
+    const auto mon_level = DungeonService::decide_gradiator_level();
     while (true) {
         auto [total, is_applicable] = this->set_gladiators(player_ptr, mon_level);
         const auto &[count, new_total] = this->set_odds(total, is_applicable);
@@ -106,29 +105,6 @@ void MeleeArena::update_gladiators(PlayerType *player_ptr)
             break;
         }
     }
-}
-
-int MeleeArena::decide_max_level() const
-{
-    auto max_dl = 0;
-    for (const auto &dungeon : dungeons_info) {
-        if (max_dl < max_dlv[dungeon.idx]) {
-            max_dl = max_dlv[dungeon.idx];
-        }
-    }
-
-    auto max_level = randint1(std::min(max_dl, 122)) + 5;
-    if (evaluate_percent(60)) {
-        const auto i = randint1(std::min(max_dl, 122)) + 5;
-        max_level = std::max(i, max_level);
-    }
-
-    if (evaluate_percent(30)) {
-        const auto i = randint1(std::min(max_dl, 122)) + 5;
-        max_level = std::max(i, max_level);
-    }
-
-    return max_level;
 }
 
 std::pair<int, bool> MeleeArena::set_gladiators(PlayerType *player_ptr, int mon_level)
@@ -185,12 +161,12 @@ std::pair<int, int> MeleeArena::set_odds(int current_total, bool is_applicable)
     return { count, total };
 }
 
-MonsterRaceId MeleeArena::search_gladiator(PlayerType *player_ptr, int mon_level, int num_gladiator) const
+MonraceId MeleeArena::search_gladiator(PlayerType *player_ptr, int mon_level, int num_gladiator) const
 {
     const auto &monraces = MonraceList::get_instance();
-    MonsterRaceId monrace_id;
+    MonraceId monrace_id;
     while (true) {
-        get_mon_num_prep(player_ptr, monster_can_entry_arena, nullptr);
+        get_mon_num_prep_enum(player_ptr, MonraceHook::ARENA);
         monrace_id = get_mon_num(player_ptr, 0, mon_level, PM_ARENA);
         if (!MonraceList::is_valid(monrace_id)) {
             continue;
@@ -212,7 +188,7 @@ MonsterRaceId MeleeArena::search_gladiator(PlayerType *player_ptr, int mon_level
     }
 }
 
-int MeleeArena::matches_gladiator(MonsterRaceId monrace_id, int current_num) const
+int MeleeArena::matches_gladiator(MonraceId monrace_id, int current_num) const
 {
     for (auto count = 0; count < current_num; count++) {
         if (monrace_id == this->get_gladiator(count).monrace_id) {

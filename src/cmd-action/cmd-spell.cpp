@@ -56,9 +56,9 @@
 #include "status/bad-status-setter.h"
 #include "status/base-status.h"
 #include "status/experience.h"
-#include "system/baseitem-info.h"
-#include "system/floor-type-definition.h"
-#include "system/item-entity.h"
+#include "system/baseitem/baseitem-key.h"
+#include "system/floor/floor-info.h"
+#include "system/item/item-entity.h"
 #include "system/player-type-definition.h"
 #include "system/redrawing-flags-updater.h"
 #include "term/screen-processor.h"
@@ -319,12 +319,11 @@ static int get_spell(PlayerType *player_ptr, SPELL_IDX *sn, std::string_view pro
     SPELL_IDX spell = -1;
     int num = 0;
     SPELL_IDX spells[64]{};
-    COMMAND_CODE code;
     int menu_line = (use_menu ? 1 : 0);
 
     /* Get the spell, if available */
-    if (repeat_pull(&code)) {
-        *sn = (SPELL_IDX)code;
+    if (const auto code = repeat_pull(); code) {
+        *sn = *code;
         /* Verify the spell */
         if (spell_okay(player_ptr, *sn, learned, false, use_realm)) {
             /* Success */
@@ -396,7 +395,7 @@ static int get_spell(PlayerType *player_ptr, SPELL_IDX *sn, std::string_view pro
         if (choice == ESCAPE) {
             choice = ' ';
         } else {
-            const auto new_choice = input_command(prompt, true);
+            const auto new_choice = input_command(prompt);
             if (!new_choice) {
                 break;
             }
@@ -526,33 +525,26 @@ static int get_spell(PlayerType *player_ptr, SPELL_IDX *sn, std::string_view pro
  */
 static void confirm_use_force(PlayerType *player_ptr, bool browse_only)
 {
-    char which;
-    COMMAND_CODE code;
-
-    /* Get the item index */
-    if (repeat_pull(&code) && (code == INVEN_FORCE)) {
+    if (const auto code = repeat_pull(); code == INVEN_FORCE) {
         browse_only ? do_cmd_mind_browse(player_ptr) : do_cmd_mind(player_ptr);
         return;
     }
 
-    /* Show the prompt */
     prt(_("('w'練気術, ESC) 'w'かESCを押してください。 ", "(w for the Force, ESC) Hit 'w' or ESC. "), 0, 0);
-
+    char which;
     while (true) {
-        /* Get a key */
         which = inkey();
-
         if (which == ESCAPE) {
             break;
-        } else if (which == 'w') {
+        }
+
+        if (which == 'w') {
             repeat_push(INVEN_FORCE);
             break;
         }
     }
 
-    /* Clear the prompt line */
     prt("", 0, 0);
-
     if (which == 'w') {
         browse_only ? do_cmd_mind_browse(player_ptr) : do_cmd_mind(player_ptr);
     }
@@ -609,9 +601,8 @@ void do_cmd_browse(PlayerType *player_ptr)
     constexpr auto q = _("どの本を読みますか? ", "Browse which book? ");
     constexpr auto s = _("読める本がない。", "You have no books that you can read.");
     constexpr auto options = USE_INVEN | USE_FLOOR;
-    short i_idx;
-    const auto *o_ptr = choose_object(player_ptr, &i_idx, q, s, options | (pc.equals(PlayerClassType::FORCETRAINER) ? USE_FORCE : 0), item_tester);
-    if (o_ptr == nullptr) {
+    const auto &[item, i_idx] = choose_item(player_ptr, q, s, options | (pc.equals(PlayerClassType::FORCETRAINER) ? USE_FORCE : 0), item_tester);
+    if (!item) {
         if (i_idx == INVEN_FORCE) /* the_force */
         {
             do_cmd_mind_browse(player_ptr);
@@ -621,11 +612,11 @@ void do_cmd_browse(PlayerType *player_ptr)
     }
 
     /* Access the item's sval */
-    const auto tval = o_ptr->bi_key.tval();
-    const auto sval = *o_ptr->bi_key.sval();
+    const auto tval = item->bi_key.tval();
+    const auto sval = *item->bi_key.sval();
     const auto use_realm = PlayerRealm::get_realm_of_book(tval);
 
-    o_ptr->track_baseitem();
+    item->track_baseitem();
     handle_stuff(player_ptr);
 
     /* Extract spells */
@@ -747,22 +738,20 @@ void do_cmd_study(PlayerType *player_ptr)
     msg_format("You can learn %d new %s%s.", player_ptr->new_spells, spell_category.data(), (player_ptr->new_spells == 1 ? "" : "s"));
 #endif
 
-    msg_print(nullptr);
+    msg_erase();
 
     /* Restrict choices to "useful" books */
     auto item_tester = get_learnable_spellbook_tester(player_ptr);
 
     constexpr auto q = _("どの本から学びますか? ", "Study which book? ");
     constexpr auto s = _("読める本がない。", "You have no books that you can read.");
-
-    short i_idx;
-    const auto *o_ptr = choose_object(player_ptr, &i_idx, q, s, (USE_INVEN | USE_FLOOR), item_tester);
-    if (o_ptr == nullptr) {
+    const auto &[item, i_idx] = choose_item(player_ptr, q, s, (USE_INVEN | USE_FLOOR), item_tester);
+    if (!item) {
         return;
     }
 
-    const auto tval = o_ptr->bi_key.tval();
-    const auto sval = *o_ptr->bi_key.sval();
+    const auto tval = item->bi_key.tval();
+    const auto sval = *item->bi_key.sval();
     const auto study_realm = PlayerRealm::get_realm_of_book(tval);
     if (pr.realm2().equals(study_realm)) {
         increment = 32;
@@ -775,7 +764,7 @@ void do_cmd_study(PlayerType *player_ptr)
         increment = 32;
     }
 
-    o_ptr->track_baseitem();
+    item->track_baseitem();
     handle_stuff(player_ptr);
 
     /* Mage -- Learn a selected spell */
@@ -890,7 +879,7 @@ void do_cmd_study(PlayerType *player_ptr)
         break;
     }
 
-    sound(SOUND_STUDY);
+    sound(SoundKind::STUDY);
 
     /* One less spell available */
     player_ptr->learned_spells++;
@@ -966,9 +955,8 @@ bool do_cmd_cast(PlayerType *player_ptr)
     constexpr auto s = _("呪文書がない！", "You have no spell books!");
     auto item_tester = get_castable_spellbook_tester(player_ptr);
     const auto options = USE_INVEN | USE_FLOOR | (pc.equals(PlayerClassType::FORCETRAINER) ? USE_FORCE : 0);
-    short i_idx;
-    const auto *o_ptr = choose_object(player_ptr, &i_idx, q, s, options, item_tester);
-    if (o_ptr == nullptr) {
+    const auto &[item, i_idx] = choose_item(player_ptr, q, s, options, item_tester);
+    if (!item) {
         if (i_idx == INVEN_FORCE) {
             do_cmd_mind(player_ptr);
             return true; //!< 錬気キャンセル時の処理がない
@@ -977,14 +965,14 @@ bool do_cmd_cast(PlayerType *player_ptr)
         return false;
     }
 
-    const auto tval = o_ptr->bi_key.tval();
-    const auto sval = *o_ptr->bi_key.sval();
+    const auto tval = item->bi_key.tval();
+    const auto sval = *item->bi_key.sval();
     const auto use_realm = PlayerRealm::get_realm_of_book(tval);
     if (!is_every_magic && PlayerRealm(player_ptr).realm2().equals(use_realm)) {
         increment = 32;
     }
 
-    o_ptr->track_baseitem();
+    item->track_baseitem();
     handle_stuff(player_ptr);
 
     /* Ask for a spell */
@@ -1057,7 +1045,7 @@ bool do_cmd_cast(PlayerType *player_ptr)
         }
 
         msg_format(_("%sをうまく唱えられなかった！", "You failed to get the %s off!"), prayer.data());
-        sound(SOUND_FAIL);
+        sound(SoundKind::FAIL);
 
         switch (use_realm) {
         case RealmType::LIFE:
@@ -1105,7 +1093,7 @@ bool do_cmd_cast(PlayerType *player_ptr)
             wild_magic(player_ptr, spell_id);
         } else if ((tval == ItemKindType::DEATH_BOOK) && (randint1(100) < spell_id)) {
             if ((sval == 3) && one_in_(2)) {
-                sanity_blast(player_ptr, 0, true);
+                sanity_blast(player_ptr, tl::nullopt, true);
             } else {
                 msg_print(_("痛い！", "It hurts!"));
                 take_hit(player_ptr, DAMAGE_LOSELIFE, Dice::roll(sval + 1, 6), _("暗黒魔法の逆流", "a miscast Death spell"));

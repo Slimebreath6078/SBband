@@ -3,9 +3,6 @@
 #include "core/stuff-handler.h"
 #include "core/window-redrawer.h"
 #include "flavor/flavor-describer.h"
-#include "floor/cave.h"
-#include "floor/floor-events.h"
-#include "floor/floor-town.h"
 #include "game-option/birth-options.h"
 #include "game-option/input-options.h"
 #include "inventory/inventory-object.h"
@@ -20,13 +17,14 @@
 #include "store/store-owners.h"
 #include "store/store-util.h"
 #include "store/store.h"
-#include "system/dungeon-info.h"
-#include "system/floor-type-definition.h"
+#include "system/dungeon/dungeon-definition.h"
+#include "system/floor/floor-info.h"
+#include "system/floor/town-list.h"
 #include "system/grid-type-definition.h"
-#include "system/item-entity.h"
+#include "system/item/item-entity.h"
 #include "system/player-type-definition.h"
 #include "system/redrawing-flags-updater.h"
-#include "system/terrain-type-definition.h"
+#include "system/terrain/terrain-definition.h"
 #include "term/gameterm.h"
 #include "term/screen-processor.h"
 #include "util/bit-flags-calculator.h"
@@ -52,17 +50,18 @@
  */
 void do_cmd_store(PlayerType *player_ptr)
 {
-    if (AngbandWorld::get_instance().is_wild_mode()) {
+    auto &world = AngbandWorld::get_instance();
+    if (world.is_wild_mode()) {
         return;
     }
-    TermCenteredOffsetSetter tcos(MAIN_TERM_MIN_COLS, std::nullopt);
+    TermCenteredOffsetSetter tcos(MAIN_TERM_MIN_COLS, tl::nullopt);
     const auto &[wid, hgt] = term_get_size();
     xtra_stock = std::min(14 + 26, ((hgt > MAIN_TERM_MIN_ROWS) ? (hgt - MAIN_TERM_MIN_ROWS) : 0));
     store_bottom = MIN_STOCK + xtra_stock;
 
     auto &floor = *player_ptr->current_floor_ptr;
     const auto &grid = floor.get_grid(player_ptr->get_position());
-    if (!grid.cave_has_flag(TerrainCharacteristics::STORE)) {
+    if (!grid.has(TerrainCharacteristics::STORE)) {
         msg_print(_("ここには店がありません。", "You see no store here."));
         return;
     }
@@ -74,23 +73,22 @@ void do_cmd_store(PlayerType *player_ptr)
     //   inner_town_num は、施設内で C コマンドなどを使ったときにそのままでは現在地の偽装がバレる
     //   ため、それを糊塗するためのグローバル変数。
     //   この辺はリファクタしたい。
-    const auto store_num = i2enum<StoreSaleType>(grid.get_terrain().subtype);
-    old_town_num = player_ptr->town_num;
+    const auto store_num = grid.get_terrain().store_sale_type;
+    old_town_num = world.get_town_index();
     if ((store_num == StoreSaleType::HOME) || (store_num == StoreSaleType::MUSEUM)) {
-        player_ptr->town_num = 1;
+        world.set_town_index(1);
     }
 
-    if (floor.is_in_underground()) {
-        player_ptr->town_num = VALID_TOWNS;
+    if (floor.is_underground()) {
+        world.set_town_index(VALID_TOWNS);
     }
 
-    inner_town_num = player_ptr->town_num;
-    auto &town = towns_info[player_ptr->town_num];
-    auto &store = town.stores[store_num];
-    auto &world = AngbandWorld::get_instance();
+    inner_town_num = world.get_town_index();
+    auto &town = world.get_town();
+    auto &store = town.get_store(store_num);
     if ((store.store_open >= world.game_turn) || ironman_shops) {
         msg_print(_("ドアに鍵がかかっている。", "The doors are locked."));
-        player_ptr->town_num = old_town_num;
+        world.set_town_index(old_town_num);
         return;
     }
 
@@ -100,19 +98,19 @@ void do_cmd_store(PlayerType *player_ptr)
     }
 
     if (maintain_num > 0) {
-        store_maintenance(player_ptr, player_ptr->town_num, store_num, maintain_num);
+        store_maintenance(player_ptr, world.get_town_index(), store_num, maintain_num);
         store.last_visit = world.game_turn;
     }
 
-    forget_lite(&floor);
-    forget_view(&floor);
+    floor.forget_lite();
+    floor.forget_view();
     world.character_icky_depth = 1;
     command_arg = 0;
     command_rep = 0;
     command_new = 0;
     get_com_no_macros = true;
     cur_store_feat = grid.feat;
-    st_ptr = &towns_info[player_ptr->town_num].stores[store_num];
+    st_ptr = &store;
     ot_ptr = &owners.at(store_num)[st_ptr->owner];
     store_top = 0;
     play_music(TERM_XTRA_MUSIC_BASIC, MUSIC_BASIC_BUILD);
@@ -156,9 +154,9 @@ void do_cmd_store(PlayerType *player_ptr)
         const auto should_redraw_store_inventory = rfu.has(StatusRecalculatingFlag::BONUS);
         world.character_icky_depth = 1;
         handle_stuff(player_ptr);
-        if (player_ptr->inventory_list[INVEN_PACK].bi_id) {
+        if (player_ptr->inventory[INVEN_PACK]->bi_id) {
             INVENTORY_IDX i_idx = INVEN_PACK;
-            auto *o_ptr = &player_ptr->inventory_list[i_idx];
+            const auto &item_inventory = *player_ptr->inventory[i_idx];
             if (store_num != StoreSaleType::HOME) {
                 if (store_num == StoreSaleType::MUSEUM) {
                     msg_print(_("ザックからアイテムがあふれそうなので、あわてて博物館から出た...", "Your pack is so full that you flee the Museum..."));
@@ -167,22 +165,17 @@ void do_cmd_store(PlayerType *player_ptr)
                 }
 
                 leave_store = true;
-            } else if (!store_check_num(o_ptr, store_num)) {
+            } else if (!store_check_num(&item_inventory, store_num)) {
                 msg_print(_("ザックからアイテムがあふれそうなので、あわてて家から出た...", "Your pack is so full that you flee your home..."));
                 leave_store = true;
             } else {
-                int item_pos;
-                ItemEntity forge;
-                ItemEntity *q_ptr;
                 msg_print(_("ザックからアイテムがあふれてしまった！", "Your pack overflows!"));
-                q_ptr = &forge;
-                q_ptr->copy_from(o_ptr);
-                const auto item_name = describe_flavor(player_ptr, q_ptr, 0);
+                auto item = item_inventory.clone();
+                const auto item_name = describe_flavor(player_ptr, item, 0);
                 msg_format(_("%sが落ちた。(%c)", "You drop %s (%c)."), item_name.data(), index_to_label(i_idx));
                 vary_item(player_ptr, i_idx, -255);
                 handle_stuff(player_ptr);
-
-                item_pos = home_carry(player_ptr, q_ptr, store_num);
+                const auto item_pos = home_carry(player_ptr, &item, store_num);
                 if (item_pos >= 0) {
                     store_top = (item_pos / store_bottom) * store_bottom;
                     display_store_inventory(player_ptr, store_num);
@@ -200,7 +193,7 @@ void do_cmd_store(PlayerType *player_ptr)
     }
 
     // 現在地の偽装を解除。
-    player_ptr->town_num = old_town_num;
+    world.set_town_index(old_town_num);
 
     select_floor_music(player_ptr);
     PlayerEnergy(player_ptr).set_player_turn_energy(100);

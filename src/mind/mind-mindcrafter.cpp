@@ -11,10 +11,8 @@
 #include "floor/floor-object.h"
 #include "game-option/auto-destruction-options.h"
 #include "hpmp/hp-mp-processor.h"
-#include "mind/mind-mindcrafter.h"
 #include "mind/mind-numbers.h"
 #include "object-enchant/item-feeling.h"
-#include "object-enchant/special-object-flags.h"
 #include "object/item-use-flags.h"
 #include "object/object-mark-types.h"
 #include "perception/object-perception.h"
@@ -32,7 +30,7 @@
 #include "status/buff-setter.h"
 #include "status/element-resistance.h"
 #include "status/sight-setter.h"
-#include "system/item-entity.h"
+#include "system/item/item-entity.h"
 #include "system/player-type-definition.h"
 #include "system/redrawing-flags-updater.h"
 #include "target/target-getter.h"
@@ -55,19 +53,18 @@ bool psychometry(PlayerType *player_ptr)
 {
     constexpr auto q = _("どのアイテムを調べますか？", "Meditate on which item? ");
     constexpr auto s = _("調べるアイテムがありません。", "You have nothing appropriate.");
-    short i_idx;
-    auto *o_ptr = choose_object(player_ptr, &i_idx, q, s, (USE_EQUIP | USE_INVEN | USE_FLOOR | IGNORE_BOTHHAND_SLOT));
-    if (!o_ptr) {
+    const auto &[item, i_idx] = choose_item(player_ptr, q, s, (USE_EQUIP | USE_INVEN | USE_FLOOR | IGNORE_BOTHHAND_SLOT));
+    if (!item) {
         return false;
     }
 
-    if (o_ptr->is_known()) {
+    if (item->is_known()) {
         msg_print(_("何も新しいことは判らなかった。", "You cannot find out anything more about that."));
         return true;
     }
 
-    item_feel_type feel = pseudo_value_check_heavy(o_ptr);
-    const auto item_name = describe_flavor(player_ptr, o_ptr, (OD_OMIT_PREFIX | OD_NAME_ONLY));
+    item_feel_type feel = pseudo_value_check_heavy(item.get());
+    const auto item_name = describe_flavor(player_ptr, *item, (OD_OMIT_PREFIX | OD_NAME_ONLY));
     if (!feel) {
         msg_format(_("%sからは特に変わった事は感じとれなかった。", "You do not perceive anything unusual about the %s."), item_name.data());
         return true;
@@ -76,12 +73,12 @@ bool psychometry(PlayerType *player_ptr)
 #ifdef JP
     msg_format("%sは%sという感じがする...", item_name.data(), game_inscriptions[feel]);
 #else
-    msg_format("You feel that the %s %s %s...", item_name.data(), ((o_ptr->number == 1) ? "is" : "are"), game_inscriptions[feel]);
+    msg_format("You feel that the %s %s %s...", item_name.data(), ((item->number == 1) ? "is" : "are"), game_inscriptions[feel]);
 #endif
 
-    set_bits(o_ptr->ident, IDENT_SENSE);
-    o_ptr->feeling = feel;
-    o_ptr->marked.set(OmType::TOUCHED);
+    item->set_identification_flag(IdentificationFlag::SENSE);
+    item->feeling = feel;
+    item->marked.set(OmType::TOUCHED);
 
     auto &rfu = RedrawingFlagsUpdater::get_instance();
     static constexpr auto flags_srf = {
@@ -99,7 +96,7 @@ bool psychometry(PlayerType *player_ptr)
     rfu.set_flags(flags_swrf);
 
     bool okay = false;
-    switch (o_ptr->bi_key.tval()) {
+    switch (item->bi_key.tval()) {
     case ItemKindType::SHOT:
     case ItemKindType::ARROW:
     case ItemKindType::BOLT:
@@ -143,7 +140,6 @@ bool cast_mindcrafter_spell(PlayerType *player_ptr, MindMindcrafterType spell)
 {
     bool b = false;
     int dam = 0;
-    DIRECTION dir;
     TIME_EFFECT t;
     PLAYER_LEVEL plev = player_ptr->lev;
     switch (spell) {
@@ -178,8 +174,9 @@ bool cast_mindcrafter_spell(PlayerType *player_ptr, MindMindcrafterType spell)
         }
 
         break;
-    case MindMindcrafterType::NEURAL_BLAST:
-        if (!get_aim_dir(player_ptr, &dir)) {
+    case MindMindcrafterType::NEURAL_BLAST: {
+        const auto dir = get_aim_dir(player_ptr);
+        if (!dir) {
             return false;
         }
 
@@ -189,6 +186,7 @@ bool cast_mindcrafter_spell(PlayerType *player_ptr, MindMindcrafterType spell)
             fire_ball(player_ptr, AttributeType::PSI, dir, Dice::roll(3 + ((plev - 1) / 4), (3 + plev / 15)), 0);
         }
         break;
+    }
     case MindMindcrafterType::MINOR_DISPLACEMENT:
         teleport_player(player_ptr, 10, TELEPORT_SPONTANEOUS);
         break;
@@ -197,7 +195,8 @@ bool cast_mindcrafter_spell(PlayerType *player_ptr, MindMindcrafterType spell)
         break;
     case MindMindcrafterType::DOMINATION:
         if (plev < 30) {
-            if (!get_aim_dir(player_ptr, &dir)) {
+            const auto dir = get_aim_dir(player_ptr);
+            if (!dir) {
                 return false;
             }
 
@@ -207,13 +206,15 @@ bool cast_mindcrafter_spell(PlayerType *player_ptr, MindMindcrafterType spell)
         }
 
         break;
-    case MindMindcrafterType::PLUVERISE:
-        if (!get_aim_dir(player_ptr, &dir)) {
+    case MindMindcrafterType::PLUVERISE: {
+        const auto dir = get_aim_dir(player_ptr);
+        if (!dir) {
             return false;
         }
 
         fire_ball(player_ptr, AttributeType::TELEKINESIS, dir, Dice::roll(8 + ((plev - 5) / 4), 8), (plev > 20 ? (plev - 20) / 8 + 1 : 0));
         break;
+    }
     case MindMindcrafterType::CHARACTER_ARMOR:
         set_shield(player_ptr, (TIME_EFFECT)plev, false);
         if (plev > 14) {
@@ -261,15 +262,18 @@ bool cast_mindcrafter_spell(PlayerType *player_ptr, MindMindcrafterType spell)
         (void)set_acceleration(player_ptr, t, false);
         break;
     }
-    case MindMindcrafterType::TELEKINESIS:
-        if (!get_aim_dir(player_ptr, &dir)) {
+    case MindMindcrafterType::TELEKINESIS: {
+        const auto dir = get_aim_dir(player_ptr);
+        if (!dir) {
             return false;
         }
 
         fetch_item(player_ptr, dir, plev * 15, false);
         break;
-    case MindMindcrafterType::PSYCHIC_DRAIN:
-        if (!get_aim_dir(player_ptr, &dir)) {
+    }
+    case MindMindcrafterType::PSYCHIC_DRAIN: {
+        const auto dir = get_aim_dir(player_ptr);
+        if (!dir) {
             return false;
         }
 
@@ -279,13 +283,16 @@ bool cast_mindcrafter_spell(PlayerType *player_ptr, MindMindcrafterType spell)
         }
 
         break;
-    case MindMindcrafterType::PSYCHO_SPEAR:
-        if (!get_aim_dir(player_ptr, &dir)) {
+    }
+    case MindMindcrafterType::PSYCHO_SPEAR: {
+        const auto dir = get_aim_dir(player_ptr);
+        if (!dir) {
             return false;
         }
 
         fire_beam(player_ptr, AttributeType::PSY_SPEAR, dir, randint1(plev * 3) + plev * 3);
         break;
+    }
     case MindMindcrafterType::THE_WORLD:
         time_walk(player_ptr);
         break;

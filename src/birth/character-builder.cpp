@@ -17,8 +17,6 @@
 #include "birth/game-play-initializer.h"
 #include "birth/quick-start.h"
 #include "core/window-redrawer.h"
-#include "floor/floor-town.h"
-#include "floor/wild.h"
 #include "game-option/option-flags.h"
 #include "io/write-diary.h"
 #include "main/music-definitions-table.h"
@@ -36,6 +34,8 @@
 #include "player/race-info-table.h"
 #include "store/store-owners.h"
 #include "store/store.h"
+#include "system/floor/town-list.h"
+#include "system/floor/wilderness-grid.h"
 #include "system/player-type-definition.h"
 #include "system/redrawing-flags-updater.h"
 #include "term/gameterm.h"
@@ -73,8 +73,8 @@ static void write_birth_diary(PlayerType *player_ptr)
         exe_write_diary(floor, DiaryKind::DESCRIPTION, 1, mes_realm);
     }
 
-    if (player_ptr->element) {
-        const auto mes_element = format(_("%s元素系統に%sを選択した。", "%schose %s system."), indent, get_element_title(player_ptr->element));
+    if (player_ptr->element_realm != ElementRealmType::NONE) {
+        const auto mes_element = format(_("%s元素系統に%sを選択した。", "%schose %s system."), indent, get_element_title(player_ptr->element_realm).data());
         exe_write_diary(floor, DiaryKind::DESCRIPTION, 1, mes_element);
     }
 
@@ -97,7 +97,7 @@ void player_birth(PlayerType *player_ptr)
 {
     TermCenteredOffsetSetter tcos(MAIN_TERM_MIN_COLS, MAIN_TERM_MIN_ROWS);
 
-    AngbandWorld::get_instance().play_time = 0;
+    AngbandWorld::get_instance().play_time.reset();
     wipe_monsters_list(player_ptr);
     player_wipe_without_name(player_ptr);
     if (!ask_quick_start(player_ptr)) {
@@ -112,13 +112,13 @@ void player_birth(PlayerType *player_ptr)
     }
 
     write_birth_diary(player_ptr);
-    for (size_t i = 1; i < towns_info.size(); i++) {
+    for (size_t i = 1; i < TownList::get_instance().size(); i++) {
         for (auto sst : STORE_SALE_TYPE_LIST) {
             store_init(i, sst);
         }
     }
 
-    seed_wilderness();
+    WildernessGrids::get_instance().initialize_seeds();
     if (PlayerRace(player_ptr).equals(PlayerRaceType::BEASTMAN)) {
         player_ptr->hack_mutation = true;
     } else {

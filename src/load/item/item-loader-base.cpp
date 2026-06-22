@@ -2,8 +2,9 @@
 #include "artifact/fixed-art-types.h"
 #include "load/angband-version-comparer.h"
 #include "load/load-util.h"
-#include "system/artifact-type-definition.h"
-#include "system/baseitem-info.h"
+#include "system/artifact/artifact-record.h"
+#include "system/baseitem/baseitem-definition.h"
+#include "system/baseitem/baseitem-list.h"
 #include "util/bit-flags-calculator.h"
 #include "util/enum-converter.h"
 
@@ -13,7 +14,7 @@
 void ItemLoaderBase::load_item()
 {
     auto loading_max_k_idx = rd_u16b();
-    BaseitemInfo dummy;
+    BaseitemDefinition dummy;
     auto &baseitems = BaseitemList::get_instance();
     for (uint16_t i = 0; i < loading_max_k_idx; i++) {
         auto &baseitem = i < baseitems.size() ? baseitems.get_baseitem(i) : dummy;
@@ -27,21 +28,23 @@ void ItemLoaderBase::load_item()
 
 /*!
  * @brief 固定アーティファクトの出現情報をロードする.
+ *
+ * セーブファイルバージョン26未満専用.
  */
-void ItemLoaderBase::load_artifact()
+void ItemLoaderBase::load_artifact_older_than_26()
 {
+    auto &records = ArtifactRecords::get_instance();
     auto loading_max_a_idx = rd_u16b();
     for (auto i = 0U; i < loading_max_a_idx; i++) {
-        const auto a_idx = i2enum<FixedArtifactId>(i);
-        auto &artifact = ArtifactList::get_instance().get_artifact(a_idx);
-        artifact.is_generated = rd_bool();
+        const auto fa_id = i2enum<FixedArtifactId>(i);
+        records.set_generated(fa_id, rd_bool());
         if (h_older_than(1, 5, 0, 0)) {
-            artifact.floor_id = 0;
             strip_bytes(3);
         } else {
-            artifact.floor_id = rd_s16b();
+            const auto tmp16s = rd_s16b();
+            records.set_floor_id(fa_id, tmp16s > 0 ? tl::make_optional<short>(tmp16s) : tl::nullopt);
         }
     }
 
-    load_note(_("伝説のアイテムをロードしました", "Loaded Artifacts"));
+    load_note(_("伝説のアイテム(旧版)をロードしました", "Loaded Artifacts (old versions)"));
 }

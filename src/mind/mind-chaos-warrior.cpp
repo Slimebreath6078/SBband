@@ -3,8 +3,8 @@
 #include "object-enchant/object-boost.h"
 #include "object-enchant/object-ego.h"
 #include "sv-definition/sv-weapon-types.h"
-#include "system/floor-type-definition.h"
-#include "system/item-entity.h"
+#include "system/floor/floor-info.h"
+#include "system/item/item-entity.h"
 #include "system/player-type-definition.h"
 #include <span>
 
@@ -63,7 +63,7 @@ void acquire_chaos_weapon(PlayerType *player_ptr)
         SV_BLADE_OF_CHAOS, // LV50
     };
 
-    std::span<const sv_sword_type> candidates(weapons.begin(), player_ptr->lev);
+    const auto candidates = std::span(weapons).first(player_ptr->lev);
     const auto sval = rand_choice(candidates);
 
     ItemEntity item({ ItemKindType::SWORD, sval });
@@ -71,5 +71,5 @@ void acquire_chaos_weapon(PlayerType *player_ptr)
     item.to_d = 3 + randint1(player_ptr->current_floor_ptr->dun_level) % 10;
     one_resistance(&item);
     item.ego_idx = EgoType::CHAOTIC;
-    (void)drop_near(player_ptr, &item, -1, player_ptr->y, player_ptr->x);
+    (void)drop_near(player_ptr, item, player_ptr->get_position());
 }

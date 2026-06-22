@@ -1,10 +1,13 @@
 #include "status/buff-setter.h"
+#include "action/travel-execution.h"
 #include "avatar/avatar.h"
 #include "core/disturbance.h"
 #include "core/speed-table.h"
 #include "core/stuff-handler.h"
 #include "core/window-redrawer.h"
 #include "game-option/disturbance-options.h"
+#include "main/sound-definitions-table.h"
+#include "main/sound-of-music.h"
 #include "monster/monster-status-setter.h"
 #include "player-base/player-class.h"
 #include "player-info/class-info.h"
@@ -38,12 +41,12 @@ void reset_tim_flags(PlayerType *player_ptr)
     effects->poison().reset();
     effects->cut().reset();
     effects->stun().reset();
+    effects->protection().reset();
 
-    player_ptr->protevil = 0; /* Timed -- Protection */
     player_ptr->invuln = 0; /* Timed -- Invulnerable */
     player_ptr->ult_res = 0;
     player_ptr->hero = 0; /* Timed -- Heroism */
-    player_ptr->shero = 0; /* Timed -- Super Heroism */
+    player_ptr->berserk = 0; /* Timed -- Super Heroism */
     player_ptr->shield = 0; /* Timed -- Shield Spell */
     player_ptr->blessed = 0; /* Timed -- Blessed */
     player_ptr->tim_invis = 0; /* Timed -- Invisibility */
@@ -62,12 +65,18 @@ void reset_tim_flags(PlayerType *player_ptr)
     player_ptr->tsuyoshi = 0;
     player_ptr->tim_pass_wall = 0;
     player_ptr->tim_res_nether = 0;
+    player_ptr->tim_res_lite = 0;
+    player_ptr->tim_res_dark = 0;
+    player_ptr->tim_res_fear = 0;
     player_ptr->tim_res_time = 0;
     player_ptr->tim_mimic = 0;
     player_ptr->mimic_form = MimicKindType::NONE;
     player_ptr->tim_reflect = 0;
     player_ptr->multishadow = 0;
     player_ptr->dustrobe = 0;
+    player_ptr->tim_emission = 0;
+    player_ptr->tim_exorcism = 0;
+    player_ptr->tim_imm_dark = 0;
     player_ptr->action = ACTION_NONE;
 
     player_ptr->oppose_acid = 0; /* Timed -- oppose acid */
@@ -92,9 +101,9 @@ void reset_tim_flags(PlayerType *player_ptr)
     player_ptr->timewalk = false;
 
     if (player_ptr->riding) {
-        (void)set_monster_fast(player_ptr, player_ptr->riding, 0);
-        (void)set_monster_slow(player_ptr, player_ptr->riding, 0);
-        (void)set_monster_invulner(player_ptr, player_ptr->riding, 0, false);
+        (void)set_monster_fast(*player_ptr->current_floor_ptr, player_ptr->riding, 0);
+        (void)set_monster_slow(*player_ptr->current_floor_ptr, player_ptr->riding, 0);
+        (void)set_monster_invulner(*player_ptr->current_floor_ptr, player_ptr->riding, 0, false);
     }
 
     if (PlayerClass(player_ptr).equals(PlayerClassType::BARD)) {
@@ -137,6 +146,7 @@ bool set_acceleration(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
             is_singing |= music_singing(player_ptr, MUSIC_SHERO);
             if (!is_singing) {
                 msg_print(_("動きの素早さがなくなったようだ。", "You feel yourself slow down."));
+                sound(SoundKind::BUFF_EXPIRE);
                 notice = true;
             }
         }
@@ -147,8 +157,8 @@ bool set_acceleration(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
         return false;
     }
 
-    if (disturb_state) {
-        disturb(player_ptr, false, false);
+    if (disturb_state || Travel::get_instance().is_ongoing()) {
+        disturb(player_ptr, false, true);
     }
     RedrawingFlagsUpdater::get_instance().set_flag(StatusRecalculatingFlag::BONUS);
     handle_stuff(player_ptr);
@@ -188,6 +198,7 @@ bool set_shield(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
     } else {
         if (player_ptr->shield) {
             msg_print(_("肌が元に戻った。", "Your skin returns to normal."));
+            sound(SoundKind::BUFF_EXPIRE);
             notice = true;
         }
     }
@@ -199,8 +210,8 @@ bool set_shield(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
         return false;
     }
 
-    if (disturb_state) {
-        disturb(player_ptr, false, false);
+    if (disturb_state || Travel::get_instance().is_ongoing()) {
+        disturb(player_ptr, false, true);
     }
 
     rfu.set_flag(StatusRecalculatingFlag::BONUS);
@@ -236,6 +247,7 @@ bool set_magicdef(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
     } else {
         if (player_ptr->magicdef) {
             msg_print(_("魔法の防御力が元に戻った。", "You feel less resistant to magic."));
+            sound(SoundKind::BUFF_EXPIRE);
             notice = true;
         }
     }
@@ -247,8 +259,8 @@ bool set_magicdef(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
         return false;
     }
 
-    if (disturb_state) {
-        disturb(player_ptr, false, false);
+    if (disturb_state || Travel::get_instance().is_ongoing()) {
+        disturb(player_ptr, false, true);
     }
 
     rfu.set_flag(StatusRecalculatingFlag::BONUS);
@@ -284,6 +296,7 @@ bool set_blessed(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
     } else {
         if (player_ptr->blessed && !music_singing(player_ptr, MUSIC_BLESS)) {
             msg_print(_("高潔な気分が消え失せた。", "The prayer has expired."));
+            sound(SoundKind::BUFF_EXPIRE);
             notice = true;
         }
     }
@@ -295,8 +308,8 @@ bool set_blessed(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
         return false;
     }
 
-    if (disturb_state) {
-        disturb(player_ptr, false, false);
+    if (disturb_state || Travel::get_instance().is_ongoing()) {
+        disturb(player_ptr, false, true);
     }
 
     rfu.set_flag(StatusRecalculatingFlag::BONUS);
@@ -332,6 +345,7 @@ bool set_hero(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
     } else {
         if (player_ptr->hero && !music_singing(player_ptr, MUSIC_HERO) && !music_singing(player_ptr, MUSIC_SHERO)) {
             msg_print(_("ヒーローの気分が消え失せた。", "The heroism wears off."));
+            sound(SoundKind::BUFF_EXPIRE);
             notice = true;
         }
     }
@@ -343,8 +357,8 @@ bool set_hero(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
         return false;
     }
 
-    if (disturb_state) {
-        disturb(player_ptr, false, false);
+    if (disturb_state || Travel::get_instance().is_ongoing()) {
+        disturb(player_ptr, false, true);
     }
 
     static constexpr auto flags = {
@@ -388,6 +402,7 @@ bool set_mimic(PlayerType *player_ptr, TIME_EFFECT v, MimicKindType mimic_race_i
     else {
         if (player_ptr->tim_mimic) {
             msg_print(_("変身が解けた。", "You are no longer transformed."));
+            sound(SoundKind::BUFF_EXPIRE);
             if (player_ptr->mimic_form == MimicKindType::DEMON) {
                 set_oppose_fire(player_ptr, 0, true);
             }
@@ -402,7 +417,7 @@ bool set_mimic(PlayerType *player_ptr, TIME_EFFECT v, MimicKindType mimic_race_i
         return false;
     }
 
-    if (disturb_state) {
+    if (disturb_state || Travel::get_instance().is_ongoing()) {
         disturb(player_ptr, false, true);
     }
 
@@ -427,7 +442,7 @@ bool set_mimic(PlayerType *player_ptr, TIME_EFFECT v, MimicKindType mimic_race_i
  * @param do_dec FALSEの場合現在の継続時間より長い値のみ上書きする
  * @return ステータスに影響を及ぼす変化があった場合TRUEを返す。
  */
-bool set_shero(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
+bool set_berserk(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
 {
     bool notice = false;
     v = (v > 10000) ? 10000 : (v < 0) ? 0
@@ -443,30 +458,31 @@ bool set_shero(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
     }
 
     if (v) {
-        if (player_ptr->shero && !do_dec) {
-            if (player_ptr->shero > v) {
+        if (player_ptr->berserk && !do_dec) {
+            if (player_ptr->berserk > v) {
                 return false;
             }
-        } else if (!player_ptr->shero) {
+        } else if (!player_ptr->berserk) {
             msg_print(_("殺戮マシーンになった気がする！", "You feel like a killing machine!"));
             notice = true;
         }
     } else {
-        if (player_ptr->shero) {
+        if (player_ptr->berserk) {
+            sound(SoundKind::BUFF_EXPIRE);
             msg_print(_("野蛮な気持ちが消え失せた。", "You feel less berserk."));
             notice = true;
         }
     }
 
-    player_ptr->shero = v;
+    player_ptr->berserk = v;
     auto &rfu = RedrawingFlagsUpdater::get_instance();
     rfu.set_flag(MainWindowRedrawingFlag::TIMED_EFFECT);
     if (!notice) {
         return false;
     }
 
-    if (disturb_state) {
-        disturb(player_ptr, false, false);
+    if (disturb_state || Travel::get_instance().is_ongoing()) {
+        disturb(player_ptr, false, true);
     }
 
     static constexpr auto flags = {
@@ -518,6 +534,7 @@ bool set_wraith_form(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
     } else {
         if (player_ptr->wraith_form) {
             msg_print(_("不透明になった感じがする。", "You feel opaque."));
+            sound(SoundKind::BUFF_EXPIRE);
             notice = true;
             rfu.set_flag(MainWindowRedrawingFlag::MAP);
             rfu.set_flag(StatusRecalculatingFlag::MONSTER_STATUSES);
@@ -531,8 +548,8 @@ bool set_wraith_form(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
         return false;
     }
 
-    if (disturb_state) {
-        disturb(player_ptr, false, false);
+    if (disturb_state || Travel::get_instance().is_ongoing()) {
+        disturb(player_ptr, false, true);
     }
 
     rfu.set_flag(StatusRecalculatingFlag::BONUS);
@@ -568,6 +585,7 @@ bool set_tsuyoshi(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
         }
     } else {
         if (player_ptr->tsuyoshi) {
+            sound(SoundKind::BUFF_EXPIRE);
             msg_print(_("肉体が急速にしぼんでいった。", "Your body has quickly shriveled."));
 
             (void)dec_stat(player_ptr, A_CON, 20, true);
@@ -585,8 +603,8 @@ bool set_tsuyoshi(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
         return false;
     }
 
-    if (disturb_state) {
-        disturb(player_ptr, false, false);
+    if (disturb_state || Travel::get_instance().is_ongoing()) {
+        disturb(player_ptr, false, true);
     }
 
     static constexpr auto flags = {

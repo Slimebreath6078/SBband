@@ -1,6 +1,6 @@
 #include "save/player-class-specific-data-writer.h"
 #include "player-info/bard-data-type.h"
-#include "player-info/bluemage-data-type.h"
+#include "player-info/bluemage-data.h"
 #include "player-info/force-trainer-data-type.h"
 #include "player-info/magic-eater-data-type.h"
 #include "player-info/mane-data-type.h"
@@ -30,12 +30,12 @@ void PlayerClassSpecificDataWriter::operator()(const std::shared_ptr<force_train
     wr_s32b(force_trainer_data->ki);
 }
 
-void PlayerClassSpecificDataWriter::operator()(const std::shared_ptr<bluemage_data_type> &bluemage_data) const
+void PlayerClassSpecificDataWriter::operator()(const std::shared_ptr<BluemageData> &bluemage_data) const
 {
     wr_FlagGroup(bluemage_data->learnt_blue_magics, wr_byte);
 }
 
-void PlayerClassSpecificDataWriter::operator()(const std::shared_ptr<magic_eater_data_type> &magic_eater_data) const
+void PlayerClassSpecificDataWriter::operator()(const std::shared_ptr<MagicEaterDataList> &magic_eater_data) const
 {
     auto write_item_group = [](const auto &item_group) {
         wr_u16b(static_cast<uint16_t>(item_group.size()));

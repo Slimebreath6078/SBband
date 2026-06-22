@@ -12,34 +12,34 @@
  */
 
 #include "save/save.h"
+#include "artifact/fixed-art-types.h"
 #include "core/object-compressor.h"
-#include "dungeon/quest.h"
-#include "floor/floor-town.h"
-#include "floor/wild.h"
 #include "inventory/inventory-slot-types.h"
 #include "io/files-util.h"
 #include "io/report.h"
 #include "io/uid-checker.h"
 #include "locale/character-encoding.h"
 #include "monster/monster-compaction.h"
-#include "monster/monster-status.h"
 #include "player/player-status.h"
+#include "save/artifact-record-writer.h"
 #include "save/floor-writer.h"
 #include "save/info-writer.h"
 #include "save/item-writer.h"
 #include "save/lore-writer.h"
 #include "save/player-writer.h"
 #include "save/save-util.h"
-#include "store/store-owners.h"
-#include "store/store-util.h"
-#include "system/angband-system.h"
-#include "system/artifact-type-definition.h"
-#include "system/baseitem-info.h"
-#include "system/item-entity.h"
-#include "system/monster-race-info.h"
+#include "system/artifact/artifact-definition.h"
+#include "system/artifact/artifact-list.h"
+#include "system/artifact/artifact-record.h"
+#include "system/dungeon/quest-definition.h"
+#include "system/dungeon/quest-list.h"
+#include "system/floor/floor-info.h"
+#include "system/floor/town-list.h"
+#include "system/floor/wilderness-grid.h"
+#include "system/inner-game-data.h"
+#include "system/monrace/monrace-list.h"
 #include "system/player-type-definition.h"
 #include "util/angband-files.h"
-#include "util/enum-converter.h"
 #include "view/display-messages.h"
 #include "world/world.h"
 #include <algorithm>
@@ -54,14 +54,7 @@
  */
 static bool wr_savefile_new(PlayerType *player_ptr)
 {
-    compact_objects(player_ptr, 0);
     compact_monsters(player_ptr, 0);
-
-    uint32_t now = (uint32_t)time((time_t *)0);
-    auto &world = AngbandWorld::get_instance();
-    world.sf_system = 0L;
-    world.sf_when = now;
-    world.sf_saves++;
 
     save_xor_byte = 0;
     auto variant_length = VARIANT_NAME.length();
@@ -77,15 +70,10 @@ static bool wr_savefile_new(PlayerType *player_ptr)
     wr_byte(H_VER_PATCH);
     wr_byte(H_VER_EXTRA);
 
-    byte tmp8u = (byte)Rand_external(256);
+    auto tmp8u = static_cast<uint8_t>(Rand_external(256));
     wr_byte(tmp8u);
     v_stamp = 0L;
     x_stamp = 0L;
-
-    wr_u32b(world.sf_system);
-    wr_u32b(world.sf_when);
-    wr_u16b(world.sf_lives);
-    wr_u16b(world.sf_saves);
 
     wr_u32b(SAVEFILE_VERSION);
     wr_u16b(0);
@@ -106,10 +94,10 @@ static bool wr_savefile_new(PlayerType *player_ptr)
     wr_options();
     wr_message_history();
 
-    uint16_t tmp16u = static_cast<uint16_t>(monraces_info.size());
+    uint16_t tmp16u = static_cast<uint16_t>(MonraceList::get_instance().size());
     wr_u16b(tmp16u);
-    for (auto r_idx = 0; r_idx < tmp16u; r_idx++) {
-        wr_lore(i2enum<MonsterRaceId>(r_idx));
+    for (auto monrace_id = 0; monrace_id < tmp16u; monrace_id++) {
+        wr_lore(i2enum<MonraceId>(monrace_id));
     }
 
     tmp16u = static_cast<uint16_t>(BaseitemList::get_instance().size());
@@ -118,7 +106,9 @@ static bool wr_savefile_new(PlayerType *player_ptr)
         wr_perception(bi_id);
     }
 
-    tmp16u = static_cast<uint16_t>(towns_info.size());
+    const auto &towns = TownList::get_instance();
+    const auto towns_size = static_cast<uint16_t>(towns.size());
+    tmp16u = towns_size;
     wr_u16b(tmp16u);
 
     const auto &quests = QuestList::get_instance();
@@ -146,37 +136,31 @@ static bool wr_savefile_new(PlayerType *player_ptr)
         wr_s16b((int16_t)quest.max_num);
         wr_s16b(enum2i(quest.type));
         wr_s16b(enum2i(quest.r_idx));
-        wr_s16b(enum2i(quest.reward_fa_id));
+        wr_s16b(enum2i(quest.get_reward().value_or(FixedArtifactId::NONE)));
         wr_byte((byte)quest.flags);
         wr_byte((byte)quest.dungeon);
     }
 
-    wr_s32b(player_ptr->wilderness_x);
-    wr_s32b(player_ptr->wilderness_y);
+    const auto &wilderness = WildernessGrids::get_instance();
+    const auto &pos = wilderness.get_player_position();
+    wr_s32b(pos.x);
+    wr_s32b(pos.y);
+    const auto &world = AngbandWorld::get_instance();
     wr_bool(world.is_wild_mode());
     wr_bool(player_ptr->ambush_flag);
-    wr_s32b(world.max_wild_x);
-    wr_s32b(world.max_wild_y);
-    for (int i = 0; i < world.max_wild_x; i++) {
-        for (int j = 0; j < world.max_wild_y; j++) {
-            wr_u32b(wilderness[j][i].seed);
+    const auto &area = wilderness.get_area();
+    wr_s32b(area.width());
+    wr_s32b(area.height());
+    for (auto x = 0; x < area.width(); x++) {
+        for (auto y = 0; y < area.height(); y++) {
+            wr_u32b(wilderness.get_grid({ y, x }).get_seed());
         }
     }
 
-    const auto &artifacts = ArtifactList::get_instance();
-    auto max_a_num = enum2i(artifacts.rbegin()->first);
-    tmp16u = max_a_num + 1;
-    wr_u16b(tmp16u);
-    for (auto i = 0U; i < tmp16u; i++) {
-        const auto a_idx = i2enum<FixedArtifactId>(i);
-        const auto &artifact = artifacts.get_artifact(a_idx);
-        wr_bool(artifact.is_generated);
-        wr_s16b(artifact.floor_id);
-    }
-
-    wr_u32b(world.sf_play_time);
-    wr_FlagGroup(world.sf_winner, wr_byte);
-    wr_FlagGroup(world.sf_retired, wr_byte);
+    wr_u32b(InnerGameData::get_instance().get_total_play_time());
+    const auto &igd = InnerGameData::get_instance();
+    wr_FlagGroup(igd.get_won_classes(), wr_byte);
+    wr_FlagGroup(igd.get_retired_classes(), wr_byte);
 
     wr_player(player_ptr);
     tmp16u = PY_MAX_LEVEL;
@@ -198,31 +182,30 @@ static bool wr_savefile_new(PlayerType *player_ptr)
         wr_byte(static_cast<byte>(spell_id));
     }
 
-    for (int i = 0; i < INVEN_TOTAL; i++) {
-        const auto &item = player_ptr->inventory_list[i];
+    for (const auto i_idx : INVEN_ALL_SLOTS) {
+        const auto &item = *player_ptr->inventory[i_idx];
         if (!item.is_valid()) {
             continue;
         }
 
-        wr_u16b((uint16_t)i);
+        wr_u16b((uint16_t)i_idx);
         wr_item(item);
     }
 
     wr_u16b(0xFFFF);
-    tmp16u = static_cast<uint16_t>(towns_info.size());
-    wr_u16b(tmp16u);
+    wr_u16b(towns_size);
 
     tmp16u = MAX_STORES;
     wr_u16b(tmp16u);
-    for (size_t i = 1; i < towns_info.size(); i++) {
+    for (uint16_t i = 1; i < towns_size; i++) {
         for (auto sst : STORE_SALE_TYPE_LIST) {
-            wr_store(&towns_info[i].stores[sst]);
+            wr_store(towns.get_town(i).get_store(sst));
         }
     }
 
     wr_s16b(player_ptr->pet_follow_distance);
     wr_s16b(player_ptr->pet_extra_flags);
-    if (screen_dump && (player_ptr->wait_report_score || !player_ptr->is_dead)) {
+    if (AngbandSystem::get_instance().is_awaiting_report_status() || !player_ptr->is_dead) {
         wr_string(screen_dump);
     } else {
         wr_string("");
@@ -237,6 +220,7 @@ static bool wr_savefile_new(PlayerType *player_ptr)
         wr_s32b(0);
     }
 
+    wr_artifact_records();
     wr_u32b(v_stamp);
     wr_u32b(x_stamp);
     return !ferror(saving_savefile) && (fflush(saving_savefile) != EOF);
@@ -285,7 +269,7 @@ static bool save_player_aux(PlayerType *player_ptr, const std::filesystem::path 
     }
 
     auto &world = AngbandWorld::get_instance();
-    counts_write(player_ptr, 0, world.play_time);
+    counts_write(player_ptr, 0, world.play_time.elapsed_sec());
     world.character_saved = true;
     return true;
 }
@@ -310,7 +294,7 @@ bool save_player(PlayerType *player_ptr, SaveType type)
 
     safe_setuid_drop();
     auto &world = AngbandWorld::get_instance();
-    world.update_playtime();
+    world.play_time.update();
     auto result = false;
     if (save_player_aux(player_ptr, savefile_new.data())) {
         std::stringstream ss_old;
@@ -329,7 +313,7 @@ bool save_player(PlayerType *player_ptr, SaveType type)
     if (type != SaveType::CLOSE_GAME) {
         world.is_loading_now = false;
         update_creature(player_ptr);
-        mproc_init(player_ptr->current_floor_ptr);
+        player_ptr->current_floor_ptr->reset_mproc();
         world.is_loading_now = true;
     }
 

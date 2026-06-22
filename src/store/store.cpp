@@ -7,7 +7,6 @@
 #include "store/store.h"
 #include "core/asking-player.h"
 #include "flavor/flavor-describer.h"
-#include "floor/floor-town.h"
 #include "game-option/birth-options.h"
 #include "game-option/game-play-options.h"
 #include "io/command-repeater.h"
@@ -15,7 +14,6 @@
 #include "main/sound-of-music.h"
 #include "object-enchant/item-apply-magic.h"
 #include "object-enchant/item-magic-applier.h"
-#include "object-enchant/special-object-flags.h"
 #include "object/object-stack.h"
 #include "object/object-value.h"
 #include "object/tval-types.h"
@@ -26,21 +24,24 @@
 #include "store/store-util.h"
 #include "sv-definition/sv-lite-types.h"
 #include "sv-definition/sv-scroll-types.h"
-#include "system/floor-type-definition.h"
-#include "system/item-entity.h"
+#include "system/floor/floor-info.h"
+#include "system/floor/town-list.h"
+#include "system/inner-game-data.h"
+#include "system/item/item-entity.h"
 #include "system/player-type-definition.h"
 #include "term/screen-processor.h"
 #include "term/z-form.h"
 #include "util/int-char-converter.h"
 #include "view/display-messages.h"
-#include "world/world-object.h"
+#include "world/world.h"
+#include <tl/optional.hpp>
 
 int store_top = 0;
 int store_bottom = 0;
 int xtra_stock = 0;
 const owner_type *ot_ptr = nullptr;
-int16_t old_town_num = 0;
-int16_t inner_town_num = 0;
+size_t old_town_num = 0;
+size_t inner_town_num = 0;
 
 /* We store the current "store feat" here so everyone can access it */
 short cur_store_feat;
@@ -58,6 +59,8 @@ int16_t store_get_stock_max(StoreSaleType sst, bool powerup)
     switch (sst) {
     case StoreSaleType::HOME:
         return powerup ? STORE_INVEN_MAX * 10 : STORE_INVEN_MAX;
+    case StoreSaleType::BLACK:
+        return STORE_INVEN_MAX * 50;
     case StoreSaleType::MUSEUM:
         return STORE_INVEN_MAX * 50;
     default:
@@ -102,9 +105,8 @@ static int check_free_space(StoreSaleType store_num)
  *  1 : Cannot be combined but there are empty spaces.
  * </pre>
  */
-int store_check_num(ItemEntity *o_ptr, StoreSaleType store_num)
+int store_check_num(const ItemEntity *o_ptr, StoreSaleType store_num)
 {
-    ItemEntity *j_ptr;
     if ((store_num == StoreSaleType::HOME) || (store_num == StoreSaleType::MUSEUM)) {
         bool old_stack_force_notes = stack_force_notes;
         bool old_stack_force_costs = stack_force_costs;
@@ -113,9 +115,9 @@ int store_check_num(ItemEntity *o_ptr, StoreSaleType store_num)
             stack_force_costs = false;
         }
 
-        for (int i = 0; i < st_ptr->stock_num; i++) {
-            j_ptr = &st_ptr->stock[i];
-            if (!object_similar(j_ptr, o_ptr)) {
+        for (auto i = 0; i < st_ptr->stock_num; i++) {
+            auto &item = *st_ptr->stock[i];
+            if (!item.is_similar(*o_ptr)) {
                 continue;
             }
 
@@ -132,15 +134,30 @@ int store_check_num(ItemEntity *o_ptr, StoreSaleType store_num)
             stack_force_costs = old_stack_force_costs;
         }
     } else {
-        for (int i = 0; i < st_ptr->stock_num; i++) {
-            j_ptr = &st_ptr->stock[i];
-            if (store_object_similar(j_ptr, o_ptr)) {
+        for (auto i = 0; i < st_ptr->stock_num; i++) {
+            auto &item = *st_ptr->stock[i];
+            if (item.is_similar_for_store(*o_ptr)) {
                 return -1;
             }
         }
     }
 
     return check_free_space(store_num);
+}
+
+/*!
+ * @brief 店舗のレベルを返す。日数で成長する。(現状BMのみ使用)
+ * @param store_num 店舗の種類
+ * @return 店舗レベル。BM以外1、BMは日数(MAX1000)
+ */
+int store_level(StoreSaleType store_num)
+{
+    if (store_num != StoreSaleType::BLACK) {
+        return 1;
+    }
+
+    const auto &[day, hour, min] = AngbandWorld::get_instance().extract_date_time(InnerGameData::get_instance().get_start_race());
+    return std::min(day, 1000);
 }
 
 /*!
@@ -151,14 +168,14 @@ int store_check_num(ItemEntity *o_ptr, StoreSaleType store_num)
  * @return アイテムを選択したらそのインデックス ('a'等)、キャンセルしたらnullopt
  * 繰り返しコマンドの時は前回の前回のインデックス
  */
-std::optional<short> input_stock(std::string_view fmt, int min, int max, [[maybe_unused]] StoreSaleType store_num)
+tl::optional<short> input_stock(std::string_view fmt, int min, int max, [[maybe_unused]] StoreSaleType store_num)
 {
-    short repeat_command;
-    if (repeat_pull(&repeat_command) && (repeat_command >= min) && (repeat_command <= max)) {
-        return repeat_command;
+    const auto code = repeat_pull();
+    if ((code >= min) && (code <= max)) {
+        return code;
     }
 
-    msg_print(nullptr);
+    msg_erase();
     const auto lo = I2A(min);
     const auto hi = (max > 25) ? toupper(I2A(max - 26)) : I2A(max);
 #ifdef JP
@@ -168,14 +185,14 @@ std::optional<short> input_stock(std::string_view fmt, int min, int max, [[maybe
     const auto prompt = format("(Items %c-%c, ESC to exit) %s", lo, hi, fmt.data());
 #endif
 
-    std::optional<char> command;
+    tl::optional<char> command;
     while (true) {
         const auto command_alpha = input_command(prompt);
         if (!command_alpha) {
             break;
         }
 
-        std::optional<int> command_num;
+        tl::optional<int> command_num;
         if (islower(*command_alpha)) {
             command_num = A2I(*command_alpha);
         } else if (isupper(*command_alpha)) {
@@ -192,7 +209,7 @@ std::optional<short> input_stock(std::string_view fmt, int min, int max, [[maybe
 
     prt("", 0, 0);
     if (!command) {
-        return std::nullopt;
+        return tl::nullopt;
     }
 
     repeat_push(*command);
@@ -228,15 +245,15 @@ void store_examine(PlayerType *player_ptr, StoreSaleType store_num)
     }
 
     const auto item_num = *item_num_opt + store_top;
-    auto *o_ptr = &st_ptr->stock[item_num];
-    if (!o_ptr->is_fully_known()) {
+    auto &item = *st_ptr->stock[item_num];
+    if (!item.is_fully_known()) {
         msg_print(_("このアイテムについて特に知っていることはない。", "You have no special knowledge about that item."));
         return;
     }
 
-    const auto item_name = describe_flavor(player_ptr, o_ptr, 0);
+    const auto item_name = describe_flavor(player_ptr, item, 0);
     msg_format(_("%sを調べている...", "Examining %s..."), item_name.data());
-    if (!screen_object(player_ptr, o_ptr, SCROBJ_FORCE_DETAIL)) {
+    if (!screen_object(player_ptr, item, SCROBJ_FORCE_DETAIL)) {
         msg_print(_("特に変わったところはないようだ。", "You see nothing special."));
     }
 }
@@ -247,30 +264,32 @@ void store_examine(PlayerType *player_ptr, StoreSaleType store_num)
  * @param which 店舗種類のID
  * @todo init_store()と処理を一部統合＆ランダム選択を改善。
  */
-void store_shuffle(PlayerType *player_ptr, StoreSaleType store_num)
+void store_shuffle(StoreSaleType store_num)
 {
-    auto owner_num = owners.at(store_num).size();
-    if ((store_num == StoreSaleType::HOME) || (store_num == StoreSaleType::MUSEUM) || (owner_num <= (uint16_t)towns_info.size())) {
+    auto &towns = TownList::get_instance();
+    const auto towns_size = towns.size();
+    const auto owner_num = owners.at(store_num).size();
+    if ((store_num == StoreSaleType::HOME) || (store_num == StoreSaleType::MUSEUM) || (owner_num <= towns_size)) {
         return;
     }
 
-    st_ptr = &towns_info[player_ptr->town_num].stores[store_num];
+    auto &world = AngbandWorld::get_instance();
+    st_ptr = &world.get_town().get_store(store_num);
     int j = st_ptr->owner;
     while (true) {
-        st_ptr->owner = (byte)randint0(owner_num);
+        st_ptr->owner = randnum0<uint8_t>(owner_num);
 
         if (j == st_ptr->owner) {
             continue;
         }
 
-        int i;
-        const int towns_size = towns_info.size();
+        size_t i;
         for (i = 1; i < towns_size; i++) {
-            if (i == player_ptr->town_num) {
+            if (i == world.get_town_index()) {
                 continue;
             }
 
-            if (st_ptr->owner == towns_info[i].stores[store_num].owner) {
+            if (st_ptr->owner == towns.get_town(i).get_store(store_num).owner) {
                 break;
             }
         }
@@ -285,15 +304,14 @@ void store_shuffle(PlayerType *player_ptr, StoreSaleType store_num)
     st_ptr->store_open = 0;
     st_ptr->good_buy = 0;
     st_ptr->bad_buy = 0;
-    for (int i = 0; i < st_ptr->stock_num; i++) {
-        ItemEntity *o_ptr;
-        o_ptr = &st_ptr->stock[i];
-        if (o_ptr->is_fixed_or_random_artifact()) {
+    for (auto i = 0; i < st_ptr->stock_num; i++) {
+        auto &item = *st_ptr->stock[i];
+        if (item.is_fixed_or_random_artifact()) {
             continue;
         }
 
-        o_ptr->discount = 50;
-        o_ptr->inscription.emplace(_("売出中", "on sale"));
+        item.discount = 50;
+        item.inscription.emplace(_("売出中", "on sale"));
     }
 }
 
@@ -317,23 +335,25 @@ static void store_create(PlayerType *player_ptr, short fix_k_idx, StoreSaleType 
         return;
     }
 
-    const owner_type *ow_ptr = &owners.at(store_num)[st_ptr->owner];
-
+    const auto &world = AngbandWorld::get_instance();
+    const int bm_boost = 25 + store_level(store_num) / 4;
+    const auto &owner = owners.at(store_num)[st_ptr->owner];
     for (int tries = 0; tries < 4; tries++) {
         short bi_id;
         DEPTH level;
         if (store_num == StoreSaleType::BLACK) {
-            level = 25 + randint0(25);
-            bi_id = get_obj_index(player_ptr->current_floor_ptr, level, 0x00000000);
+            level = bm_boost + randint0(25);
+            level = std::min(128, level);
+            bi_id = player_ptr->current_floor_ptr->select_baseitem_id(level, 0x00000000);
             if (bi_id == 0) {
                 continue;
             }
         } else if (fix_k_idx > 0) {
             bi_id = fix_k_idx;
-            level = rand_range(1, ow_ptr->level);
+            level = rand_range(1, owner.level);
         } else {
             bi_id = rand_choice(st_ptr->table);
-            level = rand_range(1, ow_ptr->level);
+            level = rand_range(1, owner.level);
         }
 
         ItemEntity item(bi_id);
@@ -342,7 +362,7 @@ static void store_create(PlayerType *player_ptr, short fix_k_idx, StoreSaleType 
             continue;
         }
 
-        const auto pvals = store_same_magic_device_pvals(&item);
+        const auto pvals = st_ptr->collect_same_magic_device_pvals(item);
         if (pvals.size() >= 2) {
             auto pval = rand_choice(pvals);
             item.pval = pval;
@@ -361,23 +381,23 @@ static void store_create(PlayerType *player_ptr, short fix_k_idx, StoreSaleType 
         }
 
         item.mark_as_known();
-        item.ident |= IDENT_STORE;
+        item.set_identification_flag(IdentificationFlag::STORE);
         if (tval == ItemKindType::CHEST) {
             continue;
         }
 
         if (store_num == StoreSaleType::BLACK) {
-            if (black_market_crap(player_ptr, &item) || (item.get_price() < 10)) {
+            if (black_market_crap(world.get_town_index(), item) || (item.calc_price() < 10)) {
                 continue;
             }
         } else {
-            if (item.get_price() <= 0) {
+            if (item.calc_price() <= 0) {
                 continue;
             }
         }
 
         mass_produce(&item, store_num);
-        (void)store_carry(&item);
+        (void)st_ptr->carry(item);
         break;
     }
 }
@@ -396,21 +416,28 @@ void store_maintenance(PlayerType *player_ptr, int town_num, StoreSaleType store
         return;
     }
 
-    st_ptr = &towns_info[town_num].stores[store_num];
+    const auto &world = AngbandWorld::get_instance();
+    st_ptr = &TownList::get_instance().get_town(town_num).get_store(store_num);
     ot_ptr = &owners.at(store_num)[st_ptr->owner];
     st_ptr->insult_cur = 0;
     if (store_num == StoreSaleType::BLACK) {
         for (INVENTORY_IDX j = st_ptr->stock_num - 1; j >= 0; j--) {
-            auto *o_ptr = &st_ptr->stock[j];
-            if (black_market_crap(player_ptr, o_ptr)) {
-                store_item_increase(j, 0 - o_ptr->number);
-                store_item_optimize(j);
+            auto &item = *st_ptr->stock[j];
+            if (black_market_crap(world.get_town_index(), item)) {
+                st_ptr->increase_item(j, 0 - item.number);
+                st_ptr->optimize_item(j);
             }
         }
     }
 
-    INVENTORY_IDX j = st_ptr->stock_num;
-    int remain = STORE_TURNOVER + std::max(0, j - STORE_MAX_KEEP);
+    const int level = store_level(store_num);
+    const short store_max_keep = (store_num == StoreSaleType::BLACK) ? STORE_MAX_KEEP * (level + 60) / 20 : STORE_MAX_KEEP;
+    const short store_min_keep = (store_num == StoreSaleType::BLACK) ? STORE_MIN_KEEP * (level + 60) / 20 : STORE_MIN_KEEP;
+    const short store_turnover = (store_num == StoreSaleType::BLACK) ? STORE_TURNOVER * (level + 60) / 20 : STORE_TURNOVER;
+    chance = (store_num == StoreSaleType::BLACK) ? chance * (level + 60) / 20 : chance;
+
+    auto j = st_ptr->stock_num;
+    int remain = store_turnover + std::max(0, j - store_max_keep);
     int turn_over = 1;
     for (int i = 0; i < chance; i++) {
         auto n = randint0(remain);
@@ -419,18 +446,18 @@ void store_maintenance(PlayerType *player_ptr, int town_num, StoreSaleType store
     }
 
     j = j - turn_over;
-    if (j > STORE_MAX_KEEP) {
-        j = STORE_MAX_KEEP;
+    if (j > store_max_keep) {
+        j = store_max_keep;
     }
-    if (j < STORE_MIN_KEEP) {
-        j = STORE_MIN_KEEP;
+    if (j < store_min_keep) {
+        j = store_min_keep;
     }
 
     while (st_ptr->stock_num > j) {
-        store_delete();
+        st_ptr->delete_item();
     }
 
-    remain = STORE_MAX_KEEP - st_ptr->stock_num;
+    remain = store_max_keep - st_ptr->stock_num;
     turn_over = 1;
     for (int i = 0; i < chance; i++) {
         auto n = randint0(remain);
@@ -439,11 +466,11 @@ void store_maintenance(PlayerType *player_ptr, int town_num, StoreSaleType store
     }
 
     j = st_ptr->stock_num + turn_over;
-    if (j > STORE_MAX_KEEP) {
-        j = STORE_MAX_KEEP;
+    if (j > store_max_keep) {
+        j = store_max_keep;
     }
-    if (j < STORE_MIN_KEEP) {
-        j = STORE_MIN_KEEP;
+    if (j < store_min_keep) {
+        j = store_min_keep;
     }
     if (j >= st_ptr->stock_size) {
         j = st_ptr->stock_size - 1;
@@ -451,7 +478,7 @@ void store_maintenance(PlayerType *player_ptr, int town_num, StoreSaleType store
 
     for (size_t k = 0; k < st_ptr->regular.size(); k++) {
         store_create(player_ptr, st_ptr->regular[k], store_num);
-        if (st_ptr->stock_num >= STORE_MAX_KEEP) {
+        if (st_ptr->stock_num >= store_max_keep) {
             break;
         }
     }
@@ -462,29 +489,29 @@ void store_maintenance(PlayerType *player_ptr, int town_num, StoreSaleType store
 }
 
 /*!
- * @brief 店舗情報を初期化する /
- * Initialize the stores
+ * @brief 店舗情報を初期化する
  * @param town_num 町のID
  * @param store_num 店舗種類のID
  */
-void store_init(int town_num, StoreSaleType store_num)
+void store_init(size_t town_num, StoreSaleType store_num)
 {
-    int owner_num = owners.at(store_num).size();
-    st_ptr = &towns_info[town_num].stores[store_num];
-    const int towns_size = towns_info.size();
+    const auto owner_num = owners.at(store_num).size();
+    auto &towns = TownList::get_instance();
+    st_ptr = &towns.get_town(town_num).get_store(store_num);
+    const auto towns_size = towns.size();
     while (true) {
-        st_ptr->owner = (byte)randint0(owner_num);
+        st_ptr->owner = randnum0<uint8_t>(owner_num);
 
         if (owner_num <= towns_size) {
             break;
         }
 
-        int i;
+        size_t i;
         for (i = 1; i < towns_size; i++) {
             if (i == town_num) {
                 continue;
             }
-            if (st_ptr->owner == towns_info[i].stores[store_num].owner) {
+            if (st_ptr->owner == towns.get_town(i).get_store(store_num).owner) {
                 break;
             }
         }
@@ -502,6 +529,6 @@ void store_init(int town_num, StoreSaleType store_num)
     st_ptr->stock_num = 0;
     st_ptr->last_visit = -10L * TURNS_PER_TICK * STORE_TICKS;
     for (int k = 0; k < st_ptr->stock_size; k++) {
-        (&st_ptr->stock[k])->wipe();
+        st_ptr->stock[k]->wipe();
     }
 }

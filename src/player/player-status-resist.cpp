@@ -20,8 +20,8 @@
 #include "spell-realm/spells-hex.h"
 #include "status/element-resistance.h"
 #include "sv-definition/sv-weapon-types.h"
-#include "system/floor-type-definition.h"
-#include "system/item-entity.h"
+#include "system/floor/floor-info.h"
+#include "system/item/item-entity.h"
 #include "system/monster-entity.h"
 #include "system/player-type-definition.h"
 #include "util/bit-flags-calculator.h"
@@ -239,6 +239,10 @@ PERCENTAGE calc_deathray_damage_rate(PlayerType *player_ptr, rate_calc_type_mode
 PERCENTAGE calc_lite_damage_rate(PlayerType *player_ptr, rate_calc_type_mode mode)
 {
     PERCENTAGE per = 100;
+
+    if (has_immune_lite(player_ptr)) {
+        return 0;
+    }
 
     PlayerRace race(player_ptr);
 

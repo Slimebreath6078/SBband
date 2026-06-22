@@ -10,6 +10,7 @@
 #include "load/savedata-old-flag-types.h"
 #include "load/world-loader.h"
 #include "market/arena-entry.h"
+#include "mind/mind-elementalist.h"
 #include "monster-race/race-ability-flags.h"
 #include "mutation/mutation-calculator.h"
 #include "object/tval-types.h"
@@ -23,8 +24,8 @@
 #include "system/angband-exceptions.h"
 #include "system/angband-system.h"
 #include "system/building-type-definition.h"
-#include "system/dungeon-info.h"
-#include "system/floor-type-definition.h"
+#include "system/dungeon/dungeon-definition.h"
+#include "system/floor/floor-info.h"
 #include "system/inner-game-data.h"
 #include "system/player-type-definition.h"
 #include "timed-effect/timed-effects.h"
@@ -40,7 +41,7 @@ static void rd_realms(PlayerType *player_ptr)
     pr.reset();
 
     if (PlayerClass(player_ptr).equals(PlayerClassType::ELEMENTALIST)) {
-        player_ptr->element = rd_byte();
+        player_ptr->element_realm = i2enum<ElementRealmType>(rd_byte());
         (void)rd_byte();
         return;
     }
@@ -183,7 +184,7 @@ void rd_bounty_uniques(PlayerType *player_ptr)
         auto monrace_id = rd_s16b();
         is_achieved = rd_bool();
 
-        bounty_monrace_id = i2enum<MonsterRaceId>(monrace_id);
+        bounty_monrace_id = i2enum<MonraceId>(monrace_id);
     }
 }
 
@@ -225,7 +226,8 @@ static void rd_arena(PlayerType *player_ptr)
         set_gambling_monsters();
     }
 
-    player_ptr->town_num = rd_s16b();
+    auto &world = AngbandWorld::get_instance();
+    world.set_town_index(rd_s16b());
     auto &entries = ArenaEntryList::get_instance();
     entries.load_current_entry(rd_s16b());
     if (h_older_than(1, 5, 0, 1)) {
@@ -238,13 +240,13 @@ static void rd_arena(PlayerType *player_ptr)
     }
 
     rd_phase_out(player_ptr);
-    AngbandWorld::get_instance().set_arena(rd_bool());
+    world.set_arena(rd_bool());
     strip_bytes(1);
 
     player_ptr->oldpx = rd_s16b();
     player_ptr->oldpy = rd_s16b();
     const auto &floor = *player_ptr->current_floor_ptr;
-    if (h_older_than(0, 3, 13) && !floor.is_in_underground() && !floor.inside_arena) {
+    if (h_older_than(0, 3, 13) && !floor.is_underground() && !floor.inside_arena) {
         player_ptr->oldpy = 33;
         player_ptr->oldpx = 131;
     }
@@ -326,7 +328,7 @@ static void rd_status(PlayerType *player_ptr)
     effects->stun().set(rd_s16b());
     effects->poison().set(rd_s16b());
     effects->hallucination().set(rd_s16b());
-    player_ptr->protevil = rd_s16b();
+    effects->protection().set(rd_s16b());
     player_ptr->invuln = rd_s16b();
     if (h_older_than(0, 0, 0)) {
         player_ptr->ult_res = 0;
@@ -363,6 +365,15 @@ static void set_timed_effects(PlayerType *player_ptr)
     }
 
     player_ptr->tim_res_nether = rd_s16b();
+
+    if (h_older_than(3, 0, 1, 29)) {
+        set_zangband_tim_res(player_ptr);
+    } else {
+        player_ptr->tim_res_lite = rd_s16b();
+        player_ptr->tim_res_dark = rd_s16b();
+        player_ptr->tim_res_fear = rd_s16b();
+    }
+
     if (h_older_than(0, 4, 11)) {
         set_zangband_mimic(player_ptr);
     } else {
@@ -386,6 +397,14 @@ static void set_timed_effects(PlayerType *player_ptr)
         player_ptr->tim_reflect = rd_s16b();
         player_ptr->multishadow = rd_s16b();
         player_ptr->dustrobe = rd_s16b();
+    }
+
+    if (h_older_than(3, 0, 1, 29)) {
+        set_zangband_tim_crusade(player_ptr);
+    } else {
+        player_ptr->tim_emission = rd_s16b();
+        player_ptr->tim_exorcism = rd_s16b();
+        player_ptr->tim_imm_dark = rd_s16b();
     }
 }
 
@@ -439,7 +458,7 @@ static void rd_player_status(PlayerType *player_ptr)
     rd_energy(player_ptr);
     rd_status(player_ptr);
     player_ptr->hero = rd_s16b();
-    player_ptr->shero = rd_s16b();
+    player_ptr->berserk = rd_s16b();
     player_ptr->shield = rd_s16b();
     player_ptr->blessed = rd_s16b();
     player_ptr->tim_invis = rd_s16b();

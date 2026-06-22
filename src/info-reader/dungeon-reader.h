@@ -1,8 +1,5 @@
 #pragma once
 
-#include "system/angband.h"
-#include <string_view>
+#include <nlohmann/json.hpp>
 
-struct angband_header;
-errr parse_dungeons_info(std::string_view buf, angband_header *head);
-void retouch_dungeons_info();
+int parse_dungeons_info(nlohmann::json &element);

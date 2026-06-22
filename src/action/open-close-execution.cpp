@@ -10,26 +10,24 @@
 #include "combat/attack-power-table.h"
 #include "game-option/disturbance-options.h"
 #include "game-option/input-options.h"
-#include "grid/feature.h"
 #include "grid/grid.h"
 #include "grid/trap.h"
 #include "main/sound-definitions-table.h"
 #include "main/sound-of-music.h"
-#include "perception/object-perception.h"
 #include "player-base/player-class.h"
 #include "player-status/player-energy.h"
 #include "player/player-status-table.h"
 #include "specific-object/chest.h"
 #include "status/bad-status-setter.h"
 #include "status/experience.h"
-#include "system/floor-type-definition.h"
+#include "system/dungeon/dungeon-definition.h"
+#include "system/floor/floor-info.h"
 #include "system/grid-type-definition.h"
-#include "system/item-entity.h"
-#include "system/player-type-definition.h"
-#include "system/terrain-type-definition.h"
+#include "system/item/item-entity.h"
+#include "system/terrain/terrain-definition.h"
+#include "system/terrain/terrain-list.h"
 #include "term/screen-processor.h"
 #include "timed-effect/timed-effects.h"
-#include "util/bit-flags-calculator.h"
 #include "view/display-messages.h"
 
 /*!
@@ -47,13 +45,13 @@ bool exe_open(PlayerType *player_ptr, POSITION y, POSITION x)
     PlayerEnergy(player_ptr).set_player_turn_energy(100);
     if (terrain.flags.has_not(TerrainCharacteristics::OPEN)) {
         constexpr auto fmt = _("%sはがっちりと閉じられているようだ。", "The %s appears to be stuck.");
-        msg_format(fmt, grid.get_terrain_mimic().name.data());
+        msg_format(fmt, grid.get_terrain(TerrainKind::MIMIC).name.data());
         return false;
     }
 
-    if (!terrain.power) {
+    if (!terrain.door_power) {
         cave_alter_feat(player_ptr, y, x, TerrainCharacteristics::OPEN);
-        sound(SOUND_OPENDOOR);
+        sound(SoundKind::OPENDOOR);
         return false;
     }
 
@@ -67,7 +65,7 @@ bool exe_open(PlayerType *player_ptr, POSITION y, POSITION x)
         i = i / 10;
     }
 
-    int j = terrain.power;
+    int j = terrain.door_power;
     j = i - (j * 4);
     if (j < 2) {
         j = 2;
@@ -84,7 +82,7 @@ bool exe_open(PlayerType *player_ptr, POSITION y, POSITION x)
 
     msg_print(_("鍵をはずした。", "You have picked the lock."));
     cave_alter_feat(player_ptr, y, x, TerrainCharacteristics::OPEN);
-    sound(SOUND_OPENDOOR);
+    sound(SoundKind::OPENDOOR);
     gain_exp(player_ptr, 1);
     return false;
 }
@@ -101,10 +99,10 @@ bool exe_open(PlayerType *player_ptr, POSITION y, POSITION x)
  * Returns TRUE if repeated commands may continue
  * @todo 常にFALSEを返している
  */
-bool exe_close(PlayerType *player_ptr, POSITION y, POSITION x)
+bool exe_close(PlayerType *player_ptr, const Pos2D &pos)
 {
-    const Pos2D pos(y, x);
-    const auto &grid = player_ptr->current_floor_ptr->get_grid(pos);
+    const auto &floor = *player_ptr->current_floor_ptr;
+    const auto &grid = floor.get_grid(pos);
     const auto terrain_id = grid.feat;
     auto more = false;
     PlayerEnergy(player_ptr).set_player_turn_energy(100);
@@ -112,7 +110,7 @@ bool exe_close(PlayerType *player_ptr, POSITION y, POSITION x)
         return more;
     }
 
-    const auto closed_feat = feat_state(player_ptr->current_floor_ptr, terrain_id, TerrainCharacteristics::CLOSE);
+    const auto closed_feat = floor.get_dungeon_definition().convert_terrain_id(terrain_id, TerrainCharacteristics::CLOSE);
     auto is_preventing = !grid.o_idx_list.empty() || grid.is_object();
     is_preventing &= closed_feat != terrain_id;
     is_preventing &= TerrainList::get_instance().get_terrain(closed_feat).flags.has_not(TerrainCharacteristics::DROP);
@@ -121,11 +119,11 @@ bool exe_close(PlayerType *player_ptr, POSITION y, POSITION x)
         return more;
     }
 
-    cave_alter_feat(player_ptr, y, x, TerrainCharacteristics::CLOSE);
+    cave_alter_feat(player_ptr, pos.y, pos.x, TerrainCharacteristics::CLOSE);
     if (terrain_id == grid.feat) {
         msg_print(_("ドアは壊れてしまっている。", "The door appears to be broken."));
     } else {
-        sound(SOUND_SHUTDOOR);
+        sound(SoundKind::SHUTDOOR);
     }
 
     return more;
@@ -145,19 +143,19 @@ bool exe_close(PlayerType *player_ptr, POSITION y, POSITION x)
  *	do_cmd_open_test() and exe_open().
  * </pre>
  */
-bool easy_open_door(PlayerType *player_ptr, POSITION y, POSITION x)
+bool easy_open_door(PlayerType *player_ptr, const Pos2D &pos)
 {
-    const Pos2D pos(y, x);
-    const auto &grid = player_ptr->current_floor_ptr->get_grid(pos);
-    const auto &terrain = grid.get_terrain();
-    if (!is_closed_door(player_ptr, grid.feat)) {
+    const auto &floor = *player_ptr->current_floor_ptr;
+    if (!floor.has_closed_door_at(pos)) {
         return false;
     }
 
+    const auto &grid = floor.get_grid(pos);
+    const auto &terrain = grid.get_terrain();
     if (terrain.flags.has_not(TerrainCharacteristics::OPEN)) {
         constexpr auto fmt = _("%sはがっちりと閉じられているようだ。", "The %s appears to be stuck.");
-        msg_format(fmt, grid.get_terrain_mimic().name.data());
-    } else if (terrain.power) {
+        msg_format(fmt, grid.get_terrain(TerrainKind::MIMIC).name.data());
+    } else if (terrain.door_power) {
         auto power_disarm = player_ptr->skill_dis;
         const auto effects = player_ptr->effects();
         if (effects->blindness().is_blind() || no_lite(player_ptr)) {
@@ -168,7 +166,7 @@ bool easy_open_door(PlayerType *player_ptr, POSITION y, POSITION x)
             power_disarm = power_disarm / 10;
         }
 
-        auto power_terrain = terrain.power;
+        int power_terrain = terrain.door_power;
         power_terrain = power_disarm - (power_terrain * 4);
         if (power_terrain < 2) {
             power_terrain = 2;
@@ -176,8 +174,8 @@ bool easy_open_door(PlayerType *player_ptr, POSITION y, POSITION x)
 
         if (evaluate_percent(power_terrain)) {
             msg_print(_("鍵をはずした。", "You have picked the lock."));
-            cave_alter_feat(player_ptr, y, x, TerrainCharacteristics::OPEN);
-            sound(SOUND_OPENDOOR);
+            cave_alter_feat(player_ptr, pos.y, pos.x, TerrainCharacteristics::OPEN);
+            sound(SoundKind::OPENDOOR);
             gain_exp(player_ptr, 1);
         } else {
             if (flush_failure) {
@@ -187,8 +185,8 @@ bool easy_open_door(PlayerType *player_ptr, POSITION y, POSITION x)
             msg_print(_("鍵をはずせなかった。", "You failed to pick the lock."));
         }
     } else {
-        cave_alter_feat(player_ptr, y, x, TerrainCharacteristics::OPEN);
-        sound(SOUND_OPENDOOR);
+        cave_alter_feat(player_ptr, pos.y, pos.x, TerrainCharacteristics::OPEN);
+        sound(SoundKind::OPENDOOR);
     }
 
     return true;
@@ -211,7 +209,7 @@ bool easy_open_door(PlayerType *player_ptr, POSITION y, POSITION x)
 bool exe_disarm_chest(PlayerType *player_ptr, POSITION y, POSITION x, OBJECT_IDX o_idx)
 {
     const Pos2D pos(y, x);
-    auto *o_ptr = &player_ptr->current_floor_ptr->o_list[o_idx];
+    auto *o_ptr = player_ptr->current_floor_ptr->o_list[o_idx].get();
     PlayerEnergy(player_ptr).set_player_turn_energy(100);
     int i = player_ptr->skill_dis;
     const auto effects = player_ptr->effects();
@@ -248,7 +246,7 @@ bool exe_disarm_chest(PlayerType *player_ptr, POSITION y, POSITION x, OBJECT_IDX
         msg_print(_("箱のトラップ解除に失敗した。", "You failed to disarm the chest."));
     } else {
         msg_print(_("トラップを作動させてしまった！", "You set off a trap!"));
-        sound(SOUND_FAIL);
+        sound(SoundKind::FAIL);
         Chest(player_ptr).fire_trap(pos, o_idx);
     }
 
@@ -260,7 +258,7 @@ bool exe_disarm_chest(PlayerType *player_ptr, POSITION y, POSITION x, OBJECT_IDX
  * Perform the basic "disarm" command
  * @param y 解除を行うマスのY座標
  * @param x 解除を行うマスのX座標
- * @param dir プレイヤーからみた方向ID
+ * @param dir プレイヤーからみた方向
  * @return ターンを消費する処理が行われた場合TRUEを返す
  * @details
  * <pre>
@@ -270,13 +268,13 @@ bool exe_disarm_chest(PlayerType *player_ptr, POSITION y, POSITION x, OBJECT_IDX
  * </pre>
  */
 
-bool exe_disarm(PlayerType *player_ptr, POSITION y, POSITION x, DIRECTION dir)
+bool exe_disarm(PlayerType *player_ptr, POSITION y, POSITION x, const Direction &dir)
 {
     const Pos2D pos(y, x);
     const auto &grid = player_ptr->current_floor_ptr->get_grid(pos);
     const auto &terrain = grid.get_terrain();
     const auto &name = terrain.name;
-    int power = terrain.power;
+    int power = terrain.trap_power;
     int i = player_ptr->skill_dis;
     PlayerEnergy(player_ptr).set_player_turn_energy(100);
     auto effects = player_ptr->effects();
@@ -319,7 +317,7 @@ bool exe_disarm(PlayerType *player_ptr, POSITION y, POSITION x, DIRECTION dir)
  * Perform the basic "bash" command
  * @param y 対象を行うマスのY座標
  * @param x 対象を行うマスのX座標
- * @param dir プレイヤーから見たターゲットの方角ID
+ * @param dir プレイヤーから見たターゲットの方向
  * @return 実際に処理が行われた場合TRUEを返す。
  * @details
  * <pre>
@@ -328,15 +326,15 @@ bool exe_disarm(PlayerType *player_ptr, POSITION y, POSITION x, DIRECTION dir)
  * Returns TRUE if repeated commands may continue
  * </pre>
  */
-bool exe_bash(PlayerType *player_ptr, POSITION y, POSITION x, DIRECTION dir)
+bool exe_bash(PlayerType *player_ptr, POSITION y, POSITION x, const Direction &dir)
 {
     const auto &floor = *player_ptr->current_floor_ptr;
     const Pos2D pos(y, x);
     const auto &grid = floor.get_grid(pos);
     const auto &terrain = grid.get_terrain();
     int bash = adj_str_blow[player_ptr->stat_index[A_STR]];
-    int power = terrain.power;
-    const auto &name = grid.get_terrain_mimic().name;
+    int power = terrain.door_power;
+    const auto &name = grid.get_terrain(TerrainKind::MIMIC).name;
     PlayerEnergy(player_ptr).set_player_turn_energy(100);
     msg_format(_("%sに体当たりをした！", "You smash into the %s!"), name.data());
     power = (bash - (power * 10));
@@ -351,8 +349,9 @@ bool exe_bash(PlayerType *player_ptr, POSITION y, POSITION x, DIRECTION dir)
     auto more = false;
     if (evaluate_percent(power)) {
         msg_format(_("%sを壊した！", "The %s crashes open!"), name.data());
-        sound(terrain.flags.has(TerrainCharacteristics::GLASS) ? SOUND_GLASS : SOUND_OPENDOOR);
-        if (one_in_(2) || (feat_state(player_ptr->current_floor_ptr, grid.feat, TerrainCharacteristics::OPEN) == grid.feat) || terrain.flags.has(TerrainCharacteristics::GLASS)) {
+        sound(terrain.flags.has(TerrainCharacteristics::GLASS) ? SoundKind::GLASS : SoundKind::OPENDOOR);
+        const auto &dungeon = floor.get_dungeon_definition();
+        if (one_in_(2) || (dungeon.convert_terrain_id(grid.feat, TerrainCharacteristics::OPEN) == grid.feat) || terrain.flags.has(TerrainCharacteristics::GLASS)) {
             cave_alter_feat(player_ptr, y, x, TerrainCharacteristics::BASH);
         } else {
             cave_alter_feat(player_ptr, y, x, TerrainCharacteristics::OPEN);

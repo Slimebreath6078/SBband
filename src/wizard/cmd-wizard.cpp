@@ -22,9 +22,9 @@
 #include "spell-kind/spells-teleport.h"
 #include "spell/spells-status.h"
 #include "status/experience.h"
-#include "system/floor-type-definition.h"
+#include "system/floor/floor-info.h"
 #include "system/grid-type-definition.h"
-#include "system/item-entity.h"
+#include "system/item/item-entity.h"
 #include "system/player-type-definition.h"
 #include "term/screen-processor.h"
 #include "util/int-char-converter.h"
@@ -36,6 +36,7 @@
 #include "wizard/wizard-spells.h"
 #include "wizard/wizard-spoiler.h"
 #include <algorithm>
+#include <range/v3/view.hpp>
 #include <sstream>
 #include <string>
 #include <tuple>
@@ -205,13 +206,13 @@ bool exe_cmd_debug(PlayerType *player_ptr, char cmd)
         map_area(player_ptr, DETECT_RAD_ALL * 3);
         return true;
     case 'n':
-        wiz_summon_specific_monster(player_ptr, i2enum<MonsterRaceId>(command_arg));
+        wiz_summon_specific_monster(player_ptr, i2enum<MonraceId>(command_arg));
         return true;
     case 'N':
-        wiz_summon_pet(player_ptr, i2enum<MonsterRaceId>(command_arg));
+        wiz_summon_pet(player_ptr, i2enum<MonraceId>(command_arg));
         return true;
     case KTRL('N'):
-        wiz_summon_clone(player_ptr, i2enum<MonsterRaceId>(command_arg));
+        wiz_summon_clone(player_ptr, i2enum<MonraceId>(command_arg));
         return true;
     case 'o':
         wiz_modify_item(player_ptr);
@@ -239,15 +240,15 @@ bool exe_cmd_debug(PlayerType *player_ptr, char cmd)
     case 't':
         teleport_player(player_ptr, 100, TELEPORT_SPONTANEOUS);
         return true;
-    case 'u':
-        for (int y = 0; y < player_ptr->current_floor_ptr->height; y++) {
-            for (int x = 0; x < player_ptr->current_floor_ptr->width; x++) {
-                player_ptr->current_floor_ptr->grid_array[y][x].info |= CAVE_GLOW | CAVE_MARK;
-            }
+    case 'u': {
+        auto &floor = *player_ptr->current_floor_ptr;
+        for (const auto &pos : floor.get_area()) {
+            floor.get_grid(pos).info |= CAVE_GLOW | CAVE_MARK;
         }
 
         wiz_lite(player_ptr, false);
         return true;
+    }
     case 'w':
         wiz_lite(player_ptr, PlayerClass(player_ptr).equals(PlayerClassType::NINJA));
         return true;
@@ -255,9 +256,9 @@ bool exe_cmd_debug(PlayerType *player_ptr, char cmd)
         gain_exp(player_ptr, command_arg ? command_arg : (player_ptr->exp + 1));
         return true;
     case 'X':
-        for (INVENTORY_IDX i = INVEN_TOTAL - 1; i >= 0; i--) {
-            if (player_ptr->inventory_list[i].is_valid()) {
-                drop_from_inventory(player_ptr, i, 999);
+        for (const auto i_idx : INVEN_ALL_SLOTS | ranges::views::reverse) {
+            if (player_ptr->inventory[i_idx]->is_valid()) {
+                drop_from_inventory(player_ptr, i_idx, 999);
             }
         }
 

@@ -5,15 +5,14 @@
  * @details PlayerRaceからPlayerClassへの依存はあるが、逆は依存させないこと.
  */
 #include "player-base/player-race.h"
-#include "grid/feature-flag-types.h"
 #include "player-base/player-class.h"
 #include "player-info/mimic-info-table.h"
 #include "player/race-info-table.h"
 #include "system/angband-exceptions.h"
-#include "system/floor-type-definition.h"
+#include "system/floor/floor-info.h"
 #include "system/grid-type-definition.h"
 #include "system/player-type-definition.h"
-#include "system/terrain-type-definition.h"
+#include "system/terrain/terrain-definition.h"
 #include "util/bit-flags-calculator.h"
 
 /*!
@@ -78,6 +77,8 @@ const player_race_info *PlayerRace::get_info() const
     case MimicKindType::DEMON:
     case MimicKindType::DEMON_LORD:
     case MimicKindType::VAMPIRE:
+    case MimicKindType::ANGEL:
+    case MimicKindType::DEMIGOD:
         return &mimic_info.at(this->player_ptr->mimic_form);
     default:
         THROW_EXCEPTION(std::logic_error, "Invalid MimicKindType was specified!");
@@ -167,6 +168,10 @@ int16_t PlayerRace::speed() const
         return result + 5;
     case MimicKindType::VAMPIRE:
         return result + 3;
+    case MimicKindType::ANGEL:
+        return result + 3;
+    case MimicKindType::DEMIGOD:
+        return result + 5;
     default:
         THROW_EXCEPTION(std::logic_error, "Invalid MimicKindType was specified!");
     }

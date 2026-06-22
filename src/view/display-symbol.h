@@ -39,6 +39,16 @@ public:
     {
         return this->character != '\0';
     }
+
+    bool is_ascii_graphics() const
+    {
+        return this->color < 0x80;
+    }
+
+    bool matches_character(char other_character) const
+    {
+        return this->character == other_character;
+    }
 };
 
 class DisplaySymbolPair {

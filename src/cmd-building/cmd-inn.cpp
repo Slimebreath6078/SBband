@@ -5,6 +5,7 @@
 #include "io/write-diary.h"
 #include "market/bounty.h"
 #include "market/building-actions-table.h"
+#include "object/tval-types.h"
 #include "player-base/player-class.h"
 #include "player-base/player-race.h"
 #include "player-info/magic-eater-data-type.h"
@@ -12,6 +13,8 @@
 #include "player-info/race-types.h"
 #include "player/digestion-processor.h"
 #include "player/eldritch-horror.h"
+#include "rumor/rumor-rarity.h"
+#include "rumor/rumor-service.h"
 #include "status/bad-status-setter.h"
 #include "store/rumor.h"
 #include "system/inner-game-data.h"
@@ -50,7 +53,7 @@ static bool is_healthy_stay(PlayerType *player_ptr)
     }
 
     msg_print(_("あなたに必要なのは部屋ではなく、治療者です。", "You need a healer, not a room."));
-    msg_print(nullptr);
+    msg_erase();
     msg_print(_("すみません、でもうちで誰かに死なれちゃ困りますんで。", "Sorry, but I don't want anyone dying in here."));
     return false;
 }
@@ -92,7 +95,7 @@ static bool has_a_nightmare(PlayerType *player_ptr)
     msg_print(_("眠りに就くと恐ろしい光景が心をよぎった。", "Horrible visions flit through your mind as you sleep."));
 
     while (true) {
-        sanity_blast(player_ptr, nullptr, false);
+        sanity_blast(player_ptr);
         if (!one_in_(3)) {
             break;
         }
@@ -123,7 +126,7 @@ static void back_to_health(PlayerType *player_ptr)
  */
 static void charge_magic_eating_energy(PlayerType *player_ptr)
 {
-    auto magic_eater_data = PlayerClass(player_ptr).get_specific_data<magic_eater_data_type>();
+    auto magic_eater_data = PlayerClass(player_ptr).get_specific_data<MagicEaterDataList>();
     if (!magic_eater_data) {
         return;
     }
@@ -179,7 +182,7 @@ static bool stay_inn(PlayerType *player_ptr)
     world.pass_game_turn_by_stay();
     prevent_turn_overflow(player_ptr);
     if ((prev_hour >= 18) && (prev_hour <= 23)) {
-        determine_daily_bounty(player_ptr, false); /* Update daily bounty */
+        determine_daily_bounty(player_ptr);
         exe_write_diary(*player_ptr->current_floor_ptr, DiaryKind::DIALY, 0);
     }
 
@@ -199,26 +202,37 @@ static bool stay_inn(PlayerType *player_ptr)
  * @brief 宿屋を利用する
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param cmd 宿屋の利用施設ID
+ * @param cost 噂を聞くのに払った金額
  * @return 施設の利用が実際に行われたらTRUE
- * @details inn commands
- * Note that resting for the night was a perfect way to avoid player
- * ghosts in the town *if* you could only make it to the inn in time (-:
- * Now that the ghosts are temporarily disabled in 2.8.X, this function
- * will not be that useful.  I will keep it in the hopes the player
- * ghost code does become a reality again. Does help to avoid filthy urchins.
- * Resting at night is also a quick way to restock stores -KMW-
  * @todo 悪夢を見る前後に全回復しているが、何か意図がある？
  */
-bool inn_comm(PlayerType *player_ptr, int cmd)
+bool inn_comm(PlayerType *player_ptr, int cmd, int cost)
 {
     switch (cmd) {
     case BACT_FOOD:
         return buy_food(player_ptr);
     case BACT_REST:
         return stay_inn(player_ptr);
-    case BACT_RUMORS:
-        display_rumor(player_ptr, true);
+    case BACT_RUMORS: {
+        constexpr auto high_rarity_rumor_threshold = 100;
+        if (cost >= high_rarity_rumor_threshold) {
+            const auto &rumor = RumorService::pick_rumor(RumorRarity::HIGH);
+            display_selected_rumor(rumor);
+            return true;
+        }
+
+        constexpr auto medium_rarity_rumor_threshold = 10;
+        if (cost >= medium_rarity_rumor_threshold) {
+            const auto &rumor = RumorService::pick_rumor(RumorRarity::MEDIUM);
+            display_selected_rumor(rumor);
+            return true;
+        }
+
+        // V3.2.0.4時点で1～9$を取られる宿屋の噂はなく、デッドコード.
+        const auto &rumor = RumorService::pick_rumor(RumorRarity::LOW);
+        display_selected_rumor(rumor);
         return true;
+    }
     default:
         //!< @todo リファクタリング前のコードもTRUEだった、FALSEにすべきでは.
         return true;

@@ -2,12 +2,12 @@
 #include "flavor/flavor-describer.h"
 #include "flavor/object-flavor-types.h"
 #include "io/files-util.h"
-#include "object-enchant/special-object-flags.h"
 #include "object-enchant/trg-types.h"
 #include "object/object-value.h"
 #include "system/angband-system.h"
-#include "system/baseitem-info.h"
-#include "system/item-entity.h"
+#include "system/baseitem/baseitem-definition.h"
+#include "system/baseitem/baseitem-list.h"
+#include "system/item/item-entity.h"
 #include "system/player-type-definition.h"
 #include "term/z-form.h"
 #include "util/angband-files.h"
@@ -24,8 +24,8 @@
  */
 static std::pair<DEPTH, PRICE> get_info(const ItemEntity &item)
 {
-    const auto level = item.get_baseitem().level;
-    const auto price = item.get_price();
+    const auto level = item.get_baseitem_level();
+    const auto price = item.calc_price();
     return { level, price };
 }
 
@@ -102,7 +102,7 @@ static std::string describe_weight(const ItemEntity &item)
 static ItemEntity prepare_item_for_obj_desc(short bi_id)
 {
     ItemEntity item(bi_id);
-    item.ident |= IDENT_KNOWN;
+    item.set_identification_flag(IdentificationFlag::KNOWN);
     switch (item.bi_key.tval()) {
     case ItemKindType::FIGURINE:
     case ItemKindType::STATUE:
@@ -136,12 +136,14 @@ SpoilerOutputResultType spoil_obj_desc()
     ofs << format("%-37s%8s%7s%5s %40s%9s\n", "Description", "Dam/AC", "Wgt", "Lev", "Chance", "Cost");
     ofs << format("%-37s%8s%7s%5s %40s%9s\n", "-------------------------------------", "------", "---", "---", "----------------", "----");
 
+    const auto &baseitems = BaseitemList::get_instance();
     for (const auto &[tval_list, name] : group_item_list) {
         std::vector<short> whats;
         for (auto tval : tval_list) {
-            for (const auto &baseitem : BaseitemList::get_instance()) {
+            for (short bi_id = 0; bi_id < static_cast<short>(baseitems.size()); bi_id++) {
+                const auto &baseitem = baseitems.get_baseitem(bi_id);
                 if ((baseitem.bi_key.tval() == tval) && baseitem.gen_flags.has_not(ItemGenerationTraitType::INSTA_ART)) {
-                    whats.push_back(baseitem.idx);
+                    whats.push_back(bi_id);
                 }
             }
         }
@@ -162,7 +164,7 @@ SpoilerOutputResultType spoil_obj_desc()
         for (const auto &bi_id : whats) {
             PlayerType dummy;
             const auto item = prepare_item_for_obj_desc(bi_id);
-            const auto item_name = describe_flavor(&dummy, &item, OD_NAME_ONLY | OD_STORE);
+            const auto item_name = describe_flavor(&dummy, item, OD_NAME_ONLY | OD_STORE);
             const auto &[depth, price] = get_info(item);
             const auto dam_or_ac = describe_dam_or_ac(item);
             const auto weight = describe_weight(item);

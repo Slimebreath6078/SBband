@@ -10,9 +10,14 @@
 #include "main/sound-definitions-table.h"
 #include "main/sound-of-music.h"
 #include "system/angband-system.h"
-#include "system/dungeon-info.h"
-#include "system/floor-type-definition.h"
-#include "system/monster-race-info.h"
+#include "system/dungeon/dungeon-definition.h"
+#include "system/dungeon/dungeon-record.h"
+#include "system/dungeon/quest-definition.h"
+#include "system/dungeon/quest-list.h"
+#include "system/enums/dungeon/dungeon-id.h"
+#include "system/floor/floor-info.h"
+#include "system/floor/wilderness-grid.h"
+#include "system/monrace/monrace-definition.h"
 #include "system/player-type-definition.h"
 #include "system/redrawing-flags-updater.h"
 #include "util/enum-range.h"
@@ -27,7 +32,7 @@ void check_random_quest_auto_failure(PlayerType *player_ptr)
 {
     auto &quests = QuestList::get_instance();
     const auto &floor = *player_ptr->current_floor_ptr;
-    if (floor.dungeon_idx != DUNGEON_ANGBAND) {
+    if (floor.dungeon_id != DungeonId::ANGBAND) {
         return;
     }
 
@@ -43,8 +48,8 @@ void check_random_quest_auto_failure(PlayerType *player_ptr)
 
         quest.status = QuestStatusType::FAILED;
         quest.complev = (byte)player_ptr->lev;
-        world.update_playtime();
-        quest.comptime = world.play_time;
+        world.play_time.update();
+        quest.comptime = world.play_time.elapsed_sec();
         quest.get_bounty().misc_flags.reset(MonsterMiscType::QUESTOR);
     }
 }
@@ -75,10 +80,10 @@ void execute_recall(PlayerType *player_ptr)
 
     disturb(player_ptr, false, true);
     auto &floor = *player_ptr->current_floor_ptr;
-    if (floor.dun_level || floor.is_in_quest() || player_ptr->enter_dungeon) {
+    if (floor.is_underground() || floor.is_in_quest() || floor.is_entering_dungeon()) {
         msg_print(_("上に引っ張りあげられる感じがする！", "You feel yourself yanked upwards!"));
-        if (floor.dungeon_idx) {
-            player_ptr->recall_dungeon = floor.dungeon_idx;
+        if (floor.is_underground()) {
+            player_ptr->recall_dungeon = floor.dungeon_id;
         }
         if (record_stair) {
             exe_write_diary(floor, DiaryKind::RECALL, floor.dun_level);
@@ -90,7 +95,7 @@ void execute_recall(PlayerType *player_ptr)
         leave_tower_check(player_ptr);
         floor.quest_number = QuestId::NONE;
         player_ptr->leaving = true;
-        sound(SOUND_TPLEVEL);
+        sound(SoundKind::TPLEVEL);
         return;
     }
 
@@ -100,11 +105,11 @@ void execute_recall(PlayerType *player_ptr)
         exe_write_diary(floor, DiaryKind::RECALL, floor.dun_level);
     }
 
-    floor.dun_level = max_dlv[floor.dungeon_idx];
-    if (floor.dun_level < 1) {
+    floor.dun_level = DungeonRecords::get_instance().get_record(floor.dungeon_id).get_max_level();
+    if (!floor.is_underground()) {
         floor.dun_level = 1;
     }
-    if (ironman_nightmare && !randint0(666) && (floor.dungeon_idx == DUNGEON_ANGBAND)) {
+    if (ironman_nightmare && !randint0(666) && (floor.dungeon_id == DungeonId::ANGBAND)) {
         if (floor.dun_level < 50) {
             floor.dun_level *= 2;
         } else if (floor.dun_level < 99) {
@@ -116,8 +121,7 @@ void execute_recall(PlayerType *player_ptr)
 
     auto &world = AngbandWorld::get_instance();
     if (world.is_wild_mode()) {
-        player_ptr->wilderness_y = player_ptr->y;
-        player_ptr->wilderness_x = player_ptr->x;
+        WildernessGrids::get_instance().set_player_position(player_ptr->get_position());
     } else {
         player_ptr->oldpx = player_ptr->x;
         player_ptr->oldpy = player_ptr->y;
@@ -133,7 +137,7 @@ void execute_recall(PlayerType *player_ptr)
     player_ptr->leaving = true;
 
     check_random_quest_auto_failure(player_ptr);
-    sound(SOUND_TPLEVEL);
+    sound(SoundKind::TPLEVEL);
 }
 
 /*!
@@ -159,7 +163,7 @@ void execute_floor_reset(PlayerType *player_ptr)
     }
 
     disturb(player_ptr, false, true);
-    if (!inside_quest(floor.get_quest_id()) && floor.dun_level) {
+    if (!inside_quest(floor.get_quest_id()) && floor.is_underground()) {
         msg_print(_("世界が変わった！", "The world changes!"));
         FloorChangeModesStore::get_instace()->set(FloorChangeMode::FIRST_FLOOR);
         player_ptr->leaving = true;
@@ -167,5 +171,5 @@ void execute_floor_reset(PlayerType *player_ptr)
         msg_print(_("世界が少しの間変化したようだ。", "The world seems to change for a moment!"));
     }
 
-    sound(SOUND_TPLEVEL);
+    sound(SoundKind::TPLEVEL);
 }

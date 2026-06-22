@@ -6,33 +6,26 @@
 
 #include "monster-attack/monster-eating.h"
 #include "avatar/avatar.h"
-#include "core/window-redrawer.h"
 #include "flavor/flavor-describer.h"
 #include "flavor/object-flavor-types.h"
 #include "inventory/inventory-object.h"
-#include "inventory/inventory-slot-types.h"
 #include "mind/mind-mirror-master.h"
 #include "monster-attack/monster-attack-player.h"
-#include "monster/monster-status.h"
 #include "object/object-info.h"
-#include "object/object-mark-types.h"
 #include "player-base/player-race.h"
 #include "player-info/race-info.h"
 #include "player/digestion-processor.h"
 #include "player/player-status-flags.h"
 #include "player/player-status-table.h"
 #include "status/experience.h"
-#include "system/baseitem-info.h"
-#include "system/floor-type-definition.h"
-#include "system/item-entity.h"
+#include "system/floor/floor-info.h"
+#include "system/item/item-entity.h"
 #include "system/monster-entity.h"
 #include "system/player-type-definition.h"
 #include "system/redrawing-flags-updater.h"
 #include "timed-effect/timed-effects.h"
 #include "tracking/health-bar-tracker.h"
-#include "util/bit-flags-calculator.h"
 #include "view/display-messages.h"
-#include "world/world-object.h"
 
 void process_eat_gold(PlayerType *player_ptr, MonsterAttackPlayer *monap_ptr)
 {
@@ -64,7 +57,7 @@ void process_eat_gold(PlayerType *player_ptr, MonsterAttackPlayer *monap_ptr)
         msg_print(_("しかし何も盗まれなかった。", "Nothing was stolen."));
     } else if (player_ptr->au > 0) {
         msg_print(_("財布が軽くなった気がする。", "Your purse feels lighter."));
-        msg_format(_("$%ld のお金が盗まれた！", "%ld coins were stolen!"), (long)gold);
+        msg_print(_("${} のお金が盗まれた！", "{} coins were stolen!"), gold);
         chg_virtue(player_ptr, Virtue::SACRIFICE, 1);
     } else {
         msg_print(_("財布が軽くなった気がする。", "Your purse feels lighter."));
@@ -116,17 +109,17 @@ static void move_item_to_monster(PlayerType *player_ptr, MonsterAttackPlayer *mo
         return;
     }
 
-    auto *j_ptr = &player_ptr->current_floor_ptr->o_list[o_idx];
-    j_ptr->copy_from(monap_ptr->o_ptr);
-    j_ptr->number = 1;
+    auto &item = *player_ptr->current_floor_ptr->o_list[o_idx];
+    item = monap_ptr->o_ptr->clone();
+    item.number = 1;
     if (monap_ptr->o_ptr->is_wand_rod()) {
-        j_ptr->pval = monap_ptr->o_ptr->pval / monap_ptr->o_ptr->number;
-        monap_ptr->o_ptr->pval -= j_ptr->pval;
+        item.pval = monap_ptr->o_ptr->pval / monap_ptr->o_ptr->number;
+        monap_ptr->o_ptr->pval -= item.pval;
     }
 
-    j_ptr->marked.clear().set(OmType::TOUCHED);
-    j_ptr->held_m_idx = monap_ptr->m_idx;
-    monap_ptr->m_ptr->hold_o_idx_list.add(player_ptr->current_floor_ptr, o_idx);
+    item.marked.clear().set(OmType::TOUCHED);
+    item.held_m_idx = monap_ptr->m_idx;
+    monap_ptr->m_ptr->hold_o_idx_list.add(*player_ptr->current_floor_ptr, o_idx);
 }
 
 /*!
@@ -138,9 +131,8 @@ static void move_item_to_monster(PlayerType *player_ptr, MonsterAttackPlayer *mo
 void process_eat_item(PlayerType *player_ptr, MonsterAttackPlayer *monap_ptr)
 {
     for (int i = 0; i < 10; i++) {
-        OBJECT_IDX o_idx;
-        INVENTORY_IDX i_idx = (INVENTORY_IDX)randint0(INVEN_PACK);
-        monap_ptr->o_ptr = &player_ptr->inventory_list[i_idx];
+        const auto i_idx = rand_choice(INVEN_PACK_SLOTS);
+        monap_ptr->o_ptr = player_ptr->inventory[i_idx].get();
         if (!monap_ptr->o_ptr->is_valid()) {
             continue;
         }
@@ -149,15 +141,15 @@ void process_eat_item(PlayerType *player_ptr, MonsterAttackPlayer *monap_ptr)
             continue;
         }
 
-        const auto item_name = describe_flavor(player_ptr, monap_ptr->o_ptr, OD_OMIT_PREFIX);
+        const auto item_name = describe_flavor(player_ptr, *monap_ptr->o_ptr, OD_OMIT_PREFIX);
 #ifdef JP
         msg_format("%s(%c)を%s盗まれた！", item_name.data(), index_to_label(i_idx), ((monap_ptr->o_ptr->number > 1) ? "一つ" : ""));
 #else
         msg_format("%sour %s (%c) was stolen!", ((monap_ptr->o_ptr->number > 1) ? "One of y" : "Y"), item_name.data(), index_to_label(i_idx));
 #endif
         chg_virtue(player_ptr, Virtue::SACRIFICE, 1);
-        o_idx = o_pop(player_ptr->current_floor_ptr);
-        move_item_to_monster(player_ptr, monap_ptr, o_idx);
+        const auto item_idx = player_ptr->current_floor_ptr->pop_empty_index_item();
+        move_item_to_monster(player_ptr, monap_ptr, item_idx);
         inven_item_increase(player_ptr, i_idx, -1);
         inven_item_optimize(player_ptr, i_idx);
         monap_ptr->obvious = true;
@@ -169,8 +161,8 @@ void process_eat_item(PlayerType *player_ptr, MonsterAttackPlayer *monap_ptr)
 void process_eat_food(PlayerType *player_ptr, MonsterAttackPlayer *monap_ptr)
 {
     for (int i = 0; i < 10; i++) {
-        INVENTORY_IDX i_idx = (INVENTORY_IDX)randint0(INVEN_PACK);
-        monap_ptr->o_ptr = &player_ptr->inventory_list[i_idx];
+        const auto i_idx = rand_choice(INVEN_PACK_SLOTS);
+        monap_ptr->o_ptr = player_ptr->inventory[i_idx].get();
         if (!monap_ptr->o_ptr->is_valid()) {
             continue;
         }
@@ -180,7 +172,7 @@ void process_eat_food(PlayerType *player_ptr, MonsterAttackPlayer *monap_ptr)
             continue;
         }
 
-        const auto item_name = describe_flavor(player_ptr, monap_ptr->o_ptr, (OD_OMIT_PREFIX | OD_NAME_ONLY));
+        const auto item_name = describe_flavor(player_ptr, *monap_ptr->o_ptr, (OD_OMIT_PREFIX | OD_NAME_ONLY));
 #ifdef JP
         msg_format("%s(%c)を%s食べられてしまった！", item_name.data(), index_to_label(i_idx), ((monap_ptr->o_ptr->number > 1) ? "一つ" : ""));
 #else
@@ -227,10 +219,9 @@ bool process_un_power(PlayerType *player_ptr, MonsterAttackPlayer *monap_ptr)
     }
 
     const auto is_magic_mastery = has_magic_mastery(player_ptr) != 0;
-    const auto &baseitem = monap_ptr->o_ptr->get_baseitem();
-    const auto pval = baseitem.pval;
+    const auto base_pval = monap_ptr->o_ptr->get_baseitem_pval();
     const auto level = monap_ptr->rlev;
-    auto drain = is_magic_mastery ? std::min<short>(pval, pval * level / 400 + pval * randint1(level) / 400) : pval;
+    auto drain = is_magic_mastery ? std::min<short>(base_pval, base_pval * level / 400 + base_pval * randint1(level) / 400) : base_pval;
     drain = std::min(drain, monap_ptr->o_ptr->pval);
     if (drain <= 0) {
         return false;
@@ -242,7 +233,7 @@ bool process_un_power(PlayerType *player_ptr, MonsterAttackPlayer *monap_ptr)
     }
 
     monap_ptr->obvious = true;
-    auto recovery = drain * baseitem.level;
+    auto recovery = drain * monap_ptr->o_ptr->get_baseitem_level();
     const auto tval = monap_ptr->o_ptr->bi_key.tval();
     if (tval == ItemKindType::STAFF) {
         recovery *= monap_ptr->o_ptr->number;

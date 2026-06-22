@@ -1,10 +1,10 @@
 #include "load/old/load-v1-7-0.h"
-#include "dungeon/quest.h"
 #include "game-option/birth-options.h"
 #include "load/load-util.h"
 #include "load/old/load-v1-5-0.h"
-#include "system/dungeon-info.h"
-#include "system/floor-type-definition.h"
+#include "system/dungeon/quest-definition.h"
+#include "system/enums/dungeon/dungeon-id.h"
+#include "system/floor/floor-info.h"
 #include "system/player-type-definition.h"
 
 void set_hp_old(PlayerType *player_ptr)
@@ -35,7 +35,7 @@ void remove_water_cave(PlayerType *player_ptr)
         return;
     }
 
-    floor.set_dungeon_index(lite_town ? DUNGEON_ANGBAND : DUNGEON_GALGALS);
+    floor.set_dungeon_index(lite_town ? DungeonId::ANGBAND : DungeonId::GALGALS);
     floor.dun_level = 1;
     floor.quest_number = QuestId::NONE;
 }

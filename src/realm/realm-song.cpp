@@ -3,6 +3,8 @@
 #include "effect/effect-characteristics.h"
 #include "effect/effect-processor.h"
 #include "hpmp/hp-mp-processor.h"
+#include "main/sound-definitions-table.h"
+#include "main/sound-of-music.h"
 #include "player-info/class-info.h"
 #include "player/attack-defense-types.h"
 #include "player/player-status.h"
@@ -56,9 +58,9 @@ static void start_singing(PlayerType *player_ptr, SPELL_IDX spell, int32_t song)
  * @param mode 処理内容 (NAME / SPELL_DESC / INFO / CAST / FAIL / SPELL_CONT / STOP)
  * @return
  * NAME / SPELL_DESC / INFO 時には文字列を返す.
- * CAST / FAIL / SPELL_CONT / STOP 時は std::nullopt を返す.
+ * CAST / FAIL / SPELL_CONT / STOP 時は tl::nullopt を返す.
  */
-std::optional<std::string> do_music_spell(PlayerType *player_ptr, SPELL_IDX spell, SpellProcessType mode)
+tl::optional<std::string> do_music_spell(PlayerType *player_ptr, SPELL_IDX spell, SpellProcessType mode)
 {
     bool info = mode == SpellProcessType::INFO;
     bool cast = mode == SpellProcessType::CAST;
@@ -66,7 +68,6 @@ std::optional<std::string> do_music_spell(PlayerType *player_ptr, SPELL_IDX spel
     bool cont = mode == SpellProcessType::CONTNUATION;
     bool stop = mode == SpellProcessType::STOP;
 
-    DIRECTION dir;
     PLAYER_LEVEL plev = player_ptr->lev;
 
     switch (spell) {
@@ -108,6 +109,7 @@ std::optional<std::string> do_music_spell(PlayerType *player_ptr, SPELL_IDX spel
         if (stop) {
             if (!player_ptr->blessed) {
                 msg_print(_("高潔な気分が消え失せた。", "The prayer has expired."));
+                sound(SoundKind::BUFF_EXPIRE);
             }
         }
 
@@ -127,8 +129,9 @@ std::optional<std::string> do_music_spell(PlayerType *player_ptr, SPELL_IDX spel
             }
 
             if (cast) {
-                if (!get_aim_dir(player_ptr, &dir)) {
-                    return std::nullopt;
+                const auto dir = get_aim_dir(player_ptr);
+                if (!dir) {
+                    return tl::nullopt;
                 }
 
                 fire_bolt(player_ptr, AttributeType::SOUND, dir, dice.roll());
@@ -249,6 +252,7 @@ std::optional<std::string> do_music_spell(PlayerType *player_ptr, SPELL_IDX spel
         if (stop) {
             if (!player_ptr->hero) {
                 msg_print(_("ヒーローの気分が消え失せた。", "The heroism wears off."));
+                sound(SoundKind::BUFF_EXPIRE);
                 RedrawingFlagsUpdater::get_instance().set_flag(StatusRecalculatingFlag::HP);
             }
         }
@@ -384,6 +388,7 @@ std::optional<std::string> do_music_spell(PlayerType *player_ptr, SPELL_IDX spel
         if (stop) {
             if (!player_ptr->tim_stealth) {
                 msg_print(_("姿がはっきりと見えるようになった。", "You are no longer hidden."));
+                sound(SoundKind::BUFF_EXPIRE);
             }
         }
 
@@ -510,24 +515,42 @@ std::optional<std::string> do_music_spell(PlayerType *player_ptr, SPELL_IDX spel
         }
 
         if (stop) {
+            auto sound_played = false;
             if (!player_ptr->oppose_acid) {
                 msg_print(_("酸への耐性が薄れた気がする。", "You feel less resistant to acid."));
+                sound(SoundKind::BUFF_EXPIRE);
+                sound_played = true;
             }
 
             if (!player_ptr->oppose_elec) {
                 msg_print(_("電撃への耐性が薄れた気がする。", "You feel less resistant to elec."));
+                if (!sound_played) {
+                    sound(SoundKind::BUFF_EXPIRE);
+                    sound_played = true;
+                }
             }
 
             if (!player_ptr->oppose_fire) {
                 msg_print(_("火への耐性が薄れた気がする。", "You feel less resistant to fire."));
+                if (!sound_played) {
+                    sound(SoundKind::BUFF_EXPIRE);
+                    sound_played = true;
+                }
             }
 
             if (!player_ptr->oppose_cold) {
                 msg_print(_("冷気への耐性が薄れた気がする。", "You feel less resistant to cold."));
+                if (!sound_played) {
+                    sound(SoundKind::BUFF_EXPIRE);
+                    sound_played = true;
+                }
             }
 
             if (!player_ptr->oppose_pois) {
                 msg_print(_("毒への耐性が薄れた気がする。", "You feel less resistant to pois."));
+                if (!sound_played) {
+                    sound(SoundKind::BUFF_EXPIRE);
+                }
             }
         }
 
@@ -547,6 +570,7 @@ std::optional<std::string> do_music_spell(PlayerType *player_ptr, SPELL_IDX spel
         if (stop) {
             if (!player_ptr->effects()->acceleration().is_fast()) {
                 msg_print(_("動きの素早さがなくなったようだ。", "You feel yourself slow down."));
+                sound(SoundKind::BUFF_EXPIRE);
             }
         }
 
@@ -636,8 +660,9 @@ std::optional<std::string> do_music_spell(PlayerType *player_ptr, SPELL_IDX spel
         }
 
         if (cast) {
-            if (!get_aim_dir(player_ptr, &dir)) {
-                return std::nullopt;
+            const auto dir = get_aim_dir(player_ptr);
+            if (!dir) {
+                return tl::nullopt;
             }
 
             fire_beam(player_ptr, AttributeType::SOUND, dir, dice.roll());
@@ -682,7 +707,7 @@ std::optional<std::string> do_music_spell(PlayerType *player_ptr, SPELL_IDX spel
             }
 
             if (cont) {
-                earthquake(player_ptr, player_ptr->y, player_ptr->x, 10, 0);
+                earthquake(player_ptr, player_ptr->get_position(), 10);
             }
         }
 
@@ -740,13 +765,19 @@ std::optional<std::string> do_music_spell(PlayerType *player_ptr, SPELL_IDX spel
         }
 
         if (stop) {
+            auto sound_played = false;
             if (!player_ptr->hero) {
                 msg_print(_("ヒーローの気分が消え失せた。", "The heroism wears off."));
+                sound(SoundKind::BUFF_EXPIRE);
+                sound_played = true;
                 RedrawingFlagsUpdater::get_instance().set_flag(StatusRecalculatingFlag::HP);
             }
 
             if (!player_ptr->effects()->acceleration().is_fast()) {
                 msg_print(_("動きの素早さがなくなったようだ。", "You feel yourself slow down."));
+                if (!sound_played) {
+                    sound(SoundKind::BUFF_EXPIRE);
+                }
             }
         }
 
@@ -814,8 +845,9 @@ std::optional<std::string> do_music_spell(PlayerType *player_ptr, SPELL_IDX spel
         }
 
         if (cast) {
-            if (!get_aim_dir(player_ptr, &dir)) {
-                return std::nullopt;
+            const auto dir = get_aim_dir(player_ptr);
+            if (!dir) {
+                return tl::nullopt;
             }
 
             fire_ball(player_ptr, AttributeType::SOUND, dir, dice.roll(), rad);
@@ -844,6 +876,7 @@ std::optional<std::string> do_music_spell(PlayerType *player_ptr, SPELL_IDX spel
         if (stop) {
             if (!player_ptr->invuln) {
                 msg_print(_("無敵ではなくなった。", "The invulnerability wears off."));
+                sound(SoundKind::BUFF_EXPIRE);
                 auto &rfu = RedrawingFlagsUpdater::get_instance();
                 rfu.set_flag(MainWindowRedrawingFlag::MAP);
                 rfu.set_flag(StatusRecalculatingFlag::MONSTER_STATUSES);

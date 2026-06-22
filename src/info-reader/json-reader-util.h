@@ -1,10 +1,11 @@
 #pragma once
 
-#include "external-lib/include-json.h"
 #include "info-reader/parse-error-types.h"
 #include "system/angband.h"
 #include <concepts>
-#include <optional>
+#include <nlohmann/json.hpp>
+#include <string_view>
+#include <tl/optional.hpp>
 #include <utility>
 
 class Dice;
@@ -17,6 +18,7 @@ concept IntegralOrEnum = std::integral<T> || std::is_enum_v<T>;
 errr info_set_string(const nlohmann::json &json, std::string &data, bool is_required);
 errr info_set_dice(const nlohmann::json &json, Dice &dice, bool is_required);
 errr info_set_bool(const nlohmann::json &json, bool &bool_value, bool is_required);
+const nlohmann::json &get_json_value(const nlohmann::json &json, std::string_view key);
 
 /*!
  * @brief JSON Objectから整数値もしくはenum値を取得する
@@ -31,13 +33,13 @@ errr info_set_bool(const nlohmann::json &json, bool &bool_value, bool is_require
  * @return エラーコード
  */
 template <IntegralOrEnum T>
-errr info_set_integer(const nlohmann::json &json, T &data, bool is_required, std::optional<Range> range = std::nullopt)
+errr info_set_integer(const nlohmann::json &json, T &data, bool is_required, tl::optional<Range> range = tl::nullopt)
 {
     if (json.is_null()) {
         return is_required ? PARSE_ERROR_TOO_FEW_ARGUMENTS : PARSE_ERROR_NONE;
     }
     if (!json.is_number_integer()) {
-        return PARSE_ERROR_TOO_FEW_ARGUMENTS;
+        return PARSE_ERROR_INVALID_TYPE;
     }
 
     const auto value = json.get<T>();

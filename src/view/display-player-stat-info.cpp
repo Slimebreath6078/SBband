@@ -17,12 +17,13 @@
 #include "player/player-personality.h"
 #include "player/player-status-table.h"
 #include "player/player-status.h"
-#include "system/item-entity.h"
+#include "system/item/item-entity.h"
 #include "system/player-type-definition.h"
 #include "term/screen-processor.h"
 #include "term/term-color-types.h"
 #include "term/z-form.h"
 #include "util/bit-flags-calculator.h"
+#include "view/display-symbol.h"
 
 /*!
  * @brief プレイヤーのパラメータ基礎値 (腕力等)を18以下になるようにして返す
@@ -206,9 +207,9 @@ static DisplaySymbol compensate_stat_by_weapon(uint8_t color, ItemEntity *o_ptr,
  */
 static void display_equipments_compensation(PlayerType *player_ptr, int row, int *col)
 {
-    for (int i = INVEN_MAIN_HAND; i < INVEN_TOTAL; i++) {
+    for (const auto i_idx : INVEN_WIELDING_SLOTS) {
         ItemEntity *o_ptr;
-        o_ptr = &player_ptr->inventory_list[i];
+        o_ptr = player_ptr->inventory[i_idx].get();
         auto flags = o_ptr->get_flags_known();
         for (int stat = 0; stat < A_MAX; stat++) {
             DisplaySymbol symbol(TERM_SLATE, '.');

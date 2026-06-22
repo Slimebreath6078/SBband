@@ -30,8 +30,8 @@
 #include "racial/racial-android.h"
 #include "status/action-setter.h"
 #include "status/experience.h"
-#include "system/baseitem-info.h"
-#include "system/item-entity.h"
+#include "system/baseitem/baseitem-key.h"
+#include "system/item/item-entity.h"
 #include "system/player-type-definition.h"
 #include "system/redrawing-flags-updater.h"
 #include "term/screen-processor.h"
@@ -41,18 +41,18 @@
 #include <tuple>
 
 /// 破壊するアイテムの選択結果: アイテム、インベントリもしくは床上アイテムのインデックス、個数
-using SelectionResult = std::tuple<ItemEntity *, short, int>;
+using SelectionResult = std::tuple<std::shared_ptr<ItemEntity>, short, int>;
 
 static bool check_destory_item(PlayerType *player_ptr, const ItemEntity &destroying_item, short i_idx)
 {
-    if (!confirm_destroy && (destroying_item.get_price() <= 0)) {
+    if (!confirm_destroy && (destroying_item.calc_price() <= 0)) {
         return true;
     }
 
-    const auto item_name = describe_flavor(player_ptr, &destroying_item, OD_OMIT_PREFIX);
+    const auto item_name = describe_flavor(player_ptr, destroying_item, OD_OMIT_PREFIX);
     constexpr auto fmt = _("本当に%sを壊しますか? [y/n/Auto]", "Really destroy %s? [y/n/Auto]");
     const auto msg = format(fmt, item_name.data());
-    msg_print(nullptr);
+    msg_erase();
     message_add(msg);
     RedrawingFlagsUpdater::get_instance().set_flag(SubWindowRedrawingFlag::MESSAGE);
     window_stuff(player_ptr);
@@ -80,30 +80,29 @@ static bool check_destory_item(PlayerType *player_ptr, const ItemEntity &destroy
     }
 }
 
-static std::optional<SelectionResult> select_destroying_item(PlayerType *player_ptr, bool force_destroy)
+static tl::optional<SelectionResult> select_destroying_item(PlayerType *player_ptr, bool force_destroy)
 {
-    short i_idx;
     constexpr auto q = _("どのアイテムを壊しますか? ", "Destroy which item? ");
     constexpr auto s = _("壊せるアイテムを持っていない。", "You have nothing to destroy.");
-    auto *o_ptr = choose_object(player_ptr, &i_idx, q, s, USE_INVEN | USE_FLOOR);
-    if (o_ptr == nullptr) {
-        return std::nullopt;
+    const auto &[item, i_idx] = choose_item(player_ptr, q, s, USE_INVEN | USE_FLOOR);
+    if (!item) {
+        return tl::nullopt;
     }
 
-    if (!force_destroy && !check_destory_item(player_ptr, *o_ptr, i_idx)) {
-        return std::nullopt;
+    if (!force_destroy && !check_destory_item(player_ptr, *item, i_idx)) {
+        return tl::nullopt;
     }
 
-    if (o_ptr->number <= 1) {
-        return std::make_optional<SelectionResult>(o_ptr, i_idx, 1);
+    if (item->number <= 1) {
+        return tl::make_optional<SelectionResult>(item, i_idx, 1);
     }
 
-    const auto amt = input_quantity(o_ptr->number);
+    const auto amt = input_quantity(item->number);
     if (amt <= 0) {
-        return std::nullopt;
+        return tl::nullopt;
     }
 
-    return std::make_optional<SelectionResult>(o_ptr, i_idx, amt);
+    return tl::make_optional<SelectionResult>(item, i_idx, amt);
 }
 
 /*!
@@ -190,11 +189,11 @@ static void process_destroy_magic_book(PlayerType *player_ptr, const ItemEntity 
 
 static void exe_destroy_item(PlayerType *player_ptr, ItemEntity &destroying_item, short i_idx, int amount)
 {
-    ItemEntity destroyed_item = destroying_item;
+    auto destroyed_item = destroying_item.clone();
     destroyed_item.number = amount;
-    const auto item_name = describe_flavor(player_ptr, &destroyed_item, 0);
+    const auto item_name = describe_flavor(player_ptr, destroyed_item, 0);
     msg_format(_("%sを壊した。", "You destroy %s."), item_name.data());
-    sound(SOUND_DESTITEM);
+    sound(SoundKind::DESTITEM);
     reduce_charges(&destroying_item, amount);
     vary_item(player_ptr, i_idx, -amount);
     process_destroy_magic_book(player_ptr, destroyed_item);
@@ -220,16 +219,15 @@ void do_cmd_destroy(PlayerType *player_ptr)
         return;
     }
 
-    auto [o_ptr, i_idx, amt] = *selection_result;
-
+    const auto &[item, i_idx, amt] = *selection_result;
     PlayerEnergy energy(player_ptr);
     energy.set_player_turn_energy(100);
-    if (!can_player_destroy_object(o_ptr)) {
+    if (!can_player_destroy_object(item.get())) {
         energy.reset_player_turn();
-        const auto item_name = describe_flavor(player_ptr, o_ptr, 0);
+        const auto item_name = describe_flavor(player_ptr, *item, 0);
         msg_format(_("%sは破壊不可能だ。", "You cannot destroy %s."), item_name.data());
         return;
     }
 
-    exe_destroy_item(player_ptr, *o_ptr, i_idx, amt);
+    exe_destroy_item(player_ptr, *item, i_idx, amt);
 }

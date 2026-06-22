@@ -23,7 +23,8 @@
 #include "player/player-sex.h"
 #include "player/process-death.h"
 #include "save/save.h"
-#include "system/floor-type-definition.h"
+#include "system/floor/floor-info.h"
+#include "system/inner-game-data.h"
 #include "system/player-type-definition.h"
 #include "term/gameterm.h"
 #include "term/screen-processor.h"
@@ -40,6 +41,24 @@ static void clear_floor(PlayerType *player_ptr)
     highscore_fd = -1;
     clear_saved_floor_files(player_ptr);
     signals_handle_tstp();
+}
+
+static void send_world_score_on_closing(PlayerType *player_ptr, bool do_send)
+{
+    if (send_world_score(player_ptr, do_send)) {
+        return;
+    }
+
+    if (!input_check_strict(
+            player_ptr, _("後でスコアを登録するために待機しますか？", "Stand by for later score registration? "), { UserCheck::NO_ESCAPE, UserCheck::NO_HISTORY })) {
+        return;
+    }
+
+    AngbandSystem::get_instance().set_awaiting_report_score(true);
+    player_ptr->is_dead = false;
+    if (!save_player(player_ptr, SaveType::CLOSE_GAME)) {
+        msg_print(_("セーブ失敗！", "death save failed!"));
+    }
 }
 
 /*!
@@ -128,7 +147,7 @@ static void kingly(PlayerType *player_ptr)
 void close_game(PlayerType *player_ptr)
 {
     handle_stuff(player_ptr);
-    msg_print(nullptr);
+    msg_erase();
     flush();
     signals_ignore_tstp();
 
@@ -151,8 +170,8 @@ void close_game(PlayerType *player_ptr)
     print_tomb(player_ptr);
 
     if (!cheat_save || input_check(_("死んだデータをセーブしますか？ ", "Save death? "))) {
-        world.update_playtime();
-        world.sf_play_time += world.play_time;
+        world.play_time.update();
+        InnerGameData::get_instance().add_play_time(world.play_time.elapsed_sec());
 
         if (!save_player(player_ptr, SaveType::CLOSE_GAME)) {
             msg_print(_("セーブ失敗！", "death save failed!"));
@@ -163,7 +182,10 @@ void close_game(PlayerType *player_ptr)
     show_death_info(player_ptr);
     term_clear();
     if (check_score(player_ptr)) {
-        (void)top_twenty(player_ptr);
+        send_world_score_on_closing(player_ptr, do_send);
+        if (!AngbandSystem::get_instance().is_awaiting_report_status()) {
+            (void)top_twenty(player_ptr);
+        }
     } else if (highscore_fd >= 0) {
         display_scores(0, 10, -1, nullptr);
     }

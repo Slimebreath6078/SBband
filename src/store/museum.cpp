@@ -4,7 +4,7 @@
 #include "store/home.h"
 #include "store/store-util.h"
 #include "store/store.h"
-#include "system/item-entity.h"
+#include "system/item/item-entity.h"
 #include "view/display-messages.h"
 #include "view/display-store.h"
 
@@ -32,16 +32,16 @@ void museum_remove_object(PlayerType *player_ptr)
     }
 
     const short item_num = *item_num_opt + store_top;
-    auto *o_ptr = &st_ptr->stock[item_num];
-    const auto item_name = describe_flavor(player_ptr, o_ptr, 0);
+    const auto &item = *st_ptr->stock[item_num];
+    const auto item_name = describe_flavor(player_ptr, item, 0);
     msg_print(_("展示をやめさせたアイテムは二度と見ることはできません！", "Once removed from the Museum, an item will be gone forever!"));
     if (!input_check(format(_("本当に%sの展示をやめさせますか？", "Really order to remove %s from the Museum? "), item_name.data()))) {
         return;
     }
 
     msg_format(_("%sの展示をやめさせた。", "You ordered to remove %s."), item_name.data());
-    store_item_increase(item_num, -o_ptr->number);
-    store_item_optimize(item_num);
+    st_ptr->increase_item(item_num, -item.number);
+    st_ptr->optimize_item(item_num);
     (void)combine_and_reorder_home(player_ptr, StoreSaleType::MUSEUM);
     if (st_ptr->stock_num == 0) {
         store_top = 0;

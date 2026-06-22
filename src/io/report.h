@@ -1,5 +1,5 @@
 #pragma once
 
-#include "system/angband.h"
+#include <string>
 
 extern concptr screen_dump;

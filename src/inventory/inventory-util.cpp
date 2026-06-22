@@ -12,8 +12,8 @@
 #include "io/input-key-requester.h"
 #include "object/item-tester-hooker.h"
 #include "object/item-use-flags.h"
-#include "system/floor-type-definition.h"
-#include "system/item-entity.h"
+#include "system/floor/floor-info.h"
+#include "system/item/item-entity.h"
 #include "system/player-type-definition.h"
 #include "util/bit-flags-calculator.h"
 #include "util/int-char-converter.h"
@@ -31,67 +31,54 @@ bool is_ring_slot(int i)
 }
 
 /*!
- * @brief 床オブジェクトに選択タグを与える/タグに該当するオブジェクトがあるかを返す /
- * Find the "first" inventory object with the given "tag".
- * @param cp 対応するタグIDを与える参照ポインタ
+ * @brief 床上のアイテムで該当するタグのある要素番号を返す
+ * @param floor フロアへの参照
  * @param tag 該当するオブジェクトがあるかを調べたいタグ
- * @param floor_list 床上アイテムの配列
- * @param floor_num  床上アイテムの配列ID
- * @return タグに該当するオブジェクトがあるならTRUEを返す
- * @details
- * A "tag" is a numeral "n" appearing as "@n" anywhere in the\n
- * inscription of an object.  Alphabetical characters don't work as a\n
- * tag in this form.\n
- *\n
- * Also, the tag "@xn" will work as well, where "n" is a any tag-char,\n
- * and "x" is the "current" command_cmd code.\n
+ * @param floor_item_index 床上アイテムの配列
+ * @return タグに該当するアイテムがあればfloor_item_indexの要素番号、なければnullopt
  */
-bool get_tag_floor(FloorType *floor_ptr, COMMAND_CODE *cp, char tag, FLOOR_IDX floor_list[], ITEM_NUMBER floor_num)
+tl::optional<short> get_tag_floor(const FloorType &floor, char tag, const std::vector<short> &floor_item_index)
 {
-    for (COMMAND_CODE i = 0; i < floor_num && i < 23; i++) {
-        auto *o_ptr = &floor_ptr->o_list[floor_list[i]];
-        if (!o_ptr->is_inscribed()) {
+    tl::optional<short> floor_item_indice;
+    for (size_t i = 0; i < floor_item_index.size(); i++) {
+        const auto &item = *floor.o_list[floor_item_index[i]];
+        if (!item.is_inscribed()) {
             continue;
         }
 
-        auto s = angband_strchr(o_ptr->inscription->data(), '@');
+        auto s = extract_suffix(*item.inscription, '@');
         while (s) {
-            if ((s[1] == command_cmd) && (s[2] == tag)) {
-                *cp = i;
-                return true;
+            // コマンドと同じタグならそれで決まり.
+            if ((s->length() > 2) && (s->at(1) == command_cmd) && (s->at(2) == tag)) {
+                return static_cast<short>(i);
             }
 
-            s = angband_strchr(s + 1, '@');
-        }
-    }
-
-    if (tag < '0' || '9' < tag) {
-        return false;
-    }
-
-    for (COMMAND_CODE i = 0; i < floor_num && i < 23; i++) {
-        auto *o_ptr = &floor_ptr->o_list[floor_list[i]];
-        if (!o_ptr->is_inscribed()) {
-            continue;
-        }
-
-        auto s = angband_strchr(o_ptr->inscription->data(), '@');
-        while (s) {
-            if (s[1] == tag) {
-                *cp = i;
-                return true;
+            // その他のタグは一旦保持して次のタグを探す.
+            if (!floor_item_indice && is_numeric(tag) && (s->length() > 1) && (s->at(1) == tag)) {
+                floor_item_indice = static_cast<short>(i);
             }
 
-            s = angband_strchr(s + 1, '@');
+            s = extract_suffix(s->substr(1), '@');
         }
     }
 
-    return false;
+    return floor_item_indice;
+}
+
+static tl::optional<EnumRange<inventory_slot_type>> get_inventory_range(BIT_FLAGS mode)
+{
+    switch (mode) {
+    case USE_EQUIP:
+        return INVEN_WIELDING_SLOTS.to_enum_range();
+    case USE_INVEN:
+        return INVEN_PACK_SLOTS;
+    default:
+        return tl::nullopt;
+    }
 }
 
 /*!
- * @brief 所持/装備オブジェクトに選択タグを与える/タグに該当するオブジェクトがあるかを返す /
- * Find the "first" inventory object with the given "tag".
+ * @brief 所持/装備オブジェクトに選択タグを与える/タグに該当するオブジェクトがあるかを返す
  * @param player_ptr プレイヤーへの参照ポインタ
  * @param cp 対応するタグIDを与える参照ポインタ
  * @param tag 該当するオブジェクトがあるかを調べたいタグ
@@ -105,71 +92,39 @@ bool get_tag_floor(FloorType *floor_ptr, COMMAND_CODE *cp, char tag, FLOOR_IDX f
  * Also, the tag "@xn" will work as well, where "n" is a any tag-char,\n
  * and "x" is the "current" command_cmd code.\n
  */
-bool get_tag(PlayerType *player_ptr, COMMAND_CODE *cp, char tag, BIT_FLAGS mode, const ItemTester &item_tester)
+tl::optional<short> get_tag(PlayerType *player_ptr, char tag, BIT_FLAGS mode, const ItemTester &item_tester)
 {
-    COMMAND_CODE start, end;
-    switch (mode) {
-    case USE_EQUIP:
-        start = INVEN_MAIN_HAND;
-        end = INVEN_TOTAL - 1;
-        break;
-
-    case USE_INVEN:
-        start = 0;
-        end = INVEN_PACK - 1;
-        break;
-
-    default:
-        return false;
+    const auto range = get_inventory_range(mode);
+    if (!range) {
+        return tl::nullopt;
     }
 
-    for (COMMAND_CODE i = start; i <= end; i++) {
-        auto *o_ptr = &player_ptr->inventory_list[i];
-        if (!o_ptr->is_valid() || !o_ptr->is_inscribed()) {
+    tl::optional<short> result;
+    for (const auto i_idx : *range) {
+        const auto &item = *player_ptr->inventory[i_idx];
+        if (!item.is_valid() || !item.is_inscribed()) {
             continue;
         }
 
-        if (!item_tester.okay(o_ptr) && !(mode & USE_FULL)) {
+        if (!item_tester.okay(&item) && none_bits(mode, USE_FULL)) {
             continue;
         }
 
-        auto s = angband_strchr(o_ptr->inscription->data(), '@');
-        while (s) {
-            if ((s[1] == command_cmd) && (s[2] == tag)) {
-                *cp = i;
-                return true;
+        auto sv = extract_suffix(*item.inscription, '@');
+        while (sv) {
+            if ((sv->length() > 2) && (sv->at(1) == command_cmd) && (sv->at(2) == tag)) {
+                return i_idx;
             }
 
-            s = angband_strchr(s + 1, '@');
-        }
-    }
-
-    if (tag < '0' || '9' < tag) {
-        return false;
-    }
-
-    for (COMMAND_CODE i = start; i <= end; i++) {
-        auto *o_ptr = &player_ptr->inventory_list[i];
-        if (!o_ptr->is_valid() || !o_ptr->is_inscribed()) {
-            continue;
-        }
-
-        if (!item_tester.okay(o_ptr) && !(mode & USE_FULL)) {
-            continue;
-        }
-
-        auto s = angband_strchr(o_ptr->inscription->data(), '@');
-        while (s) {
-            if (s[1] == tag) {
-                *cp = i;
-                return true;
+            if (!result && is_numeric(tag) && (sv->length() > 1) && (sv->at(1) == tag)) {
+                result = i_idx;
             }
 
-            s = angband_strchr(s + 1, '@');
+            sv = extract_suffix(sv->substr(1), '@');
         }
     }
 
-    return false;
+    return result;
 }
 
 /*!
@@ -180,7 +135,7 @@ bool get_tag(PlayerType *player_ptr, COMMAND_CODE *cp, char tag, BIT_FLAGS mode,
  */
 bool get_item_okay(PlayerType *player_ptr, OBJECT_IDX i, const ItemTester &item_tester)
 {
-    if ((i < 0) || (i >= INVEN_TOTAL)) {
+    if (!INVEN_ALL_SLOTS.contains(i2enum<inventory_slot_type>(i))) {
         return false;
     }
 
@@ -188,7 +143,7 @@ bool get_item_okay(PlayerType *player_ptr, OBJECT_IDX i, const ItemTester &item_
         return is_ring_slot(i);
     }
 
-    return item_tester.okay(&player_ptr->inventory_list[i]);
+    return item_tester.okay(player_ptr->inventory[i].get());
 }
 
 /*!
@@ -205,9 +160,9 @@ bool get_item_allow(PlayerType *player_ptr, INVENTORY_IDX i_idx)
 
     ItemEntity *o_ptr;
     if (i_idx >= 0) {
-        o_ptr = &player_ptr->inventory_list[i_idx];
+        o_ptr = player_ptr->inventory[i_idx].get();
     } else {
-        o_ptr = &player_ptr->current_floor_ptr->o_list[0 - i_idx];
+        o_ptr = player_ptr->current_floor_ptr->o_list[0 - i_idx].get();
     }
 
     if (!o_ptr->is_inscribed()) {
@@ -238,7 +193,7 @@ INVENTORY_IDX label_to_equipment(PlayerType *player_ptr, int c)
 {
     INVENTORY_IDX i = (INVENTORY_IDX)(islower(c) ? A2I(c) : -1) + INVEN_MAIN_HAND;
 
-    if ((i < INVEN_MAIN_HAND) || (i >= INVEN_TOTAL)) {
+    if (!INVEN_WIELDING_SLOTS.contains(i2enum<inventory_slot_type>(i))) {
         return -1;
     }
 
@@ -246,7 +201,7 @@ INVENTORY_IDX label_to_equipment(PlayerType *player_ptr, int c)
         return is_ring_slot(i) ? i : -1;
     }
 
-    if (!player_ptr->inventory_list[i].bi_id) {
+    if (!player_ptr->inventory[i]->bi_id) {
         return -1;
     }
 
@@ -265,7 +220,7 @@ INVENTORY_IDX label_to_inventory(PlayerType *player_ptr, int c)
 {
     INVENTORY_IDX i = (INVENTORY_IDX)(islower(c) ? A2I(c) : -1);
 
-    if ((i < 0) || (i > INVEN_PACK) || !player_ptr->inventory_list[i].is_valid()) {
+    if (!INVEN_PACK_SLOTS.contains(i2enum<inventory_slot_type>(i)) || !player_ptr->inventory[i]->is_valid()) {
         return -1;
     }
 
@@ -281,14 +236,8 @@ INVENTORY_IDX label_to_inventory(PlayerType *player_ptr, int c)
  */
 bool verify(PlayerType *player_ptr, concptr prompt, INVENTORY_IDX i_idx)
 {
-    ItemEntity *o_ptr;
-    if (i_idx >= 0) {
-        o_ptr = &player_ptr->inventory_list[i_idx];
-    } else {
-        o_ptr = &player_ptr->current_floor_ptr->o_list[0 - i_idx];
-    }
-
-    const auto item_name = describe_flavor(player_ptr, o_ptr, 0);
+    const auto &item = i_idx >= 0 ? *player_ptr->inventory[i_idx] : *player_ptr->current_floor_ptr->o_list[0 - i_idx];
+    const auto item_name = describe_flavor(player_ptr, item, 0);
     std::stringstream ss;
     ss << prompt;
 #ifndef JP
@@ -299,28 +248,30 @@ bool verify(PlayerType *player_ptr, concptr prompt, INVENTORY_IDX i_idx)
 }
 
 /*!
- * @brief タグIDにあわせてタグアルファベットのリストを返す /
- * Move around label characters with correspond tags
+ * @brief タグIDにあわせてタグアルファベットのリストを返す
  * @param player_ptr プレイヤーへの参照ポインタ
- * @param label ラベルリストを取得する文字列参照ポインタ
  * @param mode 所持品リストか装備品リストかの切り替え
+ * @param item_tester アイテムの絞り込み条件
+ * @return 有効なラベルリスト
  */
-void prepare_label_string(PlayerType *player_ptr, char *label, BIT_FLAGS mode, const ItemTester &item_tester)
+std::string prepare_label_string(PlayerType *player_ptr, BIT_FLAGS mode, const ItemTester &item_tester)
 {
-    concptr alphabet_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    int offset = match_bits(mode, USE_EQUIP, USE_EQUIP) ? INVEN_MAIN_HAND : 0;
-    strcpy(label, alphabet_chars);
-    for (int i = 0; i < 52; i++) {
-        COMMAND_CODE index;
-        auto c = alphabet_chars[i];
-        if (!get_tag(player_ptr, &index, c, mode, item_tester)) {
+    constexpr std::string_view alphabet("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
+    std::string tag_chars(alphabet);
+    const auto offset = match_bits(mode, USE_EQUIP, USE_EQUIP) ? INVEN_MAIN_HAND : 0;
+    for (size_t i = 0; i < tag_chars.length(); i++) {
+        const auto tag_char = alphabet[i];
+        const auto i_idx = get_tag(player_ptr, tag_char, mode, item_tester);
+        if (!i_idx) {
             continue;
         }
 
-        if (label[i] == c) {
-            label[i] = ' ';
+        if (tag_chars[i] == tag_char) {
+            tag_chars[i] = ' ';
         }
 
-        label[index - offset] = c;
+        tag_chars[*i_idx - offset] = tag_char;
     }
+
+    return tag_chars;
 }

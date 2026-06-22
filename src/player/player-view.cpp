@@ -1,9 +1,7 @@
 #include "player/player-view.h"
-#include "floor/cave.h"
 #include "floor/line-of-sight.h"
 #include "game-option/map-screen-options.h"
-#include "grid/grid.h"
-#include "system/floor-type-definition.h"
+#include "system/floor/floor-info.h"
 #include "system/grid-type-definition.h"
 #include "system/player-type-definition.h"
 #include "system/redrawing-flags-updater.h"
@@ -29,13 +27,14 @@
  */
 static bool update_view_aux(PlayerType *player_ptr, POSITION y, POSITION x, POSITION y1, POSITION x1, POSITION y2, POSITION x2)
 {
-    auto *floor_ptr = player_ptr->current_floor_ptr;
+    const Pos2D pos(y, x);
+    auto &floor = *player_ptr->current_floor_ptr;
     Grid *g1_c_ptr;
     Grid *g2_c_ptr;
-    g1_c_ptr = &floor_ptr->grid_array[y1][x1];
-    g2_c_ptr = &floor_ptr->grid_array[y2][x2];
-    bool f1 = (feat_supports_los(g1_c_ptr->feat));
-    bool f2 = (feat_supports_los(g2_c_ptr->feat));
+    g1_c_ptr = &floor.grid_array[y1][x1];
+    g2_c_ptr = &floor.grid_array[y2][x2];
+    bool f1 = g1_c_ptr->has_los_terrain();
+    bool f2 = g2_c_ptr->has_los_terrain();
     if (!f1 && !f2) {
         return true;
     }
@@ -46,34 +45,33 @@ static bool update_view_aux(PlayerType *player_ptr, POSITION y, POSITION x, POSI
         return true;
     }
 
-    Grid *g_ptr;
-    g_ptr = &floor_ptr->grid_array[y][x];
-    bool wall = (!feat_supports_los(g_ptr->feat));
+    auto &grid = floor.grid_array[y][x];
+    bool wall = !grid.has_los_terrain();
     bool z1 = (v1 && (g1_c_ptr->info & CAVE_XTRA));
     bool z2 = (v2 && (g2_c_ptr->info & CAVE_XTRA));
     if (z1 && z2) {
-        g_ptr->info |= CAVE_XTRA;
-        cave_view_hack(floor_ptr, y, x);
+        grid.info |= CAVE_XTRA;
+        floor.set_view_at(pos);
         return wall;
     }
 
     if (z1) {
-        cave_view_hack(floor_ptr, y, x);
+        floor.set_view_at(pos);
         return wall;
     }
 
     if (v1 && v2) {
-        cave_view_hack(floor_ptr, y, x);
+        floor.set_view_at(pos);
         return wall;
     }
 
     if (wall) {
-        cave_view_hack(floor_ptr, y, x);
+        floor.set_view_at(pos);
         return wall;
     }
 
-    if (los(player_ptr, player_ptr->y, player_ptr->x, y, x)) {
-        cave_view_hack(floor_ptr, y, x);
+    if (los(floor, player_ptr->get_position(), { y, x })) {
+        floor.set_view_at(pos);
         return wall;
     }
 
@@ -100,22 +98,16 @@ static bool update_view_aux(PlayerType *player_ptr, POSITION y, POSITION x, POSI
  */
 void update_view(PlayerType *player_ptr)
 {
-    // 前回プレイヤーから見えていた座標たちを格納する配列。
-    std::vector<Pos2D> points;
-
-    int n, m, d, k, z;
-    POSITION y, x;
-
+    int m, d, k;
     int se, sw, ne, nw, es, en, ws, wn;
 
     int full, over;
 
-    auto *floor_ptr = player_ptr->current_floor_ptr;
-    POSITION y_max = floor_ptr->height - 1;
-    POSITION x_max = floor_ptr->width - 1;
+    auto &floor = *player_ptr->current_floor_ptr;
+    POSITION y_max = floor.height - 1;
+    POSITION x_max = floor.width - 1;
 
-    Grid *g_ptr;
-    if (view_reduce_view && !floor_ptr->dun_level) {
+    if (view_reduce_view && !floor.is_underground()) {
         full = MAX_PLAYER_SIGHT / 2;
         over = MAX_PLAYER_SIGHT * 3 / 4;
     } else {
@@ -123,139 +115,129 @@ void update_view(PlayerType *player_ptr)
         over = MAX_PLAYER_SIGHT * 3 / 2;
     }
 
-    for (n = 0; n < floor_ptr->view_n; n++) {
-        y = floor_ptr->view_y[n];
-        x = floor_ptr->view_x[n];
-        g_ptr = &floor_ptr->grid_array[y][x];
-        g_ptr->info &= ~(CAVE_VIEW);
-        g_ptr->info |= CAVE_TEMP;
+    const auto points = floor.reset_view();
+    auto y = player_ptr->y;
+    auto x = player_ptr->x;
+    auto &grid_player = floor.grid_array[y][x];
+    grid_player.info |= CAVE_XTRA;
 
-        points.emplace_back(y, x);
-    }
-
-    floor_ptr->view_n = 0;
-    y = player_ptr->y;
-    x = player_ptr->x;
-    g_ptr = &floor_ptr->grid_array[y][x];
-    g_ptr->info |= CAVE_XTRA;
-    cave_view_hack(floor_ptr, y, x);
-
-    z = full * 2 / 3;
+    floor.set_view_at({ y, x });
+    auto z = full * 2 / 3;
     for (d = 1; d <= z; d++) {
-        g_ptr = &floor_ptr->grid_array[y + d][x + d];
-        g_ptr->info |= CAVE_XTRA;
-        cave_view_hack(floor_ptr, y + d, x + d);
-        if (!feat_supports_los(g_ptr->feat)) {
+        auto &grid = floor.grid_array[y + d][x + d];
+        grid.info |= CAVE_XTRA;
+        floor.set_view_at(Pos2D(y, x) + Pos2DVec(d, d));
+        if (!grid.has_los_terrain()) {
             break;
         }
     }
 
     for (d = 1; d <= z; d++) {
-        g_ptr = &floor_ptr->grid_array[y + d][x - d];
-        g_ptr->info |= CAVE_XTRA;
-        cave_view_hack(floor_ptr, y + d, x - d);
-        if (!feat_supports_los(g_ptr->feat)) {
+        auto &grid = floor.grid_array[y + d][x - d];
+        grid.info |= CAVE_XTRA;
+        floor.set_view_at(Pos2D(y, x) + Pos2DVec(d, -d));
+        if (!grid.has_los_terrain()) {
             break;
         }
     }
 
     for (d = 1; d <= z; d++) {
-        g_ptr = &floor_ptr->grid_array[y - d][x + d];
-        g_ptr->info |= CAVE_XTRA;
-        cave_view_hack(floor_ptr, y - d, x + d);
-        if (!feat_supports_los(g_ptr->feat)) {
+        auto &grid = floor.grid_array[y - d][x + d];
+        grid.info |= CAVE_XTRA;
+        floor.set_view_at(Pos2D(y, x) + Pos2DVec(-d, d));
+        if (!grid.has_los_terrain()) {
             break;
         }
     }
 
     for (d = 1; d <= z; d++) {
-        g_ptr = &floor_ptr->grid_array[y - d][x - d];
-        g_ptr->info |= CAVE_XTRA;
-        cave_view_hack(floor_ptr, y - d, x - d);
-        if (!feat_supports_los(g_ptr->feat)) {
+        auto &grid = floor.grid_array[y - d][x - d];
+        grid.info |= CAVE_XTRA;
+        floor.set_view_at(Pos2D(y, x) + Pos2DVec(-d, -d));
+        if (!grid.has_los_terrain()) {
             break;
         }
     }
 
     for (d = 1; d <= full; d++) {
-        g_ptr = &floor_ptr->grid_array[y + d][x];
-        g_ptr->info |= CAVE_XTRA;
-        cave_view_hack(floor_ptr, y + d, x);
-        if (!feat_supports_los(g_ptr->feat)) {
+        auto &grid = floor.grid_array[y + d][x];
+        grid.info |= CAVE_XTRA;
+        floor.set_view_at(Pos2D(y, x) + Pos2DVec(d, 0));
+        if (!grid.has_los_terrain()) {
             break;
         }
     }
 
     se = sw = d;
     for (d = 1; d <= full; d++) {
-        g_ptr = &floor_ptr->grid_array[y - d][x];
-        g_ptr->info |= CAVE_XTRA;
-        cave_view_hack(floor_ptr, y - d, x);
-        if (!feat_supports_los(g_ptr->feat)) {
+        auto &grid = floor.grid_array[y - d][x];
+        grid.info |= CAVE_XTRA;
+        floor.set_view_at(Pos2D(y, x) + Pos2DVec(-d, 0));
+        if (!grid.has_los_terrain()) {
             break;
         }
     }
 
     ne = nw = d;
     for (d = 1; d <= full; d++) {
-        g_ptr = &floor_ptr->grid_array[y][x + d];
-        g_ptr->info |= CAVE_XTRA;
-        cave_view_hack(floor_ptr, y, x + d);
-        if (!feat_supports_los(g_ptr->feat)) {
+        auto &grid = floor.grid_array[y][x + d];
+        grid.info |= CAVE_XTRA;
+        floor.set_view_at(Pos2D(y, x) + Pos2DVec(0, d));
+        if (!grid.has_los_terrain()) {
             break;
         }
     }
 
     es = en = d;
     for (d = 1; d <= full; d++) {
-        g_ptr = &floor_ptr->grid_array[y][x - d];
-        g_ptr->info |= CAVE_XTRA;
-        cave_view_hack(floor_ptr, y, x - d);
-        if (!feat_supports_los(g_ptr->feat)) {
+        auto &grid = floor.grid_array[y][x - d];
+        grid.info |= CAVE_XTRA;
+        floor.set_view_at(Pos2D(y, x) + Pos2DVec(0, -d));
+        if (!grid.has_los_terrain()) {
             break;
         }
     }
 
     ws = wn = d;
-    for (n = 1; n <= over / 2; n++) {
+    for (auto i = 1; i <= over / 2; i++) {
         POSITION ypn, ymn, xpn, xmn;
-        z = over - n - n;
-        if (z > full - n) {
-            z = full - n;
+        z = over - i - i;
+        if (z > full - i) {
+            z = full - i;
         }
 
-        while ((z + n + (n >> 1)) > full) {
+        while ((z + i + (i >> 1)) > full) {
             z--;
         }
 
-        ypn = y + n;
-        ymn = y - n;
-        xpn = x + n;
-        xmn = x - n;
+        ypn = y + i;
+        ymn = y - i;
+        xpn = x + i;
+        xmn = x - i;
         if (ypn < y_max) {
             m = std::min(z, y_max - ypn);
-            if ((xpn <= x_max) && (n < se)) {
-                for (k = n, d = 1; d <= m; d++) {
+            if ((xpn <= x_max) && (i < se)) {
+                for (k = i, d = 1; d <= m; d++) {
                     if (update_view_aux(player_ptr, ypn + d, xpn, ypn + d - 1, xpn - 1, ypn + d - 1, xpn)) {
-                        if (n + d >= se) {
+                        if (i + d >= se) {
                             break;
                         }
                     } else {
-                        k = n + d;
+                        k = i + d;
                     }
                 }
 
                 se = k + 1;
             }
 
-            if ((xmn >= 0) && (n < sw)) {
-                for (k = n, d = 1; d <= m; d++) {
+            if ((xmn >= 0) && (i < sw)) {
+                for (k = i, d = 1; d <= m; d++) {
                     if (update_view_aux(player_ptr, ypn + d, xmn, ypn + d - 1, xmn + 1, ypn + d - 1, xmn)) {
-                        if (n + d >= sw) {
+                        if (i + d >= sw) {
                             break;
                         }
                     } else {
-                        k = n + d;
+                        k = i + d;
                     }
                 }
 
@@ -265,28 +247,28 @@ void update_view(PlayerType *player_ptr)
 
         if (ymn > 0) {
             m = std::min(z, ymn);
-            if ((xpn <= x_max) && (n < ne)) {
-                for (k = n, d = 1; d <= m; d++) {
+            if ((xpn <= x_max) && (i < ne)) {
+                for (k = i, d = 1; d <= m; d++) {
                     if (update_view_aux(player_ptr, ymn - d, xpn, ymn - d + 1, xpn - 1, ymn - d + 1, xpn)) {
-                        if (n + d >= ne) {
+                        if (i + d >= ne) {
                             break;
                         }
                     } else {
-                        k = n + d;
+                        k = i + d;
                     }
                 }
 
                 ne = k + 1;
             }
 
-            if ((xmn >= 0) && (n < nw)) {
-                for (k = n, d = 1; d <= m; d++) {
+            if ((xmn >= 0) && (i < nw)) {
+                for (k = i, d = 1; d <= m; d++) {
                     if (update_view_aux(player_ptr, ymn - d, xmn, ymn - d + 1, xmn + 1, ymn - d + 1, xmn)) {
-                        if (n + d >= nw) {
+                        if (i + d >= nw) {
                             break;
                         }
                     } else {
-                        k = n + d;
+                        k = i + d;
                     }
                 }
 
@@ -296,28 +278,28 @@ void update_view(PlayerType *player_ptr)
 
         if (xpn < x_max) {
             m = std::min(z, x_max - xpn);
-            if ((ypn <= x_max) && (n < es)) {
-                for (k = n, d = 1; d <= m; d++) {
+            if ((ypn <= x_max) && (i < es)) {
+                for (k = i, d = 1; d <= m; d++) {
                     if (update_view_aux(player_ptr, ypn, xpn + d, ypn - 1, xpn + d - 1, ypn, xpn + d - 1)) {
-                        if (n + d >= es) {
+                        if (i + d >= es) {
                             break;
                         }
                     } else {
-                        k = n + d;
+                        k = i + d;
                     }
                 }
 
                 es = k + 1;
             }
 
-            if ((ymn >= 0) && (n < en)) {
-                for (k = n, d = 1; d <= m; d++) {
+            if ((ymn >= 0) && (i < en)) {
+                for (k = i, d = 1; d <= m; d++) {
                     if (update_view_aux(player_ptr, ymn, xpn + d, ymn + 1, xpn + d - 1, ymn, xpn + d - 1)) {
-                        if (n + d >= en) {
+                        if (i + d >= en) {
                             break;
                         }
                     } else {
-                        k = n + d;
+                        k = i + d;
                     }
                 }
 
@@ -327,28 +309,28 @@ void update_view(PlayerType *player_ptr)
 
         if (xmn > 0) {
             m = std::min(z, xmn);
-            if ((ypn <= y_max) && (n < ws)) {
-                for (k = n, d = 1; d <= m; d++) {
+            if ((ypn <= y_max) && (i < ws)) {
+                for (k = i, d = 1; d <= m; d++) {
                     if (update_view_aux(player_ptr, ypn, xmn - d, ypn - 1, xmn - d + 1, ypn, xmn - d + 1)) {
-                        if (n + d >= ws) {
+                        if (i + d >= ws) {
                             break;
                         }
                     } else {
-                        k = n + d;
+                        k = i + d;
                     }
                 }
 
                 ws = k + 1;
             }
 
-            if ((ymn >= 0) && (n < wn)) {
-                for (k = n, d = 1; d <= m; d++) {
+            if ((ymn >= 0) && (i < wn)) {
+                for (k = i, d = 1; d <= m; d++) {
                     if (update_view_aux(player_ptr, ymn, xmn - d, ymn + 1, xmn - d + 1, ymn, xmn - d + 1)) {
-                        if (n + d >= wn) {
+                        if (i + d >= wn) {
                             break;
                         }
                     } else {
-                        k = n + d;
+                        k = i + d;
                     }
                 }
 
@@ -357,26 +339,15 @@ void update_view(PlayerType *player_ptr)
         }
     }
 
-    for (n = 0; n < floor_ptr->view_n; n++) {
-        y = floor_ptr->view_y[n];
-        x = floor_ptr->view_x[n];
-        g_ptr = &floor_ptr->grid_array[y][x];
-        g_ptr->info &= ~(CAVE_XTRA);
-        if (g_ptr->info & CAVE_TEMP) {
+    floor.set_view();
+    for (const auto &pos : points) {
+        auto &grid = floor.get_grid(pos);
+        grid.info &= ~(CAVE_TEMP);
+        if (grid.info & CAVE_VIEW) {
             continue;
         }
 
-        cave_note_and_redraw_later(floor_ptr, y, x);
-    }
-
-    for (const auto &[py, px] : points) {
-        g_ptr = &floor_ptr->grid_array[py][px];
-        g_ptr->info &= ~(CAVE_TEMP);
-        if (g_ptr->info & CAVE_VIEW) {
-            continue;
-        }
-
-        cave_redraw_later(floor_ptr, py, px);
+        floor.set_redraw_at(pos);
     }
 
     RedrawingFlagsUpdater::get_instance().set_flag(StatusRecalculatingFlag::DELAY_VISIBILITY);

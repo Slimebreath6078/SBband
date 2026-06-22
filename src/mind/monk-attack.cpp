@@ -8,10 +8,12 @@
 #include "mind/monk-attack.h"
 #include "cmd-action/cmd-attack.h"
 #include "combat/attack-criticality.h"
+#include "combat/slaying.h"
 #include "core/speed-table.h"
 #include "core/stuff-handler.h"
 #include "floor/geometry.h"
 #include "game-option/cheat-options.h"
+#include "inventory/inventory-slot-types.h"
 #include "main/sound-definitions-table.h"
 #include "main/sound-of-music.h"
 #include "mind/mind-force-trainer.h"
@@ -22,10 +24,10 @@
 #include "player-info/monk-data-type.h"
 #include "player/attack-defense-types.h"
 #include "player/special-defense-types.h"
-#include "system/floor-type-definition.h"
+#include "system/floor/floor-info.h"
 #include "system/grid-type-definition.h"
+#include "system/monrace/monrace-definition.h"
 #include "system/monster-entity.h"
-#include "system/monster-race-info.h"
 #include "system/player-type-definition.h"
 #include "target/target-getter.h"
 #include "timed-effect/timed-effects.h"
@@ -40,25 +42,25 @@
  */
 static int calc_stun_resistance(player_attack_type *pa_ptr)
 {
-    auto *r_ptr = &pa_ptr->m_ptr->get_monrace();
+    const auto &monrace = pa_ptr->m_ptr->get_monrace();
     int resist_stun = 0;
-    if (r_ptr->kind_flags.has(MonsterKindType::UNIQUE)) {
+    if (monrace.kind_flags.has(MonsterKindType::UNIQUE)) {
         resist_stun += 88;
     }
 
-    if (r_ptr->resistance_flags.has(MonsterResistanceType::NO_STUN)) {
+    if (monrace.resistance_flags.has(MonsterResistanceType::NO_STUN)) {
         resist_stun += 66;
     }
 
-    if (r_ptr->resistance_flags.has(MonsterResistanceType::NO_CONF)) {
+    if (monrace.resistance_flags.has(MonsterResistanceType::NO_CONF)) {
         resist_stun += 33;
     }
 
-    if (r_ptr->resistance_flags.has(MonsterResistanceType::NO_SLEEP)) {
+    if (monrace.resistance_flags.has(MonsterResistanceType::NO_SLEEP)) {
         resist_stun += 33;
     }
 
-    if (r_ptr->kind_flags.has(MonsterKindType::UNDEAD) || r_ptr->kind_flags.has(MonsterKindType::NONLIVING)) {
+    if (monrace.kind_flags.has(MonsterKindType::UNDEAD) || monrace.kind_flags.has(MonsterKindType::NONLIVING)) {
         resist_stun += 66;
     }
 
@@ -140,7 +142,7 @@ static int process_monk_additional_effect(player_attack_type *pa_ptr, int *stun_
     if (pa_ptr->ma_ptr->effect == MA_KNEE) {
         if (monrace.is_male()) {
             msg_format(_("%sに金的膝蹴りをくらわした！", "You hit %s in the groin with your knee!"), pa_ptr->m_name);
-            sound(SOUND_PAIN);
+            sound(SoundKind::PAIN);
             special_effect = MA_KNEE;
         } else {
             msg_format(pa_ptr->ma_ptr->desc, pa_ptr->m_name);
@@ -198,7 +200,7 @@ WEIGHT calc_monk_attack_weight(PlayerType *player_ptr)
  */
 static void process_attack_vital_spot(PlayerType *player_ptr, player_attack_type *pa_ptr, int *stun_effect, int *resist_stun, const int special_effect)
 {
-    auto *r_ptr = &pa_ptr->m_ptr->get_monrace();
+    const auto &monrace = pa_ptr->m_ptr->get_monrace();
     if ((special_effect == MA_KNEE) && ((pa_ptr->attack_damage + player_ptr->to_d[pa_ptr->hand]) < pa_ptr->m_ptr->hp)) {
         msg_format(_("%s^は苦痛にうめいている！", "%s^ moans in agony!"), pa_ptr->m_name);
         *stun_effect = 7 + randint1(13);
@@ -207,8 +209,8 @@ static void process_attack_vital_spot(PlayerType *player_ptr, player_attack_type
     }
 
     if ((special_effect == MA_SLOW) && ((pa_ptr->attack_damage + player_ptr->to_d[pa_ptr->hand]) < pa_ptr->m_ptr->hp)) {
-        const auto is_unique = r_ptr->kind_flags.has_not(MonsterKindType::UNIQUE);
-        if (is_unique && (randint1(player_ptr->lev) > r_ptr->level) && (pa_ptr->m_ptr->mspeed > STANDARD_SPEED - 50)) {
+        const auto is_unique = monrace.kind_flags.has_not(MonsterKindType::UNIQUE);
+        if (is_unique && (randint1(player_ptr->lev) > monrace.level) && (pa_ptr->m_ptr->mspeed > STANDARD_SPEED - 50)) {
             msg_format(_("%s^は足をひきずり始めた。", "You've hobbled %s."), pa_ptr->m_name);
             pa_ptr->m_ptr->mspeed -= 10;
         }
@@ -219,16 +221,16 @@ static void process_attack_vital_spot(PlayerType *player_ptr, player_attack_type
  * @brief 朦朧効果を受けたモンスターのステータス表示
  * @param player_ptr プレイヤーの参照ポインタ
  * @param pa_ptr 直接攻撃構造体への参照ポインタ
- * @param g_ptr グリッドへの参照ポインタ
+ * @param grid グリッドへの参照
  * @param stun_effect 朦朧の残りターン
  * @param resist_stun 朦朧への抵抗値
  */
 static void print_stun_effect(PlayerType *player_ptr, player_attack_type *pa_ptr, const int stun_effect, const int resist_stun)
 {
-    auto *r_ptr = &pa_ptr->m_ptr->get_monrace();
+    const auto &monrace = pa_ptr->m_ptr->get_monrace();
     if (stun_effect && ((pa_ptr->attack_damage + player_ptr->to_d[pa_ptr->hand]) < pa_ptr->m_ptr->hp)) {
-        if (player_ptr->lev > randint1(r_ptr->level + resist_stun + 10)) {
-            if (set_monster_stunned(player_ptr, pa_ptr->g_ptr->m_idx, stun_effect + pa_ptr->m_ptr->get_remaining_stun())) {
+        if (player_ptr->lev > randint1(monrace.level + resist_stun + 10)) {
+            if (set_monster_stunned(*player_ptr->current_floor_ptr, pa_ptr->g_ptr->m_idx, stun_effect + pa_ptr->m_ptr->get_remaining_stun())) {
                 msg_format(_("%s^はフラフラになった。", "%s^ is stunned."), pa_ptr->m_name);
             } else {
                 msg_format(_("%s^はさらにフラフラになった。", "%s^ is more stunned."), pa_ptr->m_name);
@@ -241,7 +243,7 @@ static void print_stun_effect(PlayerType *player_ptr, player_attack_type *pa_ptr
  * @brief 強力な素手攻撃ができる職業 (修行僧、狂戦士、練気術師)の素手攻撃処理メインルーチン
  * @param player_ptr プレイヤーの参照ポインタ
  * @param pa_ptr 直接攻撃構造体への参照ポインタ
- * @param g_ptr グリッドへの参照ポインタ
+ * @param grid グリッドへの参照
  */
 void process_monk_attack(PlayerType *player_ptr, player_attack_type *pa_ptr)
 {
@@ -249,9 +251,11 @@ void process_monk_attack(PlayerType *player_ptr, player_attack_type *pa_ptr)
     int max_blow_selection_times = calc_max_blow_selection_times(player_ptr);
     int min_level = select_blow(player_ptr, pa_ptr, max_blow_selection_times);
 
+    auto *o_ptr = player_ptr->inventory[enum2i(INVEN_MAIN_HAND) + pa_ptr->hand].get();
     const auto num = pa_ptr->ma_ptr->damage_dice.num + player_ptr->damage_dice_bonus[pa_ptr->hand].num;
     const auto sides = pa_ptr->ma_ptr->damage_dice.sides + player_ptr->damage_dice_bonus[pa_ptr->hand].sides;
-    pa_ptr->attack_damage = Dice::roll(num, sides);
+    pa_ptr->attack_damage = calc_attack_damage_with_slay(player_ptr, o_ptr, Dice::roll(num, sides), *pa_ptr->m_ptr, pa_ptr->mode, false);
+
     if (player_ptr->special_attack & ATTACK_SUIKEN) {
         pa_ptr->attack_damage *= 2;
     }
@@ -266,8 +270,8 @@ void process_monk_attack(PlayerType *player_ptr, player_attack_type *pa_ptr)
 
 bool double_attack(PlayerType *player_ptr)
 {
-    DIRECTION dir;
-    if (!get_rep_dir(player_ptr, &dir)) {
+    const auto dir = get_rep_dir(player_ptr);
+    if (!dir) {
         return false;
     }
 
@@ -276,7 +280,7 @@ bool double_attack(PlayerType *player_ptr)
     const auto has_monster = grid.has_monster();
     if (!has_monster) {
         msg_print(_("その方向にはモンスターはいません。", "You don't see any monster in this direction"));
-        msg_print(nullptr);
+        msg_erase();
         return true;
     }
 

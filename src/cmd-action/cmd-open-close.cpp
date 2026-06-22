@@ -6,7 +6,6 @@
 #include "floor/geometry.h"
 #include "game-option/disturbance-options.h"
 #include "game-option/input-options.h"
-#include "grid/feature.h"
 #include "grid/grid.h"
 #include "inventory/inventory-object.h"
 #include "inventory/inventory-slot-types.h"
@@ -20,13 +19,14 @@
 #include "specific-object/chest.h"
 #include "status/action-setter.h"
 #include "status/experience.h"
-#include "system/floor-type-definition.h"
+#include "system/enums/grid-count-kind.h"
+#include "system/floor/floor-info.h"
 #include "system/grid-type-definition.h"
-#include "system/item-entity.h"
+#include "system/item/item-entity.h"
 #include "system/monster-entity.h"
 #include "system/player-type-definition.h"
 #include "system/redrawing-flags-updater.h"
-#include "system/terrain-type-definition.h"
+#include "system/terrain/terrain-definition.h"
 #include "target/target-getter.h"
 #include "term/screen-processor.h"
 #include "timed-effect/timed-effects.h"
@@ -48,7 +48,7 @@ static bool exe_open_chest(PlayerType *player_ptr, const Pos2D &pos, OBJECT_IDX 
 {
     auto flag = true;
     auto more = false;
-    auto *o_ptr = &player_ptr->current_floor_ptr->o_list[o_idx];
+    auto *o_ptr = player_ptr->current_floor_ptr->o_list[o_idx].get();
     PlayerEnergy(player_ptr).set_player_turn_energy(100);
     if (o_ptr->pval > 0) {
         flag = false;
@@ -104,14 +104,14 @@ void do_cmd_open(PlayerType *player_ptr)
     }
 
     PlayerClass(player_ptr).break_samurai_stance({ SamuraiStanceType::MUSOU });
+    auto &floor = *player_ptr->current_floor_ptr;
     if (easy_open) {
-        const auto &[num_doors, pos_door] = count_dt(player_ptr, is_closed_door, false);
-        const auto &[num_chests, pos_chest] = count_chests(player_ptr, false);
+        const auto &[num_doors, dir_door] = floor.count_doors_traps(player_ptr->get_position(), GridCountKind::CLOSED_DOOR, false);
+        const auto &[num_chests, dir_chest] = count_chests(player_ptr, false);
         if ((num_doors > 0) || (num_chests > 0)) {
-            const auto pos = pos_chest == Pos2D(0, 0) ? pos_door : pos_chest;
             const auto too_many = (num_doors && num_chests) || (num_doors > 1) || (num_chests > 1);
             if (!too_many) {
-                command_dir = coords_to_dir(player_ptr, pos.y, pos.x);
+                command_dir = num_chests == 0 ? dir_door : dir_chest;
             }
         }
     }
@@ -122,13 +122,11 @@ void do_cmd_open(PlayerType *player_ptr)
         command_arg = 0;
     }
 
-    int dir;
-    if (get_rep_dir(player_ptr, &dir, true)) {
-        auto &floor = *player_ptr->current_floor_ptr;
+    if (const auto dir = get_rep_dir(player_ptr, true)) {
         const auto pos = player_ptr->get_neighbor(dir);
         const auto &grid = floor.get_grid(pos);
-        const auto o_idx = chest_check(&floor, pos, false);
-        if (grid.get_terrain_mimic().flags.has_not(TerrainCharacteristics::OPEN) && !o_idx) {
+        const auto o_idx = chest_check(floor, pos, false);
+        if (grid.get_terrain(TerrainKind::MIMIC).flags.has_not(TerrainCharacteristics::OPEN) && !o_idx) {
             msg_print(_("そこには開けるものが見当たらない。", "You see nothing there to open."));
         } else if (grid.has_monster() && !floor.m_list[grid.m_idx].is_riding()) {
             PlayerEnergy(player_ptr).set_player_turn_energy(100);
@@ -158,11 +156,12 @@ void do_cmd_close(PlayerType *player_ptr)
         return;
     }
 
+    const auto &floor = *player_ptr->current_floor_ptr;
     PlayerClass(player_ptr).break_samurai_stance({ SamuraiStanceType::MUSOU });
     if (easy_open) {
-        const auto &[num_doors, pos] = count_dt(player_ptr, is_open, false);
+        const auto &[num_doors, dir] = floor.count_doors_traps(player_ptr->get_position(), GridCountKind::OPEN, false);
         if (num_doors == 1) {
-            command_dir = coords_to_dir(player_ptr, pos.y, pos.x);
+            command_dir = dir;
         }
     }
 
@@ -173,18 +172,17 @@ void do_cmd_close(PlayerType *player_ptr)
     }
 
     auto more = false;
-    int dir;
-    if (get_rep_dir(player_ptr, &dir)) {
+    if (const auto dir = get_rep_dir(player_ptr)) {
         const auto pos = player_ptr->get_neighbor(dir);
-        const auto &grid = player_ptr->current_floor_ptr->get_grid(pos);
-        if (grid.get_terrain_mimic().flags.has_not(TerrainCharacteristics::CLOSE)) {
+        const auto &grid = floor.get_grid(pos);
+        if (grid.get_terrain(TerrainKind::MIMIC).flags.has_not(TerrainCharacteristics::CLOSE)) {
             msg_print(_("そこには閉じるものが見当たらない。", "You see nothing there to close."));
         } else if (grid.has_monster()) {
             PlayerEnergy(player_ptr).set_player_turn_energy(100);
             msg_print(_("モンスターが立ちふさがっている！", "There is a monster in the way!"));
             do_cmd_attack(player_ptr, pos.y, pos.x, HISSATSU_NONE);
         } else {
-            more = exe_close(player_ptr, pos.y, pos.x);
+            more = exe_close(player_ptr, pos);
         }
     }
 
@@ -203,15 +201,15 @@ void do_cmd_disarm(PlayerType *player_ptr)
         return;
     }
 
+    auto &floor = *player_ptr->current_floor_ptr;
     PlayerClass(player_ptr).break_samurai_stance({ SamuraiStanceType::MUSOU });
     if (easy_disarm) {
-        const auto &[num_traps, pos_trap] = count_dt(player_ptr, is_trap, true);
-        const auto &[num_chests, pos_chest] = count_chests(player_ptr, true);
+        const auto &[num_traps, dir_trap] = floor.count_doors_traps(player_ptr->get_position(), GridCountKind::TRAP, true);
+        const auto &[num_chests, dir_chest] = count_chests(player_ptr, true);
         if ((num_traps > 0) || (num_chests > 0)) {
-            const auto pos = pos_chest == Pos2D(0, 0) ? pos_trap : pos_chest;
             const auto too_many = (num_traps && num_chests) || (num_traps > 1) || (num_chests > 1);
             if (!too_many) {
-                command_dir = coords_to_dir(player_ptr, pos.y, pos.x);
+                command_dir = (num_chests == 0) ? dir_trap : dir_chest;
             }
         }
     }
@@ -222,15 +220,12 @@ void do_cmd_disarm(PlayerType *player_ptr)
         command_arg = 0;
     }
 
-    int dir;
     auto more = false;
-    if (get_rep_dir(player_ptr, &dir, true)) {
-        auto &floor = *player_ptr->current_floor_ptr;
+    if (const auto dir = get_rep_dir(player_ptr, true)) {
         const auto pos = player_ptr->get_neighbor(dir);
         const auto &grid = floor.get_grid(pos);
-        const auto feat = grid.get_feat_mimic();
-        const auto o_idx = chest_check(&floor, pos, true);
-        if (!is_trap(player_ptr, feat) && !o_idx) {
+        const auto o_idx = chest_check(floor, pos, true);
+        if (!floor.has_trap_at(pos) && !o_idx) {
             msg_print(_("そこには解除するものが見当たらない。", "You see nothing there to disarm."));
         } else if (grid.has_monster() && !floor.m_list[grid.m_idx].is_riding()) {
             msg_print(_("モンスターが立ちふさがっている！", "There is a monster in the way!"));
@@ -277,12 +272,11 @@ void do_cmd_bash(PlayerType *player_ptr)
         command_arg = 0;
     }
 
-    int dir;
     auto more = false;
-    if (get_rep_dir(player_ptr, &dir)) {
+    if (const auto dir = get_rep_dir(player_ptr)) {
         const auto pos = player_ptr->get_neighbor(dir);
         const Grid &grid = player_ptr->current_floor_ptr->get_grid(pos);
-        if (grid.get_terrain_mimic().flags.has_not(TerrainCharacteristics::BASH)) {
+        if (grid.get_terrain(TerrainKind::MIMIC).flags.has_not(TerrainCharacteristics::BASH)) {
             msg_print(_("そこには体当たりするものが見当たらない。", "You see nothing there to bash."));
         } else if (grid.has_monster()) {
             PlayerEnergy(player_ptr).set_player_turn_energy(100);
@@ -310,14 +304,14 @@ void do_cmd_bash(PlayerType *player_ptr)
  */
 static bool get_spike(PlayerType *player_ptr, INVENTORY_IDX *ip)
 {
-    for (INVENTORY_IDX i = 0; i < INVEN_PACK; i++) {
-        auto *o_ptr = &player_ptr->inventory_list[i];
+    for (const auto i_idx : INVEN_PACK_SLOTS) {
+        auto *o_ptr = player_ptr->inventory[i_idx].get();
         if (!o_ptr->is_valid()) {
             continue;
         }
 
         if (o_ptr->bi_key.tval() == ItemKindType::SPIKE) {
-            *ip = i;
+            *ip = i_idx;
             return true;
         }
     }
@@ -341,14 +335,14 @@ void do_cmd_spike(PlayerType *player_ptr)
     }
 
     PlayerClass(player_ptr).break_samurai_stance({ SamuraiStanceType::MUSOU });
-    DIRECTION dir;
-    if (!get_rep_dir(player_ptr, &dir)) {
+    const auto dir = get_rep_dir(player_ptr);
+    if (!dir) {
         return;
     }
 
     const auto pos = player_ptr->get_neighbor(dir);
     const auto &grid = player_ptr->current_floor_ptr->get_grid(pos);
-    const auto &terrain_mimic = grid.get_terrain_mimic();
+    const auto &terrain_mimic = grid.get_terrain(TerrainKind::MIMIC);
     INVENTORY_IDX i_idx;
     if (terrain_mimic.flags.has_not(TerrainCharacteristics::SPIKE)) {
         msg_print(_("そこにはくさびを打てるものが見当たらない。", "You see nothing there to spike."));

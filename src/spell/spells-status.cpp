@@ -14,10 +14,8 @@
 #include "effect/effect-characteristics.h"
 #include "flavor/flavor-describer.h"
 #include "flavor/object-flavor-types.h"
-#include "floor/cave.h"
 #include "floor/floor-object.h"
 #include "floor/geometry.h"
-#include "grid/feature-flag-types.h"
 #include "hpmp/hp-mp-processor.h"
 #include "inventory/inventory-object.h"
 #include "inventory/inventory-slot-types.h"
@@ -41,10 +39,12 @@
 #include "status/experience.h"
 #include "status/shape-changer.h"
 #include "status/sight-setter.h"
-#include "system/baseitem-info.h"
-#include "system/floor-type-definition.h"
+#include "system/baseitem/baseitem-definition.h"
+#include "system/baseitem/baseitem-list.h"
+#include "system/enums/terrain/terrain-characteristics.h"
+#include "system/floor/floor-info.h"
 #include "system/grid-type-definition.h"
-#include "system/item-entity.h"
+#include "system/item/item-entity.h"
 #include "system/monster-entity.h"
 #include "system/player-type-definition.h"
 #include "system/redrawing-flags-updater.h"
@@ -60,7 +60,7 @@
  * @param dam 威力
  * @return 作用が実際にあった場合TRUEを返す
  */
-bool heal_monster(PlayerType *player_ptr, DIRECTION dir, int dam)
+bool heal_monster(PlayerType *player_ptr, const Direction &dir, int dam)
 {
     BIT_FLAGS flg = PROJECT_STOP | PROJECT_KILL | PROJECT_REFLECTABLE;
     return project_hook(player_ptr, AttributeType::OLD_HEAL, dir, dam, flg);
@@ -73,7 +73,7 @@ bool heal_monster(PlayerType *player_ptr, DIRECTION dir, int dam)
  * @param power 効力
  * @return 作用が実際にあった場合TRUEを返す
  */
-bool speed_monster(PlayerType *player_ptr, DIRECTION dir, int power)
+bool speed_monster(PlayerType *player_ptr, const Direction &dir, int power)
 {
     BIT_FLAGS flg = PROJECT_STOP | PROJECT_KILL | PROJECT_REFLECTABLE;
     return project_hook(player_ptr, AttributeType::OLD_SPEED, dir, power, flg);
@@ -86,7 +86,7 @@ bool speed_monster(PlayerType *player_ptr, DIRECTION dir, int power)
  * @param power 効力
  * @return 作用が実際にあった場合TRUEを返す
  */
-bool slow_monster(PlayerType *player_ptr, DIRECTION dir, int power)
+bool slow_monster(PlayerType *player_ptr, const Direction &dir, int power)
 {
     BIT_FLAGS flg = PROJECT_STOP | PROJECT_KILL | PROJECT_REFLECTABLE;
     return project_hook(player_ptr, AttributeType::OLD_SLOW, dir, power, flg);
@@ -99,7 +99,7 @@ bool slow_monster(PlayerType *player_ptr, DIRECTION dir, int power)
  * @param power 効力
  * @return 作用が実際にあった場合TRUEを返す
  */
-bool sleep_monster(PlayerType *player_ptr, DIRECTION dir, int power)
+bool sleep_monster(PlayerType *player_ptr, const Direction &dir, int power)
 {
     BIT_FLAGS flg = PROJECT_STOP | PROJECT_KILL | PROJECT_REFLECTABLE;
     return project_hook(player_ptr, AttributeType::OLD_SLEEP, dir, power, flg);
@@ -112,7 +112,7 @@ bool sleep_monster(PlayerType *player_ptr, DIRECTION dir, int power)
  * @return 作用が実際にあった場合TRUEを返す
  * @details 威力はプレイヤーレベル*2に固定
  */
-bool stasis_monster(PlayerType *player_ptr, DIRECTION dir)
+bool stasis_monster(PlayerType *player_ptr, const Direction &dir)
 {
     return fire_ball_hide(player_ptr, AttributeType::STASIS, dir, player_ptr->lev * 2, 0);
 }
@@ -124,7 +124,7 @@ bool stasis_monster(PlayerType *player_ptr, DIRECTION dir)
  * @return 作用が実際にあった場合TRUEを返す
  * @details 威力はプレイヤーレベル*2に固定
  */
-bool stasis_evil(PlayerType *player_ptr, DIRECTION dir)
+bool stasis_evil(PlayerType *player_ptr, const Direction &dir)
 {
     return fire_ball_hide(player_ptr, AttributeType::STASIS_EVIL, dir, player_ptr->lev * 2, 0);
 }
@@ -136,7 +136,7 @@ bool stasis_evil(PlayerType *player_ptr, DIRECTION dir)
  * @param plev プレイヤーレベル(=効力)
  * @return 作用が実際にあった場合TRUEを返す
  */
-bool confuse_monster(PlayerType *player_ptr, DIRECTION dir, PLAYER_LEVEL plev)
+bool confuse_monster(PlayerType *player_ptr, const Direction &dir, PLAYER_LEVEL plev)
 {
     BIT_FLAGS flg = PROJECT_STOP | PROJECT_KILL | PROJECT_REFLECTABLE;
     return project_hook(player_ptr, AttributeType::OLD_CONF, dir, plev, flg);
@@ -149,7 +149,7 @@ bool confuse_monster(PlayerType *player_ptr, DIRECTION dir, PLAYER_LEVEL plev)
  * @param plev プレイヤーレベル(=効力)
  * @return 作用が実際にあった場合TRUEを返す
  */
-bool stun_monster(PlayerType *player_ptr, DIRECTION dir, PLAYER_LEVEL plev)
+bool stun_monster(PlayerType *player_ptr, const Direction &dir, PLAYER_LEVEL plev)
 {
     BIT_FLAGS flg = PROJECT_STOP | PROJECT_KILL | PROJECT_REFLECTABLE;
     return project_hook(player_ptr, AttributeType::STUN, dir, plev, flg);
@@ -162,7 +162,7 @@ bool stun_monster(PlayerType *player_ptr, DIRECTION dir, PLAYER_LEVEL plev)
  * @param power 効力
  * @return 作用が実際にあった場合TRUEを返す
  */
-bool poly_monster(PlayerType *player_ptr, DIRECTION dir, int power)
+bool poly_monster(PlayerType *player_ptr, const Direction &dir, int power)
 {
     BIT_FLAGS flg = PROJECT_STOP | PROJECT_KILL | PROJECT_REFLECTABLE;
     bool tester = (project_hook(player_ptr, AttributeType::OLD_POLY, dir, power, flg));
@@ -178,7 +178,7 @@ bool poly_monster(PlayerType *player_ptr, DIRECTION dir, int power)
  * @param dir 方向(5ならばグローバル変数 target_col/target_row の座標を目標にする)
  * @return 作用が実際にあった場合TRUEを返す
  */
-bool clone_monster(PlayerType *player_ptr, DIRECTION dir)
+bool clone_monster(PlayerType *player_ptr, const Direction &dir)
 {
     BIT_FLAGS flg = PROJECT_STOP | PROJECT_KILL | PROJECT_REFLECTABLE;
     return project_hook(player_ptr, AttributeType::OLD_CLONE, dir, 0, flg);
@@ -191,7 +191,7 @@ bool clone_monster(PlayerType *player_ptr, DIRECTION dir)
  * @param plev プレイヤーレベル(=効力)
  * @return 作用が実際にあった場合TRUEを返す
  */
-bool fear_monster(PlayerType *player_ptr, DIRECTION dir, PLAYER_LEVEL plev)
+bool fear_monster(PlayerType *player_ptr, const Direction &dir, PLAYER_LEVEL plev)
 {
     BIT_FLAGS flg = PROJECT_STOP | PROJECT_KILL | PROJECT_REFLECTABLE;
     return project_hook(player_ptr, AttributeType::TURN_ALL, dir, plev, flg);
@@ -207,7 +207,7 @@ bool time_walk(PlayerType *player_ptr)
     player_ptr->timewalk = true;
     msg_print(_("「時よ！」", "You yell 'Time!'"));
     //	msg_print(_("「『ザ・ワールド』！時は止まった！」", "You yell 'The World! Time has stopped!'"));
-    msg_print(nullptr);
+    msg_erase();
 
     player_ptr->energy_need -= 1000 + (100 + player_ptr->csp - 50) * TURNS_PER_TICK / 10;
     auto &rfu = RedrawingFlagsUpdater::get_instance();
@@ -298,7 +298,7 @@ bool life_stream(PlayerType *player_ptr, bool message, bool virtue_change)
     (void)bss.set_cut(0);
     (void)bss.set_paralysis(0);
     (void)restore_all_status(player_ptr);
-    (void)set_shero(player_ptr, 0, true);
+    (void)set_berserk(player_ptr, 0, true);
     handle_stuff(player_ptr);
     hp_player(player_ptr, 5000);
 
@@ -330,7 +330,7 @@ bool berserk(PlayerType *player_ptr, int base)
         ident = true;
     }
 
-    if (set_shero(player_ptr, player_ptr->shero + randint1(base) + base, false)) {
+    if (set_berserk(player_ptr, player_ptr->berserk + randint1(base) + base, false)) {
         ident = true;
     }
 
@@ -357,7 +357,7 @@ bool cure_light_wounds(PlayerType *player_ptr, int pow)
         ident = true;
     }
 
-    if (set_shero(player_ptr, 0, true)) {
+    if (set_berserk(player_ptr, 0, true)) {
         ident = true;
     }
 
@@ -384,7 +384,7 @@ bool cure_serious_wounds(PlayerType *player_ptr, int pow)
         ident = true;
     }
 
-    if (set_shero(player_ptr, 0, true)) {
+    if (set_berserk(player_ptr, 0, true)) {
         ident = true;
     }
 
@@ -419,7 +419,7 @@ bool cure_critical_wounds(PlayerType *player_ptr, int pow)
         ident = true;
     }
 
-    if (set_shero(player_ptr, 0, true)) {
+    if (set_berserk(player_ptr, 0, true)) {
         ident = true;
     }
 
@@ -468,7 +468,7 @@ bool restore_mana(PlayerType *player_ptr, bool magic_eater)
         // 魔力復活による、魔道具術師の取り込んだ魔法の回復量
         // 取り込み数が10回未満: 3 回分回復
         // 取り込み数が10回以上: 取り込み回数/3 回分回復
-        auto magic_eater_data = PlayerClass(player_ptr).get_specific_data<magic_eater_data_type>();
+        auto magic_eater_data = PlayerClass(player_ptr).get_specific_data<MagicEaterDataList>();
         for (auto tval : { ItemKindType::STAFF, ItemKindType::WAND }) {
             for (auto &item : magic_eater_data->get_item_group(tval)) {
                 item.charge += (item.count < 10) ? EATER_CHARGE * 3 : item.count * EATER_CHARGE / 3;
@@ -537,17 +537,17 @@ bool fishing(PlayerType *player_ptr)
         return false;
     }
 
-    const auto pos = player_ptr->get_neighbor(*dir);
-    player_ptr->fishing_dir = *dir;
+    const auto pos = player_ptr->get_neighbor(dir);
+    player_ptr->fishing_dir = dir.dir();
     const auto &floor = *player_ptr->current_floor_ptr;
-    if (!cave_has_flag_bold(&floor, pos.y, pos.x, TerrainCharacteristics::WATER)) {
+    if (!floor.has_terrain_characteristics(pos, TerrainCharacteristics::WATER)) {
         msg_print(_("そこは水辺ではない。", "You can't fish here."));
         return false;
     }
 
     const auto &grid = floor.get_grid(pos);
     if (grid.has_monster()) {
-        const auto m_name = monster_desc(player_ptr, &floor.m_list[grid.m_idx], 0);
+        const auto m_name = monster_desc(player_ptr, floor.m_list[grid.m_idx], 0);
         msg_format(_("%sが邪魔だ！", "%s^ is standing in your way."), m_name.data());
         PlayerEnergy(player_ptr).reset_player_turn();
         return false;
@@ -561,38 +561,32 @@ bool fishing(PlayerType *player_ptr)
 /*!
  * @brief 装備を脱ぎ捨てて小宇宙を燃やす
  * @param player_ptr プレイヤー情報への参照ポインタ
- * @param o_ptr_ptr 脱ぐ装備品への参照ポインタのポインタ
- * @return 脱いだらTRUE、脱がなかったらFALSE
- * @details
- * 脱いで落とした装備にtimeoutを設定するために装備品のアドレスを返す。
+ * @param item_casting 脱ぐ装備品への参照
+ * @return 脱いだら脱いだ後のアイテムへのポインタ、脱がなかったらnullptr
+ * @details 脱いで落とした装備にtimeoutを設定するために装備品のアドレスを返す.
  */
-bool cosmic_cast_off(PlayerType *player_ptr, ItemEntity **o_ptr_ptr)
+std::shared_ptr<ItemEntity> cosmic_cast_off(PlayerType *player_ptr, const ItemEntity &item_casting)
 {
-    auto *o_ptr = (*o_ptr_ptr);
-
     /* Cast off activated item */
     INVENTORY_IDX slot;
     for (slot = INVEN_MAIN_HAND; slot <= INVEN_FEET; slot++) {
-        if (o_ptr == &player_ptr->inventory_list[slot]) {
+        if (&item_casting == player_ptr->inventory[slot].get()) {
             break;
         }
     }
 
     if (slot > INVEN_FEET) {
-        return false;
+        return nullptr;
     }
 
-    ItemEntity forge;
-    (&forge)->copy_from(o_ptr);
-    inven_item_increase(player_ptr, slot, (0 - o_ptr->number));
+    auto item = item_casting.clone();
+    inven_item_increase(player_ptr, slot, -item.number);
     inven_item_optimize(player_ptr, slot);
 
-    OBJECT_IDX old_o_idx = drop_near(player_ptr, &forge, 0, player_ptr->y, player_ptr->x);
-    *o_ptr_ptr = &player_ptr->current_floor_ptr->o_list[old_o_idx];
-
-    const auto item_name = describe_flavor(player_ptr, &forge, OD_NAME_ONLY);
+    const auto old_o_idx = drop_near(player_ptr, item, player_ptr->get_position());
+    const auto item_name = describe_flavor(player_ptr, item, OD_NAME_ONLY);
     msg_format(_("%sを脱ぎ捨てた。", "You cast off %s."), item_name.data());
-    sound(SOUND_TAKE_OFF);
+    sound(SoundKind::TAKE_OFF);
 
     /* Get effects */
     msg_print(_("「燃え上がれ俺の小宇宙！」", "You say, 'Burn up my cosmo!"));
@@ -605,20 +599,20 @@ bool cosmic_cast_off(PlayerType *player_ptr, ItemEntity **o_ptr_ptr)
     (void)set_hero(player_ptr, player_ptr->hero + t, false);
     (void)set_blessed(player_ptr, player_ptr->blessed + t, false);
     (void)mod_acceleration(player_ptr, t, false);
-    (void)set_shero(player_ptr, player_ptr->shero + t, false);
+    (void)set_berserk(player_ptr, player_ptr->berserk + t, false);
     if (PlayerClass(player_ptr).equals(PlayerClassType::FORCETRAINER)) {
         set_current_ki(player_ptr, true, player_ptr->lev * 5 + 190);
         msg_print(_("気が爆発寸前になった。", "Your force absorbs the explosion."));
     }
 
-    return true;
+    return old_o_idx > 0 ? player_ptr->current_floor_ptr->o_list[old_o_idx] : nullptr;
 }
 
 /*!
  * @brief プレイヤーの因果混乱処理 / Apply Nexus
  * @param m_ptr 因果混乱をプレイヤーに与えたモンスターの情報参照ポインタ
  */
-void apply_nexus(MonsterEntity *m_ptr, PlayerType *player_ptr)
+void apply_nexus(const MonsterEntity &monster, PlayerType *player_ptr)
 {
     switch (randint1(7)) {
     case 1:
@@ -630,7 +624,7 @@ void apply_nexus(MonsterEntity *m_ptr, PlayerType *player_ptr)
 
     case 4:
     case 5: {
-        teleport_player_to(player_ptr, m_ptr->fy, m_ptr->fx, TELEPORT_PASSIVE);
+        teleport_player_to(player_ptr, monster.fy, monster.fx, TELEPORT_PASSIVE);
         break;
     }
 

@@ -3,10 +3,12 @@
 #include "monster-race/race-ability-flags.h"
 #include "system/angband.h"
 #include "util/flag-group.h"
+#include "util/point-2d.h"
+#include <memory>
 #include <string>
 #include <vector>
 
-class MonsterRaceInfo;
+class MonraceDefinition;
 class MonsterEntity;
 class PlayerType;
 struct melee_spell_type {
@@ -25,10 +27,12 @@ struct melee_spell_type {
     MonsterAbilityType thrown_spell;
 
     MonsterEntity *m_ptr;
-    MonsterEntity *t_ptr;
-    MonsterRaceInfo *r_ptr;
+    const MonsterEntity *t_ptr;
+    std::shared_ptr<MonraceDefinition> monrace;
     bool see_m;
     bool maneable;
     bool pet;
     bool in_no_magic_dungeon;
+
+    Pos2D get_position();
 };

@@ -3,6 +3,8 @@
 #include "monster-race/race-ability-flags.h"
 #include "system/angband.h"
 #include "util/flag-group.h"
+#include "util/point-2d.h"
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -15,7 +17,7 @@ enum mspell_lite_type {
 
 // Monster Spell Attack.
 class MonsterEntity;
-class MonsterRaceInfo;
+class MonraceDefinition;
 class PlayerType;
 struct msa_type {
     msa_type(PlayerType *player_ptr, MONSTER_IDX m_idx);
@@ -37,7 +39,12 @@ struct msa_type {
     mspell_lite_type do_spell;
     MonsterAbilityType thrown_spell;
 
-    MonsterRaceInfo *r_ptr;
+    std::shared_ptr<MonraceDefinition> monrace;
     bool no_inate;
     EnumClassFlagGroup<MonsterAbilityType> ability_flags;
+
+    Pos2D get_position() const;
+    void set_position(const Pos2D &pos);
+    Pos2D get_position_lite() const;
+    void set_position_lite(const Pos2D &pos);
 };

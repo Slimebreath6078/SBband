@@ -9,7 +9,6 @@
 #include "inventory/player-inventory.h"
 #include "main/sound-definitions-table.h"
 #include "main/sound-of-music.h"
-#include "object-enchant/special-object-flags.h"
 #include "object-use/zapwand-execution.h"
 #include "object/item-tester-hooker.h"
 #include "object/item-use-flags.h"
@@ -32,8 +31,8 @@
 #include "status/action-setter.h"
 #include "status/experience.h"
 #include "sv-definition/sv-wand-types.h"
-#include "system/baseitem-info.h"
-#include "system/item-entity.h"
+#include "system/baseitem/baseitem-key.h"
+#include "system/item/item-entity.h"
 #include "system/player-type-definition.h"
 #include "target/target-getter.h"
 #include "term/screen-processor.h"
@@ -51,7 +50,7 @@
  * @param magic 魔道具術上の処理ならばTRUE
  * @return 発動により効果内容が確定したならばTRUEを返す
  */
-bool wand_effect(PlayerType *player_ptr, int sval, int dir, bool powerful, bool magic)
+bool wand_effect(PlayerType *player_ptr, int sval, const Direction &dir, bool powerful, bool magic)
 {
     bool ident = false;
     PLAYER_LEVEL lev = powerful ? player_ptr->lev * 2 : player_ptr->lev;
@@ -336,8 +335,8 @@ void do_cmd_aim_wand(PlayerType *player_ptr)
 
     constexpr auto q = _("どの魔法棒で狙いますか? ", "Aim which wand? ");
     constexpr auto s = _("使える魔法棒がない。", "You have no wand to aim.");
-    short i_idx;
-    if (!choose_object(player_ptr, &i_idx, q, s, (USE_INVEN | USE_FLOOR), TvalItemTester(ItemKindType::WAND))) {
+    const auto &[item, i_idx] = choose_item(player_ptr, q, s, (USE_INVEN | USE_FLOOR), TvalItemTester(ItemKindType::WAND));
+    if (!item) {
         return;
     }
 

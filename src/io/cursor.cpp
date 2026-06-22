@@ -2,19 +2,17 @@
 #include "core/stuff-handler.h"
 #include "effect/effect-characteristics.h"
 #include "effect/spells-effect-util.h"
-#include "floor/cave.h"
 #include "game-option/map-screen-options.h"
 #include "game-option/special-options.h"
-#include "grid/feature.h"
 #include "io/screen-util.h"
 #include "player/player-status.h"
 #include "system/angband-system.h"
-#include "system/floor-type-definition.h"
+#include "system/floor/floor-info.h"
 #include "system/grid-type-definition.h"
 #include "system/monster-entity.h"
 #include "system/player-type-definition.h"
 #include "system/redrawing-flags-updater.h"
-#include "system/terrain-type-definition.h"
+#include "system/terrain/terrain-definition.h"
 #include "target/projection-path-calculator.h"
 #include "term/term-color-types.h"
 #include "view/display-map.h"
@@ -44,18 +42,20 @@ void print_path(PlayerType *player_ptr, POSITION y, POSITION x)
         return;
     }
 
-    auto *floor_ptr = player_ptr->current_floor_ptr;
-    ProjectionPath path_g(player_ptr, (project_length ? project_length : AngbandSystem::get_instance().get_max_range()), player_ptr->get_position(), { y, x }, PROJECT_PATH | PROJECT_THRU);
+    const auto &floor = *player_ptr->current_floor_ptr;
+    const auto p_pos = player_ptr->get_position();
+    const auto range = project_length != 0 ? project_length : AngbandSystem::get_instance().get_max_range();
+    ProjectionPath path_g(floor, range, p_pos, p_pos, pos, PROJECT_PATH | PROJECT_THRU);
     RedrawingFlagsUpdater::get_instance().set_flag(MainWindowRedrawingFlag::MAP);
     handle_stuff(player_ptr);
     for (const auto &pos_path : path_g) {
-        auto *g_ptr = &floor_ptr->get_grid(pos_path);
-        if (panel_contains(pos_path.y, pos_path.x)) {
+        const auto &grid = floor.get_grid(pos_path);
+        if (panel_contains(pos_path)) {
             DisplaySymbolPair symbol_pair({ default_color, '\0' }, { default_color, '*' });
-            if (g_ptr->has_monster() && floor_ptr->m_list[g_ptr->m_idx].ml) {
+            if (grid.has_monster() && floor.m_list[grid.m_idx].ml) {
                 symbol_pair = map_info(player_ptr, pos_path);
                 auto &symbol_foreground = symbol_pair.symbol_foreground;
-                if (!is_ascii_graphics(symbol_foreground.color)) {
+                if (!symbol_foreground.is_ascii_graphics()) {
                     symbol_foreground.color = default_color;
                 } else if ((symbol_foreground.character == '.') && ((symbol_foreground.color == TERM_WHITE) || (symbol_foreground.color == TERM_L_WHITE))) {
                     symbol_foreground.color = default_color;
@@ -69,7 +69,7 @@ void print_path(PlayerType *player_ptr, POSITION y, POSITION x)
             term_queue_bigchar(panel_col_of(pos_path.x), pos_path.y - panel_row_prt, symbol_pair);
         }
 
-        if (g_ptr->is_mark() && !g_ptr->cave_has_flag(TerrainCharacteristics::PROJECT)) {
+        if (grid.is_mark() && !grid.has(TerrainCharacteristics::PROJECTION)) {
             break;
         }
 
@@ -95,16 +95,16 @@ bool change_panel(PlayerType *player_ptr, POSITION dy, POSITION dx)
     POSITION y = panel_row_min + dy * hgt / 2;
     POSITION x = panel_col_min + dx * wid / 2;
 
-    auto *floor_ptr = player_ptr->current_floor_ptr;
-    if (y > floor_ptr->height - hgt) {
-        y = floor_ptr->height - hgt;
+    const auto &floor = *player_ptr->current_floor_ptr;
+    if (y > floor.height - hgt) {
+        y = floor.height - hgt;
     }
     if (y < 0) {
         y = 0;
     }
 
-    if (x > floor_ptr->width - wid) {
-        x = floor_ptr->width - wid;
+    if (x > floor.width - wid) {
+        x = floor.width - wid;
     }
     if (x < 0) {
         x = 0;

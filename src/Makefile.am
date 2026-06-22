@@ -32,7 +32,7 @@ SBband_SOURCES = \
 	autopick/autopick.cpp autopick/autopick.h \
 	autopick/autopick-commands-table.h autopick/autopick-dirty-flags.h \
 	autopick/autopick-flags-table.h \
-	autopick/autopick-key-flag-process.h autopick/autopick-keys-table.h \
+	autopick/autopick-keys-table.cpp autopick/autopick-keys-table.h \
 	autopick/autopick-menu-data-table.cpp autopick/autopick-menu-data-table.h \
 	autopick/autopick-methods-table.h \
 	autopick/autopick-util.cpp autopick/autopick-util.h \
@@ -114,7 +114,6 @@ SBband_SOURCES = \
 	cmd-io/cmd-process-screen.cpp cmd-io/cmd-process-screen.h \
 	cmd-io/cmd-save.cpp cmd-io/cmd-save.h \
 	cmd-io/diary-subtitle-table.cpp cmd-io/diary-subtitle-table.h \
-	cmd-io/feeling-table.cpp cmd-io/feeling-table.h \
 	cmd-io/macro-util.cpp cmd-io/macro-util.h \
 	\
 	cmd-item/cmd-destroy.cpp cmd-item/cmd-destroy.h \
@@ -192,8 +191,345 @@ SBband_SOURCES = \
 	effect/effect-processor.cpp effect/effect-processor.h \
 	effect/effect-characteristics.h \
 	\
-	external-lib/include-json.h \
-	external-lib/json.hpp \
+	external-lib/include/nlohmann/json.hpp \
+	external-lib/include/simpleini/SimpleIni.h \
+	external-lib/include/std/detail/associated_types.hpp \
+	external-lib/include/std/iterator \
+	external-lib/include/concepts/compare.hpp \
+	external-lib/include/concepts/swap.hpp \
+	external-lib/include/concepts/type_traits.hpp \
+	external-lib/include/concepts/concepts.hpp \
+	external-lib/include/module.modulemap \
+	external-lib/include/range/v3/range_traits.hpp \
+	external-lib/include/range/v3/view_adaptor.hpp \
+	external-lib/include/range/v3/functional.hpp \
+	external-lib/include/range/v3/view_facade.hpp \
+	external-lib/include/range/v3/iterator.hpp \
+	external-lib/include/range/v3/begin_end.hpp \
+	external-lib/include/range/v3/algorithm.hpp \
+	external-lib/include/range/v3/view_interface.hpp \
+	external-lib/include/range/v3/experimental/utility/generator.hpp \
+	external-lib/include/range/v3/experimental/view/shared.hpp \
+	external-lib/include/range/v3/range_access.hpp \
+	external-lib/include/range/v3/numeric/inner_product.hpp \
+	external-lib/include/range/v3/numeric/iota.hpp \
+	external-lib/include/range/v3/numeric/partial_sum.hpp \
+	external-lib/include/range/v3/numeric/adjacent_difference.hpp \
+	external-lib/include/range/v3/numeric/accumulate.hpp \
+	external-lib/include/range/v3/view.hpp \
+	external-lib/include/range/v3/index.hpp \
+	external-lib/include/range/v3/detail/range_access.hpp \
+	external-lib/include/range/v3/detail/adl_get.hpp \
+	external-lib/include/range/v3/detail/satisfy_boost_range.hpp \
+	external-lib/include/range/v3/detail/prologue.hpp \
+	external-lib/include/range/v3/detail/epilogue.hpp \
+	external-lib/include/range/v3/detail/variant.hpp \
+	external-lib/include/range/v3/detail/with_braced_init_args.hpp \
+	external-lib/include/range/v3/detail/config.hpp \
+	external-lib/include/range/v3/span.hpp \
+	external-lib/include/range/v3/range_concepts.hpp \
+	external-lib/include/range/v3/action/split.hpp \
+	external-lib/include/range/v3/action/reverse.hpp \
+	external-lib/include/range/v3/action/erase.hpp \
+	external-lib/include/range/v3/action/sort.hpp \
+	external-lib/include/range/v3/action/remove_if.hpp \
+	external-lib/include/range/v3/action/unique.hpp \
+	external-lib/include/range/v3/action/push_back.hpp \
+	external-lib/include/range/v3/action/drop.hpp \
+	external-lib/include/range/v3/action/push_front.hpp \
+	external-lib/include/range/v3/action/adjacent_remove_if.hpp \
+	external-lib/include/range/v3/action/shuffle.hpp \
+	external-lib/include/range/v3/action/join.hpp \
+	external-lib/include/range/v3/action/remove.hpp \
+	external-lib/include/range/v3/action/insert.hpp \
+	external-lib/include/range/v3/action/drop_while.hpp \
+	external-lib/include/range/v3/action/transform.hpp \
+	external-lib/include/range/v3/action/unstable_remove_if.hpp \
+	external-lib/include/range/v3/action/stable_sort.hpp \
+	external-lib/include/range/v3/action/take_while.hpp \
+	external-lib/include/range/v3/action/stride.hpp \
+	external-lib/include/range/v3/action/slice.hpp \
+	external-lib/include/range/v3/action/take.hpp \
+	external-lib/include/range/v3/action/action.hpp \
+	external-lib/include/range/v3/action/concepts.hpp \
+	external-lib/include/range/v3/action/split_when.hpp \
+	external-lib/include/range/v3/iterator_range.hpp \
+	external-lib/include/range/v3/algorithm/partial_sort_copy.hpp \
+	external-lib/include/range/v3/algorithm/search.hpp \
+	external-lib/include/range/v3/algorithm/remove_copy.hpp \
+	external-lib/include/range/v3/algorithm/aux_/sort_n_with_buffer.hpp \
+	external-lib/include/range/v3/algorithm/aux_/equal_range_n.hpp \
+	external-lib/include/range/v3/algorithm/aux_/upper_bound_n.hpp \
+	external-lib/include/range/v3/algorithm/aux_/lower_bound_n.hpp \
+	external-lib/include/range/v3/algorithm/aux_/partition_point_n.hpp \
+	external-lib/include/range/v3/algorithm/aux_/merge_n.hpp \
+	external-lib/include/range/v3/algorithm/aux_/merge_n_with_buffer.hpp \
+	external-lib/include/range/v3/algorithm/find_end.hpp \
+	external-lib/include/range/v3/algorithm/fold.hpp \
+	external-lib/include/range/v3/algorithm/reverse.hpp \
+	external-lib/include/range/v3/algorithm/swap_ranges.hpp \
+	external-lib/include/range/v3/algorithm/max.hpp \
+	external-lib/include/range/v3/algorithm/fold_left.hpp \
+	external-lib/include/range/v3/algorithm/replace.hpp \
+	external-lib/include/range/v3/algorithm/fold_right.hpp \
+	external-lib/include/range/v3/algorithm/mismatch.hpp \
+	external-lib/include/range/v3/algorithm/tagspec.hpp \
+	external-lib/include/range/v3/algorithm/fill_n.hpp \
+	external-lib/include/range/v3/algorithm/sort.hpp \
+	external-lib/include/range/v3/algorithm/remove_if.hpp \
+	external-lib/include/range/v3/algorithm/unique.hpp \
+	external-lib/include/range/v3/algorithm/count_if.hpp \
+	external-lib/include/range/v3/algorithm/max_element.hpp \
+	external-lib/include/range/v3/algorithm/replace_copy.hpp \
+	external-lib/include/range/v3/algorithm/equal_range.hpp \
+	external-lib/include/range/v3/algorithm/copy_backward.hpp \
+	external-lib/include/range/v3/algorithm/copy_if.hpp \
+	external-lib/include/range/v3/algorithm/move_backward.hpp \
+	external-lib/include/range/v3/algorithm/contains.hpp \
+	external-lib/include/range/v3/algorithm/find_if_not.hpp \
+	external-lib/include/range/v3/algorithm/for_each_n.hpp \
+	external-lib/include/range/v3/algorithm/rotate.hpp \
+	external-lib/include/range/v3/algorithm/rotate_copy.hpp \
+	external-lib/include/range/v3/algorithm/adjacent_remove_if.hpp \
+	external-lib/include/range/v3/algorithm/generate_n.hpp \
+	external-lib/include/range/v3/algorithm/lexicographical_compare.hpp \
+	external-lib/include/range/v3/algorithm/find.hpp \
+	external-lib/include/range/v3/algorithm/shuffle.hpp \
+	external-lib/include/range/v3/algorithm/adjacent_find.hpp \
+	external-lib/include/range/v3/algorithm/remove.hpp \
+	external-lib/include/range/v3/algorithm/reverse_copy.hpp \
+	external-lib/include/range/v3/algorithm/result_types.hpp \
+	external-lib/include/range/v3/algorithm/partial_sort.hpp \
+	external-lib/include/range/v3/algorithm/permutation.hpp \
+	external-lib/include/range/v3/algorithm/partition_copy.hpp \
+	external-lib/include/range/v3/algorithm/replace_copy_if.hpp \
+	external-lib/include/range/v3/algorithm/sample.hpp \
+	external-lib/include/range/v3/algorithm/for_each.hpp \
+	external-lib/include/range/v3/algorithm/starts_with.hpp \
+	external-lib/include/range/v3/algorithm/minmax.hpp \
+	external-lib/include/range/v3/algorithm/partition.hpp \
+	external-lib/include/range/v3/algorithm/find_if.hpp \
+	external-lib/include/range/v3/algorithm/is_sorted_until.hpp \
+	external-lib/include/range/v3/algorithm/stable_partition.hpp \
+	external-lib/include/range/v3/algorithm/min_element.hpp \
+	external-lib/include/range/v3/algorithm/partition_point.hpp \
+	external-lib/include/range/v3/algorithm/find_first_of.hpp \
+	external-lib/include/range/v3/algorithm/unique_copy.hpp \
+	external-lib/include/range/v3/algorithm/is_sorted.hpp \
+	external-lib/include/range/v3/algorithm/minmax_element.hpp \
+	external-lib/include/range/v3/algorithm/fill.hpp \
+	external-lib/include/range/v3/algorithm/ends_with.hpp \
+	external-lib/include/range/v3/algorithm/remove_copy_if.hpp \
+	external-lib/include/range/v3/algorithm/inplace_merge.hpp \
+	external-lib/include/range/v3/algorithm/transform.hpp \
+	external-lib/include/range/v3/algorithm/is_partitioned.hpp \
+	external-lib/include/range/v3/algorithm/any_of.hpp \
+	external-lib/include/range/v3/algorithm/none_of.hpp \
+	external-lib/include/range/v3/algorithm/unstable_remove_if.hpp \
+	external-lib/include/range/v3/algorithm/move.hpp \
+	external-lib/include/range/v3/algorithm/heap_algorithm.hpp \
+	external-lib/include/range/v3/algorithm/stable_sort.hpp \
+	external-lib/include/range/v3/algorithm/copy.hpp \
+	external-lib/include/range/v3/algorithm/search_n.hpp \
+	external-lib/include/range/v3/algorithm/lower_bound.hpp \
+	external-lib/include/range/v3/algorithm/replace_if.hpp \
+	external-lib/include/range/v3/algorithm/min.hpp \
+	external-lib/include/range/v3/algorithm/merge.hpp \
+	external-lib/include/range/v3/algorithm/copy_n.hpp \
+	external-lib/include/range/v3/algorithm/set_algorithm.hpp \
+	external-lib/include/range/v3/algorithm/binary_search.hpp \
+	external-lib/include/range/v3/algorithm/upper_bound.hpp \
+	external-lib/include/range/v3/algorithm/nth_element.hpp \
+	external-lib/include/range/v3/algorithm/equal.hpp \
+	external-lib/include/range/v3/algorithm/all_of.hpp \
+	external-lib/include/range/v3/algorithm/count.hpp \
+	external-lib/include/range/v3/algorithm/generate.hpp \
+	external-lib/include/range/v3/getlines.hpp \
+	external-lib/include/range/v3/size.hpp \
+	external-lib/include/range/v3/compare.hpp \
+	external-lib/include/range/v3/front.hpp \
+	external-lib/include/range/v3/utility/functional.hpp \
+	external-lib/include/range/v3/utility/iterator.hpp \
+	external-lib/include/range/v3/utility/associated_types.hpp \
+	external-lib/include/range/v3/utility/compressed_pair.hpp \
+	external-lib/include/range/v3/utility/dangling.hpp \
+	external-lib/include/range/v3/utility/tagged_tuple.hpp \
+	external-lib/include/range/v3/utility/any.hpp \
+	external-lib/include/range/v3/utility/infinity.hpp \
+	external-lib/include/range/v3/utility/unreachable.hpp \
+	external-lib/include/range/v3/utility/static_const.hpp \
+	external-lib/include/range/v3/utility/scope_exit.hpp \
+	external-lib/include/range/v3/utility/addressof.hpp \
+	external-lib/include/range/v3/utility/semiregular_box.hpp \
+	external-lib/include/range/v3/utility/counted_iterator.hpp \
+	external-lib/include/range/v3/utility/get.hpp \
+	external-lib/include/range/v3/utility/tuple_algorithm.hpp \
+	external-lib/include/range/v3/utility/memory.hpp \
+	external-lib/include/range/v3/utility/variant.hpp \
+	external-lib/include/range/v3/utility/swap.hpp \
+	external-lib/include/range/v3/utility/invoke.hpp \
+	external-lib/include/range/v3/utility/common_iterator.hpp \
+	external-lib/include/range/v3/utility/common_type.hpp \
+	external-lib/include/range/v3/utility/move.hpp \
+	external-lib/include/range/v3/utility/tagged_pair.hpp \
+	external-lib/include/range/v3/utility/copy.hpp \
+	external-lib/include/range/v3/utility/box.hpp \
+	external-lib/include/range/v3/utility/in_place.hpp \
+	external-lib/include/range/v3/utility/polymorphic_cast.hpp \
+	external-lib/include/range/v3/utility/iterator_traits.hpp \
+	external-lib/include/range/v3/utility/optional.hpp \
+	external-lib/include/range/v3/utility/nullptr_v.hpp \
+	external-lib/include/range/v3/utility/basic_iterator.hpp \
+	external-lib/include/range/v3/utility/common_tuple.hpp \
+	external-lib/include/range/v3/utility/iterator_concepts.hpp \
+	external-lib/include/range/v3/utility/semiregular.hpp \
+	external-lib/include/range/v3/utility/random.hpp \
+	external-lib/include/range/v3/utility/concepts.hpp \
+	external-lib/include/range/v3/functional/indirect.hpp \
+	external-lib/include/range/v3/functional/identity.hpp \
+	external-lib/include/range/v3/functional/pipeable.hpp \
+	external-lib/include/range/v3/functional/bind.hpp \
+	external-lib/include/range/v3/functional/bind_back.hpp \
+	external-lib/include/range/v3/functional/comparisons.hpp \
+	external-lib/include/range/v3/functional/overload.hpp \
+	external-lib/include/range/v3/functional/invoke.hpp \
+	external-lib/include/range/v3/functional/not_fn.hpp \
+	external-lib/include/range/v3/functional/compose.hpp \
+	external-lib/include/range/v3/functional/on.hpp \
+	external-lib/include/range/v3/functional/arithmetic.hpp \
+	external-lib/include/range/v3/functional/reference_wrapper.hpp \
+	external-lib/include/range/v3/functional/concepts.hpp \
+	external-lib/include/range/v3/empty.hpp \
+	external-lib/include/range/v3/iterator/traits.hpp \
+	external-lib/include/range/v3/iterator/diffmax_t.hpp \
+	external-lib/include/range/v3/iterator/move_iterators.hpp \
+	external-lib/include/range/v3/iterator/operations.hpp \
+	external-lib/include/range/v3/iterator/counted_iterator.hpp \
+	external-lib/include/range/v3/iterator/access.hpp \
+	external-lib/include/range/v3/iterator/common_iterator.hpp \
+	external-lib/include/range/v3/iterator/default_sentinel.hpp \
+	external-lib/include/range/v3/iterator/insert_iterators.hpp \
+	external-lib/include/range/v3/iterator/unreachable_sentinel.hpp \
+	external-lib/include/range/v3/iterator/reverse_iterator.hpp \
+	external-lib/include/range/v3/iterator/basic_iterator.hpp \
+	external-lib/include/range/v3/iterator/stream_iterators.hpp \
+	external-lib/include/range/v3/iterator/concepts.hpp \
+	external-lib/include/range/v3/range_for.hpp \
+	external-lib/include/range/v3/range_fwd.hpp \
+	external-lib/include/range/v3/utility.hpp \
+	external-lib/include/range/v3/to_container.hpp \
+	external-lib/include/range/v3/at.hpp \
+	external-lib/include/range/v3/back.hpp \
+	external-lib/include/range/v3/range/dangling.hpp \
+	external-lib/include/range/v3/range/conversion.hpp \
+	external-lib/include/range/v3/range/primitives.hpp \
+	external-lib/include/range/v3/range/traits.hpp \
+	external-lib/include/range/v3/range/operations.hpp \
+	external-lib/include/range/v3/range/access.hpp \
+	external-lib/include/range/v3/range/concepts.hpp \
+	external-lib/include/range/v3/distance.hpp \
+	external-lib/include/range/v3/all.hpp \
+	external-lib/include/range/v3/version.hpp \
+	external-lib/include/range/v3/core.hpp \
+	external-lib/include/range/v3/data.hpp \
+	external-lib/include/range/v3/action.hpp \
+	external-lib/include/range/v3/istream_range.hpp \
+	external-lib/include/range/v3/view/enumerate.hpp \
+	external-lib/include/range/v3/view/zip_with.hpp \
+	external-lib/include/range/v3/view/linear_distribute.hpp \
+	external-lib/include/range/v3/view/split.hpp \
+	external-lib/include/range/v3/view/concat.hpp \
+	external-lib/include/range/v3/view/take_exactly.hpp \
+	external-lib/include/range/v3/view/any_view.hpp \
+	external-lib/include/range/v3/view/reverse.hpp \
+	external-lib/include/range/v3/view/cache1.hpp \
+	external-lib/include/range/v3/view/indices.hpp \
+	external-lib/include/range/v3/view/replace.hpp \
+	external-lib/include/range/v3/view/sliding.hpp \
+	external-lib/include/range/v3/view/view.hpp \
+	external-lib/include/range/v3/view/intersperse.hpp \
+	external-lib/include/range/v3/view/remove_if.hpp \
+	external-lib/include/range/v3/view/zip.hpp \
+	external-lib/include/range/v3/view/filter.hpp \
+	external-lib/include/range/v3/view/unique.hpp \
+	external-lib/include/range/v3/view/group_by.hpp \
+	external-lib/include/range/v3/view/cartesian_product.hpp \
+	external-lib/include/range/v3/view/drop.hpp \
+	external-lib/include/range/v3/view/indirect.hpp \
+	external-lib/include/range/v3/view/adjacent_filter.hpp \
+	external-lib/include/range/v3/view/const.hpp \
+	external-lib/include/range/v3/view/iota.hpp \
+	external-lib/include/range/v3/view/istream.hpp \
+	external-lib/include/range/v3/view/span.hpp \
+	external-lib/include/range/v3/view/adjacent_remove_if.hpp \
+	external-lib/include/range/v3/view/generate_n.hpp \
+	external-lib/include/range/v3/view/join.hpp \
+	external-lib/include/range/v3/view/drop_last.hpp \
+	external-lib/include/range/v3/view/remove.hpp \
+	external-lib/include/range/v3/view/getlines.hpp \
+	external-lib/include/range/v3/view/take_last.hpp \
+	external-lib/include/range/v3/view/c_str.hpp \
+	external-lib/include/range/v3/view/facade.hpp \
+	external-lib/include/range/v3/view/sample.hpp \
+	external-lib/include/range/v3/view/addressof.hpp \
+	external-lib/include/range/v3/view/for_each.hpp \
+	external-lib/include/range/v3/view/empty.hpp \
+	external-lib/include/range/v3/view/ref.hpp \
+	external-lib/include/range/v3/view/bounded.hpp \
+	external-lib/include/range/v3/view/common.hpp \
+	external-lib/include/range/v3/view/drop_exactly.hpp \
+	external-lib/include/range/v3/view/subrange.hpp \
+	external-lib/include/range/v3/view/drop_while.hpp \
+	external-lib/include/range/v3/view/single.hpp \
+	external-lib/include/range/v3/view/transform.hpp \
+	external-lib/include/range/v3/view/interface.hpp \
+	external-lib/include/range/v3/view/move.hpp \
+	external-lib/include/range/v3/view/counted.hpp \
+	external-lib/include/range/v3/view/unbounded.hpp \
+	external-lib/include/range/v3/view/tokenize.hpp \
+	external-lib/include/range/v3/view/chunk.hpp \
+	external-lib/include/range/v3/view/all.hpp \
+	external-lib/include/range/v3/view/replace_if.hpp \
+	external-lib/include/range/v3/view/take_while.hpp \
+	external-lib/include/range/v3/view/tail.hpp \
+	external-lib/include/range/v3/view/cycle.hpp \
+	external-lib/include/range/v3/view/stride.hpp \
+	external-lib/include/range/v3/view/set_algorithm.hpp \
+	external-lib/include/range/v3/view/repeat_n.hpp \
+	external-lib/include/range/v3/view/partial_sum.hpp \
+	external-lib/include/range/v3/view/exclusive_scan.hpp \
+	external-lib/include/range/v3/view/slice.hpp \
+	external-lib/include/range/v3/view/map.hpp \
+	external-lib/include/range/v3/view/take.hpp \
+	external-lib/include/range/v3/view/delimit.hpp \
+	external-lib/include/range/v3/view/adaptor.hpp \
+	external-lib/include/range/v3/view/generate.hpp \
+	external-lib/include/range/v3/view/trim.hpp \
+	external-lib/include/range/v3/view/repeat.hpp \
+	external-lib/include/range/v3/view/chunk_by.hpp \
+	external-lib/include/range/v3/view/split_when.hpp \
+	external-lib/include/range/v3/numeric.hpp \
+	external-lib/include/range/v3/range.hpp \
+	external-lib/include/meta/meta.hpp \
+	external-lib/include/meta/meta_fwd.hpp \
+	external-lib/include/tl/expected.hpp \
+	external-lib/include/tl/optional.hpp \
+	external-lib/include/fmt/core.h \
+	external-lib/include/fmt/ranges.h \
+	external-lib/include/fmt/compile.h \
+	external-lib/include/fmt/color.h \
+	external-lib/include/fmt/xchar.h \
+	external-lib/include/fmt/format.h \
+	external-lib/include/fmt/format-inl.h \
+	external-lib/include/fmt/os.h \
+	external-lib/include/fmt/base.h \
+	external-lib/include/fmt/chrono.h \
+	external-lib/include/fmt/args.h \
+	external-lib/include/fmt/std.h \
+	external-lib/include/fmt/printf.h \
+	external-lib/include/fmt/ostream.h \
+	external-lib/include/xoshiro.h \
+	external-lib/fmt/format.cc \
 	\
 	flavor/flag-inscriptions-table.cpp flavor/flag-inscriptions-table.h \
 	flavor/flavor-describer.cpp flavor/flavor-describer.h \
@@ -203,8 +539,8 @@ SBband_SOURCES = \
 	flavor/object-flavor.cpp flavor/object-flavor.h \
 	flavor/tval-description-switcher.cpp flavor/tval-description-switcher.h \
 	\
-	floor/cave.cpp floor/cave.h \
 	floor/cave-generator.cpp floor/cave-generator.h \
+	floor/dungeon-feeling.cpp floor/dungeon-feeling.h \
 	floor/dungeon-tunnel-util.cpp floor/dungeon-tunnel-util.h \
 	floor/fixed-map-generator.cpp floor/fixed-map-generator.h \
 	floor/floor-allocation-types.h \
@@ -220,7 +556,6 @@ SBband_SOURCES = \
 	floor/floor-save.cpp floor/floor-save.h \
 	floor/floor-save-util.cpp floor/floor-save-util.h \
 	floor/floor-streams.cpp floor/floor-streams.h \
-	floor/floor-town.h floor/floor-town.cpp \
 	floor/floor-util.cpp floor/floor-util.h \
 	floor/geometry.cpp floor/geometry.h \
 	floor/line-of-sight.cpp floor/line-of-sight.h \
@@ -235,6 +570,7 @@ SBband_SOURCES = \
 	game-option/cheat-options.cpp game-option/cheat-options.h \
 	game-option/cheat-types.h \
 	game-option/disturbance-options.cpp game-option/disturbance-options.h \
+	game-option/game-option-page.h \
 	game-option/game-play-options.cpp game-option/game-play-options.h \
 	game-option/input-options.cpp game-option/input-options.h \
 	game-option/keymap-directory-getter.cpp game-option/keymap-directory-getter.h \
@@ -247,14 +583,10 @@ SBband_SOURCES = \
 	game-option/text-display-options.cpp game-option/text-display-options.h \
 	\
 	grid/door.cpp grid/door.h \
-	grid/feature-action-flags.cpp grid/feature-action-flags.h \
-	grid/feature-flag-types.h \
 	grid/feature-generator.cpp grid/feature-generator.h \
-	grid/feature.cpp grid/feature.h \
 	grid/grid.cpp grid/grid.h \
 	grid/lighting-colors-table.cpp grid/lighting-colors-table.h \
 	grid/object-placer.cpp grid/object-placer.h \
-	grid/stair.cpp grid/stair.h \
 	grid/trap.cpp grid/trap.h \
 	\
 	hpmp/hp-mp-processor.cpp hpmp/hp-mp-processor.h \
@@ -263,22 +595,24 @@ SBband_SOURCES = \
 	info-reader/artifact-reader.cpp info-reader/artifact-reader.h \
 	info-reader/baseitem-reader.cpp info-reader/baseitem-reader.h \
 	info-reader/baseitem-tokens-table.cpp info-reader/baseitem-tokens-table.h \
+	info-reader/definition-hash-data.cpp info-reader/definition-hash-data.h \
 	info-reader/dungeon-info-tokens-table.cpp info-reader/dungeon-info-tokens-table.h \
 	info-reader/dungeon-reader.cpp info-reader/dungeon-reader.h \
 	info-reader/ego-reader.cpp info-reader/ego-reader.h \
 	info-reader/feature-info-tokens-table.cpp info-reader/feature-info-tokens-table.h \
-	info-reader/feature-reader.cpp info-reader/feature-reader.h \
 	info-reader/fixed-map-parser.cpp info-reader/fixed-map-parser.h \
 	info-reader/general-parser.cpp info-reader/general-parser.h \
 	info-reader/info-reader-util.cpp info-reader/info-reader-util.h \
 	info-reader/json-reader-util.cpp info-reader/json-reader-util.h \
 	info-reader/magic-reader.cpp info-reader/magic-reader.h \
+	info-reader/message-reader.cpp info-reader/message-reader.h \
 	info-reader/parse-error-types.h \
 	info-reader/race-info-tokens-table.cpp info-reader/race-info-tokens-table.h \
 	info-reader/race-reader.cpp info-reader/race-reader.h \
 	info-reader/random-grid-effect-types.h \
 	info-reader/skill-reader.cpp info-reader/skill-reader.h \
 	info-reader/spell-reader.cpp info-reader/spell-reader.h \
+	info-reader/terrain-reader.cpp info-reader/terrain-reader.h \
 	info-reader/vault-reader.cpp info-reader/vault-reader.h \
 	\
 	inventory/floor-item-getter.cpp inventory/floor-item-getter.h \
@@ -288,7 +622,6 @@ SBband_SOURCES = \
 	inventory/inventory-object.cpp inventory/inventory-object.h \
 	inventory/inventory-slot-types.h \
 	inventory/inventory-util.cpp inventory/inventory-util.h \
-	inventory/item-getter.cpp inventory/item-getter.h \
 	inventory/item-selection-util.cpp inventory/item-selection-util.h \
 	inventory/pack-overflow.cpp inventory/pack-overflow.h \
 	inventory/player-inventory.cpp inventory/player-inventory.h \
@@ -303,6 +636,7 @@ SBband_SOURCES = \
 	io/input-key-processor.cpp io/input-key-processor.h \
 	io/input-key-requester.cpp io/input-key-requester.h \
 	io/interpret-pref-file.cpp io/interpret-pref-file.h \
+	io/macro-configurations-store.cpp io/macro-configurations-store.h \
 	io/mutations-dump.cpp io/mutations-dump.h \
 	io/pref-file-expressor.cpp io/pref-file-expressor.h \
 	io/read-pref-file.cpp io/read-pref-file.h \
@@ -310,6 +644,7 @@ SBband_SOURCES = \
 	io/report.cpp io/report.h \
 	io/screen-util.cpp io/screen-util.h \
 	io/signal-handlers.cpp io/signal-handlers.h \
+	io/temp-file.cpp io/temp-file.h \
 	io/tokenizer.cpp io/tokenizer.h \
 	io/uid-checker.cpp io/uid-checker.h \
 	io/write-diary.cpp io/write-diary.h \
@@ -338,6 +673,7 @@ SBband_SOURCES = \
 	knowledge/monster-group-table.cpp knowledge/monster-group-table.h \
 	\
 	load/angband-version-comparer.cpp load/angband-version-comparer.h \
+	load/artifact-record-loader.cpp load/artifact-record-loader.h \
 	load/birth-loader.cpp load/birth-loader.h \
 	load/dummy-loader.cpp load/dummy-loader.h \
 	load/dungeon-loader.cpp load/dungeon-loader.h \
@@ -374,11 +710,10 @@ SBband_SOURCES = \
 	load/old/monster-flag-types-savefile50.h \
 	load/old/monster-loader-savefile50.cpp load/old/monster-loader-savefile50.h \
 	\
-	locale/character-encoding.h \
+	locale/character-encoding.cpp locale/character-encoding.h \
 	locale/english.cpp locale/english.h \
 	locale/japanese.cpp locale/japanese.h \
 	locale/localized-string.cpp locale/localized-string.h \
-	locale/utf-8.cpp locale/utf-8.h \
 	locale/language-switcher.h \
 	\
 	lore/combat-types-setter.cpp lore/combat-types-setter.h \
@@ -389,7 +724,6 @@ SBband_SOURCES = \
 	\
 	main.cpp main-x11.cpp main-gcu.cpp \
 	\
-	main/angband-headers.cpp main/angband-headers.h \
 	main/angband-initializer.cpp main/angband-initializer.h \
 	main/game-data-initializer.cpp main/game-data-initializer.h \
 	main/info-initializer.cpp main/info-initializer.h \
@@ -405,6 +739,9 @@ SBband_SOURCES = \
 	main-unix/unix-user-ids.cpp main-unix/unix-user-ids.h \
 	main-unix/x11-gamma-builder.cpp main-unix/x11-gamma-builder.h \
 	main-unix/x11-type-string.cpp main-unix/x11-type-string.h \
+	main-unix/unix-music.cpp main-unix/unix-music.h \
+	main-unix/unix-sound.cpp main-unix/unix-sound.h \
+	main-unix/unix-cfg-reader.cpp main-unix/unix-cfg-reader.h \
 	\
 	market/arena.cpp market/arena.h \
 	market/arena-entry.cpp market/arena-entry.h \
@@ -476,12 +813,12 @@ SBband_SOURCES = \
 	monster/monster-pain-describer.cpp monster/monster-pain-describer.h \
 	monster/monster-processor.cpp monster/monster-processor.h \
 	monster/monster-processor-util.cpp monster/monster-processor-util.h \
-	monster/monster-timed-effect-types.h \
-	monster/smart-learn-types.h \
+	monster/monster-timed-effects.cpp monster/monster-timed-effects.h \
 	monster/monster-status.cpp monster/monster-status.h \
 	monster/monster-status-setter.cpp monster/monster-status-setter.h \
 	monster/monster-update.cpp monster/monster-update.h \
 	monster/monster-util.cpp monster/monster-util.h \
+	monster/smart-learn-types.h \
 	\
 	monster-attack/insults-moans.cpp monster-attack/insults-moans.h \
 	monster-attack/monster-attack-describer.cpp monster-attack/monster-attack-describer.h \
@@ -500,6 +837,7 @@ SBband_SOURCES = \
 	monster-floor/monster-dist-offsets.cpp monster-floor/monster-dist-offsets.h \
 	monster-floor/monster-generator.cpp monster-floor/monster-generator.h \
 	monster-floor/monster-move.cpp monster-floor/monster-move.h \
+	monster-floor/monster-movement-direction-list.cpp monster-floor/monster-movement-direction-list.h \
 	monster-floor/monster-object.cpp monster-floor/monster-object.h \
 	monster-floor/monster-remover.cpp monster-floor/monster-remover.h \
 	monster-floor/monster-runaway.cpp monster-floor/monster-runaway.h \
@@ -515,7 +853,6 @@ SBband_SOURCES = \
 	\
 	monster-race/monster-aura-types.h \
 	monster-race/monster-kind-mask.cpp monster-race/monster-kind-mask.h \
-	monster-race/monster-race-hook.cpp monster-race/monster-race-hook.h \
 	monster-race/race-ability-flags.h \
 	monster-race/race-ability-mask.cpp monster-race/race-ability-mask.h \
 	monster-race/race-behavior-flags.h \
@@ -524,7 +861,6 @@ SBband_SOURCES = \
 	monster-race/race-drop-flags.h \
 	monster-race/race-feature-flags.h \
 	monster-race/race-flags-resistance.h \
-	monster-race/race-indice-types.h \
 	monster-race/race-kind-flags.h \
 	monster-race/race-misc-flags.h \
 	monster-race/race-population-flags.h \
@@ -609,7 +945,7 @@ SBband_SOURCES = \
 	object-enchant/object-curse.cpp object-enchant/object-curse.h \
 	object-enchant/object-ego.cpp object-enchant/object-ego.h \
 	object-enchant/item-apply-magic.h object-enchant/item-feeling.h \
-	object-enchant/old-ego-extra-values.h object-enchant/special-object-flags.h \
+	object-enchant/old-ego-extra-values.h \
 	object-enchant/tr-flags.h \
 	object-enchant/tr-types.h object-enchant/trc-types.h \
 	object-enchant/trg-types.h \
@@ -714,7 +1050,7 @@ SBband_SOURCES = \
 	player-info/alignment.cpp player-info/alignment.h \
 	player-info/bard-data-type.h \
 	player-info/base-status-info.cpp player-info/base-status-info.h \
-	player-info/bluemage-data-type.h \
+	player-info/bluemage-data.cpp player-info/bluemage-data.h \
 	player-info/body-improvement-info.cpp player-info/body-improvement-info.h \
 	player-info/class-ability-info.cpp player-info/class-ability-info.h \
 	player-info/class-types.h \
@@ -778,7 +1114,7 @@ SBband_SOURCES = \
 	\
 	room/cave-filler.cpp room/cave-filler.h \
 	room/door-definition.cpp room/door-definition.h \
-	room/lake-types.h room/room-types.h \
+	room/lake-types.h \
 	room/pit-nest-util.cpp room/pit-nest-util.h \
 	room/room-generator.cpp room/room-generator.h \
 	room/room-info-table.cpp room/room-info-table.h \
@@ -796,6 +1132,12 @@ SBband_SOURCES = \
 	room/treasure-deployment.cpp room/treasure-deployment.h \
 	room/vault-builder.cpp room/vault-builder.h \
 	\
+	rumor/rumor-definition.cpp rumor/rumor-definition.h \
+	rumor/rumor-list.cpp rumor/rumor-list.h \
+	rumor/rumor-rarity.h \
+	rumor/rumor-service.cpp rumor/rumor-service.h \
+	\
+	save/artifact-record-writer.cpp save/artifact-record-writer.h \
 	save/floor-writer.cpp save/floor-writer.h \
 	save/info-writer.cpp save/info-writer.h \
 	save/item-writer.cpp save/item-writer.h \
@@ -912,31 +1254,80 @@ SBband_SOURCES = \
 	sv-definition/sv-wand-types.h sv-definition/sv-weapon-types.h \
 	sv-definition/sv-other-types.h \
 	\
-	system/alloc-entries.cpp system/alloc-entries.h \
 	system/angband.h \
 	system/angband-exceptions.h \
 	system/angband-system.h system/angband-system.cpp \
 	system/angband-version.cpp system/angband-version.h \
-	system/artifact-type-definition.cpp system/artifact-type-definition.h \
-	system/baseitem-info.cpp system/baseitem-info.h \
+	system/artifact/artifact-definition.cpp system/artifact/artifact-definition.h \
+	system/artifact/artifact-list.cpp system/artifact/artifact-list.h \
+	system/artifact/artifact-record.cpp system/artifact/artifact-record.h \
+	system/artifact/artifact-service.cpp system/artifact/artifact-service.h \
 	system/building-type-definition.cpp system/building-type-definition.h \
-	system/dungeon-data-definition.h \
-	system/dungeon-info.cpp system/dungeon-info.h \
-	system/floor-type-definition.cpp system/floor-type-definition.h \
 	system/grid-type-definition.cpp system/grid-type-definition.h \
-	system/game-option-types.h \
 	system/h-basic.h system/h-config.h \
 	system/h-system.h system/h-type.h \
 	system/inner-game-data.cpp system/inner-game-data.h \
-	system/item-entity.cpp system/item-entity.h \
 	system/monster-entity.cpp system/monster-entity.h \
-	system/monster-race-info.cpp system/monster-race-info.h \
 	system/player-type-definition.cpp system/player-type-definition.h \
 	system/redrawing-flags-updater.cpp system/redrawing-flags-updater.h \
 	system/spell-info-list.cpp system/spell-info-list.h \
 	system/system-variables.cpp system/system-variables.h \
-	system/terrain-type-definition.cpp system/terrain-type-definition.h \
 	system/gamevalue.h \
+	\
+	system/baseitem/baseitem-allocation.cpp system/baseitem/baseitem-allocation.h \
+	system/baseitem/baseitem-config.cpp system/baseitem/baseitem-config.h \
+	system/baseitem/baseitem-configs.cpp system/baseitem/baseitem-configs.h \
+	system/baseitem/baseitem-definition.cpp system/baseitem/baseitem-definition.h \
+	system/baseitem/baseitem-key.cpp system/baseitem/baseitem-key.h \
+	system/baseitem/baseitem-list.cpp system/baseitem/baseitem-list.h \
+	system/baseitem/baseitem-service.cpp system/baseitem/baseitem-service.h \
+	\
+	system/dungeon/dungeon-data-definition.cpp system/dungeon/dungeon-data-definition.h \
+	system/dungeon/dungeon-definition.cpp system/dungeon/dungeon-definition.h \
+	system/dungeon/dungeon-list.cpp system/dungeon/dungeon-list.h \
+	system/dungeon/dungeon-record.cpp system/dungeon/dungeon-record.h \
+	system/dungeon/quest-definition.cpp system/dungeon/quest-definition.h \
+	system/dungeon/quest-list.cpp system/dungeon/quest-list.h \
+	\
+	system/enums/grid-flow.h \
+	system/enums/grid-count-kind.h \
+	system/enums/dungeon/dungeon-id.h \
+	system/enums/monrace/monrace-hook-types.h \
+	system/enums/monrace/monrace-id.h \
+	system/enums/terrain/terrain-characteristics.h \
+	system/enums/terrain/terrain-kind.h \
+	system/enums/terrain/terrain-tag.h \
+	system/enums/terrain/building-type.h \
+	system/enums/terrain/pattern-tile-type.h \
+	system/enums/terrain/terrain-conversion-type.h \
+	system/enums/terrain/trap.h \
+	system/enums/terrain/wilderness-terrain.h \
+	system/enums/store-sale-type.h \
+	\
+	system/floor/floor-info.cpp system/floor/floor-info.h \
+	system/floor/floor-list.cpp system/floor/floor-list.h \
+	system/floor/town-info.cpp system/floor/town-info.h \
+	system/floor/town-list.cpp system/floor/town-list.h \
+	system/floor/town-records.cpp system/floor/town-records.h \
+	system/floor/wilderness-grid.cpp system/floor/wilderness-grid.h \
+	\
+	system/item/item-entity.cpp system/item/item-entity.h \
+	system/item/identification-flags.h \
+	\
+	system/monrace/monrace-allocation.cpp system/monrace/monrace-allocation.h \
+	system/monrace/monrace-definition.cpp system/monrace/monrace-definition.h \
+	system/monrace/monrace-list.cpp system/monrace/monrace-list.h \
+	system/monrace/monrace-message.cpp system/monrace/monrace-message.h \
+	system/monrace/monrace-record.cpp system/monrace/monrace-record.h \
+	system/monrace/monrace-records.cpp system/monrace/monrace-records.h \
+	system/monrace/monrace-service.cpp system/monrace/monrace-service.h \
+	\
+	system/services/baseitem-monrace-service.cpp system/services/baseitem-monrace-service.h \
+	system/services/dungeon-service.cpp system/services/dungeon-service.h \
+	system/services/dungeon-monrace-service.cpp system/services/dungeon-monrace-service.h \
+	\
+	system/terrain/terrain-definition.cpp system/terrain/terrain-definition.h \
+	system/terrain/terrain-list.cpp system/terrain/terrain-list.h \
 	\
 	target/grid-selector.cpp target/grid-selector.h \
 	target/projection-path-calculator.cpp target/projection-path-calculator.h \
@@ -947,13 +1338,13 @@ SBband_SOURCES = \
 	target/target-setter.cpp target/target-setter.h \
 	target/target-sorter.cpp target/target-sorter.h \
 	target/target-types.h \
+	target/target.cpp target/target.h \
 	\
 	term/gameterm.cpp term/gameterm.h \
 	term/screen-processor.cpp term/screen-processor.h \
 	term/term-color-types.h \
 	term/z-form.cpp term/z-form.h term/z-rand.cpp term/z-rand.h \
 	term/z-term.cpp term/z-term.h term/z-util.cpp term/z-util.h \
-	term/z-virt.cpp term/z-virt.h \
 	\
 	timed-effect/player-acceleration.cpp timed-effect/player-acceleration.h \
 	timed-effect/player-blindness.cpp timed-effect/player-blindness.h \
@@ -964,6 +1355,7 @@ SBband_SOURCES = \
 	timed-effect/player-hallucination.cpp timed-effect/player-hallucination.h \
 	timed-effect/player-paralysis.cpp timed-effect/player-paralysis.h \
 	timed-effect/player-poison.cpp timed-effect/player-poison.h \
+	timed-effect/player-protection.cpp timed-effect/player-protection.h \
 	timed-effect/player-stun.cpp timed-effect/player-stun.h \
 	timed-effect/timed-effects.cpp timed-effect/timed-effects.h \
 	\
@@ -971,10 +1363,13 @@ SBband_SOURCES = \
 	tracking/health-bar-tracker.cpp tracking/health-bar-tracker.h \
 	tracking/lore-tracker.cpp tracking/lore-tracker.h \
 	\
+	util/abstract-map-wrapper.h \
+	util/abstract-vector-wrapper.h \
 	util/angband-files.cpp util/angband-files.h \
 	util/buffer-shaper.cpp util/buffer-shaper.h \
 	util/bit-flags-calculator.h \
 	util/candidate-selector.cpp util/candidate-selector.h \
+	util/elapsed-time.cpp util/elapsed-time.h \
 	util/enum-converter.h \
 	util/enum-range.h \
 	util/finalizer.h \
@@ -984,7 +1379,6 @@ SBband_SOURCES = \
 	util/object-sort.cpp util/object-sort.h \
 	util/point-2d.h \
 	util/probability-table.h \
-	util/rng-xoshiro.cpp util/rng-xoshiro.h \
 	util/sha256.cpp util/sha256.h \
 	util/stack-trace.h \
 	util/string-processor.cpp util/string-processor.h \
@@ -1000,7 +1394,6 @@ SBband_SOURCES = \
 	view/display-lore.cpp view/display-lore.h \
 	view/display-map.cpp view/display-map.h \
 	view/display-messages.cpp view/display-messages.h \
-	view/display-monster-status.cpp view/display-monster-status.h \
 	view/display-player-stat-info.cpp view/display-player-stat-info.h \
 	view/display-player-misc-info.cpp view/display-player-misc-info.h \
 	view/display-player-middle.cpp view/display-player-middle.h \
@@ -1016,7 +1409,7 @@ SBband_SOURCES = \
 	\
 	window/display-sub-windows.cpp window/display-sub-windows.h \
 	window/main-window-left-frame.cpp window/main-window-left-frame.h \
-	window/main-window-row-column.cpp window/main-window-row-column.h \
+	window/main-window-row-column.h \
 	window/main-window-stat-poster.cpp window/main-window-stat-poster.h \
 	window/main-window-util.cpp window/main-window-util.h \
 	window/main-window-equipments.cpp window/main-window-equipments.h \
@@ -1026,6 +1419,7 @@ SBband_SOURCES = \
 	wizard/cmd-wizard.cpp wizard/cmd-wizard.h \
 	wizard/fixed-artifacts-spoiler.cpp wizard/fixed-artifacts-spoiler.h \
 	wizard/items-spoiler.cpp wizard/items-spoiler.h \
+	wizard/monrace-filter-debug-info.cpp wizard/monrace-filter-debug-info.h \
 	wizard/monster-info-spoiler.cpp wizard/monster-info-spoiler.h \
 	wizard/spoiler-table.cpp wizard/spoiler-table.h \
 	wizard/spoiler-util.cpp wizard/spoiler-util.h \
@@ -1038,8 +1432,8 @@ SBband_SOURCES = \
 	wizard/wizard-spoiler.cpp wizard/wizard-spoiler.h\
 	wizard/wizard-special-process.cpp wizard/wizard-special-process.h \
 	\
+	world/town-info-service.cpp world/town-info-service.h \
 	world/world.cpp world/world.h \
-	world/world-object.cpp world/world-object.h \
 	world/world-movement-processor.cpp world/world-movement-processor.h \
 	world/world-turn-processor.cpp world/world-turn-processor.h
 
@@ -1069,26 +1463,45 @@ EXTRA_SBband_SOURCES = \
 EXTRA_DIST = \
 	gcc-wrap
 
-DEFAULT_INCLUDES = -I$(srcdir) -I$(top_builddir)/src
+DEFAULT_INCLUDES = \
+	-I. -I$(srcdir) -I$(srcdir)/external-lib/include
+
 CPPFLAGS += $(XFT_CFLAGS) $(libcurl_CFLAGS)
-if PCH
-CPPFLAGS += -include ../src/stdafx.h
-endif
 LIBS += $(XFT_LIBS) $(libcurl_LIBS)
-COMPILE = $(srcdir)/gcc-wrap $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-CXXCOMPILE = $(srcdir)/gcc-wrap $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CXXFLAGS)
+
+AM_CXXFLAGS =
+
+if COMPILER_HAVE_EXEC_CHARSET_EUC_JP_MS
+AM_CXXFLAGS += -fexec-charset=euc-jp-ms
+endif
+
+if USE_NKF
+CXXCOMPILE_WRAPPER = $(srcdir)/gcc-wrap
+DEFAULT_INCLUDES += -I$(top_builddir)/src -I$(top_builddir)/src/external-lib/include
+if COMPILER_IS_CLANG
+AM_CXXFLAGS += -Wno-invalid-source-encoding
+endif
+if PCH
+PCH_INCLUDES = -include $(top_builddir)/src/stdafx.h
+endif
+else
+if PCH
+PCH_INCLUDES = -include $(srcdir)/stdafx.h
+endif
+endif
+
+CXXCOMPILE = $(strip $(CXXCOMPILE_WRAPPER) $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) $(PCH_INCLUDES))
 
 if PCH
 stdafx.h.gch: stdafx.h stdafx.cpp Makefile
-	$(CXX) -x c++-header $(CXXFLAGS) $(srcdir)/stdafx.cpp -o $@
+	$(CXX) -x c++-header $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) $(srcdir)/stdafx.cpp -o $@
 	if test none != "$(PCH_CHECKSUMMER)" ; then \
 		rm -f "$@".sum ; \
 		$(PCH_CHECKSUMMER) $@ > "$@".sum ; \
 	fi
 
 $(SBband_SOURCES:.cpp=.$(OBJEXT)): stdafx.h.gch
+$(SBband_SOURCES:.cc=.$(OBJEXT)): stdafx.h.gch
 endif
 
 install-exec-hook:

@@ -10,10 +10,9 @@
  */
 
 #include "cmd-io/cmd-dump.h"
-#include "cmd-io/feeling-table.h"
 #include "core/asking-player.h"
 #include "dungeon/quest.h"
-#include "floor/floor-town.h"
+#include "floor/dungeon-feeling.h"
 #include "io-dump/dump-remover.h"
 #include "io-dump/dump-util.h"
 #include "io/files-util.h"
@@ -27,8 +26,9 @@
 #include "player/player-status-flags.h"
 #include "player/player-status.h"
 #include "system/angband-system.h"
-#include "system/dungeon-info.h"
-#include "system/floor-type-definition.h"
+#include "system/dungeon/dungeon-definition.h"
+#include "system/floor/floor-info.h"
+#include "system/floor/town-list.h"
 #include "system/inner-game-data.h"
 #include "system/player-type-definition.h"
 #include "term/gameterm.h"
@@ -55,8 +55,7 @@ void do_cmd_pref(PlayerType *player_ptr)
         return;
     }
 
-    auto buf(*input_str);
-    (void)interpret_pref_file(player_ptr, buf.data());
+    (void)interpret_pref_file(player_ptr, *input_str);
 }
 
 /*
@@ -232,7 +231,8 @@ void do_cmd_version()
  */
 void do_cmd_feeling(PlayerType *player_ptr)
 {
-    if (AngbandWorld::get_instance().is_wild_mode()) {
+    const auto &world = AngbandWorld::get_instance();
+    if (world.is_wild_mode()) {
         return;
     }
 
@@ -242,8 +242,8 @@ void do_cmd_feeling(PlayerType *player_ptr)
         return;
     }
 
-    if (player_ptr->town_num && !floor.is_in_underground()) {
-        if (towns_info[player_ptr->town_num].name == _("荒野", "wilderness")) {
+    if (world.is_in_any_town() && !floor.is_underground()) {
+        if (world.get_town().get_name() == _("荒野", "wilderness")) {
             msg_print(_("何かありそうな荒野のようだ。", "Looks like a strange wilderness."));
             return;
         }
@@ -252,18 +252,22 @@ void do_cmd_feeling(PlayerType *player_ptr)
         return;
     }
 
-    if (!floor.is_in_underground()) {
+    if (!floor.is_underground()) {
         msg_print(_("典型的な荒野のようだ。", "Looks like a typical wilderness."));
         return;
     }
 
+    const auto &df = DungeonFeeling::get_instance();
+    std::string_view feeling_text;
     if (has_good_luck(player_ptr)) {
-        msg_print(do_cmd_feeling_text_lucky[player_ptr->feeling]);
+        feeling_text = df.get_feeling_lucky();
     } else if (is_echizen(player_ptr)) {
-        msg_print(do_cmd_feeling_text_combat[player_ptr->feeling]);
+        feeling_text = df.get_feeling_combat();
     } else {
-        msg_print(do_cmd_feeling_text[player_ptr->feeling]);
+        feeling_text = df.get_feeling_normal();
     }
+
+    msg_print(feeling_text);
 }
 
 /*

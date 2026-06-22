@@ -21,8 +21,9 @@
 #include "spell/spells-execution.h"
 #include "spell/spells-util.h"
 #include "system/angband-system.h"
-#include "system/item-entity.h"
-#include "system/monster-race-info.h"
+#include "system/item/item-entity.h"
+#include "system/monrace/monrace-definition.h"
+#include "system/monrace/monrace-list.h"
 #include "system/player-type-definition.h"
 #include "term/screen-processor.h"
 #include "term/z-form.h"
@@ -59,28 +60,29 @@ static constexpr std::array<std::string_view, 6> wiz_spell_stat = { {
  */
 static auto get_mon_evol_roots()
 {
-    std::set<MonsterRaceId> evol_parents;
-    std::set<MonsterRaceId> evol_children;
-    for (const auto &[monrace_id, monrace] : monraces_info) {
-        if (monrace.get_next().is_valid()) {
+    std::set<MonraceId> evol_parents;
+    std::set<MonraceId> evol_children;
+    const auto &monraces = MonraceList::get_instance();
+    for (const auto &[monrace_id, monrace] : monraces) {
+        if (monrace->get_next().is_valid()) {
             evol_parents.emplace(monrace_id);
-            evol_children.emplace(monrace.next_r_idx);
+            evol_children.emplace(monrace->next_r_idx);
         }
     }
 
-    auto evol_root_sort = [](MonsterRaceId i1, MonsterRaceId i2) {
-        auto &r1 = monraces_info[i1];
-        auto &r2 = monraces_info[i2];
-        if (r1.level != r2.level) {
-            return r1.level < r2.level;
+    const auto evol_root_sort = [&monraces](MonraceId i1, MonraceId i2) {
+        const auto &monrace1 = monraces.get_monrace(i1);
+        const auto &monrace2 = monraces.get_monrace(i2);
+        if (monrace1.level != monrace2.level) {
+            return monrace2.order_level_strictly(monrace1);
         }
-        if (r1.mexp != r2.mexp) {
-            return r1.mexp < r2.mexp;
+        if (monrace1.mexp != monrace2.mexp) {
+            return monrace1.mexp < monrace2.mexp;
         }
         return i1 <= i2;
     };
 
-    std::set<MonsterRaceId, decltype(evol_root_sort)> evol_roots(evol_root_sort);
+    std::set<MonraceId, decltype(evol_root_sort)> evol_roots(evol_root_sort);
     std::set_difference(evol_parents.begin(), evol_parents.end(), evol_children.begin(), evol_children.end(),
         std::inserter(evol_roots, evol_roots.end()));
 
@@ -104,16 +106,22 @@ static SpoilerOutputResultType spoil_mon_evol()
     ss << "Monster Spoilers for " << AngbandSystem::get_instance().build_version_expression(VersionExpression::FULL) << '\n';
     spoil_out(ss.str());
     spoil_out("------------------------------------------\n\n");
+    const auto &monraces = MonraceList::get_instance();
     for (auto monrace_id : get_mon_evol_roots()) {
-        const auto *monrace_ptr = &monraces_info[monrace_id];
+        auto monrace = monraces.get_monrace_shared(monrace_id);
         constexpr auto fmt_before = _("[%d]: %s (レベル%d, '%c')\n", "[%d]: %s (Level %d, '%c')\n");
-        fprintf(spoiler_file, fmt_before, enum2i(monrace_id), monrace_ptr->name.data(), monrace_ptr->level, monrace_ptr->symbol_definition.character);
-        for (auto n = 1; monrace_ptr->get_next().is_valid(); n++) {
-            fprintf(spoiler_file, "%*s-(%d)-> ", n * 2, "", monrace_ptr->next_exp);
-            monrace_ptr = &monrace_ptr->get_next();
-            fprintf(spoiler_file, "[%d]: ", enum2i(monrace_ptr->idx));
+        fprintf(spoiler_file, fmt_before, enum2i(monrace_id), monrace->name.data(), monrace->level, monrace->symbol_definition.character);
+        for (auto n = 1;; n++) {
+            const auto monrace_next = monrace->get_next_shared();
+            if (!monrace_next->is_valid()) {
+                break;
+            }
+
+            fprintf(spoiler_file, "%*s-(%d)-> ", n * 2, "", monrace->next_exp);
+            monrace = monrace_next;
+            fprintf(spoiler_file, "[%d]: ", enum2i(monrace->idx));
             constexpr auto fmt_after = _("%s (レベル%d, '%c')\n", "%s (Level %d, '%c')\n");
-            fprintf(spoiler_file, fmt_after, monrace_ptr->name.data(), monrace_ptr->level, monrace_ptr->symbol_definition.character);
+            fprintf(spoiler_file, fmt_after, monrace->name.data(), monrace->level, monrace->symbol_definition.character);
         }
 
         fputc('\n', spoiler_file);
@@ -125,45 +133,45 @@ static SpoilerOutputResultType spoil_mon_evol()
 
 static SpoilerOutputResultType spoil_categorized_mon_desc()
 {
-    auto status = spoil_mon_desc("mon-desc-ridable.txt", [](const MonsterRaceInfo *r_ptr) { return r_ptr->misc_flags.has(MonsterMiscType::RIDING); });
+    auto status = spoil_mon_desc("mon-desc-ridable.txt", [](const MonraceDefinition &monrace) { return monrace.misc_flags.has(MonsterMiscType::RIDING); });
     if (status == SpoilerOutputResultType::SUCCESSFUL) {
-        status = spoil_mon_desc("mon-desc-wildonly.txt", [](const MonsterRaceInfo *r_ptr) { return r_ptr->wilderness_flags.has(MonsterWildernessType::WILD_ONLY); });
+        status = spoil_mon_desc("mon-desc-wildonly.txt", [](const MonraceDefinition &monrace) { return monrace.wilderness_flags.has(MonsterWildernessType::WILD_ONLY); });
     }
 
     if (status == SpoilerOutputResultType::SUCCESSFUL) {
-        status = spoil_mon_desc("mon-desc-town.txt", [](const MonsterRaceInfo *r_ptr) { return r_ptr->wilderness_flags.has(MonsterWildernessType::WILD_TOWN); });
+        status = spoil_mon_desc("mon-desc-town.txt", [](const MonraceDefinition &monrace) { return monrace.wilderness_flags.has(MonsterWildernessType::WILD_TOWN); });
     }
 
     if (status == SpoilerOutputResultType::SUCCESSFUL) {
-        status = spoil_mon_desc("mon-desc-shore.txt", [](const MonsterRaceInfo *r_ptr) { return r_ptr->wilderness_flags.has(MonsterWildernessType::WILD_SHORE); });
+        status = spoil_mon_desc("mon-desc-shore.txt", [](const MonraceDefinition &monrace) { return monrace.wilderness_flags.has(MonsterWildernessType::WILD_SHORE); });
     }
 
     if (status == SpoilerOutputResultType::SUCCESSFUL) {
-        status = spoil_mon_desc("mon-desc-ocean.txt", [](const MonsterRaceInfo *r_ptr) { return r_ptr->wilderness_flags.has(MonsterWildernessType::WILD_OCEAN); });
+        status = spoil_mon_desc("mon-desc-ocean.txt", [](const MonraceDefinition &monrace) { return monrace.wilderness_flags.has(MonsterWildernessType::WILD_OCEAN); });
     }
 
     if (status == SpoilerOutputResultType::SUCCESSFUL) {
-        status = spoil_mon_desc("mon-desc-waste.txt", [](const MonsterRaceInfo *r_ptr) { return r_ptr->wilderness_flags.has(MonsterWildernessType::WILD_WASTE); });
+        status = spoil_mon_desc("mon-desc-waste.txt", [](const MonraceDefinition &monrace) { return monrace.wilderness_flags.has(MonsterWildernessType::WILD_WASTE); });
     }
 
     if (status == SpoilerOutputResultType::SUCCESSFUL) {
-        status = spoil_mon_desc("mon-desc-wood.txt", [](const MonsterRaceInfo *r_ptr) { return r_ptr->wilderness_flags.has(MonsterWildernessType::WILD_WOOD); });
+        status = spoil_mon_desc("mon-desc-wood.txt", [](const MonraceDefinition &monrace) { return monrace.wilderness_flags.has(MonsterWildernessType::WILD_WOOD); });
     }
 
     if (status == SpoilerOutputResultType::SUCCESSFUL) {
-        status = spoil_mon_desc("mon-desc-volcano.txt", [](const MonsterRaceInfo *r_ptr) { return r_ptr->wilderness_flags.has(MonsterWildernessType::WILD_VOLCANO); });
+        status = spoil_mon_desc("mon-desc-volcano.txt", [](const MonraceDefinition &monrace) { return monrace.wilderness_flags.has(MonsterWildernessType::WILD_VOLCANO); });
     }
 
     if (status == SpoilerOutputResultType::SUCCESSFUL) {
-        status = spoil_mon_desc("mon-desc-mountain.txt", [](const MonsterRaceInfo *r_ptr) { return r_ptr->wilderness_flags.has(MonsterWildernessType::WILD_MOUNTAIN); });
+        status = spoil_mon_desc("mon-desc-mountain.txt", [](const MonraceDefinition &monrace) { return monrace.wilderness_flags.has(MonsterWildernessType::WILD_MOUNTAIN); });
     }
 
     if (status == SpoilerOutputResultType::SUCCESSFUL) {
-        status = spoil_mon_desc("mon-desc-grass.txt", [](const MonsterRaceInfo *r_ptr) { return r_ptr->wilderness_flags.has(MonsterWildernessType::WILD_GRASS); });
+        status = spoil_mon_desc("mon-desc-grass.txt", [](const MonraceDefinition &monrace) { return monrace.wilderness_flags.has(MonsterWildernessType::WILD_GRASS); });
     }
 
     if (status == SpoilerOutputResultType::SUCCESSFUL) {
-        status = spoil_mon_desc("mon-desc-wildall.txt", [](const MonsterRaceInfo *r_ptr) { return r_ptr->wilderness_flags.has(MonsterWildernessType::WILD_ALL); });
+        status = spoil_mon_desc("mon-desc-wildall.txt", [](const MonraceDefinition &monrace) { return monrace.wilderness_flags.has(MonsterWildernessType::WILD_ALL); });
     }
 
     return status;
@@ -189,7 +197,7 @@ static SpoilerOutputResultType spoil_player_spell()
         std::string book_name = _("なし", "None");
         if (magic_ptr->spell_book != ItemKindType::NONE) {
             ItemEntity item({ magic_ptr->spell_book, 0 });
-            book_name = describe_flavor(&dummy_p, &item, OD_NAME_ONLY);
+            book_name = describe_flavor(&dummy_p, item, OD_NAME_ONLY);
             auto *s = angband_strchr(book_name.data(), '[');
             if (s != nullptr) {
                 book_name.erase(s - book_name.data());

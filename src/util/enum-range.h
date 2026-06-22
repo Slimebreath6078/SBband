@@ -2,6 +2,7 @@
 
 #include <concepts>
 #include <iterator>
+#include <range/v3/range/concepts.hpp>
 #include <type_traits>
 
 /*!
@@ -19,9 +20,11 @@ public:
     class iterator {
     public:
         // std::iterator_traits に対応するための定義
-        using difference_type = int;
+        using difference_type = ptrdiff_t;
         using value_type = EnumType;
-        using iterator_concept = std::input_iterator_tag;
+        using iterator_concept = std::bidirectional_iterator_tag;
+
+        constexpr iterator() noexcept = default;
 
         /*!
          * @brief 引数で与えた列挙値を指すイテレータオブジェクトを生成する
@@ -63,6 +66,29 @@ public:
         {
             auto old = *this;
             ++*this;
+            return old;
+        }
+
+        /*!
+         * @brief イテレータを前置デクリメントする
+         *
+         * @return *this の参照
+         */
+        constexpr iterator &operator--() noexcept
+        {
+            --index;
+            return *this;
+        }
+
+        /*!
+         * @brief イテレータを後置デクリメントする
+         *
+         * @return インクリメント前のイテレータのコピー
+         */
+        constexpr iterator operator--(int) noexcept
+        {
+            auto old = *this;
+            --*this;
             return old;
         }
 
@@ -212,6 +238,23 @@ public:
         return range.size();
     }
 
+    /*!
+     * @brief 閉区間の範囲を半開区間の EnumRange に変換する
+     *
+     * @return 同じ範囲を表す EnumRange<EnumType>
+     */
+    constexpr EnumRange<EnumType> to_enum_range() const noexcept
+    {
+        return range;
+    }
+
 private:
     EnumRange<EnumType> range;
 };
+
+namespace ranges {
+template <typename T>
+inline constexpr bool enable_view<EnumRange<T>> = true;
+template <typename T>
+inline constexpr bool enable_view<EnumRangeInclusive<T>> = true;
+}

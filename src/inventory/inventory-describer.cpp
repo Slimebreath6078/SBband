@@ -3,7 +3,7 @@
 #include "inventory/inventory-slot-types.h"
 #include "player/player-status-flags.h"
 #include "player/player-status-table.h"
-#include "system/item-entity.h"
+#include "system/item/item-entity.h"
 #include "system/player-type-definition.h"
 
 /*!
@@ -44,7 +44,7 @@ concptr mention_use(PlayerType *player_ptr, int i)
 #endif
 
     case INVEN_BOW:
-        p = (adj_str_hold[player_ptr->stat_index[A_STR]] < player_ptr->inventory_list[i].weight / 10) ? _("運搬中", "Just holding") : _("射撃用", "Shooting");
+        p = (adj_str_hold[player_ptr->stat_index[A_STR]] < player_ptr->inventory[i]->weight / 10) ? _("運搬中", "Just holding") : _("射撃用", "Shooting");
         break;
     case INVEN_MAIN_RING:
         p = (left_hander ? _("左手指", "On left hand") : _("右手指", "On right hand"));
@@ -120,8 +120,8 @@ concptr describe_use(PlayerType *player_ptr, int i)
 #endif
 
     case INVEN_BOW:
-        p = (adj_str_hold[player_ptr->stat_index[A_STR]] < player_ptr->inventory_list[i].weight / 10) ? _("持つだけで精一杯の", "just holding")
-                                                                                                      : _("射撃用に装備している", "shooting missiles with");
+        p = (adj_str_hold[player_ptr->stat_index[A_STR]] < player_ptr->inventory[i]->weight / 10) ? _("持つだけで精一杯の", "just holding")
+                                                                                                  : _("射撃用に装備している", "shooting missiles with");
         break;
     case INVEN_MAIN_RING:
         p = (left_hander ? _("左手の指にはめている", "wearing on your left hand") : _("右手の指にはめている", "wearing on your right hand"));

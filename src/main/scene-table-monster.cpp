@@ -6,41 +6,27 @@
 #include "main/scene-table-monster.h"
 #include "dungeon/quest.h"
 #include "main/music-definitions-table.h"
-#include "system/floor-type-definition.h"
+#include "system/floor/floor-info.h"
 #include "system/inner-game-data.h"
+#include "system/monrace/monrace-definition.h"
 #include "system/monster-entity.h"
-#include "system/monster-race-info.h"
 #include "system/player-type-definition.h"
 #include "util/bit-flags-calculator.h"
 #include "world/world.h"
+#include <memory>
 
 struct scene_monster_info {
     MONSTER_IDX m_idx;
-    MonsterRaceInfo *ap_r_ptr;
+    std::shared_ptr<const MonraceDefinition> apparent_monrace;
     GAME_TURN last_seen; //!< 最後に対象モンスター見たゲームターン
     uint32_t mute_until; //!< この時間に到達するまでモンスターBGMは設定しない
 };
 
 scene_monster_info scene_target_monster;
 
-inline static bool has_shadower_flag(MonsterEntity *m_ptr)
-{
-    return m_ptr->mflag2.has(MonsterConstantFlagType::KAGE);
-}
-
-inline static bool is_unique(MonsterRaceInfo *ap_r_ptr)
-{
-    return ap_r_ptr->kind_flags.has(MonsterKindType::UNIQUE);
-}
-
-inline static bool is_unknown_monster(MonsterRaceInfo *ap_r_ptr)
-{
-    return ap_r_ptr->r_tkills == 0;
-}
-
 void clear_scene_target_monster()
 {
-    scene_target_monster.ap_r_ptr = nullptr;
+    scene_target_monster.apparent_monrace = nullptr;
 }
 
 static int get_game_turn()
@@ -85,34 +71,34 @@ inline static bool can_mute_scene_monster()
 static bool is_high_rate(PlayerType *player_ptr, MONSTER_IDX m_idx1, MONSTER_IDX m_idx2)
 {
     // FIXME 視界内モンスターリストの比較関数と同じ処理
-    auto floor_ptr = player_ptr->current_floor_ptr;
-    auto m_ptr1 = &floor_ptr->m_list[m_idx1];
-    auto m_ptr2 = &floor_ptr->m_list[m_idx2];
-    auto ap_r_ptr1 = &m_ptr1->get_appearance_monrace();
-    auto ap_r_ptr2 = &m_ptr2->get_appearance_monrace();
+    const auto &floor = *player_ptr->current_floor_ptr;
+    const auto &monster1 = floor.m_list[m_idx1];
+    const auto &monster2 = floor.m_list[m_idx2];
+    const auto &apparent_monrace1 = monster1.get_apparent_monrace();
+    const auto &apparent_monrace2 = monster2.get_apparent_monrace();
 
     /* Unique monsters first */
-    if (ap_r_ptr1->kind_flags.has(MonsterKindType::UNIQUE) != ap_r_ptr2->kind_flags.has(MonsterKindType::UNIQUE)) {
-        return ap_r_ptr1->kind_flags.has(MonsterKindType::UNIQUE);
+    if (apparent_monrace1.kind_flags.has(MonsterKindType::UNIQUE) != apparent_monrace2.kind_flags.has(MonsterKindType::UNIQUE)) {
+        return apparent_monrace1.kind_flags.has(MonsterKindType::UNIQUE);
     }
 
     /* Shadowers first (あやしい影) */
-    if (m_ptr1->mflag2.has(MonsterConstantFlagType::KAGE) != m_ptr2->mflag2.has(MonsterConstantFlagType::KAGE)) {
-        return m_ptr1->mflag2.has(MonsterConstantFlagType::KAGE);
+    if (monster1.mflag2.has(MonsterConstantFlagType::KAGE) != monster2.mflag2.has(MonsterConstantFlagType::KAGE)) {
+        return monster1.mflag2.has(MonsterConstantFlagType::KAGE);
     }
 
     /* Unknown monsters first */
-    if ((ap_r_ptr1->r_tkills == 0) != (ap_r_ptr2->r_tkills == 0)) {
-        return ap_r_ptr1->r_tkills == 0;
+    if ((apparent_monrace1.r_tkills == 0) != (apparent_monrace2.r_tkills == 0)) {
+        return apparent_monrace1.r_tkills == 0;
     }
 
     /* Higher level monsters first (if known) */
-    if (ap_r_ptr1->r_tkills && ap_r_ptr2->r_tkills && ap_r_ptr1->level != ap_r_ptr2->level) {
-        return ap_r_ptr1->level > ap_r_ptr2->level;
+    if (apparent_monrace1.r_tkills && apparent_monrace2.r_tkills && apparent_monrace1.level != apparent_monrace2.level) {
+        return apparent_monrace1.level > apparent_monrace2.level;
     }
 
     /* Sort by index if all conditions are same */
-    return m_ptr1->ap_r_idx > m_ptr2->ap_r_idx;
+    return monster1.ap_r_idx > monster2.ap_r_idx;
 }
 
 /*!
@@ -125,12 +111,12 @@ static bool is_high_rate(PlayerType *player_ptr, MONSTER_IDX m_idx1, MONSTER_IDX
  */
 static void update_target_monster(PlayerType *player_ptr, MONSTER_IDX m_idx)
 {
-    if (scene_target_monster.ap_r_ptr && (scene_target_monster.m_idx == m_idx)) {
+    if (scene_target_monster.apparent_monrace && (scene_target_monster.m_idx == m_idx)) {
         // 同一モンスター。最後に見たゲームターンを更新。
         scene_target_monster.last_seen = get_game_turn();
     } else {
         bool do_dwap = false;
-        if (!scene_target_monster.ap_r_ptr) {
+        if (!scene_target_monster.apparent_monrace) {
             // 空席
             do_dwap = true;
         } else if (is_high_rate(player_ptr, m_idx, scene_target_monster.m_idx)) {
@@ -139,10 +125,9 @@ static void update_target_monster(PlayerType *player_ptr, MONSTER_IDX m_idx)
         }
 
         if (do_dwap) {
-            auto *m_ptr = &player_ptr->current_floor_ptr->m_list[m_idx];
-            auto *ap_r_ptr = &m_ptr->get_appearance_monrace();
+            const auto &monster = player_ptr->current_floor_ptr->m_list[m_idx];
             scene_target_monster.m_idx = m_idx;
-            scene_target_monster.ap_r_ptr = ap_r_ptr;
+            scene_target_monster.apparent_monrace = monster.get_apparent_monrace_shared();
             scene_target_monster.last_seen = get_game_turn();
         }
     }
@@ -152,15 +137,15 @@ using scene_monster_func = bool (*)(PlayerType *player_ptr, scene_type *value);
 
 static bool scene_monster(PlayerType *player_ptr, scene_type *value)
 {
-    auto *m_ptr = &player_ptr->current_floor_ptr->m_list[scene_target_monster.m_idx];
+    const auto &monster = player_ptr->current_floor_ptr->m_list[scene_target_monster.m_idx];
 
-    if (has_shadower_flag(m_ptr)) {
+    if (monster.mflag2.has(MonsterConstantFlagType::KAGE)) {
         value->type = TERM_XTRA_MUSIC_BASIC;
         value->val = MUSIC_BASIC_SHADOWER;
         return true;
     } else {
         value->type = TERM_XTRA_MUSIC_MONSTER;
-        value->val = enum2i(m_ptr->ap_r_idx);
+        value->val = enum2i(monster.ap_r_idx);
         return true;
     }
 }
@@ -169,7 +154,7 @@ static bool scene_unique(PlayerType *player_ptr, scene_type *value)
 {
     (void)player_ptr;
 
-    if (is_unique(scene_target_monster.ap_r_ptr)) {
+    if (scene_target_monster.apparent_monrace->kind_flags.has(MonsterKindType::UNIQUE)) {
         value->type = TERM_XTRA_MUSIC_BASIC;
         value->val = MUSIC_BASIC_UNIQUE;
         return true;
@@ -181,7 +166,7 @@ static bool scene_unique(PlayerType *player_ptr, scene_type *value)
 static bool scene_unknown(PlayerType *player_ptr, scene_type *value)
 {
     (void)player_ptr;
-    if (is_unknown_monster(scene_target_monster.ap_r_ptr)) {
+    if (scene_target_monster.apparent_monrace->r_tkills == 0) {
         value->type = TERM_XTRA_MUSIC_BASIC;
         value->val = MUSIC_BASIC_UNKNOWN_MONSTER;
         return true;
@@ -192,7 +177,7 @@ static bool scene_unknown(PlayerType *player_ptr, scene_type *value)
 
 static bool scene_high_level(PlayerType *player_ptr, scene_type *value)
 {
-    if (!is_unknown_monster(scene_target_monster.ap_r_ptr) && (scene_target_monster.ap_r_ptr->level >= player_ptr->lev)) {
+    if (scene_target_monster.apparent_monrace->r_tkills > 0 && (scene_target_monster.apparent_monrace->level >= player_ptr->lev)) {
         value->type = TERM_XTRA_MUSIC_BASIC;
         value->val = MUSIC_BASIC_HIGHER_LEVEL_MONSTER;
         return true;
@@ -238,15 +223,14 @@ void refresh_scene_monster(PlayerType *player_ptr, const std::vector<MONSTER_IDX
         // モンスターBGM制限中
         clear_scene_target_monster();
     } else {
-        if (scene_target_monster.ap_r_ptr) {
+        if (scene_target_monster.apparent_monrace) {
             // BGM対象から外すチェック
             if (get_game_turn() - scene_target_monster.last_seen >= 200) {
                 // 最後に見かけてから一定のゲームターンが経過した場合、BGM対象から外す
                 clear_scene_target_monster();
             } else {
-                auto *m_ptr = &player_ptr->current_floor_ptr->m_list[scene_target_monster.m_idx];
-                auto *ap_r_ptr = &m_ptr->get_appearance_monrace();
-                if (ap_r_ptr != scene_target_monster.ap_r_ptr) {
+                const auto &monster = player_ptr->current_floor_ptr->m_list[scene_target_monster.m_idx];
+                if (monster.get_apparent_monrace_shared() != scene_target_monster.apparent_monrace) {
                     // 死亡、チェンジモンスター、etc.
                     clear_scene_target_monster();
                 }
@@ -259,7 +243,7 @@ void refresh_scene_monster(PlayerType *player_ptr, const std::vector<MONSTER_IDX
         }
     }
 
-    if (scene_target_monster.ap_r_ptr) {
+    if (scene_target_monster.apparent_monrace) {
         // BGM対象の条件で選曲リストを設定する
         for (auto func : scene_monster_def_list) {
             scene_type &item = list[from_index];

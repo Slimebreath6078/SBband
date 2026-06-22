@@ -8,8 +8,8 @@
 #include "core/disturbance.h"
 #include "core/stuff-handler.h"
 #include "dungeon/quest.h"
-#include "floor/cave.h"
 #include "floor/floor-mode-changer.h"
+#include "floor/geometry.h"
 #include "floor/wild.h"
 #include "game-option/birth-options.h"
 #include "game-option/input-options.h"
@@ -32,12 +32,17 @@
 #include "spell-realm/spells-hex.h"
 #include "spell-realm/spells-song.h"
 #include "status/action-setter.h"
-#include "system/dungeon-info.h"
-#include "system/floor-type-definition.h"
+#include "system/dungeon/dungeon-definition.h"
+#include "system/dungeon/quest-definition.h"
+#include "system/dungeon/quest-list.h"
+#include "system/enums/dungeon/dungeon-id.h"
+#include "system/floor/floor-info.h"
+#include "system/floor/wilderness-grid.h"
 #include "system/grid-type-definition.h"
 #include "system/player-type-definition.h"
 #include "system/redrawing-flags-updater.h"
-#include "system/terrain-type-definition.h"
+#include "system/services/dungeon-service.h"
+#include "system/terrain/terrain-definition.h"
 #include "target/target-getter.h"
 #include "timed-effect/timed-effects.h"
 #include "util/bit-flags-calculator.h"
@@ -81,7 +86,7 @@ void do_cmd_go_up(PlayerType *player_ptr)
     const auto &terrain = grid.get_terrain();
     PlayerClass(player_ptr).break_samurai_stance({ SamuraiStanceType::MUSOU });
 
-    if (terrain.flags.has_not(TerrainCharacteristics::LESS)) {
+    if (terrain.flags.has_not(TerrainCharacteristics::UP_STAIRS)) {
         msg_print(_("ここには上り階段が見当たらない。", "I see no up staircase here."));
         return;
     }
@@ -97,7 +102,7 @@ void do_cmd_go_up(PlayerType *player_ptr)
             msg_print(_("上の階に登った。", "You enter the up staircase."));
         }
 
-        sound(SOUND_STAIRWAY);
+        sound(SoundKind::STAIRWAY);
 
         leave_quest_check(player_ptr);
         floor.quest_number = i2enum<QuestId>(grid.special);
@@ -125,7 +130,7 @@ void do_cmd_go_up(PlayerType *player_ptr)
     }
 
     auto go_up = false;
-    if (!floor.is_in_underground()) {
+    if (!floor.is_underground()) {
         go_up = true;
     } else {
         go_up = confirm_leave_level(player_ptr, false);
@@ -188,7 +193,7 @@ void do_cmd_go_up(PlayerType *player_ptr)
         }
     }
 
-    sound(SOUND_STAIRWAY);
+    sound(SoundKind::STAIRWAY);
 
     player_ptr->leaving = true;
 }
@@ -199,22 +204,17 @@ void do_cmd_go_up(PlayerType *player_ptr)
  */
 void do_cmd_go_down(PlayerType *player_ptr)
 {
-    bool fall_trap = false;
-    int down_num = 0;
     PlayerClass(player_ptr).break_samurai_stance({ SamuraiStanceType::MUSOU });
 
     auto &floor = *player_ptr->current_floor_ptr;
     auto &grid = floor.grid_array[player_ptr->y][player_ptr->x];
     auto &terrain = grid.get_terrain();
-    if (terrain.flags.has_not(TerrainCharacteristics::MORE)) {
+    if (terrain.flags.has_not(TerrainCharacteristics::DOWN_STAIRS)) {
         msg_print(_("ここには下り階段が見当たらない。", "I see no down staircase here."));
         return;
     }
 
-    if (terrain.flags.has(TerrainCharacteristics::TRAP)) {
-        fall_trap = true;
-    }
-
+    const auto is_fall_trap = terrain.flags.has(TerrainCharacteristics::TRAP);
     if (terrain.flags.has(TerrainCharacteristics::QUEST_ENTER)) {
         do_cmd_quest(player_ptr);
         return;
@@ -231,7 +231,7 @@ void do_cmd_go_down(PlayerType *player_ptr)
             msg_print(_("下の階に降りた。", "You enter the down staircase."));
         }
 
-        sound(SOUND_STAIRWAY);
+        sound(SoundKind::STAIRWAY);
 
         leave_quest_check(player_ptr);
         leave_tower_check(player_ptr);
@@ -260,19 +260,18 @@ void do_cmd_go_down(PlayerType *player_ptr)
         return;
     }
 
-    short target_dungeon = 0;
+    auto dungeon_id = DungeonId::WILDERNESS;
     auto &fcms = FloorChangeModesStore::get_instace();
-    if (!floor.is_in_underground()) {
-        target_dungeon = terrain.flags.has(TerrainCharacteristics::ENTRANCE) ? grid.special : DUNGEON_ANGBAND;
-        if (ironman_downward && (target_dungeon != DUNGEON_ANGBAND)) {
+    if (!floor.is_underground()) {
+        dungeon_id = terrain.flags.has(TerrainCharacteristics::ENTRANCE) ? i2enum<DungeonId>(grid.special) : DungeonId::ANGBAND;
+        if (ironman_downward && (dungeon_id != DungeonId::ANGBAND)) {
             msg_print(_("ダンジョンの入口は塞がれている！", "The entrance of this dungeon is closed!"));
             return;
         }
 
-        if (!max_dlv[target_dungeon]) {
-            const auto mes = _("ここには%sの入り口(%d階相当)があります", "There is the entrance of %s (Danger level: %d)");
-            const auto &dungeon = dungeons_info[target_dungeon];
-            msg_format(mes, dungeon.name.data(), dungeon.mindepth);
+        const auto mes_entrance = DungeonService::check_first_entrance(dungeon_id);
+        if (mes_entrance) {
+            msg_print(*mes_entrance);
             if (!input_check(_("本当にこのダンジョンに入りますか？", "Do you really get in this dungeon? "))) {
                 return;
             }
@@ -280,7 +279,7 @@ void do_cmd_go_down(PlayerType *player_ptr)
 
         player_ptr->oldpx = player_ptr->x;
         player_ptr->oldpy = player_ptr->y;
-        floor.set_dungeon_index(target_dungeon);
+        floor.set_dungeon_index(dungeon_id);
         fcms->set(FloorChangeMode::FIRST_FLOOR);
     }
 
@@ -289,6 +288,7 @@ void do_cmd_go_down(PlayerType *player_ptr)
         do_cmd_save_game(player_ptr, true);
     }
 
+    auto down_num = 0;
     if (terrain.flags.has(TerrainCharacteristics::SHAFT)) {
         down_num += 2;
     } else {
@@ -296,23 +296,24 @@ void do_cmd_go_down(PlayerType *player_ptr)
     }
 
     const auto &dungeon = floor.get_dungeon_definition();
-    if (!floor.is_in_underground()) {
-        player_ptr->enter_dungeon = true;
+    if (!floor.is_underground()) {
+        floor.enter_dungeon(true);
         down_num = dungeon.mindepth;
     }
 
-    if (record_stair) {
-        if (fall_trap) {
-            exe_write_diary(floor, DiaryKind::STAIR, down_num, _("落とし戸に落ちた", "fell through a trap door"));
-        } else {
-            exe_write_diary(floor, DiaryKind::STAIR, down_num, _("階段を下りた", "climbed down the stairs to"));
-        }
+    if (record_stair && !floor.is_in_quest()) {
+        const auto note = is_fall_trap ? _("落とし戸に落ちた", "fell through a trap door") : _("階段を下りた", "climbed down the stairs to");
+        exe_write_diary(floor, DiaryKind::STAIR, down_num, note);
     }
 
-    if (fall_trap) {
+    if (is_fall_trap) {
         msg_print(_("わざと落とし戸に落ちた。", "You deliberately jump through the trap door."));
+        if (floor.is_in_quest()) {
+            msg_print(_("しかし何も起こらなかった。", "But, nothing happens."));
+            return;
+        }
     } else {
-        if (target_dungeon) {
+        if (dungeon_id > DungeonId::WILDERNESS) {
             msg_format(_("%sへ入った。", "You entered %s."), dungeon.text.data());
         } else {
             if (is_echizen(player_ptr)) {
@@ -322,12 +323,11 @@ void do_cmd_go_down(PlayerType *player_ptr)
             }
         }
 
-        sound(SOUND_STAIRWAY);
+        sound(SoundKind::STAIRWAY);
     }
 
     player_ptr->leaving = true;
-
-    if (fall_trap) {
+    if (is_fall_trap) {
         fcms->set({ FloorChangeMode::SAVE_FLOORS, FloorChangeMode::DOWN, FloorChangeMode::RANDOM_PLACE, FloorChangeMode::RANDOM_CONNECT });
         return;
     }
@@ -352,13 +352,12 @@ void do_cmd_walk(PlayerType *player_ptr, bool pickup)
         command_arg = 0;
     }
 
-    bool more = false;
-    DIRECTION dir;
+    auto more = false;
     const auto is_wild_mode = AngbandWorld::get_instance().is_wild_mode();
-    if (get_rep_dir(player_ptr, &dir)) {
+    if (const auto dir = get_rep_dir(player_ptr)) {
         PlayerEnergy energy(player_ptr);
         energy.set_player_turn_energy(100);
-        if (dir != 5) {
+        if (dir.has_direction()) {
             PlayerClass(player_ptr).break_samurai_stance({ SamuraiStanceType::MUSOU });
         }
 
@@ -375,13 +374,16 @@ void do_cmd_walk(PlayerType *player_ptr, bool pickup)
         more = true;
     }
 
-    if (is_wild_mode && !cave_has_flag_bold(player_ptr->current_floor_ptr, player_ptr->y, player_ptr->x, TerrainCharacteristics::TOWN)) {
-        int tmp = 120 + player_ptr->lev * 10 - wilderness[player_ptr->y][player_ptr->x].level + 5;
+    const auto &floor = *player_ptr->current_floor_ptr;
+    const auto p_pos = player_ptr->get_position();
+    if (is_wild_mode && !floor.has_terrain_characteristics(p_pos, TerrainCharacteristics::TOWN)) {
+        const auto wild_level = WildernessGrids::get_instance().get_player_grid().get_level();
+        auto tmp = 120 + player_ptr->lev * 10 - wild_level + 5;
         if (tmp < 1) {
             tmp = 1;
         }
 
-        if (((wilderness[player_ptr->y][player_ptr->x].level + 5) > (player_ptr->lev / 2)) && randint0(tmp) < (21 - player_ptr->skill_stl)) {
+        if (((wild_level + 5) > (player_ptr->lev / 2)) && randint0(tmp) < (21 - player_ptr->skill_stl)) {
             msg_print(_("襲撃だ！", "You are ambushed !"));
             player_ptr->oldpy = randint1(MAX_HGT - 2);
             player_ptr->oldpx = randint1(MAX_WID - 2);
@@ -402,14 +404,13 @@ void do_cmd_walk(PlayerType *player_ptr, bool pickup)
  */
 void do_cmd_run(PlayerType *player_ptr)
 {
-    DIRECTION dir;
     if (cmd_limit_confused(player_ptr)) {
         return;
     }
 
     PlayerClass(player_ptr).break_samurai_stance({ SamuraiStanceType::MUSOU });
 
-    if (get_rep_dir(player_ptr, &dir)) {
+    if (const auto dir = get_rep_dir(player_ptr)) {
         player_ptr->running = (command_arg ? command_arg : 1000);
         run_step(player_ptr, dir);
     }

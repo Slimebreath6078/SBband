@@ -1,11 +1,10 @@
 #pragma once
 
-#include "external-lib/include-json.h"
 #include "realm/realm-types.h"
 #include "system/angband.h"
-#include <optional>
 #include <string>
 #include <string_view>
+#include <tl/optional.hpp>
 #include <unordered_map>
 #include <vector>
 
@@ -49,11 +48,11 @@ public:
     ~SpellInfoList() = default;
 
     void initialize();
-    errr parse(nlohmann::json &spell_data);
+    void set_spell_info(RealmType realm, int spell_id, SpellInfo &&spell_info);
 
     static SpellInfoList &get_instance();
 
-    std::optional<short> get_spell_id(RealmType realm, std::string_view spell_tag) const;
+    tl::optional<short> get_spell_id(RealmType realm, std::string_view spell_tag) const;
     const SpellInfo &get_spell_info(RealmType realm, int spell_id) const;
 
 private:

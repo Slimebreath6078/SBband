@@ -17,7 +17,7 @@
 #include "realm/realm-hex-numbers.h"
 #include "spell-realm/spells-hex.h"
 #include "sv-definition/sv-weapon-types.h"
-#include "system/item-entity.h"
+#include "system/item/item-entity.h"
 #include "system/player-type-definition.h"
 #include "system/redrawing-flags-updater.h"
 #include "term/screen-processor.h"
@@ -246,7 +246,7 @@ static void compare_weapon_aux(PlayerType *player_ptr, ItemEntity *o_ptr, int co
 /*!
  * @brief 武器匠における武器一つ毎の完全情報を表示する。
  * @param PlayerType プレイヤーへの参照ポインタ
- * @param o_ptr オブジェクトの構造体の参照ポインタ。
+ * @param item アイテムへの参照
  * @param row 表示する列の左端
  * @param col 表示する行の上端
  * @details
@@ -255,12 +255,12 @@ static void compare_weapon_aux(PlayerType *player_ptr, ItemEntity *o_ptr, int co
  * Only accurate for the current weapon, because it includes
  * various info about the player's +to_dam and number of blows.
  */
-static void list_weapon(PlayerType *player_ptr, ItemEntity *o_ptr, TERM_LEN row, TERM_LEN col)
+static void list_weapon(PlayerType *player_ptr, const ItemEntity &item, TERM_LEN row, TERM_LEN col)
 {
-    const auto eff_dd = o_ptr->damage_dice.num + player_ptr->damage_dice_bonus[0].num;
-    const auto eff_ds = o_ptr->damage_dice.sides + player_ptr->damage_dice_bonus[0].sides;
-    const auto hit_reliability = player_ptr->skill_thn + (player_ptr->to_h[0] + o_ptr->to_h) * BTH_PLUS_ADJ;
-    const auto item_name = describe_flavor(player_ptr, o_ptr, OD_NAME_ONLY);
+    const auto eff_dd = item.damage_dice.num + player_ptr->damage_dice_bonus[0].num;
+    const auto eff_ds = item.damage_dice.sides + player_ptr->damage_dice_bonus[0].sides;
+    const auto hit_reliability = player_ptr->skill_thn + (player_ptr->to_h[0] + item.to_h) * BTH_PLUS_ADJ;
+    const auto item_name = describe_flavor(player_ptr, item, OD_NAME_ONLY);
     c_put_str(TERM_YELLOW, item_name, row, col);
     put_str(format(_("攻撃回数: %d", "Number of Blows: %d"), player_ptr->num_blow[0]), row + 1, col);
 
@@ -275,13 +275,13 @@ static void list_weapon(PlayerType *player_ptr, ItemEntity *o_ptr, TERM_LEN row,
     c_put_str(TERM_YELLOW, _("可能なダメージ:", "Possible Damage:"), row + 5, col);
 
     put_str(format(_("攻撃一回につき %d-%d", "One Strike: %d-%d damage"),
-                (int)(eff_dd + o_ptr->to_d + player_ptr->to_d[0]),
-                (int)(eff_ds * eff_dd + o_ptr->to_d + player_ptr->to_d[0])),
+                (int)(eff_dd + item.to_d + player_ptr->to_d[0]),
+                (int)(eff_ds * eff_dd + item.to_d + player_ptr->to_d[0])),
         row + 6, col + 1);
 
     put_str(format(_("１ターンにつき %d-%d", "One Attack: %d-%d damage"),
-                (int)(player_ptr->num_blow[0] * (eff_dd + o_ptr->to_d + player_ptr->to_d[0])),
-                (int)(player_ptr->num_blow[0] * (eff_ds * eff_dd + o_ptr->to_d + player_ptr->to_d[0]))),
+                (int)(player_ptr->num_blow[0] * (eff_dd + item.to_d + player_ptr->to_d[0])),
+                (int)(player_ptr->num_blow[0] * (eff_ds * eff_dd + item.to_d + player_ptr->to_d[0]))),
         row + 7, col + 1);
 }
 
@@ -296,8 +296,7 @@ static void list_weapon(PlayerType *player_ptr, ItemEntity *o_ptr, TERM_LEN row,
  */
 PRICE compare_weapons(PlayerType *player_ptr, PRICE bcost)
 {
-    ItemEntity *o_ptr[2]{};
-    ItemEntity orig_weapon;
+    std::shared_ptr<ItemEntity> items[2]{};
     TERM_LEN row = 2;
     TERM_LEN wid = 38, mgn = 2;
     auto &world = AngbandWorld::get_instance();
@@ -308,16 +307,16 @@ PRICE compare_weapons(PlayerType *player_ptr, PRICE bcost)
 
     screen_save();
     clear_bldg(0, 22);
-    auto *i_ptr = &player_ptr->inventory_list[INVEN_MAIN_HAND];
-    (&orig_weapon)->copy_from(i_ptr);
+    auto &item_main_hand = player_ptr->inventory[INVEN_MAIN_HAND];
+    auto orig_weapon = item_main_hand->clone();
 
     constexpr auto first_q = _("第一の武器は？", "What is your first weapon? ");
     constexpr auto first_s = _("比べるものがありません。", "You have nothing to compare.");
 
     short i_idx_first;
     constexpr auto options = USE_EQUIP | USE_INVEN | IGNORE_BOTHHAND_SLOT;
-    o_ptr[0] = choose_object(player_ptr, &i_idx_first, first_q, first_s, options, FuncItemTester(&ItemEntity::is_orthodox_melee_weapons));
-    if (!o_ptr[0]) {
+    std::tie(items[0], i_idx_first) = choose_item(player_ptr, first_q, first_s, options, FuncItemTester(&ItemEntity::is_orthodox_melee_weapons));
+    if (!items[0]) {
         screen_load();
         return 0;
     }
@@ -330,16 +329,16 @@ PRICE compare_weapons(PlayerType *player_ptr, PRICE bcost)
         world.character_xtra = true;
         for (int i = 0; i < n; i++) {
             int col = (wid * i + mgn);
-            if (o_ptr[i] != i_ptr) {
-                i_ptr->copy_from(o_ptr[i]);
+            if (items[i] != item_main_hand) {
+                *item_main_hand = items[i]->clone();
             }
 
             rfu.set_flag(StatusRecalculatingFlag::BONUS);
             handle_stuff(player_ptr);
 
-            list_weapon(player_ptr, o_ptr[i], row, col);
-            compare_weapon_aux(player_ptr, o_ptr[i], col, row + 8);
-            i_ptr->copy_from(&orig_weapon);
+            list_weapon(player_ptr, *items[i], row, col);
+            compare_weapon_aux(player_ptr, items[i].get(), col, row + 8);
+            *item_main_hand = orig_weapon.clone();
         }
 
         rfu.set_flag(StatusRecalculatingFlag::BONUS);
@@ -364,25 +363,24 @@ PRICE compare_weapons(PlayerType *player_ptr, PRICE bcost)
 
         if (total + cost > player_ptr->au) {
             msg_print(_("お金が足りません！", "You don't have enough money!"));
-            msg_print(nullptr);
+            msg_erase();
             continue;
         }
 
         constexpr auto q = _("第二の武器は？", "What is your second weapon? ");
         constexpr auto s = _("比べるものがありません。", "You have nothing to compare.");
-        short i_idx_second;
-        auto *i2_ptr = choose_object(player_ptr, &i_idx_second, q, s, (USE_EQUIP | USE_INVEN | IGNORE_BOTHHAND_SLOT), FuncItemTester(&ItemEntity::is_orthodox_melee_weapons));
-        if (!i2_ptr) {
+        const auto &[item_second, i_idx_second] = choose_item(player_ptr, q, s, (USE_EQUIP | USE_INVEN | IGNORE_BOTHHAND_SLOT), FuncItemTester(&ItemEntity::is_orthodox_melee_weapons));
+        if (!item_second) {
             continue;
         }
 
-        if (i2_ptr == o_ptr[0] || (n == 2 && i2_ptr == o_ptr[1])) {
+        if (item_second == items[0] || (n == 2 && item_second == items[1])) {
             msg_print(_("表示中の武器は選べません！", "Select a different weapon than those displayed."));
-            msg_print(nullptr);
+            msg_erase();
             continue;
         }
 
-        o_ptr[1] = i2_ptr;
+        items[1] = item_second;
         total += cost;
         cost = bcost / 2;
         n = 2;

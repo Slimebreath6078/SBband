@@ -1,62 +1,83 @@
 #include "status/body-improvement.h"
+#include "action/travel-execution.h"
 #include "avatar/avatar.h"
 #include "core/disturbance.h"
 #include "core/speed-table.h"
 #include "core/stuff-handler.h"
 #include "core/window-redrawer.h"
 #include "game-option/disturbance-options.h"
+#include "main/sound-definitions-table.h"
+#include "main/sound-of-music.h"
 #include "player/player-status.h"
 #include "realm/realm-song-numbers.h"
 #include "spell-realm/spells-song.h"
 #include "system/player-type-definition.h"
 #include "system/redrawing-flags-updater.h"
+#include "timed-effect/timed-effects.h"
 #include "view/display-messages.h"
 
+BodyImprovement::BodyImprovement(PlayerType *player_ptr)
+    : player_ptr(player_ptr)
+{
+}
+
+bool BodyImprovement::has_effect() const
+{
+    return this->is_affected;
+}
+
+void BodyImprovement::mod_protection(short v, bool is_decrease)
+{
+    this->set_protection(this->player_ptr->effects()->protection().current() + v, is_decrease);
+}
+
 /*!
- * @brief 対邪悪結界の継続時間をセットする / Set "protevil", notice observable changes
+ * @brief 対邪悪結界の継続時間をセットする
  * @param v 継続時間
- * @param do_dec 現在の継続時間より長い値のみ上書きする
+ * @param is_decrease ターン経過による減少か魔力消去の場合のみtrue
  * @return ステータスに影響を及ぼす変化があった場合TRUEを返す。
  */
-bool set_protevil(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
+void BodyImprovement::set_protection(short v, bool is_decrease)
 {
-    bool notice = false;
+    this->is_affected = false;
+    auto notice = false;
     v = (v > 10000) ? 10000 : (v < 0) ? 0
                                       : v;
-
-    if (player_ptr->is_dead) {
-        return false;
+    if (this->player_ptr->is_dead) {
+        return;
     }
 
+    auto &protection = this->player_ptr->effects()->protection();
+    const auto is_protected = protection.is_protected();
     if (v) {
-        if (player_ptr->protevil && !do_dec) {
-            if (player_ptr->protevil > v) {
-                return false;
+        if (is_protected && !is_decrease) {
+            if (protection.is_larger_than(v)) {
+                return;
             }
-        } else if (!player_ptr->protevil) {
+        } else if (!is_protected) {
             msg_print(_("邪悪なる存在から守られているような感じがする！", "You feel safe from evil!"));
             notice = true;
         }
     } else {
-        if (player_ptr->protevil) {
+        if (is_protected) {
             msg_print(_("邪悪なる存在から守られている感じがなくなった。", "You no longer feel safe from evil."));
+            sound(SoundKind::BUFF_EXPIRE);
             notice = true;
         }
     }
 
-    player_ptr->protevil = v;
+    protection.set(v);
     RedrawingFlagsUpdater::get_instance().set_flag(MainWindowRedrawingFlag::TIMED_EFFECT);
-
     if (!notice) {
-        return false;
+        return;
     }
 
-    if (disturb_state) {
-        disturb(player_ptr, false, false);
+    if (disturb_state || Travel::get_instance().is_ongoing()) {
+        disturb(player_ptr, false, true);
     }
 
-    handle_stuff(player_ptr);
-    return true;
+    handle_stuff(this->player_ptr);
+    this->is_affected = true;
 }
 
 /*!
@@ -65,7 +86,7 @@ bool set_protevil(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
  * @param do_dec 現在の継続時間より長い値のみ上書きする
  * @return ステータスに影響を及ぼす変化があった場合TRUEを返す。
  */
-bool set_invuln(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
+bool set_invuln(PlayerType *player_ptr, short v, bool do_dec)
 {
     bool notice = false;
     v = (v > 10000) ? 10000 : (v < 0) ? 0
@@ -99,6 +120,7 @@ bool set_invuln(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
     } else {
         if (player_ptr->invuln && !music_singing(player_ptr, MUSIC_INVULN)) {
             msg_print(_("無敵ではなくなった。", "The invulnerability wears off."));
+            sound(SoundKind::BUFF_EXPIRE);
             notice = true;
             rfu.set_flag(MainWindowRedrawingFlag::MAP);
             rfu.set_flag(StatusRecalculatingFlag::MONSTER_STATUSES);
@@ -114,8 +136,8 @@ bool set_invuln(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
         return false;
     }
 
-    if (disturb_state) {
-        disturb(player_ptr, false, false);
+    if (disturb_state || Travel::get_instance().is_ongoing()) {
+        disturb(player_ptr, false, true);
     }
 
     rfu.set_flag(StatusRecalculatingFlag::BONUS);
@@ -129,7 +151,7 @@ bool set_invuln(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
  * @param do_dec 現在の継続時間より長い値のみ上書きする
  * @return ステータスに影響を及ぼす変化があった場合TRUEを返す。
  */
-bool set_tim_regen(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
+bool set_tim_regen(PlayerType *player_ptr, short v, bool do_dec)
 {
     bool notice = false;
     v = (v > 10000) ? 10000 : (v < 0) ? 0
@@ -151,6 +173,7 @@ bool set_tim_regen(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
     } else {
         if (player_ptr->tim_regen) {
             msg_print(_("素早く回復する感じがなくなった。", "You feel you are no longer regenerating quickly."));
+            sound(SoundKind::BUFF_EXPIRE);
             notice = true;
         }
     }
@@ -162,8 +185,8 @@ bool set_tim_regen(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
         return false;
     }
 
-    if (disturb_state) {
-        disturb(player_ptr, false, false);
+    if (disturb_state || Travel::get_instance().is_ongoing()) {
+        disturb(player_ptr, false, true);
     }
 
     rfu.set_flag(StatusRecalculatingFlag::BONUS);
@@ -177,7 +200,7 @@ bool set_tim_regen(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
  * @param do_dec 現在の継続時間より長い値のみ上書きする
  * @return ステータスに影響を及ぼす変化があった場合TRUEを返す。
  */
-bool set_tim_reflect(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
+bool set_tim_reflect(PlayerType *player_ptr, short v, bool do_dec)
 {
     bool notice = false;
     v = (v > 10000) ? 10000 : (v < 0) ? 0
@@ -199,6 +222,7 @@ bool set_tim_reflect(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
     } else {
         if (player_ptr->tim_reflect) {
             msg_print(_("体の表面が滑かでなくなった。", "Your body is no longer smooth."));
+            sound(SoundKind::BUFF_EXPIRE);
             notice = true;
         }
     }
@@ -210,8 +234,8 @@ bool set_tim_reflect(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
         return false;
     }
 
-    if (disturb_state) {
-        disturb(player_ptr, false, false);
+    if (disturb_state || Travel::get_instance().is_ongoing()) {
+        disturb(player_ptr, false, true);
     }
 
     rfu.set_flag(StatusRecalculatingFlag::BONUS);
@@ -225,7 +249,7 @@ bool set_tim_reflect(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
  * @param do_dec 現在の継続時間より長い値のみ上書きする
  * @return ステータスに影響を及ぼす変化があった場合TRUEを返す。
  */
-bool set_pass_wall(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
+bool set_pass_wall(PlayerType *player_ptr, short v, bool do_dec)
 {
     bool notice = false;
     v = (v > 10000) ? 10000 : (v < 0) ? 0
@@ -247,6 +271,7 @@ bool set_pass_wall(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
     } else {
         if (player_ptr->tim_pass_wall) {
             msg_print(_("体が物質化した。", "You are no longer ethereal."));
+            sound(SoundKind::BUFF_EXPIRE);
             notice = true;
         }
     }
@@ -258,8 +283,106 @@ bool set_pass_wall(PlayerType *player_ptr, TIME_EFFECT v, bool do_dec)
         return false;
     }
 
-    if (disturb_state) {
-        disturb(player_ptr, false, false);
+    if (disturb_state || Travel::get_instance().is_ongoing()) {
+        disturb(player_ptr, false, true);
+    }
+
+    rfu.set_flag(StatusRecalculatingFlag::BONUS);
+    handle_stuff(player_ptr);
+    return true;
+}
+
+/*!
+ * @brief 一時的光源強化の継続時間をセットする / Set "tim_emission", notice observable changes
+ * @param v 継続時間
+ * @param do_dec 現在の継続時間より長い値のみ上書きする
+ * @return ステータスに影響を及ぼす変化があった場合TRUEを返す。
+ */
+bool set_tim_emission(PlayerType *player_ptr, short v, bool do_dec)
+{
+    auto notice = false;
+    v = (v > 10000) ? 10000 : (v < 0) ? 0
+                                      : v;
+
+    if (player_ptr->is_dead) {
+        return false;
+    }
+
+    if (v) {
+        if (player_ptr->tim_emission && !do_dec) {
+            if (player_ptr->tim_emission > v) {
+                return false;
+            }
+        } else if (!player_ptr->tim_emission) {
+            msg_print(_("体が発光した。", "Your body emit light."));
+            notice = true;
+        }
+    } else {
+        if (player_ptr->tim_emission) {
+            msg_print(_("体の光が消え去った。", "Your body stopped emitting light."));
+            sound(SoundKind::BUFF_EXPIRE);
+            notice = true;
+        }
+    }
+
+    player_ptr->tim_emission = v;
+    auto &rfu = RedrawingFlagsUpdater::get_instance();
+    rfu.set_flag(MainWindowRedrawingFlag::TIMED_EFFECT);
+    if (!notice) {
+        return false;
+    }
+
+    if (disturb_state || Travel::get_instance().is_ongoing()) {
+        disturb(player_ptr, false, true);
+    }
+
+    rfu.set_flag(StatusRecalculatingFlag::BONUS);
+    rfu.set_flag(StatusRecalculatingFlag::TORCH);
+    handle_stuff(player_ptr);
+    return true;
+}
+/*!
+ * @brief 一時的悪魔祓いの継続時間をセットする / Set "tim_exorcism", notice observable changes
+ * @param v 継続時間
+ * @param do_dec 現在の継続時間より長い値のみ上書きする
+ * @return ステータスに影響を及ぼす変化があった場合TRUEを返す。
+ */
+bool set_tim_exorcism(PlayerType *player_ptr, short v, bool do_dec)
+{
+    auto notice = false;
+    v = (v > 10000) ? 10000 : (v < 0) ? 0
+                                      : v;
+
+    if (player_ptr->is_dead) {
+        return false;
+    }
+
+    if (v) {
+        if (player_ptr->tim_exorcism && !do_dec) {
+            if (player_ptr->tim_exorcism > v) {
+                return false;
+            }
+        } else if (!player_ptr->tim_exorcism) {
+            msg_print(_("浄化の力を得た気がする。", "You feel you become an exorcist."));
+            notice = true;
+        }
+    } else {
+        if (player_ptr->tim_exorcism) {
+            msg_print(_("浄化の力を失った。", "You are no longer exorcist."));
+            sound(SoundKind::BUFF_EXPIRE);
+            notice = true;
+        }
+    }
+
+    player_ptr->tim_exorcism = v;
+    auto &rfu = RedrawingFlagsUpdater::get_instance();
+    rfu.set_flag(MainWindowRedrawingFlag::TIMED_EFFECT);
+    if (!notice) {
+        return false;
+    }
+
+    if (disturb_state || Travel::get_instance().is_ongoing()) {
+        disturb(player_ptr, false, true);
     }
 
     rfu.set_flag(StatusRecalculatingFlag::BONUS);

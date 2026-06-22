@@ -36,7 +36,7 @@
 #include "status/shape-changer.h"
 #include "status/sight-setter.h"
 #include "sv-definition/sv-staff-types.h"
-#include "system/floor-type-definition.h"
+#include "system/floor/floor-info.h"
 #include "system/player-type-definition.h"
 #include "util/dice.h"
 #include "view/display-messages.h"
@@ -198,7 +198,7 @@ int staff_effect(PlayerType *player_ptr, int sval, bool *use_charge, bool powerf
 
     case SV_STAFF_CURING: {
         ident = true_healing(player_ptr, 0);
-        if (set_shero(player_ptr, 0, true)) {
+        if (set_berserk(player_ptr, 0, true)) {
             ident = true;
         }
         break;
@@ -216,7 +216,7 @@ int staff_effect(PlayerType *player_ptr, int sval, bool *use_charge, bool powerf
             ident = true;
         }
         ident |= restore_mana(player_ptr, false);
-        if (set_shero(player_ptr, 0, true)) {
+        if (set_berserk(player_ptr, 0, true)) {
             ident = true;
         }
         break;
@@ -269,7 +269,7 @@ int staff_effect(PlayerType *player_ptr, int sval, bool *use_charge, bool powerf
     }
 
     case SV_STAFF_EARTHQUAKES: {
-        if (earthquake(player_ptr, player_ptr->y, player_ptr->x, (powerful ? 15 : 10), 0)) {
+        if (earthquake(player_ptr, player_ptr->get_position(), (powerful ? 15 : 10))) {
             ident = true;
         } else {
             msg_print(_("ダンジョンが揺れた。", "The dungeon trembles."));
@@ -320,8 +320,8 @@ void do_cmd_use_staff(PlayerType *player_ptr)
     PlayerClass(player_ptr).break_samurai_stance({ SamuraiStanceType::MUSOU, SamuraiStanceType::KOUKIJIN });
     constexpr auto q = _("どの杖を使いますか? ", "Use which staff? ");
     constexpr auto s = _("使える杖がない。", "You have no staff to use.");
-    short i_idx;
-    if (!choose_object(player_ptr, &i_idx, q, s, (USE_INVEN | USE_FLOOR), TvalItemTester(ItemKindType::STAFF))) {
+    const auto &[item, i_idx] = choose_item(player_ptr, q, s, (USE_INVEN | USE_FLOOR), TvalItemTester(ItemKindType::STAFF));
+    if (!item) {
         return;
     }
 
