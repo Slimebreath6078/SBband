@@ -549,9 +549,6 @@ int take_hit(PlayerType *player_ptr, int damage_type, int damage, std::string_vi
 
         term_putstr(w - 1, h - 1, 1, TERM_WHITE, " ");
         flush();
-#ifdef WORLD_SCORE
-        screen_dump = make_screen_dump(player_ptr);
-#endif
         (void)inkey();
         return damage;
 #else

@@ -124,12 +124,7 @@ fi
 
 AC_CHECK_LIB(iconv, iconv_open)
 
-if test "$use_net" = no; then
-  AC_DEFINE(DISABLE_NET, 1, [Disable networking support])
-  worldscore=no;
-else
-  PKG_CHECK_MODULES(libcurl, [libcurl])
-fi
+worldscore=no;
 
 dnl The world score server is currently only available in Japanese.
 if test "$use_japanese" = no; then

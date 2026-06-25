@@ -208,12 +208,6 @@ const std::vector<GameOption> option_info = validate_option_info({
 
     { &auto_dump, false, GameOptionType::AUTO_DUMP, "auto_dump", _("自動的にキャラクターの記録をファイルに書き出す", "Dump a character record automatically"), GameOptionPage::GAMEPLAY },
 
-#ifdef WORLD_SCORE
-    { &send_score, true, GameOptionType::SEND_SCORE, "send_score", _("スコアサーバにスコアを送る", "Send score dump to the world score server"), GameOptionPage::GAMEPLAY },
-#else
-    { &send_score, false, GameOptionType::SEND_SCORE, "send_score", _("スコアサーバにスコアを送る", "Send score dump to the world score server"), GameOptionPage::HIDE },
-#endif
-
     { &allow_debug_opts, false, GameOptionType::ALLOW_DEBUG_OPTS, "allow_debug_opts", _("デバッグ/詐欺オプションを許可する", "Allow use of debug/cheat options"), GameOptionPage::GAMEPLAY },
 
     /*** Disturbance ***/

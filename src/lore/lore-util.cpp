@@ -241,11 +241,6 @@ std::vector<lore_msg> lore_type::build_random_movement_description() const
     return texts;
 }
 
-bool lore_type::has_reinforce() const
-{
-    return this->r_ptr->has_reinforce();
-}
-
 /*!
  * @brief モンスターの思い出メッセージをあらかじめ指定された関数ポインタに基づき出力する
  * @param str 出力文字列

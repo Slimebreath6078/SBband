@@ -90,7 +90,7 @@ static void decide_summon_kin_caster(
     bool mon_to_mon = target_type == MONSTER_TO_MONSTER;
     bool mon_to_player = target_type == MONSTER_TO_PLAYER;
 
-    if (monster.r_idx == MonraceId::SERPENT || monster.r_idx == MonraceId::ZOMBI_SERPENT) {
+    if (monster.r_idx == MonraceId::SERPENT || monster.r_idx == MonraceId::OBSERVER) {
         mspell_cast_msg_blind msg(_("%s^が何かをつぶやいた。", "%s^ mumbles."),
             _("%s^がダンジョンの主を召喚した。", "%s^ magically summons guardians of dungeons."),
             _("%s^がダンジョンの主を召喚した。", "%s^ magically summons guardians of dungeons."));
@@ -153,8 +153,8 @@ MonsterSpellResult spell_RF6_S_KIN(PlayerType *player_ptr, POSITION y, POSITION 
     case MonraceId::BULLGATES:
         count += summon_EDGE(player_ptr, y, x, rlev, m_idx);
         break;
-    case MonsterRaceId::SERPENT:
-    case MonsterRaceId::OBSERVER:
+    case MonraceId::SERPENT:
+    case MonraceId::OBSERVER:
         count += summon_guardian(player_ptr, y, x, rlev, m_idx, t_idx, target_type);
         break;
     case MonraceId::TIAMAT:

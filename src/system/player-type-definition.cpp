@@ -46,23 +46,6 @@ void PlayerType::ride_monster(MONSTER_IDX m_idx)
     }
 }
 
-/*!
- * @brief モンスターに乗る
- * @param m_idx 乗るモンスターのID（0で降りる）
- */
-void PlayerType::ride_monster(MONSTER_IDX m_idx)
-{
-    if (is_monster(this->riding)) {
-        this->current_floor_ptr->m_list[this->riding].mflag2.reset(MonsterConstantFlagType::RIDING);
-    }
-
-    this->riding = m_idx;
-
-    if (is_monster(m_idx)) {
-        this->current_floor_ptr->m_list[m_idx].mflag2.set(MonsterConstantFlagType::RIDING);
-    }
-}
-
 std::shared_ptr<TimedEffects> PlayerType::effects() const
 {
     return this->timed_effects;

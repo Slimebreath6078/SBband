@@ -40,15 +40,6 @@ void rd_version_info(void)
     v_check = 0L;
     x_check = 0L;
 
-    if (is_old_ver) {
-        /* Old savefile will be version 0.0.0.3 */
-        const auto major = rd_byte();
-        const auto minor = rd_byte();
-        const auto patch = rd_byte();
-        const auto extra = rd_byte();
-        system.set_version({ major, minor, patch, extra });
-    }
-
     if (h_older_than(3, 0, 2, 3)) {
         strip_bytes(12);
     }

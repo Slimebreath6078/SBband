@@ -245,12 +245,6 @@ void MonsterDamageProcessor::dying_scream(std::string_view m_name)
     if (death_message) {
         msg_print(*death_message);
     }
-
-#ifdef WORLD_SCORE
-    if (monster.r_idx == MonraceId::SERPENT) {
-        screen_dump = make_screen_dump(this->player_ptr);
-    }
-#endif
 }
 
 void MonsterDamageProcessor::show_kill_message(std::string_view note, std::string_view m_name)

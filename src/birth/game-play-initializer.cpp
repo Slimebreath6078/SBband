@@ -1,6 +1,6 @@
 #include "birth/game-play-initializer.h"
 #include "dungeon/quest.h"
-#include "floor/floor-list.h"
+#include "system/floor/floor-list.h"
 #include "floor/floor-util.h"
 #include "game-option/birth-options.h"
 #include "game-option/cheat-options.h"

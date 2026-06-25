@@ -109,54 +109,6 @@ static void restore_windows(PlayerType *player_ptr)
     term_set_cursor(false);
 }
 
-static void send_waiting_record(PlayerType *player_ptr)
-{
-    auto &system = AngbandSystem::get_instance();
-    if (!system.is_awaiting_report_status()) {
-        return;
-    }
-
-    if (!input_check_strict(player_ptr, _("待機していたスコア登録を今行ないますか？", "Do you register score now? "), UserCheck::NO_HISTORY)) {
-        quit("");
-    }
-
-    static constexpr auto flags = {
-        StatusRecalculatingFlag::BONUS,
-        StatusRecalculatingFlag::HP,
-        StatusRecalculatingFlag::MP,
-        StatusRecalculatingFlag::SPELLS,
-    };
-    RedrawingFlagsUpdater::get_instance().set_flags(flags);
-    update_creature(player_ptr);
-    player_ptr->is_dead = true;
-    auto &world = AngbandWorld::get_instance();
-    world.play_time.pause();
-    signals_ignore_tstp();
-    world.character_icky_depth = 1;
-    const auto path = path_build(ANGBAND_DIR_APEX, "scores.raw");
-    highscore_fd = fd_open(path, O_RDWR);
-
-    /* 町名消失バグ対策(#38205)のためここで世界マップ情報を読み出す */
-    const auto &area = WildernessGrids::get_instance().get_area();
-    parse_fixed_map(player_ptr, WILDERNESS_DEFINITION, 0, 0, area.height(), area.width());
-    bool success = send_world_score(player_ptr, true);
-    if (!success && !input_check_strict(player_ptr, _("スコア登録を諦めますか？", "Do you give up score registration? "), UserCheck::NO_HISTORY)) {
-        prt(_("引き続き待機します。", "standing by for future registration..."), 0, 0);
-        (void)inkey();
-    } else {
-        system.set_awaiting_report_score(false);
-        top_twenty(player_ptr);
-        if (!save_player(player_ptr, SaveType::CLOSE_GAME)) {
-            msg_print(_("セーブ失敗！", "death save failed!"));
-        }
-    }
-
-    (void)fd_close(highscore_fd);
-    highscore_fd = -1;
-    signals_handle_tstp();
-    quit("");
-}
-
 static void init_random_seed(PlayerType *player_ptr, bool new_game)
 {
     auto &world = AngbandWorld::get_instance();

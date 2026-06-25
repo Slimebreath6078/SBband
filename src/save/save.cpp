@@ -16,7 +16,6 @@
 #include "core/object-compressor.h"
 #include "inventory/inventory-slot-types.h"
 #include "io/files-util.h"
-#include "io/report.h"
 #include "io/uid-checker.h"
 #include "locale/character-encoding.h"
 #include "monster/monster-compaction.h"
@@ -205,11 +204,7 @@ static bool wr_savefile_new(PlayerType *player_ptr)
 
     wr_s16b(player_ptr->pet_follow_distance);
     wr_s16b(player_ptr->pet_extra_flags);
-    if (AngbandSystem::get_instance().is_awaiting_report_status() || !player_ptr->is_dead) {
-        wr_string(screen_dump);
-    } else {
-        wr_string("");
-    }
+    wr_string("");
 
     if (!player_ptr->is_dead) {
         if (!wr_dungeon(player_ptr)) {

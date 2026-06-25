@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="..\..\src\main-win.cpp" />
@@ -457,9 +457,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\floor\wild.cpp">
       <Filter>floor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\io\report.cpp">
-      <Filter>io</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\floor\geometry.cpp">
       <Filter>floor</Filter>
@@ -2406,23 +2403,11 @@
     <ClCompile Include="..\..\src\system\redrawing-flags-updater.cpp">
       <Filter>system</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\net\curl-easy-session.cpp">
-      <Filter>net</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\net\curl-slist.cpp">
-      <Filter>net</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\net\http-client.cpp">
-      <Filter>net</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\util\dice.cpp">
       <Filter>util</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\util\sha256.cpp">
       <Filter>util</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\net\report-error.cpp">
-      <Filter>net</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\main-win\main-win-exception.cpp">
       <Filter>main-win</Filter>
@@ -2505,9 +2490,6 @@
     <ClCompile Include="..\..\src\system\floor\floor-info.cpp">
       <Filter>system\floor</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\system\floor\floor-list.cpp">
-      <Filter>system\floor</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\system\floor\town-info.cpp">
       <Filter>system\floor</Filter>
     </ClCompile>
@@ -2520,49 +2502,16 @@
     <ClCompile Include="..\..\src\system\terrain\terrain-list.cpp">
       <Filter>system\terrain</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\system\services\dungeon-service.cpp">
-      <Filter>system\services</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\wizard\monrace-filter-debug-info.cpp">
       <Filter>wizard</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\system\services\dungeon-monrace-service.cpp">
-      <Filter>system\services</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\util\elapsed-time.cpp">
       <Filter>util</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\external-lib\fmt\format.cc">
-      <Filter>external-lib\fmt</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\system\floor\wilderness-grid.cpp">
-      <Filter>system\floor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\monster-floor\monster-movement-direction-list.cpp">
-      <Filter>monster-floor</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\target\target.cpp">
       <Filter>target</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\io\macro-configurations-store.cpp">
-      <Filter>io</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\player-info\bluemage-data.cpp">
-      <Filter>player-info</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\system\floor\town-records.cpp">
-      <Filter>system\floor</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\system\artifact\artifact-definition.cpp">
-      <Filter>system\artifact</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\system\artifact\artifact-list.cpp">
-      <Filter>system\artifact</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\system\artifact\artifact-record.cpp">
-      <Filter>system\artifact</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\system\artifact\artifact-service.cpp">
       <Filter>system\artifact</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\system\item\item-entity.cpp">
@@ -2571,56 +2520,1241 @@
     <ClCompile Include="..\..\src\autopick\autopick-keys-table.cpp">
       <Filter>autopick</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\info-reader\definition-hash-data.cpp">
-      <Filter>info-reader</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\system\monrace\monrace-record.cpp">
-      <Filter>system\monrace</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\system\monrace\monrace-records.cpp">
-      <Filter>system\monrace</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\system\monrace\monrace-service.cpp">
-      <Filter>system\monrace</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\world\town-info-service.cpp">
       <Filter>world</Filter>
     </ClCompile>
+    <ClInclude Include="..\..\src\external-lib\include\concepts\compare.hpp">
+      <Filter>external-lib\include\concepts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\concepts\concepts.hpp">
+      <Filter>external-lib\include\concepts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\concepts\swap.hpp">
+      <Filter>external-lib\include\concepts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\concepts\type_traits.hpp">
+      <Filter>external-lib\include\concepts</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\fmt\args.h">
+      <Filter>external-lib\include\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\fmt\base.h">
+      <Filter>external-lib\include\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\fmt\chrono.h">
+      <Filter>external-lib\include\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\fmt\color.h">
+      <Filter>external-lib\include\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\fmt\compile.h">
+      <Filter>external-lib\include\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\fmt\core.h">
+      <Filter>external-lib\include\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\fmt\format-inl.h">
+      <Filter>external-lib\include\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\fmt\format.h">
+      <Filter>external-lib\include\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\fmt\os.h">
+      <Filter>external-lib\include\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\fmt\ostream.h">
+      <Filter>external-lib\include\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\fmt\printf.h">
+      <Filter>external-lib\include\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\fmt\ranges.h">
+      <Filter>external-lib\include\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\fmt\std.h">
+      <Filter>external-lib\include\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\fmt\xchar.h">
+      <Filter>external-lib\include\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\meta\meta.hpp">
+      <Filter>external-lib\include\meta</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\meta\meta_fwd.hpp">
+      <Filter>external-lib\include\meta</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\nlohmann\json.hpp">
+      <Filter>external-lib\include\nlohmann</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\action\action.hpp">
+      <Filter>external-lib\include\range\v3\action</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\action\adjacent_remove_if.hpp">
+      <Filter>external-lib\include\range\v3\action</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\action\concepts.hpp">
+      <Filter>external-lib\include\range\v3\action</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\action\drop.hpp">
+      <Filter>external-lib\include\range\v3\action</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\action\drop_while.hpp">
+      <Filter>external-lib\include\range\v3\action</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\action\erase.hpp">
+      <Filter>external-lib\include\range\v3\action</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\action\insert.hpp">
+      <Filter>external-lib\include\range\v3\action</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\action\join.hpp">
+      <Filter>external-lib\include\range\v3\action</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\action\push_back.hpp">
+      <Filter>external-lib\include\range\v3\action</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\action\push_front.hpp">
+      <Filter>external-lib\include\range\v3\action</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\action\remove.hpp">
+      <Filter>external-lib\include\range\v3\action</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\action\remove_if.hpp">
+      <Filter>external-lib\include\range\v3\action</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\action\reverse.hpp">
+      <Filter>external-lib\include\range\v3\action</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\action\shuffle.hpp">
+      <Filter>external-lib\include\range\v3\action</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\action\slice.hpp">
+      <Filter>external-lib\include\range\v3\action</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\action\sort.hpp">
+      <Filter>external-lib\include\range\v3\action</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\action\split.hpp">
+      <Filter>external-lib\include\range\v3\action</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\action\split_when.hpp">
+      <Filter>external-lib\include\range\v3\action</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\action\stable_sort.hpp">
+      <Filter>external-lib\include\range\v3\action</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\action\stride.hpp">
+      <Filter>external-lib\include\range\v3\action</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\action\take.hpp">
+      <Filter>external-lib\include\range\v3\action</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\action\take_while.hpp">
+      <Filter>external-lib\include\range\v3\action</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\action\transform.hpp">
+      <Filter>external-lib\include\range\v3\action</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\action\unique.hpp">
+      <Filter>external-lib\include\range\v3\action</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\action\unstable_remove_if.hpp">
+      <Filter>external-lib\include\range\v3\action</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\aux_\equal_range_n.hpp">
+      <Filter>external-lib\include\range\v3\algorithm\aux_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\aux_\lower_bound_n.hpp">
+      <Filter>external-lib\include\range\v3\algorithm\aux_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\aux_\merge_n.hpp">
+      <Filter>external-lib\include\range\v3\algorithm\aux_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\aux_\merge_n_with_buffer.hpp">
+      <Filter>external-lib\include\range\v3\algorithm\aux_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\aux_\partition_point_n.hpp">
+      <Filter>external-lib\include\range\v3\algorithm\aux_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\aux_\sort_n_with_buffer.hpp">
+      <Filter>external-lib\include\range\v3\algorithm\aux_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\aux_\upper_bound_n.hpp">
+      <Filter>external-lib\include\range\v3\algorithm\aux_</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\adjacent_find.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\adjacent_remove_if.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\all_of.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\any_of.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\binary_search.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\contains.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\copy.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\copy_backward.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\copy_if.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\copy_n.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\count.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\count_if.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\ends_with.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\equal.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\equal_range.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\fill.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\fill_n.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\find.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\find_end.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\find_first_of.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\find_if.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\find_if_not.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\fold.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\fold_left.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\fold_right.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\for_each.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\for_each_n.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\generate.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\generate_n.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\heap_algorithm.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\inplace_merge.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\is_partitioned.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\is_sorted.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\is_sorted_until.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\lexicographical_compare.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\lower_bound.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\max.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\max_element.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\merge.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\min.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\minmax.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\minmax_element.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\min_element.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\mismatch.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\move.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\move_backward.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\none_of.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\nth_element.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\partial_sort.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\partial_sort_copy.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\partition.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\partition_copy.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\partition_point.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\permutation.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\remove.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\remove_copy.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\remove_copy_if.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\remove_if.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\replace.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\replace_copy.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\replace_copy_if.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\replace_if.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\result_types.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\reverse.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\reverse_copy.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\rotate.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\rotate_copy.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\sample.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\search.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\search_n.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\set_algorithm.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\shuffle.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\sort.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\stable_partition.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\stable_sort.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\starts_with.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\swap_ranges.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\tagspec.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\transform.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\unique.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\unique_copy.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\unstable_remove_if.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm\upper_bound.hpp">
+      <Filter>external-lib\include\range\v3\algorithm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\detail\adl_get.hpp">
+      <Filter>external-lib\include\range\v3\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\detail\config.hpp">
+      <Filter>external-lib\include\range\v3\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\detail\epilogue.hpp">
+      <Filter>external-lib\include\range\v3\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\detail\prologue.hpp">
+      <Filter>external-lib\include\range\v3\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\detail\range_access.hpp">
+      <Filter>external-lib\include\range\v3\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\detail\satisfy_boost_range.hpp">
+      <Filter>external-lib\include\range\v3\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\detail\variant.hpp">
+      <Filter>external-lib\include\range\v3\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\detail\with_braced_init_args.hpp">
+      <Filter>external-lib\include\range\v3\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\experimental\utility\generator.hpp">
+      <Filter>external-lib\include\range\v3\experimental\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\experimental\view\shared.hpp">
+      <Filter>external-lib\include\range\v3\experimental\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\functional\arithmetic.hpp">
+      <Filter>external-lib\include\range\v3\functional</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\functional\bind.hpp">
+      <Filter>external-lib\include\range\v3\functional</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\functional\bind_back.hpp">
+      <Filter>external-lib\include\range\v3\functional</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\functional\comparisons.hpp">
+      <Filter>external-lib\include\range\v3\functional</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\functional\compose.hpp">
+      <Filter>external-lib\include\range\v3\functional</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\functional\concepts.hpp">
+      <Filter>external-lib\include\range\v3\functional</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\functional\identity.hpp">
+      <Filter>external-lib\include\range\v3\functional</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\functional\indirect.hpp">
+      <Filter>external-lib\include\range\v3\functional</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\functional\invoke.hpp">
+      <Filter>external-lib\include\range\v3\functional</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\functional\not_fn.hpp">
+      <Filter>external-lib\include\range\v3\functional</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\functional\on.hpp">
+      <Filter>external-lib\include\range\v3\functional</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\functional\overload.hpp">
+      <Filter>external-lib\include\range\v3\functional</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\functional\pipeable.hpp">
+      <Filter>external-lib\include\range\v3\functional</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\functional\reference_wrapper.hpp">
+      <Filter>external-lib\include\range\v3\functional</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\iterator\access.hpp">
+      <Filter>external-lib\include\range\v3\iterator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\iterator\basic_iterator.hpp">
+      <Filter>external-lib\include\range\v3\iterator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\iterator\common_iterator.hpp">
+      <Filter>external-lib\include\range\v3\iterator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\iterator\concepts.hpp">
+      <Filter>external-lib\include\range\v3\iterator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\iterator\counted_iterator.hpp">
+      <Filter>external-lib\include\range\v3\iterator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\iterator\default_sentinel.hpp">
+      <Filter>external-lib\include\range\v3\iterator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\iterator\diffmax_t.hpp">
+      <Filter>external-lib\include\range\v3\iterator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\iterator\insert_iterators.hpp">
+      <Filter>external-lib\include\range\v3\iterator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\iterator\move_iterators.hpp">
+      <Filter>external-lib\include\range\v3\iterator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\iterator\operations.hpp">
+      <Filter>external-lib\include\range\v3\iterator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\iterator\reverse_iterator.hpp">
+      <Filter>external-lib\include\range\v3\iterator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\iterator\stream_iterators.hpp">
+      <Filter>external-lib\include\range\v3\iterator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\iterator\traits.hpp">
+      <Filter>external-lib\include\range\v3\iterator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\iterator\unreachable_sentinel.hpp">
+      <Filter>external-lib\include\range\v3\iterator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\numeric\accumulate.hpp">
+      <Filter>external-lib\include\range\v3\numeric</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\numeric\adjacent_difference.hpp">
+      <Filter>external-lib\include\range\v3\numeric</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\numeric\inner_product.hpp">
+      <Filter>external-lib\include\range\v3\numeric</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\numeric\iota.hpp">
+      <Filter>external-lib\include\range\v3\numeric</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\numeric\partial_sum.hpp">
+      <Filter>external-lib\include\range\v3\numeric</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\range\access.hpp">
+      <Filter>external-lib\include\range\v3\range</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\range\concepts.hpp">
+      <Filter>external-lib\include\range\v3\range</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\range\conversion.hpp">
+      <Filter>external-lib\include\range\v3\range</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\range\dangling.hpp">
+      <Filter>external-lib\include\range\v3\range</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\range\operations.hpp">
+      <Filter>external-lib\include\range\v3\range</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\range\primitives.hpp">
+      <Filter>external-lib\include\range\v3\range</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\range\traits.hpp">
+      <Filter>external-lib\include\range\v3\range</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\addressof.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\any.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\associated_types.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\basic_iterator.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\box.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\common_iterator.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\common_tuple.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\common_type.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\compressed_pair.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\concepts.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\copy.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\counted_iterator.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\dangling.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\functional.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\get.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\infinity.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\invoke.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\in_place.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\iterator.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\iterator_concepts.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\iterator_traits.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\memory.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\move.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\nullptr_v.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\optional.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\polymorphic_cast.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\random.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\scope_exit.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\semiregular.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\semiregular_box.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\static_const.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\swap.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\tagged_pair.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\tagged_tuple.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\tuple_algorithm.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\unreachable.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility\variant.hpp">
+      <Filter>external-lib\include\range\v3\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\adaptor.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\addressof.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\adjacent_filter.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\adjacent_remove_if.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\all.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\any_view.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\bounded.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\cache1.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\cartesian_product.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\chunk.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\chunk_by.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\common.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\concat.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\const.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\counted.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\cycle.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\c_str.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\delimit.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\drop.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\drop_exactly.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\drop_last.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\drop_while.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\empty.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\enumerate.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\exclusive_scan.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\facade.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\filter.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\for_each.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\generate.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\generate_n.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\getlines.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\group_by.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\indices.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\indirect.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\interface.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\intersperse.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\iota.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\istream.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\join.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\linear_distribute.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\map.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\move.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\partial_sum.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\ref.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\remove.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\remove_if.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\repeat.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\repeat_n.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\replace.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\replace_if.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\reverse.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\sample.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\set_algorithm.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\single.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\slice.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\sliding.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\span.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\split.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\split_when.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\stride.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\subrange.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\tail.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\take.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\take_exactly.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\take_last.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\take_while.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\tokenize.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\transform.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\trim.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\unbounded.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\unique.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\view.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\zip.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view\zip_with.hpp">
+      <Filter>external-lib\include\range\v3\view</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\action.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\algorithm.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\all.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\at.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\back.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\begin_end.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\compare.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\core.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\data.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\distance.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\empty.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\front.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\functional.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\getlines.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\index.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\istream_range.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\iterator.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\iterator_range.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\numeric.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\range.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\range_access.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\range_concepts.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\range_for.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\range_fwd.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\range_traits.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\size.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\span.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\to_container.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\utility.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\version.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view_adaptor.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view_facade.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\range\v3\view_interface.hpp">
+      <Filter>external-lib\include\range\v3</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\simpleini\SimpleIni.h">
+      <Filter>external-lib\include\simpleini</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\std\detail\associated_types.hpp">
+      <Filter>external-lib\include\std\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\tl\expected.hpp">
+      <Filter>external-lib\include\tl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\tl\optional.hpp">
+      <Filter>external-lib\include\tl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include\xoshiro.h">
+      <Filter>external-lib\include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\game-option\keymap-directory-getter.h">
+      <Filter>game-option</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\src\info-reader\definition-hash-data.cpp">
+      <Filter>info-reader</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\src\info-reader\definition-hash-data.h">
+      <Filter>info-reader</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\src\io\exit-panic.cpp">
+      <Filter>io</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\src\io\exit-panic.h">
+      <Filter>io</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\src\io\macro-configurations-store.cpp">
+      <Filter>io</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\src\io\macro-configurations-store.h">
+      <Filter>io</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\src\io\report.cpp">
+      <Filter>io</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\src\io\report.h">
+      <Filter>io</Filter>
+    </ClInclude>
     <ClCompile Include="..\..\src\io\temp-file.cpp">
       <Filter>io</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\system\dungeon\quest-definition.cpp">
-      <Filter>system\dungeon</Filter>
+    <ClInclude Include="..\..\src\io\temp-file.h">
+      <Filter>io</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\src\load\artifact-record-loader.cpp">
+      <Filter>load</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\system\dungeon\quest-list.cpp">
-      <Filter>system\dungeon</Filter>
+    <ClInclude Include="..\..\src\load\artifact-record-loader.h">
+      <Filter>load</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\src\main-unix\stack-trace-unix.cpp">
+      <Filter>main-unix</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main-unix\unix-cfg-reader.cpp">
+      <Filter>main-unix</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\src\main-unix\unix-cfg-reader.h">
+      <Filter>main-unix</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\src\main-unix\unix-music.cpp">
+      <Filter>main-unix</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\src\main-unix\unix-music.h">
+      <Filter>main-unix</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\src\main-unix\unix-sound.cpp">
+      <Filter>main-unix</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\src\main-unix\unix-sound.h">
+      <Filter>main-unix</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\src\main-unix\unix-user-ids.cpp">
+      <Filter>main-unix</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\src\main-unix\unix-user-ids.h">
+      <Filter>main-unix</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\src\main-unix\x11-gamma-builder.cpp">
+      <Filter>main-unix</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\src\main-unix\x11-gamma-builder.h">
+      <Filter>main-unix</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\src\main-unix\x11-type-string.cpp">
+      <Filter>main-unix</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\src\main-unix\x11-type-string.h">
+      <Filter>main-unix</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\src\monster-floor\monster-movement-direction-list.cpp">
+      <Filter>monster-floor</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\src\monster-floor\monster-movement-direction-list.h">
+      <Filter>monster-floor</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\src\player-info\bluemage-data.cpp">
+      <Filter>player-info</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\save\artifact-record-writer.cpp">
       <Filter>save</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\load\artifact-record-loader.cpp">
-      <Filter>load\item</Filter>
+    <ClInclude Include="..\..\src\save\artifact-record-writer.h">
+      <Filter>save</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\src\system\artifact\artifact-list.cpp">
+      <Filter>system\artifact</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\locale\character-encoding.cpp">
-      <Filter>locale</Filter>
+    <ClInclude Include="..\..\src\system\artifact\artifact-list.h">
+      <Filter>system\artifact</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\src\system\artifact\artifact-record.cpp">
+      <Filter>system\artifact</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\rumor\rumor-definition.cpp">
-      <Filter>rumor</Filter>
+    <ClInclude Include="..\..\src\system\artifact\artifact-record.h">
+      <Filter>system\artifact</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\src\system\artifact\artifact-service.cpp">
+      <Filter>system\artifact</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\rumor\rumor-list.cpp">
-      <Filter>rumor</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\rumor\rumor-service.cpp">
-      <Filter>rumor</Filter>
-    </ClCompile>
+    <ClInclude Include="..\..\src\system\artifact\artifact-service.h">
+      <Filter>system\artifact</Filter>
+    </ClInclude>
     <ClCompile Include="..\..\src\system\baseitem\baseitem-config.cpp">
       <Filter>system\baseitem</Filter>
     </ClCompile>
+    <ClInclude Include="..\..\src\system\baseitem\baseitem-config.h">
+      <Filter>system\baseitem</Filter>
+    </ClInclude>
     <ClCompile Include="..\..\src\system\baseitem\baseitem-configs.cpp">
       <Filter>system\baseitem</Filter>
     </ClCompile>
+    <ClInclude Include="..\..\src\system\baseitem\baseitem-configs.h">
+      <Filter>system\baseitem</Filter>
+    </ClInclude>
     <ClCompile Include="..\..\src\system\baseitem\baseitem-service.cpp">
       <Filter>system\baseitem</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\src\system\baseitem\baseitem-service.h">
+      <Filter>system\baseitem</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\src\system\dungeon\quest-definition.cpp">
+      <Filter>system\dungeon</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\src\system\dungeon\quest-definition.h">
+      <Filter>system\dungeon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\system\enums\dungeon\dungeon-id.h">
+      <Filter>system\enums\dungeon</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\system\enums\monrace\monrace-hook-types.h">
+      <Filter>system\enums\monrace</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\system\enums\terrain\building-type.h">
+      <Filter>system\enums\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\system\enums\terrain\pattern-tile-type.h">
+      <Filter>system\enums\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\system\enums\terrain\terrain-conversion-type.h">
+      <Filter>system\enums\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\system\enums\terrain\terrain-kind.h">
+      <Filter>system\enums\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\system\enums\terrain\trap.h">
+      <Filter>system\enums\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\system\enums\terrain\wilderness-terrain.h">
+      <Filter>system\enums\terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\system\enums\store-sale-type.h">
+      <Filter>system\enums</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\src\system\floor\floor-list.cpp">
+      <Filter>system\floor</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\src\system\floor\floor-list.h">
+      <Filter>system\floor</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\src\system\floor\town-records.cpp">
+      <Filter>system\floor</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\src\system\floor\town-records.h">
+      <Filter>system\floor</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\src\system\floor\wilderness-grid.cpp">
+      <Filter>system\floor</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\src\system\floor\wilderness-grid.h">
+      <Filter>system\floor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\system\item\identification-flags.h">
+      <Filter>system\item</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\src\system\monrace\monrace-service.cpp">
+      <Filter>system\monrace</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\src\system\monrace\monrace-service.h">
+      <Filter>system\monrace</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\src\system\services\dungeon-monrace-service.cpp">
+      <Filter>system\services</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\src\system\services\dungeon-monrace-service.h">
+      <Filter>system\services</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\src\system\services\dungeon-service.cpp">
+      <Filter>system\services</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\src\system\services\dungeon-service.h">
+      <Filter>system\services</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\src\test\test-probability-table.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\test\test-sha256.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\src\util\probability-table.h">
+      <Filter>util</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\src\maid-x11.cpp">
+      <Filter>src\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main-cap.cpp">
+      <Filter>src\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main-gcu.cpp">
+      <Filter>src\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main-x11.cpp">
+      <Filter>src\src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main.cpp">
+      <Filter>src\src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -3107,9 +4241,6 @@
     <ClInclude Include="..\..\src\floor\wild.h">
       <Filter>floor</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\io\report.h">
-      <Filter>io</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\floor\geometry.h">
       <Filter>floor</Filter>
     </ClInclude>
@@ -3490,9 +4621,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src\object-enchant\old-ego-extra-values.h">
       <Filter>object-enchant</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\system\item\identification-flags.h">
-      <Filter>system\item</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\object-enchant\trc-types.h">
       <Filter>object-enchant</Filter>
@@ -5409,15 +6537,6 @@
     <ClInclude Include="..\..\src\system\redrawing-flags-updater.h">
       <Filter>system</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\net\http-client.h">
-      <Filter>net</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\net\curl-easy-session.h">
-      <Filter>net</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\net\curl-slist.h">
-      <Filter>net</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\util\abstract-map-wrapper.h">
       <Filter>util</Filter>
     </ClInclude>
@@ -5435,9 +6554,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src\util\stack-trace.h">
       <Filter>util</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\net\report-error.h">
-      <Filter>net</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\main-win\main-win-exception.h">
       <Filter>main-win</Filter>
@@ -5482,9 +6598,6 @@
       <Filter>save</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\system\enums\grid-flow.h">
-      <Filter>system\enums</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\system\enums\store-sale-type.h">
       <Filter>system\enums</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\timed-effect\player-protection.h">
@@ -5538,9 +6651,6 @@
     <ClInclude Include="..\..\src\system\floor\floor-info.h">
       <Filter>system\floor</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\system\floor\floor-list.h">
-      <Filter>system\floor</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\system\floor\town-info.h">
       <Filter>system\floor</Filter>
     </ClInclude>
@@ -5562,123 +6672,26 @@
     <ClInclude Include="..\..\src\system\terrain\terrain-list.h">
       <Filter>system\terrain</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\system\enums\dungeon\dungeon-id.h">
-      <Filter>system\enums\dungeon</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\system\services\dungeon-service.h">
-      <Filter>system\services</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\system\enums\monrace\monrace-hook-types.h">
-      <Filter>system\enums\monrace</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\wizard\monrace-filter-debug-info.h">
       <Filter>wizard</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\system\services\dungeon-monrace-service.h">
-      <Filter>system\services</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\util\elapsed-time.h">
       <Filter>util</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\system\enums\terrain\terrain-kind.h">
-      <Filter>system\enums\terrain</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\system\enums\terrain\building-type.h">
-      <Filter>system\enums\terrain</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\system\enums\terrain\pattern-tile-type.h">
-      <Filter>system\enums\terrain</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\system\enums\terrain\terrain-conversion-type.h">
-      <Filter>system\enums\terrain</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\system\enums\terrain\trap.h">
-      <Filter>system\enums\terrain</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\system\enums\terrain\wilderness-terrain.h">
-      <Filter>system\enums\terrain</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\system\floor\wilderness-grid.h">
-      <Filter>system\floor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\monster-floor\monster-movement-direction-list.h">
-      <Filter>monster-floor</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\target\target.h">
       <Filter>target</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\io\macro-configurations-store.h">
-      <Filter>io</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\system\floor\town-records.h">
-      <Filter>system\floor</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\system\artifact\artifact-definition.h">
-      <Filter>system\artifact</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\system\artifact\artifact-list.h">
-      <Filter>system\artifact</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\system\artifact\artifact-record.h">
-      <Filter>system\artifact</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\system\artifact\artifact-service.h">
       <Filter>system\artifact</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\system\item\item-entity.h">
       <Filter>system\item</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\info-reader\definition-hash-data.h">
-      <Filter>info-reader</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\system\monrace\monrace-record.h">
-      <Filter>system\monrace</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\system\monrace\monrace-records.h">
-      <Filter>system\monrace</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\system\monrace\monrace-service.h">
-      <Filter>system\monrace</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\world\town-info-service.h">
       <Filter>world</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\io\temp-file.h">
-      <Filter>io</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\system\dungeon\quest-definition.h">
-      <Filter>system\dungeon</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\system\dungeon\quest-list.h">
-      <Filter>system\dungeon</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\save\artifact-record-writer.h">
-      <Filter>save</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\load\artifact-record-loader.h">
-      <Filter>load\item</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\rumor\rumor-definition.h">
-      <Filter>rumor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\rumor\rumor-list.h">
-      <Filter>rumor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\rumor\rumor-service.h">
-      <Filter>rumor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\rumor\rumor-rarity.h">
-      <Filter>rumor</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\system\baseitem\baseitem-config.h">
-      <Filter>system\baseitem</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\system\baseitem\baseitem-configs.h">
-      <Filter>system\baseitem</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\system\baseitem\baseitem-service.h">
-      <Filter>system\baseitem</Filter>
-    </ClInclude>
+    <ClInclude Include="..\..\src\external-lib\include-json.h" />
+    <ClInclude Include="..\..\src\external-lib\json.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\wall.bmp" />
@@ -5987,6 +7000,135 @@
     </Filter>
     <Filter Include="rumor">
       <UniqueIdentifier>{c62f5f7a-ab76-464e-ad5b-3342523e5520}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external-lib\include\concepts">
+      <UniqueIdentifier>{27EF8993-3938-4543-A28E-3FD697830A00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external-lib\include\fmt">
+      <UniqueIdentifier>{B884C617-2DC6-45BB-9789-F7F2A8EC210C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external-lib\include\meta">
+      <UniqueIdentifier>{3B96B724-7AF1-4565-9B85-AF80C3EA8652}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external-lib\include\nlohmann">
+      <UniqueIdentifier>{5BD70540-ACE0-4F8C-8C94-28737931607B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external-lib\include\range\v3\action">
+      <UniqueIdentifier>{89563500-CE66-4EB9-9CA1-A144E49F349E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external-lib\include\range\v3\algorithm\aux_">
+      <UniqueIdentifier>{41567763-1709-4EDA-AD52-052A8A1A2AB0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external-lib\include\range\v3\algorithm">
+      <UniqueIdentifier>{671BB1E1-ACC8-430F-803A-FFA8D76DF4D5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external-lib\include\range\v3\detail">
+      <UniqueIdentifier>{9E9A8E47-1384-472A-8FB9-5350F638A21B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external-lib\include\range\v3\experimental\utility">
+      <UniqueIdentifier>{7344A469-928B-40BB-BEBA-B23CDCEBA148}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external-lib\include\range\v3\experimental\view">
+      <UniqueIdentifier>{66A8D37D-1259-4887-B3E8-0F7CF87BC581}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external-lib\include\range\v3\functional">
+      <UniqueIdentifier>{4BAFFFDD-944B-43FE-B128-A643B22D531B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external-lib\include\range\v3\iterator">
+      <UniqueIdentifier>{3359B360-425E-4D2F-BDE8-A1EF37145293}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external-lib\include\range\v3\numeric">
+      <UniqueIdentifier>{928D7637-6E35-4B7C-83A4-6D123613D94F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external-lib\include\range\v3\range">
+      <UniqueIdentifier>{C2FB9091-4C88-4EDA-88EE-80E38A51C1CE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external-lib\include\range\v3\utility">
+      <UniqueIdentifier>{324393F3-E4E6-4093-8C32-59CDEC22AF12}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external-lib\include\range\v3\view">
+      <UniqueIdentifier>{E1BA22F2-3D6F-4AF8-B83C-64E7EA63F1CD}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external-lib\include\range\v3">
+      <UniqueIdentifier>{4F4CC14E-B1FA-4B29-B069-AD92C417C111}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external-lib\include\simpleini">
+      <UniqueIdentifier>{88D34FBB-A8EF-41AD-AFEA-FC0B7BE1D83B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external-lib\include\std\detail">
+      <UniqueIdentifier>{7A5B6BB2-7378-4069-8152-A0429C1240ED}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external-lib\include\tl">
+      <UniqueIdentifier>{5AB336A3-FC33-450D-91F3-FB42386C474D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external-lib\include">
+      <UniqueIdentifier>{FBE2E970-9118-4106-BFEA-D3EF0FB5DE1F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="game-option">
+      <UniqueIdentifier>{6B9E5E9F-6DC8-4A64-93B5-7009BF4BB72D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="info-reader">
+      <UniqueIdentifier>{2F371315-A22E-4578-909C-6F26BC2295BA}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="io">
+      <UniqueIdentifier>{DAE75248-EF99-435B-A8E7-9FD864CC1BCC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="load">
+      <UniqueIdentifier>{35B6E5D6-4948-413E-AB50-67D951949BC0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="main-unix">
+      <UniqueIdentifier>{9426DDA9-3E42-4622-9D99-544A4FA81C3A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="monster-floor">
+      <UniqueIdentifier>{23E20D83-ECA8-40FE-AF68-FD670B5C7822}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="player-info">
+      <UniqueIdentifier>{CE037A9B-7BF4-4FBC-9D22-06B7B3CCEF04}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="save">
+      <UniqueIdentifier>{B858FD51-46C5-404D-8EA4-FEE1467173FA}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="system\artifact">
+      <UniqueIdentifier>{9254557A-FBA8-4161-81D1-517C70F0D099}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="system\baseitem">
+      <UniqueIdentifier>{1393019D-BCD6-43E7-B663-DD7F25FD8F98}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="system\dungeon">
+      <UniqueIdentifier>{5063EA61-3B1E-4324-B2B0-3E1FD229BF83}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="system\enums\dungeon">
+      <UniqueIdentifier>{C4063804-6FE2-4748-AD0F-1287A47AED8F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="system\enums\monrace">
+      <UniqueIdentifier>{697281B7-4A8B-4E94-BDFE-DB35B14D15DF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="system\enums\terrain">
+      <UniqueIdentifier>{AA8C0028-C45B-4787-9504-0B6FEF97229B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="system\enums">
+      <UniqueIdentifier>{1549CC9F-B6EC-4AA7-B2BC-6097839484F9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="system\floor">
+      <UniqueIdentifier>{B173B980-7550-46D1-BEBE-CBE9D810BB78}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="system\item">
+      <UniqueIdentifier>{0037888F-FC5A-4120-9715-93FEAB144AB8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="system\monrace">
+      <UniqueIdentifier>{F457C9B7-AA19-4E27-8228-18DF282ACFA6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="system\services">
+      <UniqueIdentifier>{87FEF5F7-4DAE-42F3-8505-BA7CC526BFD5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="test">
+      <UniqueIdentifier>{B3B93AD7-25E4-4C5C-AED5-09FEB38952FB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="util">
+      <UniqueIdentifier>{3C69109B-E196-4A82-B123-39B1CF310D1B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\src">
+      <UniqueIdentifier>{41874326-D6CF-4F47-9693-9376D876E197}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

@@ -14,7 +14,6 @@
 #include "game-option/birth-options.h"
 #include "inventory/inventory-slot-types.h"
 #include "io/files-util.h"
-#include "io/report.h"
 #include "io/uid-checker.h"
 #include "load/angband-version-comparer.h"
 #include "load/artifact-record-loader.h"
@@ -321,10 +320,6 @@ static errr exe_reading_savefile(PlayerType *player_ptr)
         set_zangband_pet(player_ptr);
     } else {
         player_ptr->pet_extra_flags = rd_u16b();
-    }
-
-    if (!h_older_than(1, 0, 9)) {
-        screen_dump = rd_string();
     }
 
     auto restore_dungeon_result = restore_dungeon(player_ptr);

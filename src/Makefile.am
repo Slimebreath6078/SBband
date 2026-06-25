@@ -641,7 +641,6 @@ SBband_SOURCES = \
 	io/pref-file-expressor.cpp io/pref-file-expressor.h \
 	io/read-pref-file.cpp io/read-pref-file.h \
 	io/record-play-movie.cpp io/record-play-movie.h \
-	io/report.cpp io/report.h \
 	io/screen-util.cpp io/screen-util.h \
 	io/signal-handlers.cpp io/signal-handlers.h \
 	io/temp-file.cpp io/temp-file.h \
@@ -1465,9 +1464,6 @@ EXTRA_DIST = \
 
 DEFAULT_INCLUDES = \
 	-I. -I$(srcdir) -I$(srcdir)/external-lib/include
-
-CPPFLAGS += $(XFT_CFLAGS) $(libcurl_CFLAGS)
-LIBS += $(XFT_LIBS) $(libcurl_LIBS)
 
 AM_CXXFLAGS =
 
