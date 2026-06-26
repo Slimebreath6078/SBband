@@ -159,9 +159,9 @@ void init_dungeon_quests(PlayerType *player_ptr)
     parse_fixed_map(player_ptr, QUEST_DEFINITION_LIST, 0, 0, 0, 0);
     quests.get_quest(QuestId::OBERON).status = QuestStatusType::TAKEN;
 
-    floor.quest_number = QuestId::SERPENT;
+    floor.quest_number = QuestId::OBSERVER;
     parse_fixed_map(player_ptr, QUEST_DEFINITION_LIST, 0, 0, 0, 0);
-    quests.get_quest(QuestId::SERPENT).status = QuestStatusType::TAKEN;
+    quests.get_quest(QuestId::OBSERVER).status = QuestStatusType::TAKEN;
     floor.quest_number = QuestId::NONE;
 }
 

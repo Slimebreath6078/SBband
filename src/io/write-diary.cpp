@@ -72,7 +72,7 @@ static std::pair<QuestId, std::string> write_floor(const FloorType &floor)
         return std::make_pair(q_idx, std::string(_("地上:", "Surface:")));
     }
 
-    if (inside_quest(q_idx) && QuestType::is_fixed(q_idx) && !((q_idx == QuestId::OBERON) || (q_idx == QuestId::SERPENT))) {
+    if (inside_quest(q_idx) && QuestType::is_fixed(q_idx) && !((q_idx == QuestId::OBERON) || (q_idx == QuestId::OBSERVER))) {
         return std::make_pair(q_idx, std::string(_("クエスト:", "Quest:")));
     }
 
@@ -297,7 +297,7 @@ void exe_write_diary(const FloorType &floor, DiaryKind dk, int num, std::string_
         break;
     }
     case DiaryKind::STAIR: {
-        auto to = inside_quest(q_idx) && (QuestType::is_fixed(q_idx) && !((q_idx == QuestId::OBERON) || (q_idx == QuestId::SERPENT)))
+        auto to = inside_quest(q_idx) && (QuestType::is_fixed(q_idx) && !((q_idx == QuestId::OBERON) || (q_idx == QuestId::OBSERVER)))
                       ? _("地上", "the surface")
                   : !(floor.dun_level + num)
                       ? _("地上", "the surface")

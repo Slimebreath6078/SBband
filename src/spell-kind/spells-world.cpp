@@ -475,7 +475,7 @@ bool free_level_recall(PlayerType *player_ptr)
         const auto &quests = QuestList::get_instance();
         if (quests.get_quest(QuestId::OBERON).status != QuestStatusType::FINISHED) {
             max_depth = 98;
-        } else if (quests.get_quest(QuestId::SERPENT).status != QuestStatusType::FINISHED) {
+        } else if (quests.get_quest(QuestId::OBSERVER).status != QuestStatusType::FINISHED) {
             max_depth = 99;
         }
     }

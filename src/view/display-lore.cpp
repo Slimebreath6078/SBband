@@ -714,7 +714,7 @@ void display_monster_guardian(lore_type *lore_ptr)
     bool is_kingpin = lore_ptr->misc_flags.has(MonsterMiscType::QUESTOR);
     is_kingpin &= lore_ptr->record->has_been_seen();
     is_kingpin &= lore_ptr->monrace->max_num > 0;
-    is_kingpin &= (lore_ptr->monrace_id == MonraceId::OBERON) || (lore_ptr->monrace_id == MonraceId::SERPENT);
+    is_kingpin &= (lore_ptr->monrace_id == MonraceId::OBERON) || (lore_ptr->monrace_id == MonraceId::SERPENT) || (lore_ptr->monrace_id == MonraceId::OBSERVER);
     if (is_kingpin) {
         hook_c_roff(TERM_VIOLET, _("あなたはこのモンスターを殺したいという強い欲望を感じている...", "You feel an intense desire to kill this monster...  "));
     } else if (lore_ptr->misc_flags.has(MonsterMiscType::GUARDIAN)) {
