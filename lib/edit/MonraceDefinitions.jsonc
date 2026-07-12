@@ -88413,6 +88413,53 @@
         "ja": "それはスライムに似た弾力性を持つモンスターで、ドラゴンを彷彿とさせる形をしている。",
         "en": "It has the slime-like elasticity and the dragon-like shape."
       }
+    },
+    {
+      "id": 1418,
+      "name": {
+        "ja": "セキアス",
+        "en": "Berserker"
+      },
+      "symbol": {
+        "character": "h",
+        "color": "Violet"
+      },
+      "speed": 10,
+      "hit_point": "50d20",
+      "vision": 15,
+      "armor_class": 70,
+      "alertness": 0,
+      "level": 35,
+      "rarity": 4,
+      "exp": 800,
+      "blows": [
+        {
+          "method": "HIT",
+          "effect": "HURT",
+          "damage_dice": "8d20"
+        },
+        {
+          "method": "HIT",
+          "effect": "HURT",
+          "damage_dice": "8d20"
+        }
+      ],
+      "flags": [
+        "HUMAN",
+        "EVIL",
+        "STUPID",
+        "HURT_FIRE"
+      ],
+      "skill": {
+        "probability": "1_IN_4",
+        "list": [
+          "SCARE"
+        ]
+      },
+      "flavor": {
+        "ja": "長時間＜獣＞に支配された人間の末路だ。エネルギーとなる魔力を求めて歩き回っている。",
+        "en": "This is the fate of a human who remained under the Beast's control for far too long. It wanders in search of magical energy to sustain itself."
+      }
     }
   ]
 }
